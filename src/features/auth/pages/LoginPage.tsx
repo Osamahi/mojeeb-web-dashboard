@@ -50,16 +50,18 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Mojeeb Brand Logo - Above Card */}
-        <div className="text-center mb-6">
-          <img
-            src="/mojeeb-logo.png"
-            alt="Mojeeb"
-            className="h-10 mx-auto"
-          />
-        </div>
+    <div className="min-h-screen bg-neutral-50 flex flex-col p-4">
+      {/* Mojeeb Brand Logo - Top of Page */}
+      <div className="pt-6 pb-8">
+        <img
+          src="/mojeeb-logo.png"
+          alt="Mojeeb"
+          className="h-6 mx-auto"
+        />
+      </div>
+
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-md">
 
         {/* Minimal Card Container */}
         <div className="bg-white rounded-xl border border-neutral-200 p-8">
@@ -143,6 +145,7 @@ export const LoginPage = () => {
               </Link>
             </p>
           </div>
+        </div>
         </div>
       </div>
     </div>
