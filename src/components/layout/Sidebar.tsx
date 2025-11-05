@@ -174,15 +174,13 @@ export const Sidebar = () => {
                     className={({ isActive }) =>
                       cn(
                         'flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200',
-                        // Active state - different styling based on collapsed state
-                        isActive && !isSidebarCollapsed
-                          ? 'bg-white text-brand-cyan font-medium border-l-2 border-brand-cyan'  // Expanded: white bg
-                          : isActive && isSidebarCollapsed
-                          ? 'text-brand-cyan border-l-2 border-brand-cyan'  // Collapsed: no bg, just cyan
+                        // Active state - only color change, no bg or border
+                        isActive
+                          ? 'text-brand-cyan font-medium'  // Just cyan color
                           // Inactive state - different hover based on collapsed state
                           : isSidebarCollapsed
-                          ? 'text-neutral-700 hover:text-brand-cyan'  // Collapsed: no hover bg
-                          : 'text-neutral-700 hover:bg-white hover:text-neutral-950',  // Expanded: hover bg
+                          ? 'text-neutral-700 hover:text-brand-cyan'  // Collapsed: color change only
+                          : 'text-neutral-700 hover:text-neutral-950',  // Expanded: color change only
                         isDesktop && isSidebarCollapsed && 'justify-center px-0'
                       )
                     }
