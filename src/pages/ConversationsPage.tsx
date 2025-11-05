@@ -1,26 +1,38 @@
 /**
- * Mojeeb Minimal Conversations Page
- * Displays conversations filtered by the globally selected agent
- * Clean minimal design with agent-scoped data
+ * Mojeeb Conversations Page
+ * WhatsApp-style conversation view with split-pane layout
+ * Real-time updates via Supabase subscriptions
  */
 
-import { MessageSquare } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { useConversationStore } from '@/features/conversations/stores/conversationStore';
+import { useChatStore } from '@/features/conversations/stores/chatStore';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import NoAgentEmptyState from '@/features/agents/components/NoAgentEmptyState';
-import { Badge } from '@/components/ui/Badge';
-import { Avatar } from '@/components/ui/Avatar';
+import ConversationList from '@/features/conversations/components/ConversationList/ConversationList';
+import ChatPanel from '@/features/conversations/components/Chat/ChatPanel';
+import ConversationEmptyState from '@/features/conversations/components/shared/ConversationEmptyState';
 
 export const ConversationsPage = () => {
+  const isMobile = useIsMobile();
   const globalSelectedAgent = useAgentStore((state) => state.globalSelectedAgent);
+  const selectedConversation = useConversationStore((state) => state.selectedConversation);
+  const selectConversation = useConversationStore((state) => state.selectConversation);
+
+  const [showChat, setShowChat] = useState(false);
+
+  // Reset conversation selection when agent changes
+  useEffect(() => {
+    selectConversation(null);
+    setShowChat(false);
+  }, [globalSelectedAgent?.id, selectConversation]);
 
   // Show empty state if no agent is selected
   if (!globalSelectedAgent) {
     return (
-      <div className="p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-950 mb-2">Conversations</h1>
-          <p className="text-neutral-600">View and manage conversations with your AI agents</p>
-        </div>
+      <div className="h-full flex items-center justify-center p-6">
         <NoAgentEmptyState
           title="No Agent Selected"
           message="Please select an agent from the dropdown above to view its conversations."
@@ -30,60 +42,59 @@ export const ConversationsPage = () => {
     );
   }
 
-  return (
-    <div className="p-6">
-      {/* Header with Selected Agent Info */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-950 mb-2">Conversations</h1>
-        <p className="text-neutral-600 mb-4">
-          View and manage conversations with your AI agents
-        </p>
+  const handleConversationSelect = (conversationId: string) => {
+    if (isMobile) {
+      setShowChat(true);
+    }
+  };
 
-        {/* Selected Agent Card */}
-        <div className="bg-white border border-neutral-200 rounded-lg p-4 inline-flex items-center gap-3">
-          <Avatar
-            src={globalSelectedAgent.avatarUrl || undefined}
-            name={globalSelectedAgent.name}
-            size="md"
+  const handleBackToList = () => {
+    setShowChat(false);
+    selectConversation(null);
+  };
+
+  // Mobile: Show either list or chat (stacked)
+  if (isMobile) {
+    return (
+      <div className="h-full flex flex-col overflow-hidden">
+        {!showChat ? (
+          <ConversationList
+            agentId={globalSelectedAgent.id}
+            onConversationSelect={handleConversationSelect}
           />
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-neutral-950">
-                Showing conversations for:
-              </span>
-              <span className="text-sm font-medium text-brand-cyan">
-                {globalSelectedAgent.name}
-              </span>
-              <Badge variant="success" className="text-xs">
-                {globalSelectedAgent.status}
-              </Badge>
-            </div>
-            {globalSelectedAgent.description && (
-              <p className="text-xs text-neutral-600 mt-1">
-                {globalSelectedAgent.description}
-              </p>
-            )}
-          </div>
-        </div>
+        ) : selectedConversation ? (
+          <ChatPanel
+            conversation={selectedConversation}
+            onBack={handleBackToList}
+          />
+        ) : null}
       </div>
+    );
+  }
 
-      {/* Placeholder - Ready for React Query integration */}
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center max-w-md">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 rounded-full mb-4">
-            <MessageSquare className="w-8 h-8 text-neutral-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-neutral-950 mb-2">
-            Conversations Coming Soon
-          </h2>
-          <p className="text-neutral-600">
-            This feature is under development. Conversations for <span className="font-medium text-brand-cyan">{globalSelectedAgent.name}</span> will appear here.
-          </p>
-          <p className="text-sm text-neutral-500 mt-4">
-            💡 Tip: Switch agents using the dropdown in the top navigation to view different agent conversations.
-          </p>
-        </div>
-      </div>
+  // Desktop/Tablet: Split-pane layout
+  return (
+    <div className="h-full overflow-hidden">
+      <PanelGroup direction="horizontal">
+        {/* Left Panel: Conversation List */}
+        <Panel defaultSize={35} minSize={25} maxSize={50}>
+          <ConversationList
+            agentId={globalSelectedAgent.id}
+            onConversationSelect={handleConversationSelect}
+          />
+        </Panel>
+
+        <PanelResizeHandle className="w-px bg-neutral-200 hover:bg-brand-cyan transition-colors" />
+
+        {/* Right Panel: Chat Messages */}
+        <Panel defaultSize={65}>
+          {selectedConversation ? (
+            <ChatPanel conversation={selectedConversation} />
+          ) : (
+            <ConversationEmptyState />
+          )}
+        </Panel>
+      </PanelGroup>
     </div>
   );
 };

@@ -10,6 +10,7 @@ interface UIState {
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebarCollapse: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   closeSidebarOnMobile: () => void;
 }
 
@@ -18,7 +19,7 @@ export const useUIStore = create<UIState>()(
     (set, get) => ({
       // Initial state
       isSidebarOpen: false, // Closed on mobile by default
-      isSidebarCollapsed: false, // Expanded on desktop by default
+      isSidebarCollapsed: true, // Collapsed on desktop by default (hover to expand)
 
       // Toggle sidebar open/closed (mobile drawer)
       toggleSidebar: () =>
@@ -35,6 +36,10 @@ export const useUIStore = create<UIState>()(
         set((state) => ({
           isSidebarCollapsed: !state.isSidebarCollapsed
         })),
+
+      // Set sidebar collapsed state directly (for hover behavior)
+      setSidebarCollapsed: (collapsed: boolean) =>
+        set({ isSidebarCollapsed: collapsed }),
 
       // Auto-close sidebar on mobile (called after navigation)
       closeSidebarOnMobile: () => {
