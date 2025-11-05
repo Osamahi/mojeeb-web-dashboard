@@ -38,7 +38,7 @@ export const LoginPage = () => {
     try {
       await authService.login(data);
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      navigate('/conversations');
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
       setError(errorMessage);

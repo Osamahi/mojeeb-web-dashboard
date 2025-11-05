@@ -63,7 +63,7 @@ export default function GlobalAgentSelector({ onAgentSwitch }: GlobalAgentSelect
   // Show loading spinner during agent switching
   if (isAgentSwitching) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-lg">
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-neutral-50">
         <Spinner size="sm" />
         <span className="text-sm text-neutral-600">Switching...</span>
       </div>
@@ -75,7 +75,7 @@ export default function GlobalAgentSelector({ onAgentSwitch }: GlobalAgentSelect
     return (
       <button
         onClick={handleCreateAgent}
-        className="flex items-center gap-2 px-3 py-2 bg-white border border-neutral-200 rounded-lg hover:border-brand-cyan transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-neutral-50 transition-colors"
       >
         <Plus className="w-4 h-4 text-brand-cyan" />
         <span className="text-sm font-medium text-brand-cyan">Create Agent</span>
@@ -152,11 +152,9 @@ export default function GlobalAgentSelector({ onAgentSwitch }: GlobalAgentSelect
           {/* Create New Agent Button */}
           <button
             onClick={handleCreateAgent}
-            className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-neutral-50 transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-neutral-50 transition-colors"
           >
-            <div className="w-8 h-8 flex items-center justify-center bg-brand-cyan/10 rounded-full">
-              <Plus className="w-4 h-4 text-brand-cyan" />
-            </div>
+            <Plus className="w-4 h-4 text-brand-cyan" />
             <span className="text-sm font-medium text-brand-cyan">Create New Agent</span>
           </button>
         </div>
