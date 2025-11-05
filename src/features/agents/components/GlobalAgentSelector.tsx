@@ -86,31 +86,19 @@ export default function GlobalAgentSelector({ onAgentSwitch }: GlobalAgentSelect
   // Show agent selector dropdown
   return (
     <div ref={dropdownRef} className="relative">
-      {/* Trigger Button */}
+      {/* Trigger Button - Minimal Style */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex items-center gap-3 px-3 py-2 bg-white border border-neutral-200 rounded-lg transition-colors min-w-[240px]',
-          isOpen ? 'border-brand-cyan' : 'hover:border-neutral-300'
+          'flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors',
+          isOpen ? 'bg-neutral-100' : 'hover:bg-neutral-50'
         )}
       >
         {globalSelectedAgent ? (
           <>
-            <Avatar
-              src={globalSelectedAgent.avatarUrl || undefined}
-              name={globalSelectedAgent.name}
-              size="sm"
-            />
-            <div className="flex-1 text-left min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-neutral-950 truncate">
-                  {globalSelectedAgent.name}
-                </span>
-                <Badge variant={statusVariants[globalSelectedAgent.status]} className="text-xs">
-                  {globalSelectedAgent.status}
-                </Badge>
-              </div>
-            </div>
+            <span className="text-sm font-medium text-neutral-950">
+              {globalSelectedAgent.name}
+            </span>
             <ChevronDown
               className={cn(
                 'w-4 h-4 text-neutral-600 transition-transform flex-shrink-0',
@@ -133,7 +121,7 @@ export default function GlobalAgentSelector({ onAgentSwitch }: GlobalAgentSelect
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-neutral-200 rounded-lg shadow-lg overflow-hidden z-50 max-h-[400px] overflow-y-auto">
+        <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-neutral-200 rounded-lg shadow-lg overflow-hidden z-50 max-h-[400px] overflow-y-auto">
           {/* Agent List */}
           <div className="py-1">
             {agents.map((agent) => (
@@ -141,32 +129,18 @@ export default function GlobalAgentSelector({ onAgentSwitch }: GlobalAgentSelect
                 key={agent.id}
                 onClick={() => handleAgentSelect(agent.id)}
                 className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2.5 hover:bg-neutral-50 transition-colors',
-                  globalSelectedAgent?.id === agent.id && 'bg-brand-cyan/5'
+                  'w-full flex items-center justify-between px-4 py-2.5 hover:bg-neutral-50 transition-colors',
+                  globalSelectedAgent?.id === agent.id && 'bg-brand-cyan text-white hover:bg-brand-cyan'
                 )}
               >
-                <Avatar
-                  src={agent.avatarUrl || undefined}
-                  name={agent.name}
-                  size="sm"
-                />
-                <div className="flex-1 text-left min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-medium text-neutral-950 truncate">
-                      {agent.name}
-                    </span>
-                    <Badge variant={statusVariants[agent.status]} className="text-xs">
-                      {agent.status}
-                    </Badge>
-                  </div>
-                  {agent.description && (
-                    <p className="text-xs text-neutral-500 truncate">
-                      {agent.description}
-                    </p>
-                  )}
-                </div>
+                <span className={cn(
+                  'text-sm font-medium truncate',
+                  globalSelectedAgent?.id === agent.id ? 'text-white' : 'text-neutral-950'
+                )}>
+                  {agent.name}
+                </span>
                 {globalSelectedAgent?.id === agent.id && (
-                  <Check className="w-4 h-4 text-brand-cyan flex-shrink-0" />
+                  <Check className="w-4 h-4 text-white flex-shrink-0" />
                 )}
               </button>
             ))}

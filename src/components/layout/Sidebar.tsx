@@ -1,31 +1,27 @@
 /**
- * Mojeeb Minimal Sidebar Component
- * Responsive navigation sidebar with brand cyan accents
+ * Mojeeb Minimal Sidebar Component - Supabase Style
+ * Icon-only navigation sidebar
  * Features:
  * - Mobile: Drawer with overlay (slides from left)
- * - Desktop: Hover to expand (collapsed by default to 80px, expands to 256px on hover)
- * - Smooth Framer Motion animations
- * - Auto-close on mobile navigation
+ * - Desktop/Tablet: Fixed icon-only sidebar (80px width, always visible)
+ * - No hover-to-expand behavior
+ * - Positioned below top bar on desktop
  */
 
 import { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard,
   Bot,
   Users,
   UserCog,
   MessageSquare,
   Settings,
-  LogOut,
 } from 'lucide-react';
-import { Avatar } from '@/components/ui/Avatar';
-import { useAuthStore } from '@/features/auth/stores/authStore';
-import { authService } from '@/features/auth/services/authService';
 import { Role } from '@/features/auth/types/auth.types';
 import { useUIStore } from '@/stores/uiStore';
-import { useIsDesktop, useIsMobile } from '@/hooks/useMediaQuery';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useAuthStore } from '@/features/auth/stores/authStore';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
@@ -37,18 +33,16 @@ interface NavigationItem {
 }
 
 const navigation: NavigationItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Conversations', href: '/conversations', icon: MessageSquare },
   { name: 'Agents', href: '/agents', icon: Bot },
   { name: 'Team', href: '/team', icon: UserCog },
   { name: 'Users', href: '/users', icon: Users, requireSuperAdmin: true },
-  { name: 'Conversations', href: '/conversations', icon: MessageSquare },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 export const Sidebar = () => {
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
-  const isDesktop = useIsDesktop();
   const isMobile = useIsMobile();
 
   const {
@@ -64,32 +58,25 @@ export const Sidebar = () => {
     closeSidebarOnMobile();
   }, [location.pathname, closeSidebarOnMobile]);
 
-  const handleLogout = async () => {
-    await authService.logout();
-    window.location.href = '/login';
-  };
-
-  // Desktop/Tablet hover handlers - expand on hover, collapse on leave
+  // Hover handlers for desktop/tablet
   const handleMouseEnter = () => {
-    if (!isMobile) {  // Works on both desktop and tablet
+    if (!isMobile) {
       setSidebarCollapsed(false);
     }
   };
 
   const handleMouseLeave = () => {
-    if (!isMobile) {  // Works on both desktop and tablet
+    if (!isMobile) {
       setSidebarCollapsed(true);
     }
   };
 
-  // Desktop/Tablet: Always visible (hover to expand/collapse)
-  // Mobile: Drawer pattern (can be opened/closed)
+  // Desktop/Tablet: Always visible, expand on hover
+  // Mobile: Drawer pattern
   const shouldShow = !isMobile || isSidebarOpen;
 
-  // Determine sidebar width based on collapse state
-  // Desktop/Tablet: 80px collapsed, 256px expanded (hover)
-  // Mobile: 256px when drawer is open
-  const sidebarWidth = !isMobile && isSidebarCollapsed ? 80 : 256;
+  // Dynamic width: 80px collapsed, 256px expanded (desktop), 256px (mobile)
+  const sidebarWidth = isMobile ? 256 : (isSidebarCollapsed ? 80 : 256);
 
   return (
     <>
@@ -112,11 +99,8 @@ export const Sidebar = () => {
       <AnimatePresence mode="wait">
         {shouldShow && (
           <motion.aside
-            initial={{ x: isMobile ? -256 : 0 }}
-            animate={{
-              x: 0,
-              width: sidebarWidth,
-            }}
+            initial={{ x: isMobile ? -256 : 0, width: sidebarWidth }}
+            animate={{ x: 0, width: sidebarWidth }}
             exit={{ x: -256 }}
             transition={{
               type: 'tween',
@@ -126,44 +110,29 @@ export const Sidebar = () => {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             className={cn(
-              'h-screen bg-neutral-50 border-r border-neutral-200 flex flex-col',
-              'fixed z-50',  // Always fixed, overlay on content
-              !isMobile && isSidebarCollapsed && 'items-center'
+              'bg-neutral-50 border-r border-neutral-200 flex flex-col',
+              'fixed z-40',
+              isMobile
+                ? 'top-0 h-screen'  // Mobile: full height, from top
+                : 'top-16 h-[calc(100vh-64px)]'  // Desktop: below top bar
             )}
-            style={{ width: `${sidebarWidth}px` }}
           >
-            {/* Logo Section */}
-            <div className={cn(
-              'p-6 border-b border-neutral-200',
-              'flex items-center',
-              !isMobile && isSidebarCollapsed ? 'justify-center bg-transparent' : 'justify-start bg-white'
-            )}>
-              {(isMobile || !isSidebarCollapsed) && (
-                <div className="flex items-center gap-3">
-                  <img
-                    src="/mojeeb-icon.png"
-                    alt="Mojeeb"
-                    className="w-10 h-10"
-                  />
-                  <div>
-                    <h1 className="text-lg font-bold text-neutral-950">Mojeeb</h1>
-                    <p className="text-xs text-neutral-600">AI Platform</p>
-                  </div>
-                </div>
-              )}
-
-              {!isMobile && isSidebarCollapsed && (
+            {/* Logo Section - Mobile Only */}
+            {isMobile && (
+              <div className="p-6 bg-white border-b border-neutral-200">
                 <img
-                  src="/mojeeb-icon.png"
+                  src="/mojeeb-logo.png"
                   alt="Mojeeb"
-                  className="w-10 h-10"
-                  title="Mojeeb"
+                  className="h-6"
                 />
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+            {/* Navigation Icons */}
+            <nav className={cn(
+              'flex-1 overflow-y-auto',
+              isMobile || !isSidebarCollapsed ? 'p-4 space-y-1' : 'py-4 flex flex-col items-center space-y-2'
+            )}>
               {navigation
                 .filter((item) => {
                   // Hide SuperAdmin-only items if user is not SuperAdmin
@@ -178,24 +147,22 @@ export const Sidebar = () => {
                     to={item.href}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center gap-3 px-4 py-3 rounded-md transition-colors duration-200',
-                        // Active state - only color change, no bg or border
+                        'flex items-center transition-colors duration-200',
+                        isMobile || !isSidebarCollapsed
+                          ? 'gap-3 px-4 py-3 rounded-md w-full'  // Expanded: full width with text
+                          : 'justify-center w-12 h-12 rounded-md',  // Collapsed: icon-only, square
                         isActive
-                          ? 'text-brand-cyan font-medium'  // Just cyan color
-                          // Inactive state - different hover based on collapsed state
-                          : isSidebarCollapsed
-                          ? 'text-neutral-700 hover:text-brand-cyan'  // Collapsed: color change only
-                          : 'text-neutral-700 hover:text-neutral-950',  // Expanded: color change only
-                        !isMobile && isSidebarCollapsed && 'justify-center px-0'
+                          ? 'text-brand-cyan font-medium'
+                          : 'text-neutral-700 hover:text-brand-cyan'
                       )
                     }
-                    title={!isMobile && isSidebarCollapsed ? item.name : undefined}
+                    title={!isMobile && isSidebarCollapsed ? item.name : undefined}  // Tooltip when collapsed
                   >
                     {({ isActive }) => (
                       <>
                         <item.icon
                           className={cn(
-                            'w-5 h-5',
+                            'w-6 h-6 flex-shrink-0',
                             isActive ? 'text-brand-cyan' : 'text-neutral-600'
                           )}
                         />
@@ -208,18 +175,13 @@ export const Sidebar = () => {
                 ))}
             </nav>
 
-            {/* User Profile & Logout */}
-            <div className={cn(
-              'p-4 border-t border-neutral-200',
-              !isMobile && isSidebarCollapsed ? 'flex flex-col items-center bg-transparent' : 'bg-white'
-            )}>
-              {(isMobile || !isSidebarCollapsed) && (
-                <div className="flex items-center gap-3 mb-3 px-2">
-                  <Avatar
-                    name={user?.name || 'User'}
-                    src={user?.avatarUrl}
-                    size="md"
-                  />
+            {/* User Profile - Mobile Only (moved to top bar on desktop) */}
+            {isMobile && (
+              <div className="p-4 border-t border-neutral-200 bg-white">
+                <div className="flex items-center gap-3 px-2 py-2">
+                  <div className="w-10 h-10 rounded-full bg-brand-cyan text-white flex items-center justify-center font-semibold">
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-neutral-950 truncate">
                       {user?.name || 'User'}
@@ -229,33 +191,8 @@ export const Sidebar = () => {
                     </p>
                   </div>
                 </div>
-              )}
-
-              {!isMobile && isSidebarCollapsed && (
-                <div className="mb-3">
-                  <Avatar
-                    name={user?.name || 'User'}
-                    src={user?.avatarUrl}
-                    size="md"
-                  />
-                </div>
-              )}
-
-              <button
-                onClick={handleLogout}
-                className={cn(
-                  'flex items-center gap-3 px-4 py-2.5 rounded-md transition-colors',
-                  'text-neutral-700 hover:bg-error/10 hover:text-error',
-                  !isMobile && isSidebarCollapsed ? 'w-auto px-2.5' : 'w-full'
-                )}
-                title={!isMobile && isSidebarCollapsed ? 'Logout' : undefined}
-              >
-                <LogOut className="w-5 h-5" />
-                {(isMobile || !isSidebarCollapsed) && (
-                  <span className="text-sm font-medium">Logout</span>
-                )}
-              </button>
-            </div>
+              </div>
+            )}
           </motion.aside>
         )}
       </AnimatePresence>

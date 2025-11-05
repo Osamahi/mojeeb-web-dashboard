@@ -2,7 +2,6 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { LoginPage } from './features/auth/pages/LoginPage';
 import { ForgotPasswordPage } from './features/auth/pages/ForgotPasswordPage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
-import { DashboardPage } from './pages/DashboardPage';
 import { ConversationsPage } from './pages/ConversationsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import AgentsPage from './features/agents/pages/AgentsPage';
@@ -32,18 +31,18 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (user?.role !== Role.SuperAdmin) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/conversations" replace />;
   }
 
   return <>{children}</>;
 };
 
-// Public route wrapper (redirect to dashboard if already authenticated)
+// Public route wrapper (redirect to conversations if already authenticated)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/conversations" replace />;
   }
 
   return <>{children}</>;
@@ -52,7 +51,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/dashboard" replace />,
+    element: <Navigate to="/conversations" replace />,
   },
   {
     path: '/login',
@@ -78,10 +77,6 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      {
-        path: 'dashboard',
-        element: <DashboardPage />,
-      },
       {
         path: 'agents',
         element: <AgentsPage />,

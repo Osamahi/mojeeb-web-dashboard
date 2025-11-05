@@ -16,7 +16,7 @@ export const MobileHeader = () => {
   if (!isMobile) return null;
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 bg-white border-b border-neutral-200 flex items-center px-4 z-30 md:hidden">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-neutral-200 flex items-center px-4 z-30 md:hidden">
       {/* Hamburger / Close Button */}
       <button
         onClick={toggleSidebar}
@@ -32,13 +32,12 @@ export const MobileHeader = () => {
       </button>
 
       {/* Mojeeb Logo */}
-      <div className="flex items-center gap-2 ml-4">
+      <div className="flex items-center ml-4">
         <img
-          src="/mojeeb-icon.png"
+          src="/mojeeb-logo.png"
           alt="Mojeeb"
-          className="w-8 h-8"
+          className="h-5"
         />
-        <h1 className="text-lg font-bold text-neutral-950">Mojeeb</h1>
       </div>
     </header>
   );

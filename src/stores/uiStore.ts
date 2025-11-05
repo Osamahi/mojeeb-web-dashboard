@@ -9,7 +9,6 @@ interface UIState {
   // Actions
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
-  toggleSidebarCollapse: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   closeSidebarOnMobile: () => void;
 }
@@ -31,13 +30,7 @@ export const useUIStore = create<UIState>()(
       setSidebarOpen: (open: boolean) =>
         set({ isSidebarOpen: open }),
 
-      // Toggle sidebar collapsed/expanded (desktop)
-      toggleSidebarCollapse: () =>
-        set((state) => ({
-          isSidebarCollapsed: !state.isSidebarCollapsed
-        })),
-
-      // Set sidebar collapsed state directly (for hover behavior)
+      // Set sidebar collapsed state (desktop/tablet)
       setSidebarCollapsed: (collapsed: boolean) =>
         set({ isSidebarCollapsed: collapsed }),
 
@@ -51,7 +44,6 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'mojeeb-ui-storage',
-      // Only persist desktop collapse preference
       partialize: (state) => ({
         isSidebarCollapsed: state.isSidebarCollapsed,
       }),
