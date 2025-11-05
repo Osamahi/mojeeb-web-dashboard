@@ -8,7 +8,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Users as UsersIcon, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { teamService } from '../services/teamService';
-import TeamStatsCards from '../components/TeamStatsCards';
 import TeamTable from '../components/TeamTable';
 import InviteTeamMemberModal from '../components/InviteTeamMemberModal';
 import { Button } from '@/components/ui/Button';
@@ -69,20 +68,11 @@ export default function TeamPage() {
         </Button>
       </motion.div>
 
-      {/* Statistics Cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <TeamStatsCards agentId={globalSelectedAgent.id} />
-      </motion.div>
-
       {/* Team Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.1 }}
       >
         {isLoading ? (
           <div className="flex items-center justify-center min-h-[400px] bg-white border border-neutral-200 rounded-lg">

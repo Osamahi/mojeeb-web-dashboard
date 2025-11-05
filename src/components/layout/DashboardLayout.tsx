@@ -16,12 +16,14 @@ export const DashboardLayout = () => {
       <MobileHeader />
 
       {/* Main Layout Container */}
-      <div className="flex h-screen overflow-hidden bg-neutral-50">
+      <div className="h-screen overflow-hidden bg-neutral-50">
+        {/* Sidebar - Fixed overlay */}
         <Sidebar />
 
+        {/* Main Content Area - Full width, sidebar overlays on top */}
         <div className={cn(
-          'flex-1 flex flex-col overflow-hidden',
-          isMobile && 'pt-14' // Add top padding on mobile for fixed header
+          'h-full flex flex-col overflow-hidden',
+          isMobile ? 'pt-14' : 'pl-20',  // Mobile: top padding for header, Desktop/Tablet: left padding for collapsed sidebar (80px = pl-20)
         )}>
           {/* Top Navigation Bar with Agent Selector - Desktop only */}
           <header className="bg-white border-b border-neutral-200 px-6 py-4">

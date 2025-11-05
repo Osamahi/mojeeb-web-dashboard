@@ -25,7 +25,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore';
 import { authService } from '@/features/auth/services/authService';
 import { Role } from '@/features/auth/types/auth.types';
 import { useUIStore } from '@/stores/uiStore';
-import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { useIsDesktop, useIsMobile } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
@@ -49,6 +49,7 @@ export const Sidebar = () => {
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const isDesktop = useIsDesktop();
+  const isMobile = useIsMobile();
 
   const {
     isSidebarOpen,
@@ -68,31 +69,33 @@ export const Sidebar = () => {
     window.location.href = '/login';
   };
 
-  // Desktop hover handlers - expand on hover, collapse on leave
+  // Desktop/Tablet hover handlers - expand on hover, collapse on leave
   const handleMouseEnter = () => {
-    if (isDesktop) {
+    if (!isMobile) {  // Works on both desktop and tablet
       setSidebarCollapsed(false);
     }
   };
 
   const handleMouseLeave = () => {
-    if (isDesktop) {
+    if (!isMobile) {  // Works on both desktop and tablet
       setSidebarCollapsed(true);
     }
   };
 
-  // Desktop: Always visible (hover to expand/collapse)
+  // Desktop/Tablet: Always visible (hover to expand/collapse)
   // Mobile: Drawer pattern (can be opened/closed)
-  const shouldShow = isDesktop || isSidebarOpen;
+  const shouldShow = !isMobile || isSidebarOpen;
 
   // Determine sidebar width based on collapse state
-  const sidebarWidth = isDesktop && isSidebarCollapsed ? 80 : 256;
+  // Desktop/Tablet: 80px collapsed, 256px expanded (hover)
+  // Mobile: 256px when drawer is open
+  const sidebarWidth = !isMobile && isSidebarCollapsed ? 80 : 256;
 
   return (
     <>
       {/* Mobile Overlay Backdrop */}
       <AnimatePresence>
-        {!isDesktop && isSidebarOpen && (
+        {isMobile && isSidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -109,7 +112,7 @@ export const Sidebar = () => {
       <AnimatePresence mode="wait">
         {shouldShow && (
           <motion.aside
-            initial={{ x: isDesktop ? 0 : -256 }}
+            initial={{ x: isMobile ? -256 : 0 }}
             animate={{
               x: 0,
               width: sidebarWidth,
@@ -124,8 +127,8 @@ export const Sidebar = () => {
             onMouseLeave={handleMouseLeave}
             className={cn(
               'h-screen bg-neutral-50 border-r border-neutral-200 flex flex-col',
-              'fixed md:relative z-50',
-              isDesktop && isSidebarCollapsed && 'items-center'
+              'fixed z-50',  // Always fixed, overlay on content
+              !isMobile && isSidebarCollapsed && 'items-center'
             )}
             style={{ width: `${sidebarWidth}px` }}
           >
@@ -133,9 +136,9 @@ export const Sidebar = () => {
             <div className={cn(
               'p-6 border-b border-neutral-200',
               'flex items-center',
-              isDesktop && isSidebarCollapsed ? 'justify-center bg-transparent' : 'justify-start bg-white'
+              !isMobile && isSidebarCollapsed ? 'justify-center bg-transparent' : 'justify-start bg-white'
             )}>
-              {(!isDesktop || !isSidebarCollapsed) && (
+              {(isMobile || !isSidebarCollapsed) && (
                 <div className="flex items-center gap-3">
                   <img
                     src="/mojeeb-icon.png"
@@ -149,7 +152,7 @@ export const Sidebar = () => {
                 </div>
               )}
 
-              {isDesktop && isSidebarCollapsed && (
+              {!isMobile && isSidebarCollapsed && (
                 <img
                   src="/mojeeb-icon.png"
                   alt="Mojeeb"
@@ -183,10 +186,10 @@ export const Sidebar = () => {
                           : isSidebarCollapsed
                           ? 'text-neutral-700 hover:text-brand-cyan'  // Collapsed: color change only
                           : 'text-neutral-700 hover:text-neutral-950',  // Expanded: color change only
-                        isDesktop && isSidebarCollapsed && 'justify-center px-0'
+                        !isMobile && isSidebarCollapsed && 'justify-center px-0'
                       )
                     }
-                    title={isDesktop && isSidebarCollapsed ? item.name : undefined}
+                    title={!isMobile && isSidebarCollapsed ? item.name : undefined}
                   >
                     {({ isActive }) => (
                       <>
@@ -196,7 +199,7 @@ export const Sidebar = () => {
                             isActive ? 'text-brand-cyan' : 'text-neutral-600'
                           )}
                         />
-                        {(!isDesktop || !isSidebarCollapsed) && (
+                        {(isMobile || !isSidebarCollapsed) && (
                           <span className="text-sm">{item.name}</span>
                         )}
                       </>
@@ -208,9 +211,9 @@ export const Sidebar = () => {
             {/* User Profile & Logout */}
             <div className={cn(
               'p-4 border-t border-neutral-200',
-              isDesktop && isSidebarCollapsed ? 'flex flex-col items-center bg-transparent' : 'bg-white'
+              !isMobile && isSidebarCollapsed ? 'flex flex-col items-center bg-transparent' : 'bg-white'
             )}>
-              {(!isDesktop || !isSidebarCollapsed) && (
+              {(isMobile || !isSidebarCollapsed) && (
                 <div className="flex items-center gap-3 mb-3 px-2">
                   <Avatar
                     name={user?.name || 'User'}
@@ -228,7 +231,7 @@ export const Sidebar = () => {
                 </div>
               )}
 
-              {isDesktop && isSidebarCollapsed && (
+              {!isMobile && isSidebarCollapsed && (
                 <div className="mb-3">
                   <Avatar
                     name={user?.name || 'User'}
@@ -243,12 +246,12 @@ export const Sidebar = () => {
                 className={cn(
                   'flex items-center gap-3 px-4 py-2.5 rounded-md transition-colors',
                   'text-neutral-700 hover:bg-error/10 hover:text-error',
-                  isDesktop && isSidebarCollapsed ? 'w-auto px-2.5' : 'w-full'
+                  !isMobile && isSidebarCollapsed ? 'w-auto px-2.5' : 'w-full'
                 )}
-                title={isDesktop && isSidebarCollapsed ? 'Logout' : undefined}
+                title={!isMobile && isSidebarCollapsed ? 'Logout' : undefined}
               >
                 <LogOut className="w-5 h-5" />
-                {(!isDesktop || !isSidebarCollapsed) && (
+                {(isMobile || !isSidebarCollapsed) && (
                   <span className="text-sm font-medium">Logout</span>
                 )}
               </button>

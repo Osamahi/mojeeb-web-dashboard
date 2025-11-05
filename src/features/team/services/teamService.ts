@@ -9,7 +9,7 @@ import type { TeamMember, TeamRole, InviteTeamMemberRequest, InviteTeamMemberRes
 
 interface CollaboratorsResponse {
   owner: TeamMember;
-  members: TeamMember[];
+  collaborators: TeamMember[];  // Changed from 'members' to 'collaborators'
   totalUsers: number;
 }
 
@@ -20,7 +20,7 @@ class TeamService {
    */
   async getTeamMembers(agentId: string): Promise<TeamMember[]> {
     try {
-      const { data } = await api.get<{ success: boolean; data: CollaboratorsResponse }>(
+      const { data } = await api.get<{ success: boolean; data: any }>(
         `/api/agents/${agentId}/collaborators`
       );
 
@@ -29,12 +29,28 @@ class TeamService {
       // Handle different response structures
       const responseData = data.data || data;
 
-      // Ensure members is an array
-      const members = Array.isArray(responseData.members) ? responseData.members : [];
-      const owner = responseData.owner;
+      // Map backend CollaboratorInfo to frontend TeamMember
+      const mapCollaboratorToTeamMember = (collaborator: any): TeamMember => ({
+        id: collaborator.user_id,
+        email: collaborator.email,
+        name: collaborator.full_name,
+        role: collaborator.role,
+        created_at: collaborator.granted_at,
+        updated_at: collaborator.granted_at,
+        role_value: 0, // Not provided by backend, set default
+        is_online: false, // Not provided by backend, set default
+      });
 
-      // Combine owner and members into a single array
-      const allMembers: TeamMember[] = owner ? [owner, ...members] : members;
+      // Ensure collaborators is an array
+      const collaborators = Array.isArray(responseData.collaborators)
+        ? responseData.collaborators.map(mapCollaboratorToTeamMember)
+        : [];
+
+      // Map owner if exists
+      const owner = responseData.owner ? mapCollaboratorToTeamMember(responseData.owner) : null;
+
+      // Combine owner and collaborators into a single array
+      const allMembers: TeamMember[] = owner ? [owner, ...collaborators] : collaborators;
 
       return allMembers;
     } catch (error) {

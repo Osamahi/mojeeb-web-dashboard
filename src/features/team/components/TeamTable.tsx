@@ -4,11 +4,10 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Search, ChevronDown, ChevronUp, ChevronsUpDown, MoreVertical, Trash2, Edit } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, ChevronsUpDown, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
-import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { TeamMember, TeamRole } from '../types';
 import { cn } from '@/lib/utils';
@@ -20,8 +19,6 @@ interface TeamTableProps {
 type SortField = 'name' | 'email' | 'role' | 'created_at';
 type SortDirection = 'asc' | 'desc';
 
-const TEAM_ROLES: (TeamRole | 'All')[] = ['All', 'SuperAdmin', 'Admin', 'HumanAgent'];
-
 const ROLE_COLORS: Record<TeamRole, 'success' | 'warning' | 'danger'> = {
   SuperAdmin: 'danger',
   Admin: 'warning',
@@ -31,8 +28,6 @@ const ROLE_COLORS: Record<TeamRole, 'success' | 'warning' | 'danger'> = {
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
 
 export default function TeamTable({ members }: TeamTableProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<TeamRole | 'All'>('All');
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,21 +36,6 @@ export default function TeamTable({ members }: TeamTableProps) {
   // Filter and sort members
   const filteredAndSortedMembers = useMemo(() => {
     let result = [...members];
-
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (member) =>
-          (member.name && member.name.toLowerCase().includes(query)) ||
-          (member.email && member.email.toLowerCase().includes(query))
-      );
-    }
-
-    // Apply role filter
-    if (roleFilter !== 'All') {
-      result = result.filter((member) => member.role === roleFilter);
-    }
 
     // Apply sorting
     result.sort((a, b) => {
@@ -89,7 +69,7 @@ export default function TeamTable({ members }: TeamTableProps) {
     });
 
     return result;
-  }, [members, searchQuery, roleFilter, sortField, sortDirection]);
+  }, [members, sortField, sortDirection]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedMembers.length / rowsPerPage);
@@ -97,17 +77,6 @@ export default function TeamTable({ members }: TeamTableProps) {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
-
-  // Reset to page 1 when filters change
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setCurrentPage(1);
-  };
-
-  const handleRoleFilterChange = (role: TeamRole | 'All') => {
-    setRoleFilter(role);
-    setCurrentPage(1);
-  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -134,7 +103,7 @@ export default function TeamTable({ members }: TeamTableProps) {
     setCurrentPage(1);
   };
 
-  if (filteredAndSortedMembers.length === 0 && searchQuery === '' && roleFilter === 'All') {
+  if (filteredAndSortedMembers.length === 0) {
     return (
       <EmptyState
         icon={<Search className="w-12 h-12 text-neutral-400" />}
@@ -146,36 +115,6 @@ export default function TeamTable({ members }: TeamTableProps) {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-          <Input
-            type="text"
-            placeholder="Search by name or email..."
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Role Filter */}
-        <div className="w-full sm:w-48">
-          <select
-            value={roleFilter}
-            onChange={(e) => handleRoleFilterChange(e.target.value as TeamRole | 'All')}
-            className="w-full px-4 py-2 border border-neutral-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
-          >
-            {TEAM_ROLES.map((role) => (
-              <option key={role} value={role}>
-                {role === 'All' ? 'All Roles' : role === 'HumanAgent' ? 'Agent' : role}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
       {/* Table */}
       <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
@@ -218,8 +157,7 @@ export default function TeamTable({ members }: TeamTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
-              {paginatedMembers.length > 0 ? (
-                paginatedMembers.map((member) => (
+              {paginatedMembers.map((member) => (
                   <tr
                     key={member.id}
                     className="hover:bg-neutral-50 transition-colors"
@@ -264,18 +202,7 @@ export default function TeamTable({ members }: TeamTableProps) {
                       </button>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12">
-                    <EmptyState
-                      icon={<Search className="w-12 h-12 text-neutral-400" />}
-                      title="No team members found"
-                      description="Try adjusting your search or filter criteria"
-                    />
-                  </td>
-                </tr>
-              )}
+                ))}
             </tbody>
           </table>
         </div>
