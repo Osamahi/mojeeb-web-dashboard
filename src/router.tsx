@@ -3,8 +3,12 @@ import { LoginPage } from './features/auth/pages/LoginPage';
 import { ForgotPasswordPage } from './features/auth/pages/ForgotPasswordPage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { DashboardPage } from './pages/DashboardPage';
+import { ConversationsPage } from './pages/ConversationsPage';
+import { SettingsPage } from './pages/SettingsPage';
 import AgentsPage from './features/agents/pages/AgentsPage';
+import UsersPage from './features/users/pages/UsersPage';
 import { useAuthStore } from './features/auth/stores/authStore';
+import { Role } from './features/auth/types/auth.types';
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -12,6 +16,22 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// SuperAdmin-only route wrapper
+const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== Role.SuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -66,12 +86,20 @@ export const router = createBrowserRouter([
         element: <AgentsPage />,
       },
       {
+        path: 'users',
+        element: (
+          <SuperAdminRoute>
+            <UsersPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
         path: 'conversations',
-        element: <div className="p-8">Conversations Page (Coming Soon)</div>,
+        element: <ConversationsPage />,
       },
       {
         path: 'settings',
-        element: <div className="p-8">Settings Page (Coming Soon)</div>,
+        element: <SettingsPage />,
       },
     ],
   },

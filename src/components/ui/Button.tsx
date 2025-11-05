@@ -1,23 +1,40 @@
+/**
+ * Mojeeb Minimal Button Component
+ * Clean, professional buttons following Mojeeb brand guidelines
+ * Variants: primary (cyan), secondary (outline), ghost (text-only)
+ */
+
 import { ButtonHTMLAttributes, forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]',
+  // Base styles - minimal, clean, professional
+  'inline-flex items-center justify-center rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
   {
     variants: {
       variant: {
-        primary: 'bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500 shadow-sm hover:shadow-glow',
-        secondary: 'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 focus:ring-neutral-500',
-        outline: 'border border-neutral-300 bg-transparent hover:bg-neutral-50 focus:ring-neutral-500 text-neutral-700',
-        ghost: 'bg-transparent hover:bg-neutral-100 focus:ring-neutral-500 text-neutral-700',
-        danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
+        // Primary - Brand Cyan (main CTA)
+        primary:
+          'bg-brand-cyan text-white hover:bg-brand-cyan/90 active:bg-brand-cyan/80',
+
+        // Secondary - White with border (alternative action)
+        secondary:
+          'bg-white text-neutral-950 border border-neutral-300 hover:bg-neutral-50 active:bg-neutral-100',
+
+        // Ghost - Text only (minimal action)
+        ghost:
+          'bg-transparent text-neutral-700 hover:bg-neutral-100 active:bg-neutral-200',
+
+        // Danger - For destructive actions
+        danger:
+          'bg-error text-white hover:bg-error/90 active:bg-error/80',
       },
       size: {
-        sm: 'h-8 px-3 text-sm',
-        md: 'h-10 px-4 text-base',
-        lg: 'h-12 px-6 text-lg',
+        sm: 'h-9 px-4 text-sm',     // 36px height
+        md: 'h-10 px-6 text-base',  // 40px height
+        lg: 'h-11 px-8 text-base',  // 44px height
       },
     },
     defaultVariants: {

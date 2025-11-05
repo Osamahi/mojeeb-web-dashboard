@@ -1,11 +1,14 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { Agent, KnowledgeBase } from '../types/agent.types';
 
 interface AgentState {
   agents: Agent[];
   selectedAgent: Agent | null;
+  globalSelectedAgent: Agent | null; // Global agent for all dashboard pages
   knowledgeBases: KnowledgeBase[];
   isLoading: boolean;
+  isAgentSwitching: boolean; // Loading state during agent switch
   error: string | null;
 
   // Actions
@@ -14,6 +17,9 @@ interface AgentState {
   updateAgent: (id: string, agent: Partial<Agent>) => void;
   removeAgent: (id: string) => void;
   setSelectedAgent: (agent: Agent | null) => void;
+  setGlobalSelectedAgent: (agent: Agent | null) => void;
+  switchAgent: (agentId: string, onReload?: () => Promise<void>) => Promise<void>;
+  initializeAgentSelection: () => void;
   setKnowledgeBases: (knowledgeBases: KnowledgeBase[]) => void;
   addKnowledgeBase: (kb: KnowledgeBase) => void;
   updateKnowledgeBase: (id: string, kb: Partial<KnowledgeBase>) => void;
@@ -26,62 +32,120 @@ interface AgentState {
 const initialState = {
   agents: [],
   selectedAgent: null,
+  globalSelectedAgent: null,
   knowledgeBases: [],
   isLoading: false,
+  isAgentSwitching: false,
   error: null,
 };
 
-export const useAgentStore = create<AgentState>((set) => ({
-  ...initialState,
+export const useAgentStore = create<AgentState>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-  setAgents: (agents) => set({ agents }),
+      setAgents: (agents) => set({ agents }),
 
-  addAgent: (agent) =>
-    set((state) => ({
-      agents: [agent, ...state.agents],
-    })),
+      addAgent: (agent) =>
+        set((state) => ({
+          agents: [agent, ...state.agents],
+        })),
 
-  updateAgent: (id, updatedAgent) =>
-    set((state) => ({
-      agents: state.agents.map((agent) =>
-        agent.id === id ? { ...agent, ...updatedAgent } : agent
-      ),
-      selectedAgent:
-        state.selectedAgent?.id === id
-          ? { ...state.selectedAgent, ...updatedAgent }
-          : state.selectedAgent,
-    })),
+      updateAgent: (id, updatedAgent) =>
+        set((state) => ({
+          agents: state.agents.map((agent) =>
+            agent.id === id ? { ...agent, ...updatedAgent } : agent
+          ),
+          selectedAgent:
+            state.selectedAgent?.id === id
+              ? { ...state.selectedAgent, ...updatedAgent }
+              : state.selectedAgent,
+          globalSelectedAgent:
+            state.globalSelectedAgent?.id === id
+              ? { ...state.globalSelectedAgent, ...updatedAgent }
+              : state.globalSelectedAgent,
+        })),
 
-  removeAgent: (id) =>
-    set((state) => ({
-      agents: state.agents.filter((agent) => agent.id !== id),
-      selectedAgent: state.selectedAgent?.id === id ? null : state.selectedAgent,
-    })),
+      removeAgent: (id) =>
+        set((state) => ({
+          agents: state.agents.filter((agent) => agent.id !== id),
+          selectedAgent: state.selectedAgent?.id === id ? null : state.selectedAgent,
+          globalSelectedAgent: state.globalSelectedAgent?.id === id ? null : state.globalSelectedAgent,
+        })),
 
-  setSelectedAgent: (agent) => set({ selectedAgent: agent }),
+      setSelectedAgent: (agent) => set({ selectedAgent: agent }),
 
-  setKnowledgeBases: (knowledgeBases) => set({ knowledgeBases }),
+      setGlobalSelectedAgent: (agent) => set({ globalSelectedAgent: agent }),
 
-  addKnowledgeBase: (kb) =>
-    set((state) => ({
-      knowledgeBases: [kb, ...state.knowledgeBases],
-    })),
+      switchAgent: async (agentId, onReload) => {
+        const { agents } = get();
+        const agent = agents.find((a) => a.id === agentId);
 
-  updateKnowledgeBase: (id, updatedKb) =>
-    set((state) => ({
-      knowledgeBases: state.knowledgeBases.map((kb) =>
-        kb.id === id ? { ...kb, ...updatedKb } : kb
-      ),
-    })),
+        if (!agent) {
+          console.error('Agent not found:', agentId);
+          return;
+        }
 
-  removeKnowledgeBase: (id) =>
-    set((state) => ({
-      knowledgeBases: state.knowledgeBases.filter((kb) => kb.id !== id),
-    })),
+        set({ isAgentSwitching: true });
 
-  setLoading: (isLoading) => set({ isLoading }),
+        try {
+          // Update global selected agent
+          set({ globalSelectedAgent: agent });
 
-  setError: (error) => set({ error }),
+          // Trigger data reload if callback provided
+          if (onReload) {
+            await onReload();
+          }
+        } catch (error) {
+          console.error('Error switching agent:', error);
+          set({ error: error instanceof Error ? error.message : 'Failed to switch agent' });
+        } finally {
+          set({ isAgentSwitching: false });
+        }
+      },
 
-  reset: () => set(initialState),
-}));
+      initializeAgentSelection: () => {
+        const { agents, globalSelectedAgent } = get();
+
+        // If no agent is selected and agents exist, select the first one
+        if (!globalSelectedAgent && agents.length > 0) {
+          set({ globalSelectedAgent: agents[0] });
+        }
+
+        // If selected agent was deleted, select first available agent
+        if (globalSelectedAgent && !agents.find(a => a.id === globalSelectedAgent.id) && agents.length > 0) {
+          set({ globalSelectedAgent: agents[0] });
+        }
+      },
+
+      setKnowledgeBases: (knowledgeBases) => set({ knowledgeBases }),
+
+      addKnowledgeBase: (kb) =>
+        set((state) => ({
+          knowledgeBases: [kb, ...state.knowledgeBases],
+        })),
+
+      updateKnowledgeBase: (id, updatedKb) =>
+        set((state) => ({
+          knowledgeBases: state.knowledgeBases.map((kb) =>
+            kb.id === id ? { ...kb, ...updatedKb } : kb
+          ),
+        })),
+
+      removeKnowledgeBase: (id) =>
+        set((state) => ({
+          knowledgeBases: state.knowledgeBases.filter((kb) => kb.id !== id),
+        })),
+
+      setLoading: (isLoading) => set({ isLoading }),
+
+      setError: (error) => set({ error }),
+
+      reset: () => set(initialState),
+    }),
+    {
+      name: 'mojeeb-agent-storage',
+      partialize: (state) => ({ globalSelectedAgent: state.globalSelectedAgent }),
+    }
+  )
+);

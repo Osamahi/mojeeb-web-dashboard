@@ -9,6 +9,8 @@ import type {
   User,
 } from '../types/auth.types';
 import { useAuthStore } from '../stores/authStore';
+import { agentService } from '@/features/agents/services/agentService';
+import { useAgentStore } from '@/features/agents/stores/agentStore';
 
 class AuthService {
   /**
@@ -27,6 +29,15 @@ class AuthService {
     // Update auth store
     useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
 
+    // After successful login, fetch agents and initialize selection
+    try {
+      await agentService.getAgents();
+      useAgentStore.getState().initializeAgentSelection();
+    } catch (error) {
+      console.error('Failed to initialize agent selection:', error);
+      // Don't fail the login if agent initialization fails
+    }
+
     return authResponse;
   }
 
@@ -38,6 +49,15 @@ class AuthService {
 
     // Update auth store
     useAuthStore.getState().setAuth(data.user, data.accessToken, data.refreshToken);
+
+    // After successful registration, fetch agents and initialize selection
+    try {
+      await agentService.getAgents();
+      useAgentStore.getState().initializeAgentSelection();
+    } catch (error) {
+      console.error('Failed to initialize agent selection:', error);
+      // Don't fail the registration if agent initialization fails
+    }
 
     return data;
   }

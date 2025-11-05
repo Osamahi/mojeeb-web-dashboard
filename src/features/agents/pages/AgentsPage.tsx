@@ -1,7 +1,12 @@
+/**
+ * Mojeeb Minimal Agents Page
+ * Clean agents list with search and vertical cards
+ * NO animations, NO glass effects - just professional simplicity
+ */
+
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { agentService } from '../services/agentService';
 import AgentCard from '../components/AgentCard';
@@ -55,8 +60,8 @@ export default function AgentsPage() {
           title="Error Loading Agents"
           description={`Failed to load agents: ${error instanceof Error ? error.message : 'Unknown error'}`}
         />
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <pre className="text-xs text-red-900 whitespace-pre-wrap">
+        <div className="mt-4 p-4 bg-error/5 border border-error/20 rounded-lg">
+          <pre className="text-xs text-error whitespace-pre-wrap">
             {JSON.stringify(error, null, 2)}
           </pre>
         </div>
@@ -66,10 +71,10 @@ export default function AgentsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
+      {/* Header - Clean & Minimal */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900">AI Agents</h1>
+          <h1 className="text-3xl font-bold text-neutral-950">AI Agents</h1>
           <p className="text-neutral-600 mt-1">
             Manage your intelligent AI assistants
           </p>
@@ -82,8 +87,8 @@ export default function AgentsPage() {
         </Link>
       </div>
 
-      {/* Search Bar */}
-      <div className="glass rounded-xl p-4 border border-neutral-200/50 shadow-glass">
+      {/* Search Bar - Minimal */}
+      <div className="bg-white rounded-lg p-4 border border-neutral-200">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
           <Input
@@ -96,25 +101,13 @@ export default function AgentsPage() {
         </div>
       </div>
 
-      {/* Agents List */}
+      {/* Agents List - Vertical Cards */}
       {filteredAgents && filteredAgents.length > 0 ? (
-        <motion.div
-          className="space-y-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          {filteredAgents.map((agent, index) => (
-            <motion.div
-              key={agent.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-            >
-              <AgentCard agent={agent} />
-            </motion.div>
+        <div className="space-y-4">
+          {filteredAgents.map((agent) => (
+            <AgentCard key={agent.id} agent={agent} />
           ))}
-        </motion.div>
+        </div>
       ) : (
         <EmptyState
           icon={Search}

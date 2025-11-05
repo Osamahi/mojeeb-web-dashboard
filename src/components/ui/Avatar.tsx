@@ -1,5 +1,11 @@
+/**
+ * Mojeeb Minimal Avatar Component
+ * Clean circular avatars with Mojeeb gradient fallback (green→cyan)
+ * Displays initials with brand gradient when no image is provided
+ */
+
 import { HTMLAttributes, forwardRef } from 'react';
-import { cn, getInitials, getAvatarColor } from '@/lib/utils';
+import { cn, getInitials } from '@/lib/utils';
 
 export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
   src?: string;
@@ -18,7 +24,6 @@ const sizeClasses = {
 export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
   ({ className, src, alt, name, size = 'md', ...props }, ref) => {
     const initials = name ? getInitials(name) : '?';
-    const bgColor = name ? getAvatarColor(name) : 'bg-neutral-400';
 
     return (
       <div
@@ -37,7 +42,12 @@ export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className={cn('w-full h-full flex items-center justify-center text-white font-semibold', bgColor)}>
+          <div
+            className="w-full h-full flex items-center justify-center text-white font-semibold"
+            style={{
+              background: 'linear-gradient(135deg, #7DFF51 0%, #00DBB7 100%)'
+            }}
+          >
             {initials}
           </div>
         )}

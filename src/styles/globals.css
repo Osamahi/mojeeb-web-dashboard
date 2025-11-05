@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* Mojeeb Brand Fonts - Minimal Design System */
+@import url('https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&display=swap');
+/* TODO: Add Loew Next Arabic font for Arabic support - may need self-hosting */
 
 @tailwind base;
 @tailwind components;
@@ -10,15 +12,15 @@
   }
 
   body {
-    @apply bg-neutral-50 text-neutral-900 antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-neutral-50 text-neutral-950 antialiased;
+    font-family: 'Alexandria', system-ui, -apple-system, sans-serif;
   }
 
   html {
     scroll-behavior: smooth;
   }
 
-  /* Custom scrollbar */
+  /* Minimal custom scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -38,19 +40,20 @@
 }
 
 @layer utilities {
+  /* Minimal utilities */
   .text-balance {
     text-wrap: balance;
   }
 
-  .glass {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-
-  .glass-dark {
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+  /* Skeleton loading shimmer */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.6) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
   }
 }

@@ -1,6 +1,13 @@
-import { motion } from 'framer-motion';
-import { Bot, MessageSquare, Users, TrendingUp } from 'lucide-react';
+/**
+ * Mojeeb Minimal Dashboard Page
+ * Clean dashboard overview with stats and recent activity
+ * NO animations, NO gradients - just clean minimal design
+ */
+
+import { Link } from 'react-router-dom';
+import { Bot, MessageSquare, Users, TrendingUp, Plus, BarChart3 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 
 const stats = [
   { name: 'Total Agents', value: '12', icon: Bot, change: '+2 this month', trend: 'up' },
@@ -11,75 +18,80 @@ const stats = [
 
 export const DashboardPage = () => {
   return (
-    <div className="p-8">
+    <div className="p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-900 mb-2">Dashboard</h1>
+        <h1 className="text-3xl font-bold text-neutral-950 mb-2">Dashboard</h1>
         <p className="text-neutral-600">Welcome back! Here's what's happening with your agents.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <motion.div
-            key={stat.name}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Card hoverable>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-neutral-600 mb-1">{stat.name}</p>
-                  <p className="text-3xl font-bold text-neutral-900 mb-2">{stat.value}</p>
-                  <p className="text-xs text-green-600">{stat.change}</p>
-                </div>
-                <div className="p-3 bg-primary-50 rounded-xl">
-                  <stat.icon className="w-6 h-6 text-primary-600" />
-                </div>
+      {/* Stats Grid - Minimal Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {stats.map((stat) => (
+          <Card key={stat.name} compact>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-neutral-600 mb-1">{stat.name}</p>
+                <p className="text-2xl font-bold text-neutral-950 mb-2">{stat.value}</p>
+                <p className="text-xs text-brand-green">{stat.change}</p>
               </div>
-            </Card>
-          </motion.div>
+              <div className="p-2 bg-neutral-100 rounded-md">
+                <stat.icon className="w-5 h-5 text-neutral-700" />
+              </div>
+            </div>
+          </Card>
         ))}
       </div>
 
-      {/* Quick Actions */}
+      {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
         <Card>
-          <h2 className="text-xl font-semibold text-neutral-900 mb-4">Recent Activity</h2>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-3 bg-neutral-50 rounded-lg">
-              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary-600" />
+          <h2 className="text-xl font-semibold text-neutral-950 mb-4">Recent Activity</h2>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-md">
+              <div className="w-10 h-10 bg-brand-cyan/10 rounded-full flex items-center justify-center">
+                <Bot className="w-5 h-5 text-brand-cyan" />
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-neutral-900">New agent created</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-neutral-950">New agent created</p>
                 <p className="text-xs text-neutral-600">Support Bot - 2 hours ago</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-3 bg-neutral-50 rounded-lg">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-green-600" />
+            <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-md">
+              <div className="w-10 h-10 bg-brand-green/10 rounded-full flex items-center justify-center">
+                <MessageSquare className="w-5 h-5 text-brand-green" />
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-neutral-900">45 new conversations</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-neutral-950">45 new conversations</p>
                 <p className="text-xs text-neutral-600">Across all agents - Today</p>
               </div>
             </div>
           </div>
         </Card>
 
+        {/* Quick Actions - Minimal Buttons */}
         <Card>
-          <h2 className="text-xl font-semibold text-neutral-900 mb-4">Quick Actions</h2>
+          <h2 className="text-xl font-semibold text-neutral-950 mb-4">Quick Actions</h2>
           <div className="space-y-3">
-            <button className="w-full p-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg hover:shadow-glow transition-all text-left">
-              <p className="font-medium">Create New Agent</p>
-              <p className="text-sm text-white/80">Set up a new AI agent in minutes</p>
-            </button>
-            <button className="w-full p-4 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-all text-left">
-              <p className="font-medium text-neutral-900">View Analytics</p>
-              <p className="text-sm text-neutral-600">See detailed performance metrics</p>
-            </button>
+            <Link to="/agents/new" className="block">
+              <div className="p-4 bg-brand-cyan text-white rounded-md hover:bg-brand-cyan/90 transition-colors">
+                <div className="flex items-center gap-2 mb-1">
+                  <Plus className="w-5 h-5" />
+                  <p className="font-medium">Create New Agent</p>
+                </div>
+                <p className="text-sm text-white/80">Set up a new AI agent in minutes</p>
+              </div>
+            </Link>
+            <Link to="/analytics" className="block">
+              <div className="p-4 bg-neutral-100 hover:bg-neutral-200 rounded-md transition-colors">
+                <div className="flex items-center gap-2 mb-1">
+                  <BarChart3 className="w-5 h-5 text-neutral-700" />
+                  <p className="font-medium text-neutral-950">View Analytics</p>
+                </div>
+                <p className="text-sm text-neutral-600">See detailed performance metrics</p>
+              </div>
+            </Link>
           </div>
         </Card>
       </div>

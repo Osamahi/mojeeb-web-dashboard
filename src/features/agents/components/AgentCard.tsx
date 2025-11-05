@@ -1,21 +1,22 @@
+/**
+ * Mojeeb Minimal Agent Card Component
+ * Clean, professional agent card with Mojeeb brand colors
+ * NO animations, NO gradients - just clean borders and minimal hover states
+ */
+
 import { Link } from 'react-router-dom';
-import { Edit2, Trash2, Crown, MoreVertical } from 'lucide-react';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Edit2, Trash2, Crown, ArrowRight } from 'lucide-react';
 import type { Agent, AgentStatus } from '../types';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
 
 interface AgentCardProps {
   agent: Agent;
 }
 
 export default function AgentCard({ agent }: AgentCardProps) {
-  const [showActions, setShowActions] = useState(false);
-
-  const statusColors: Record<AgentStatus, string> = {
+  const statusVariants: Record<AgentStatus, 'default' | 'primary' | 'success' | 'warning' | 'danger'> = {
     draft: 'warning',
     active: 'success',
     deleted: 'danger',
@@ -29,136 +30,86 @@ export default function AgentCard({ agent }: AgentCardProps) {
   };
 
   return (
-    <Link to={`/agents/${agent.id}`}>
-      <motion.div
-        className={cn(
-          'glass rounded-xl p-6 border border-neutral-200/50 shadow-glass',
-          'transition-all duration-300 hover:shadow-float hover:scale-[1.02]',
-          'relative overflow-hidden group'
-        )}
-        whileHover={{ y: -4 }}
-      >
-        {/* Background gradient on hover */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-        {/* Content */}
-        <div className="relative z-10 space-y-4">
-          {/* Header */}
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar
-                src={agent.avatarUrl}
-                alt={agent.name}
-                fallback={agent.name.charAt(0).toUpperCase()}
-                size="lg"
-              />
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-neutral-900 text-lg">
-                    {agent.name}
-                  </h3>
-                  {agent.isOwner && (
-                    <Crown className="w-4 h-4 text-amber-500" title="Owner" />
-                  )}
-                </div>
-                <Badge
-                  variant={statusColors[agent.status] as any}
-                  size="sm"
-                  className="mt-1"
-                >
-                  {agent.status}
-                </Badge>
-              </div>
+    <Link to={`/agents/${agent.id}`} className="block">
+      <div className="bg-white rounded-lg border border-neutral-200 p-5 transition-colors duration-200 hover:border-neutral-300">
+        {/* Header */}
+        <div className="flex items-start gap-4 mb-4">
+          <Avatar
+            src={agent.avatarUrl}
+            name={agent.name}
+            size="lg"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-neutral-950 text-base truncate">
+                {agent.name}
+              </h3>
+              {agent.isOwner && (
+                <Crown className="w-4 h-4 text-warning flex-shrink-0" title="Owner" />
+              )}
             </div>
-
-            {/* Actions Menu */}
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowActions(!showActions);
-                }}
-                className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-              >
-                <MoreVertical className="w-5 h-5 text-neutral-600" />
-              </button>
-
-              <AnimatePresence>
-                {showActions && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute right-0 mt-2 w-48 glass rounded-lg border border-neutral-200/50 shadow-float overflow-hidden z-20"
-                    onMouseLeave={() => setShowActions(false)}
-                  >
-                    {agent.canEdit && (
-                      <Link
-                        to={`/agents/${agent.id}/edit`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-100 transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4 text-neutral-600" />
-                        <span className="text-sm text-neutral-700">Edit</span>
-                      </Link>
-                    )}
-                    {agent.canDelete && (
-                      <button
-                        onClick={handleDelete}
-                        className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 transition-colors text-left"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                        <span className="text-sm text-red-600">Delete</span>
-                      </button>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <Badge variant={statusVariants[agent.status]} className="text-xs">
+              {agent.status}
+            </Badge>
           </div>
 
-          {/* Description */}
-          <p className="text-neutral-600 text-sm line-clamp-2 min-h-[40px]">
-            {agent.description || 'No description provided'}
-          </p>
-
-          {/* Footer Stats */}
-          <div className="flex items-center justify-between pt-4 border-t border-neutral-200/50">
-            <div className="flex items-center gap-4 text-xs text-neutral-500">
-              {agent.knowledgeBaseCount !== undefined && (
-                <div>
-                  <span className="font-medium text-neutral-700">
-                    {agent.knowledgeBaseCount}
-                  </span>{' '}
-                  Knowledge Bases
-                </div>
-              )}
-              {agent.conversationCount !== undefined && (
-                <div>
-                  <span className="font-medium text-neutral-700">
-                    {agent.conversationCount}
-                  </span>{' '}
-                  Conversations
-                </div>
-              )}
-            </div>
-
-            {/* View Details Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              View Details →
-            </Button>
+          {/* Inline Action Buttons */}
+          <div className="flex items-center gap-1">
+            {agent.canEdit && (
+              <Link
+                to={`/agents/${agent.id}/edit`}
+                onClick={(e) => e.stopPropagation()}
+                className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
+                title="Edit agent"
+              >
+                <Edit2 className="w-4 h-4 text-neutral-600" />
+              </Link>
+            )}
+            {agent.canDelete && (
+              <button
+                onClick={handleDelete}
+                className="p-2 hover:bg-error/10 rounded-md transition-colors"
+                title="Delete agent"
+              >
+                <Trash2 className="w-4 h-4 text-error" />
+              </button>
+            )}
           </div>
         </div>
-      </motion.div>
+
+        {/* Description */}
+        <p className="text-neutral-600 text-sm line-clamp-2 min-h-[40px] mb-4">
+          {agent.description || 'No description provided'}
+        </p>
+
+        {/* Footer Stats */}
+        <div className="flex items-center justify-between pt-4 border-t border-neutral-200">
+          <div className="flex items-center gap-4 text-xs text-neutral-500">
+            {agent.knowledgeBaseCount !== undefined && (
+              <div>
+                <span className="font-medium text-neutral-950">
+                  {agent.knowledgeBaseCount}
+                </span>
+                {' '}Knowledge Bases
+              </div>
+            )}
+            {agent.conversationCount !== undefined && (
+              <div>
+                <span className="font-medium text-neutral-950">
+                  {agent.conversationCount}
+                </span>
+                {' '}Conversations
+              </div>
+            )}
+          </div>
+
+          {/* View Details Link */}
+          <div className="flex items-center gap-1 text-sm text-brand-cyan hover:text-brand-cyan/80 transition-colors">
+            <span>View</span>
+            <ArrowRight className="w-4 h-4" />
+          </div>
+        </div>
+      </div>
     </Link>
   );
 }

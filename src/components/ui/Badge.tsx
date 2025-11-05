@@ -1,3 +1,9 @@
+/**
+ * Mojeeb Minimal Badge Component
+ * Clean pill-shaped badges using Mojeeb brand colors
+ * Variants: default, primary (cyan), success (green), warning, danger
+ */
+
 import { HTMLAttributes, forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
@@ -8,10 +14,10 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: 'bg-neutral-100 text-neutral-800 border border-neutral-200',
-        primary: 'bg-primary-100 text-primary-700 border border-primary-200',
-        success: 'bg-green-100 text-green-700 border border-green-200',
-        warning: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
-        danger: 'bg-red-100 text-red-700 border border-red-200',
+        primary: 'bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20',
+        success: 'bg-brand-green/10 text-brand-green border border-brand-green/20',
+        warning: 'bg-warning/10 text-warning border border-warning/20',
+        danger: 'bg-error/10 text-error border border-error/20',
       },
     },
     defaultVariants: {

@@ -1,22 +1,32 @@
+/**
+ * Mojeeb Minimal Card Component
+ * Clean, borderless container following minimal design principles
+ * NO shadows, NO gradients - just white background with subtle border
+ */
+
 import { HTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  glass?: boolean;
+  /** Makes card interactive with hover state (subtle border change) */
   hoverable?: boolean;
+  /** Reduces padding for compact layouts */
+  compact?: boolean;
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, glass, hoverable, children, ...props }, ref) => {
+  ({ className, hoverable, compact, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={cn(
-          'rounded-xl p-6 transition-all duration-300',
-          glass
-            ? 'glass border border-neutral-200/50 shadow-glass'
-            : 'bg-white border border-neutral-200 shadow-sm',
-          hoverable && 'hover:shadow-float hover:scale-[1.01] cursor-pointer',
+          // Base styles - minimal, clean, white
+          'bg-white rounded-lg border border-neutral-200',
+          'transition-colors duration-200',
+          // Padding
+          compact ? 'p-4' : 'p-6',
+          // Hoverable state - subtle border color change only
+          hoverable && 'hover:border-neutral-300 cursor-pointer',
           className
         )}
         {...props}

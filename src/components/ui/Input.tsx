@@ -1,3 +1,9 @@
+/**
+ * Mojeeb Minimal Input Component
+ * Clean, accessible input fields following Mojeeb brand guidelines
+ * Features: Label, error states, focus states with brand cyan
+ */
+
 import { InputHTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -19,18 +25,23 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           type={type}
           className={cn(
-            'w-full px-4 py-2.5 rounded-lg border border-neutral-300',
-            'bg-white text-neutral-900 placeholder:text-neutral-400',
-            'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
-            'transition-all duration-200',
-            'disabled:bg-neutral-50 disabled:cursor-not-allowed',
-            error && 'border-red-500 focus:ring-red-500',
+            // Base styles - minimal, clean
+            'w-full h-10 px-4 rounded-md border border-neutral-300',
+            'bg-white text-neutral-950 placeholder:text-neutral-400',
+            'text-base',
+            // Focus state - brand cyan accent
+            'focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan',
+            'transition-colors duration-200',
+            // Disabled state
+            'disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed',
+            // Error state
+            error && 'border-error focus:border-error focus:ring-error/20',
             className
           )}
           {...props}
         />
         {error && (
-          <p className="mt-1.5 text-sm text-red-600">{error}</p>
+          <p className="mt-1.5 text-sm text-error">{error}</p>
         )}
       </div>
     );
