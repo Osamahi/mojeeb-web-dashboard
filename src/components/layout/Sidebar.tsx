@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Bot,
   Users,
+  UserCog,
   MessageSquare,
   Settings,
   LogOut,
@@ -38,6 +39,7 @@ interface NavigationItem {
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Agents', href: '/agents', icon: Bot },
+  { name: 'Team', href: '/team', icon: UserCog },
   { name: 'Users', href: '/users', icon: Users, requireSuperAdmin: true },
   { name: 'Conversations', href: '/conversations', icon: MessageSquare },
   { name: 'Settings', href: '/settings', icon: Settings },

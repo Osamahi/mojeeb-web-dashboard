@@ -7,6 +7,7 @@ import { ConversationsPage } from './pages/ConversationsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import AgentsPage from './features/agents/pages/AgentsPage';
 import UsersPage from './features/users/pages/UsersPage';
+import TeamPage from './features/team/pages/TeamPage';
 import { useAuthStore } from './features/auth/stores/authStore';
 import { Role } from './features/auth/types/auth.types';
 
@@ -84,6 +85,10 @@ export const router = createBrowserRouter([
       {
         path: 'agents',
         element: <AgentsPage />,
+      },
+      {
+        path: 'team',
+        element: <TeamPage />,
       },
       {
         path: 'users',
