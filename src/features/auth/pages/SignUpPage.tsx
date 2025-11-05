@@ -1,7 +1,6 @@
 /**
- * Mojeeb Minimal Login Page
- * Ultra-clean login experience with Mojeeb brand identity
- * NO animations, NO gradients (except logo), just professional simplicity
+ * Mojeeb Minimal Sign Up Page
+ * Clean registration experience matching login page style
  */
 
 import { useState } from 'react';
@@ -16,32 +15,37 @@ import { authService } from '../services/authService';
 import { toast } from 'sonner';
 import { SocialLoginButtons } from '../components/SocialLoginButtons';
 
-const loginSchema = z.object({
+const signUpSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type SignUpForm = z.infer<typeof signUpSchema>;
 
-export const LoginPage = () => {
+export const SignUpPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
+  const { register, handleSubmit, formState: { errors } } = useForm<SignUpForm>({
+    resolver: zodResolver(signUpSchema),
   });
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async (data: SignUpForm) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      await authService.login(data);
-      toast.success('Welcome back!');
+      await authService.register({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
+      toast.success('Account created successfully!');
       navigate('/conversations');
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -66,7 +70,7 @@ export const LoginPage = () => {
           {/* Header - Clean & Centered */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-neutral-950">
-              Welcome back
+              Create your account
             </h1>
           </div>
 
@@ -78,8 +82,16 @@ export const LoginPage = () => {
             </div>
           )}
 
-          {/* Login Form - Clean Inputs */}
+          {/* Sign Up Form - Clean Inputs */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <Input
+              {...register('name')}
+              type="text"
+              placeholder="Full name"
+              error={errors.name?.message}
+              disabled={isLoading}
+            />
+
             <Input
               {...register('email')}
               type="email"
@@ -88,25 +100,13 @@ export const LoginPage = () => {
               disabled={isLoading}
             />
 
-            <div className="space-y-2">
-              <Input
-                {...register('password')}
-                type="password"
-                placeholder="Password"
-                error={errors.password?.message}
-                disabled={isLoading}
-              />
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => navigate('/forgot-password')}
-                  className="text-sm text-brand-cyan hover:text-brand-cyan/80 transition-colors"
-                  disabled={isLoading}
-                >
-                  Forgot password?
-                </button>
-              </div>
-            </div>
+            <Input
+              {...register('password')}
+              type="password"
+              placeholder="Password"
+              error={errors.password?.message}
+              disabled={isLoading}
+            />
 
             <Button
               type="submit"
@@ -114,7 +114,7 @@ export const LoginPage = () => {
               isLoading={isLoading}
               disabled={isLoading}
             >
-              Sign In
+              Create Account
             </Button>
           </form>
 
@@ -134,12 +134,12 @@ export const LoginPage = () => {
           {/* Footer Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-neutral-600">
-              Don't have an account?{' '}
+              Already have an account?{' '}
               <Link
-                to="/signup"
+                to="/login"
                 className="text-brand-cyan hover:text-brand-cyan/80 transition-colors font-medium"
               >
-                Sign up
+                Sign in
               </Link>
             </p>
           </div>

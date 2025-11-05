@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { LoginPage } from './features/auth/pages/LoginPage';
+import { SignUpPage } from './features/auth/pages/SignUpPage';
 import { ForgotPasswordPage } from './features/auth/pages/ForgotPasswordPage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { ConversationsPage } from './pages/ConversationsPage';
@@ -58,6 +59,14 @@ export const router = createBrowserRouter([
     element: (
       <PublicRoute>
         <LoginPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: '/signup',
+    element: (
+      <PublicRoute>
+        <SignUpPage />
       </PublicRoute>
     ),
   },
