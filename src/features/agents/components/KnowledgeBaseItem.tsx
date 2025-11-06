@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/hooks/useConfirm';
 
 interface KnowledgeBaseItemProps {
   knowledgeBase: KnowledgeBase;
@@ -36,6 +37,7 @@ export default function KnowledgeBaseItem({
   onUpdate,
 }: KnowledgeBaseItemProps) {
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialogComponent } = useConfirm();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -103,8 +105,16 @@ export default function KnowledgeBaseItem({
     setIsEditing(false);
   };
 
-  const handleDelete = () => {
-    if (confirm(`Are you sure you want to delete "${knowledgeBase.name}"?`)) {
+  const handleDelete = async () => {
+    const confirmed = await confirm({
+      title: 'Delete Knowledge Base',
+      message: `Are you sure you want to delete "${knowledgeBase.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'danger',
+    });
+
+    if (confirmed) {
       deleteMutation.mutate();
     }
   };
@@ -123,9 +133,11 @@ export default function KnowledgeBaseItem({
   const contentPreview = content.substring(0, 80) + (content.length > 80 ? '...' : '');
 
   return (
-    <div className="border border-neutral-200 rounded-lg overflow-hidden">
-      {/* Collapsed Header */}
-      <div
+    <>
+      {ConfirmDialogComponent}
+      <div className="border border-neutral-200 rounded-lg overflow-hidden">
+        {/* Collapsed Header */}
+        <div
         className={cn(
           'p-4 cursor-pointer hover:bg-neutral-50 transition-colors',
           isExpanded && 'border-b border-neutral-200'
@@ -200,10 +212,10 @@ export default function KnowledgeBaseItem({
             </div>
           )}
         </div>
-      </div>
+        </div>
 
-      {/* Expanded Content */}
-      {isExpanded && (
+        {/* Expanded Content */}
+        {isExpanded && (
         <div className="p-4 space-y-4 bg-white">
           {isEditing ? (
             <>
@@ -333,7 +345,8 @@ export default function KnowledgeBaseItem({
             </>
           )}
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }

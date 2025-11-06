@@ -14,12 +14,39 @@ import { useAuthStore } from '../stores/authStore';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 
+// API Response Types (snake_case from backend)
+interface ApiAuthResponse {
+  access_token: string;
+  refresh_token: string;
+  user: User;
+}
+
+interface ApiRefreshResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
 class AuthService {
+  /**
+   * Initialize agent data after successful authentication
+   * Fetches agents and initializes agent selection
+   * @private
+   */
+  private async initializeAgentData(): Promise<void> {
+    try {
+      await agentService.getAgents();
+      useAgentStore.getState().initializeAgentSelection();
+    } catch (error) {
+      console.error('Failed to initialize agent selection:', error);
+      // Don't fail the authentication if agent initialization fails
+    }
+  }
+
   /**
    * Login with email and password
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const { data } = await api.post<any>('/api/auth/login', credentials);
+    const { data } = await api.post<ApiAuthResponse>('/api/auth/login', credentials);
 
     // Backend returns snake_case, convert to camelCase
     const authResponse: AuthResponse = {
@@ -32,13 +59,7 @@ class AuthService {
     useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
 
     // After successful login, fetch agents and initialize selection
-    try {
-      await agentService.getAgents();
-      useAgentStore.getState().initializeAgentSelection();
-    } catch (error) {
-      console.error('Failed to initialize agent selection:', error);
-      // Don't fail the login if agent initialization fails
-    }
+    await this.initializeAgentData();
 
     return authResponse;
   }
@@ -47,7 +68,7 @@ class AuthService {
    * Login with Google OAuth
    */
   async loginWithGoogle(accessToken: string): Promise<AuthResponse> {
-    const { data } = await api.post<any>('/api/auth/oauth', {
+    const { data } = await api.post<ApiAuthResponse>('/api/auth/oauth', {
       provider: 'google',
       access_token: accessToken,
       id_token: '',
@@ -67,13 +88,7 @@ class AuthService {
     useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
 
     // After successful login, fetch agents and initialize selection
-    try {
-      await agentService.getAgents();
-      useAgentStore.getState().initializeAgentSelection();
-    } catch (error) {
-      console.error('Failed to initialize agent selection:', error);
-      // Don't fail the login if agent initialization fails
-    }
+    await this.initializeAgentData();
 
     return authResponse;
   }
@@ -82,7 +97,7 @@ class AuthService {
    * Login with Apple Sign-In
    */
   async loginWithApple(idToken: string): Promise<AuthResponse> {
-    const { data } = await api.post<any>('/api/auth/oauth', {
+    const { data } = await api.post<ApiAuthResponse>('/api/auth/oauth', {
       provider: 'apple',
       access_token: idToken,
       id_token: idToken,
@@ -102,13 +117,7 @@ class AuthService {
     useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
 
     // After successful login, fetch agents and initialize selection
-    try {
-      await agentService.getAgents();
-      useAgentStore.getState().initializeAgentSelection();
-    } catch (error) {
-      console.error('Failed to initialize agent selection:', error);
-      // Don't fail the login if agent initialization fails
-    }
+    await this.initializeAgentData();
 
     return authResponse;
   }
@@ -123,13 +132,7 @@ class AuthService {
     useAuthStore.getState().setAuth(data.user, data.accessToken, data.refreshToken);
 
     // After successful registration, fetch agents and initialize selection
-    try {
-      await agentService.getAgents();
-      useAgentStore.getState().initializeAgentSelection();
-    } catch (error) {
-      console.error('Failed to initialize agent selection:', error);
-      // Don't fail the registration if agent initialization fails
-    }
+    await this.initializeAgentData();
 
     return data;
   }
@@ -200,14 +203,14 @@ class AuthService {
    * and causing recursion when called from the response interceptor
    */
   async refreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
-    const { data } = await axios.post<any>(`${API_URL}/api/auth/refresh`, {
+    const { data } = await axios.post<ApiRefreshResponse>(`${API_URL}/api/auth/refresh`, {
       refreshToken: refreshToken,
     });
 
-    // Backend returns snake_case, convert to camelCase
+    // Backend returns camelCase for refresh endpoint
     return {
-      accessToken: data.accessToken || data.access_token,
-      refreshToken: data.refreshToken || data.refresh_token,
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
     };
   }
 }

@@ -6,6 +6,7 @@
  */
 
 import { Copy } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import type { ChatMessage } from '../../types';
 import { isCustomerMessage, parseAttachments, isMessageDeleted } from '../../types';
 import { formatMessageTime } from '../../utils/timeFormatters';
@@ -93,7 +94,7 @@ export default function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
                   direction: isRTL ? 'rtl' : 'ltr',
                 }}
                 dangerouslySetInnerHTML={{
-                  __html: parseFormattedText(messageText, bubbleStyle.color),
+                  __html: DOMPurify.sanitize(parseFormattedText(messageText, bubbleStyle.color)),
                 }}
               />
             )}

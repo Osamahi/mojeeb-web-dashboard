@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import {
   setTokens,
@@ -25,7 +25,7 @@ const api = axios.create({
 
 // Request interceptor - Add JWT token (read from localStorage each time to avoid race conditions)
 api.interceptors.request.use(
-  (config: any) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -89,7 +89,7 @@ const redirectToLogin = () => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as any & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // If 401 and not already retried, attempt token refresh
     if (error.response?.status === 401 && !originalRequest._retry) {

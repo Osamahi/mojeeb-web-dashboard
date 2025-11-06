@@ -8,11 +8,44 @@ import type {
   UpdateKnowledgeBaseRequest,
 } from '../types/agent.types';
 
+// API Response Types (snake_case from backend)
+interface ApiAgentResponse {
+  id: string;
+  name: string;
+  description?: string;
+  persona_prompt?: string;
+  owner_id: string;
+  avatar_url?: string;
+  status?: string;
+  language?: string;
+  platform_target?: string;
+  allow_handoff?: boolean;
+  model_provider?: string;
+  created_at: string;
+  updated_at: string;
+  conversation_count?: number;
+  knowledge_base_count?: number;
+  owner_name?: string;
+  user_role?: string;
+  user_permissions?: string[];
+  access_source?: string;
+  is_owner?: boolean;
+  can_edit?: boolean;
+  can_delete?: boolean;
+  can_manage_access?: boolean;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  message: string | null;
+  data: T;
+}
+
 class AgentService {
   /**
    * Transform API response from snake_case to camelCase
    */
-  private transformAgent(apiAgent: any): Agent {
+  private transformAgent(apiAgent: ApiAgentResponse): Agent {
     return {
       id: apiAgent.id,
       name: apiAgent.name,
@@ -44,7 +77,7 @@ class AgentService {
    * Get all agents for current user
    */
   async getAgents(): Promise<Agent[]> {
-    const { data } = await api.get<{ success: boolean; message: string | null; data: any[] }>('/api/agents');
+    const { data } = await api.get<ApiResponse<ApiAgentResponse[]>>('/api/agents');
     return data.data.map(agent => this.transformAgent(agent));
   }
 
@@ -52,7 +85,7 @@ class AgentService {
    * Get agent by ID
    */
   async getAgent(id: string): Promise<Agent> {
-    const { data } = await api.get<any>(`/api/agents/${id}`);
+    const { data } = await api.get<ApiAgentResponse>(`/api/agents/${id}`);
     return this.transformAgent(data);
   }
 
@@ -60,7 +93,7 @@ class AgentService {
    * Create new agent
    */
   async createAgent(request: CreateAgentRequest): Promise<Agent> {
-    const { data } = await api.post<any>('/api/agents', request);
+    const { data } = await api.post<ApiAgentResponse>('/api/agents', request);
     return this.transformAgent(data);
   }
 
@@ -68,7 +101,7 @@ class AgentService {
    * Update agent
    */
   async updateAgent(id: string, request: UpdateAgentRequest): Promise<Agent> {
-    const { data } = await api.put<any>(`/api/agents/${id}`, request);
+    const { data } = await api.put<ApiAgentResponse>(`/api/agents/${id}`, request);
     return this.transformAgent(data);
   }
 
