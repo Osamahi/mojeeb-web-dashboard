@@ -7,6 +7,7 @@
 import { useState, KeyboardEvent, useRef, useEffect } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface MessageComposerProps {
   onSendMessage: (message: string) => Promise<void>;
@@ -46,7 +47,7 @@ export default function MessageComposer({
         textareaRef.current.style.height = 'auto';
       }
     } catch (error) {
-      console.error('Failed to send message:', error);
+      logger.error('Failed to send message', error);
     }
   };
 

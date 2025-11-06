@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { getAccessToken, getRefreshToken, setTokens } from '@/lib/tokenManager';
 import { authService } from '../services/authService';
+import { logger } from '@/lib/logger';
 
 interface AuthInitializerProps {
   children: ReactNode;
@@ -48,7 +49,7 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
 
         // Case 2: Has refresh token but no access token - proactively refresh
         if (!accessToken && refreshToken) {
-          console.log('AuthInitializer: Access token missing, attempting refresh...');
+          logger.info('AuthInitializer: Access token missing, attempting refresh...');
 
           try {
             // Use centralized authService.refreshToken to avoid code duplication
@@ -57,11 +58,11 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
             // Store new tokens
             setTokens(tokens.accessToken, tokens.refreshToken);
 
-            console.log('AuthInitializer: Token refresh successful');
+            logger.info('AuthInitializer: Token refresh successful');
             setIsInitializing(false);
             return;
           } catch (error) {
-            console.error('AuthInitializer: Token refresh failed', error);
+            logger.error('AuthInitializer: Token refresh failed', error);
             // Token refresh failed - logout and redirect
             logout();
             navigate('/login', { replace: true });
@@ -71,14 +72,14 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
 
         // Case 3: No tokens but authenticated - inconsistent state, logout
         if (!accessToken && !refreshToken && isAuthenticated) {
-          console.warn('AuthInitializer: Inconsistent auth state - no tokens but isAuthenticated=true');
+          logger.warn('AuthInitializer: Inconsistent auth state - no tokens but isAuthenticated=true');
           logout();
           navigate('/login', { replace: true });
           return;
         }
 
       } catch (error) {
-        console.error('AuthInitializer: Unexpected error during initialization', error);
+        logger.error('AuthInitializer: Unexpected error during initialization', error);
         logout();
         navigate('/login', { replace: true });
       } finally {

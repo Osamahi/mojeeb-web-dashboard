@@ -13,6 +13,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
+import { logger } from '@/lib/logger';
 
 interface AddKnowledgeBaseModalProps {
   isOpen: boolean;
@@ -75,7 +76,7 @@ export default function AddKnowledgeBaseModal({
       onSuccess();
     },
     onError: (error: any) => {
-      console.error('Error creating KB:', error);
+      logger.error('Error creating KB', error);
       if (error.message !== 'Validation failed') {
         toast.error('Failed to create knowledge base');
       }

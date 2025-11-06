@@ -19,6 +19,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import NoAgentEmptyState from '../components/NoAgentEmptyState';
 import PromptEditor from '../components/PromptEditor';
 import KnowledgeBaseEditor from '../components/KnowledgeBaseEditor';
+import { logger } from '@/lib/logger';
 
 export default function StudioPage() {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function StudioPage() {
   // Log errors
   useEffect(() => {
     if (error) {
-      console.error('Error loading agent:', error);
+      logger.error('Error loading agent', error);
     }
   }, [error]);
 

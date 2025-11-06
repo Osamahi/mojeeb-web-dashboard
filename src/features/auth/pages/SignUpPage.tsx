@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/Input';
 import { authService } from '../services/authService';
 import { toast } from 'sonner';
 import { SocialLoginButtons } from '../components/SocialLoginButtons';
+import { logger } from '@/lib/logger';
 
 const signUpSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -45,8 +46,8 @@ export const SignUpPage = () => {
       toast.success('Account created successfully!');
       navigate('/conversations');
     } catch (error: any) {
-      console.error('Registration error:', error);
-      console.error('Error response:', error.response?.data);
+      logger.error('Registration error', error);
+      logger.error('Error response', error.response?.data);
 
       // Extract detailed error message
       const errorMessage =

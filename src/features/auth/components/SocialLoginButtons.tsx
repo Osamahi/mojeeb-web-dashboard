@@ -10,6 +10,7 @@ import AppleSignin from 'react-apple-signin-auth';
 import { toast } from 'sonner';
 import { authService } from '../services/authService';
 import { env } from '@/config/env';
+import { logger } from '@/lib/logger';
 
 interface SocialLoginButtonsProps {
   disabled?: boolean;
@@ -28,7 +29,7 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
         toast.success('Welcome to Mojeeb!');
         navigate('/conversations');
       } catch (error: any) {
-        console.error('Google sign-in error:', error);
+        logger.error('Google sign-in error', error);
         toast.error(error?.response?.data?.message || 'Google sign-in failed. Please try again.');
       } finally {
         setIsGoogleLoading(false);
@@ -47,7 +48,7 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
       toast.success('Welcome to Mojeeb!');
       navigate('/conversations');
     } catch (error: any) {
-      console.error('Apple sign-in error:', error);
+      logger.error('Apple sign-in error', error);
       toast.error(error?.response?.data?.message || 'Apple sign-in failed. Please try again.');
     } finally {
       setIsAppleLoading(false);
@@ -114,7 +115,7 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
         }}
         onSuccess={handleAppleSignIn}
         onError={(error: any) => {
-          console.error('Apple sign-in error:', error);
+          logger.error('Apple sign-in error', error);
           toast.error('Apple sign-in was cancelled or failed');
         }}
         render={(props: any) => (

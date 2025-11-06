@@ -14,6 +14,7 @@ import { queryKeys } from '@/lib/queryKeys';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
+import { logger } from '@/lib/logger';
 
 interface PromptEditorProps {
   agent: Agent;
@@ -54,7 +55,7 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
       toast.success('Agent updated successfully');
     },
     onError: (error) => {
-      console.error('Error saving agent:', error);
+      logger.error('Error saving agent', error);
       toast.error('Failed to save agent');
     },
   });

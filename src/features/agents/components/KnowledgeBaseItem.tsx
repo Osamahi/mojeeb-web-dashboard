@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { useConfirm } from '@/hooks/useConfirm';
+import { logger } from '@/lib/logger';
 
 interface KnowledgeBaseItemProps {
   knowledgeBase: KnowledgeBase;
@@ -72,7 +73,7 @@ export default function KnowledgeBaseItem({
       onUpdate();
     },
     onError: (error) => {
-      console.error('Error updating KB:', error);
+      logger.error('Error updating KB', error);
       toast.error('Failed to update knowledge base');
     },
   });
@@ -87,7 +88,7 @@ export default function KnowledgeBaseItem({
       onUpdate();
     },
     onError: (error) => {
-      console.error('Error deleting KB:', error);
+      logger.error('Error deleting KB', error);
       toast.error('Failed to delete knowledge base');
     },
   });
