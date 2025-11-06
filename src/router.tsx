@@ -11,6 +11,7 @@ import UsersPage from './features/users/pages/UsersPage';
 import TeamPage from './features/team/pages/TeamPage';
 import { useAuthStore } from './features/auth/stores/authStore';
 import { Role } from './features/auth/types/auth.types';
+import { AuthInitializer } from './features/auth/components/AuthInitializer';
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -20,7 +21,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return <>{children}</>;
+  // Wrap with AuthInitializer to validate tokens before rendering
+  return <AuthInitializer>{children}</AuthInitializer>;
 };
 
 // SuperAdmin-only route wrapper

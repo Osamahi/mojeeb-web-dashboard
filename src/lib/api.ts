@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { useAuthStore } from '@/features/auth/stores/authStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5267';
 const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT) || 30000;
@@ -83,6 +84,8 @@ const redirectToLogin = () => {
   if (shouldRedirectToLogin()) {
     lastRedirectTime = Date.now();
     clearTokens();
+    // Sync Zustand auth state - Critical fix for flickering loop
+    useAuthStore.getState().logout();
     window.location.href = '/login';
   }
 };

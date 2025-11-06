@@ -64,10 +64,20 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
-        // Restore tokens to API client on page reload
+        // Critical fix for flickering loop: Validate accessToken exists before setting isAuthenticated
         if (state?.refreshToken && state?.user) {
-          // We don't have access token on reload, but refresh token will be used automatically
-          state.isAuthenticated = true;
+          const accessToken = localStorage.getItem('accessToken');
+
+          // Only set isAuthenticated if we have BOTH tokens
+          if (accessToken && accessToken.trim() !== '') {
+            state.isAuthenticated = true;
+          } else {
+            // Has refresh token but no access token - trigger auth flow
+            state.isAuthenticated = false;
+          }
+        } else {
+          // No refresh token or user - definitely not authenticated
+          state.isAuthenticated = false;
         }
       },
     }
