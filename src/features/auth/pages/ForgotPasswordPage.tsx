@@ -4,12 +4,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AxiosError } from 'axios';
-import { motion } from 'framer-motion';
-import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
 import { authService } from '../services/authService';
 import { toast } from 'sonner';
+import { AuthPageLayout } from '../components/AuthPageLayout';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -43,97 +43,70 @@ export const ForgotPasswordPage = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md"
-        >
-          <Card glass className="text-center">
-            <div className="mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-neutral-900 mb-2">
-                Check Your Email
-              </h2>
-              <p className="text-neutral-600">
-                We've sent a password reset link to your email address.
-                Please check your inbox and follow the instructions.
-              </p>
-            </div>
-
-            <Button
-              onClick={() => navigate('/login')}
-              className="w-full"
-            >
-              Back to Login
-            </Button>
-          </Card>
-        </motion.div>
-      </div>
+      <AuthPageLayout
+        title="Check Your Email"
+        showSocialLogin={false}
+      >
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-success/10 rounded-full mb-6">
+            <CheckCircle className="w-8 h-8 text-success" />
+          </div>
+          <p className="text-neutral-600 mb-6">
+            We've sent a password reset link to your email address.
+            Please check your inbox and follow the instructions.
+          </p>
+          <Button
+            onClick={() => navigate('/login')}
+            className="w-full h-11"
+          >
+            Back to Login
+          </Button>
+        </div>
+      </AuthPageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-100 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        <Card glass>
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">
-              Reset Password
-            </h1>
-            <p className="text-neutral-600">
-              Enter your email address and we'll send you a link to reset your password
-            </p>
-          </div>
+    <AuthPageLayout
+      title="Reset Password"
+      showSocialLogin={false}
+      footerContent={
+        <div className="mt-6">
+          <button
+            onClick={() => navigate('/login')}
+            className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors mx-auto"
+            disabled={isLoading}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Login
+          </button>
+        </div>
+      }
+    >
+      <div className="text-center mb-6">
+        <p className="text-neutral-600 text-sm">
+          Enter your email address and we'll send you a link to reset your password
+        </p>
+      </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 pointer-events-none z-10" />
-                <input
-                  {...register('email')}
-                  type="email"
-                  placeholder="Email address"
-                  className="w-full pl-11 pr-4 py-3 rounded-lg border border-neutral-300 bg-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                  disabled={isLoading}
-                />
-              </div>
-              {errors.email && (
-                <p className="mt-1.5 text-sm text-red-600">{errors.email.message}</p>
-              )}
-            </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <Input
+          {...register('email')}
+          type="email"
+          placeholder="Email address"
+          error={errors.email?.message}
+          disabled={isLoading}
+        />
 
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-semibold"
-              isLoading={isLoading}
-              disabled={isLoading}
-            >
-              Send Reset Link
-            </Button>
-          </form>
-
-          {/* Back to login */}
-          <div className="mt-6">
-            <button
-              onClick={() => navigate('/login')}
-              className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors mx-auto"
-              disabled={isLoading}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Login
-            </button>
-          </div>
-        </Card>
-      </motion.div>
-    </div>
+        <Button
+          type="submit"
+          className="w-full h-11"
+          isLoading={isLoading}
+          disabled={isLoading}
+        >
+          Send Reset Link
+        </Button>
+      </form>
+    </AuthPageLayout>
   );
 };

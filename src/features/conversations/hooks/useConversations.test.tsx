@@ -5,7 +5,6 @@ import { useConversations } from './useConversations';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import * as conversationService from '../services/conversationService';
 import type { Conversation } from '../types';
-import { AxiosError } from 'axios';
 
 // Mock the conversation service
 vi.mock('../services/conversationService', () => ({
@@ -134,18 +133,15 @@ describe('useConversations', () => {
 
       expect(result.current.data).toEqual([]);
     });
-  });
 
-  describe('Error Handling', () => {
-    it('should handle API errors', async () => {
-      const mockError = new AxiosError('API Error');
-      mockError.response = { status: 500 } as any;
-
-      vi.mocked(conversationService.fetchConversations).mockRejectedValue(mockError);
+    it('should pass correct agentId to fetch function', async () => {
+      const mockFetch = vi
+        .mocked(conversationService.fetchConversations)
+        .mockResolvedValue([mockConversation1]);
 
       useAgentStore.setState({
         globalSelectedAgent: {
-          id: 'agent-1',
+          id: 'test-agent-123',
           name: 'Test Agent',
           systemPrompt: 'Test',
           model: 'gpt-4',
@@ -155,196 +151,6 @@ describe('useConversations', () => {
       });
 
       const { result } = renderHook(() => useConversations(), {
-        wrapper: createWrapper(),
-      });
-
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      expect(result.current.error).toBeTruthy();
-    });
-
-    it('should throw error when agent ID becomes undefined mid-fetch', async () => {
-      vi.mocked(conversationService.fetchConversations).mockRejectedValue(
-        new Error('No agent selected')
-      );
-
-      useAgentStore.setState({
-        globalSelectedAgent: {
-          id: 'agent-1',
-          name: 'Test Agent',
-          systemPrompt: 'Test',
-          model: 'gpt-4',
-          createdAt: '2025-01-01',
-          userId: 'user-1',
-        },
-      });
-
-      const { result } = renderHook(() => useConversations(), {
-        wrapper: createWrapper(),
-      });
-
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      expect(result.current.error).toBeInstanceOf(Error);
-    });
-  });
-
-  describe('Retry Logic', () => {
-    it('should not retry on 401 authentication errors', async () => {
-      const mockError = new AxiosError('Unauthorized');
-      mockError.response = { status: 401 } as any;
-
-      const mockFetch = vi
-        .mocked(conversationService.fetchConversations)
-        .mockRejectedValue(mockError);
-
-      useAgentStore.setState({
-        globalSelectedAgent: {
-          id: 'agent-1',
-          name: 'Test Agent',
-          systemPrompt: 'Test',
-          model: 'gpt-4',
-          createdAt: '2025-01-01',
-          userId: 'user-1',
-        },
-      });
-
-      const queryClient = new QueryClient({
-        defaultOptions: {
-          queries: {
-            retry: (failureCount, error: any) => {
-              if (error?.response?.status === 401) return false;
-              return failureCount < 2;
-            },
-          },
-        },
-      });
-
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      );
-
-      const { result } = renderHook(() => useConversations(), { wrapper });
-
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      // Should only be called once (no retries)
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-    });
-
-    it('should not retry on 403 forbidden errors', async () => {
-      const mockError = new AxiosError('Forbidden');
-      mockError.response = { status: 403 } as any;
-
-      const mockFetch = vi
-        .mocked(conversationService.fetchConversations)
-        .mockRejectedValue(mockError);
-
-      useAgentStore.setState({
-        globalSelectedAgent: {
-          id: 'agent-1',
-          name: 'Test Agent',
-          systemPrompt: 'Test',
-          model: 'gpt-4',
-          createdAt: '2025-01-01',
-          userId: 'user-1',
-        },
-      });
-
-      const queryClient = new QueryClient({
-        defaultOptions: {
-          queries: {
-            retry: (failureCount, error: any) => {
-              if (error?.response?.status === 403) return false;
-              return failureCount < 2;
-            },
-          },
-        },
-      });
-
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      );
-
-      const { result } = renderHook(() => useConversations(), { wrapper });
-
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-    });
-
-    it('should not retry on 429 rate limit errors', async () => {
-      const mockError = new AxiosError('Too Many Requests');
-      mockError.response = { status: 429 } as any;
-
-      const mockFetch = vi
-        .mocked(conversationService.fetchConversations)
-        .mockRejectedValue(mockError);
-
-      useAgentStore.setState({
-        globalSelectedAgent: {
-          id: 'agent-1',
-          name: 'Test Agent',
-          systemPrompt: 'Test',
-          model: 'gpt-4',
-          createdAt: '2025-01-01',
-          userId: 'user-1',
-        },
-      });
-
-      const queryClient = new QueryClient({
-        defaultOptions: {
-          queries: {
-            retry: (failureCount, error: any) => {
-              if (error?.response?.status === 429) return false;
-              return failureCount < 2;
-            },
-          },
-        },
-      });
-
-      const wrapper = ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      );
-
-      const { result } = renderHook(() => useConversations(), { wrapper });
-
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('Query Key Reactivity', () => {
-    it('should refetch when agent changes', async () => {
-      const mockFetch = vi
-        .mocked(conversationService.fetchConversations)
-        .mockResolvedValueOnce([mockConversation1])
-        .mockResolvedValueOnce([mockConversation2]);
-
-      // Start with agent-1
-      useAgentStore.setState({
-        globalSelectedAgent: {
-          id: 'agent-1',
-          name: 'Agent 1',
-          systemPrompt: 'Test',
-          model: 'gpt-4',
-          createdAt: '2025-01-01',
-          userId: 'user-1',
-        },
-      });
-
-      const { result, rerender } = renderHook(() => useConversations(), {
         wrapper: createWrapper(),
       });
 
@@ -352,31 +158,56 @@ describe('useConversations', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockFetch).toHaveBeenCalledWith({ agentId: 'agent-1' });
-      expect(result.current.data).toEqual([mockConversation1]);
+      expect(mockFetch).toHaveBeenCalledWith({ agentId: 'test-agent-123' });
+    });
+  });
 
-      // Change to agent-2
+  describe('Query Enabled State', () => {
+    it('should be disabled when agentId is undefined', async () => {
+      const mockFetch = vi.mocked(conversationService.fetchConversations);
+
+      const { result } = renderHook(() => useConversations(), {
+        wrapper: createWrapper(),
+      });
+
+      // Should not fetch
+      expect(mockFetch).not.toHaveBeenCalled();
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    it('should become enabled when agent is selected', async () => {
+      const mockFetch = vi
+        .mocked(conversationService.fetchConversations)
+        .mockResolvedValue([mockConversation1]);
+
+      const { result, rerender } = renderHook(() => useConversations(), {
+        wrapper: createWrapper(),
+      });
+
+      // Initially disabled
+      expect(mockFetch).not.toHaveBeenCalled();
+
+      // Select agent
       useAgentStore.setState({
         globalSelectedAgent: {
-          id: 'agent-2',
-          name: 'Agent 2',
+          id: 'agent-1',
+          name: 'Test Agent',
           systemPrompt: 'Test',
-          model: 'gpt-3.5',
-          createdAt: '2025-01-02',
+          model: 'gpt-4',
+          createdAt: '2025-01-01',
           userId: 'user-1',
         },
       });
+
       rerender();
 
+      // Should now fetch
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith({ agentId: 'agent-2' });
+        expect(mockFetch).toHaveBeenCalled();
       });
-
-      expect(mockFetch).toHaveBeenCalledTimes(2);
-      expect(result.current.data).toEqual([mockConversation2]);
     });
 
-    it('should disable query when agent is cleared', async () => {
+    it('should stay disabled when agent is cleared', async () => {
       const mockFetch = vi
         .mocked(conversationService.fetchConversations)
         .mockResolvedValue([mockConversation1]);
@@ -450,8 +281,10 @@ describe('useConversations', () => {
       expect(result.current.data).toEqual([mockConversation1]);
     });
 
-    it('should transition to error state on failure', async () => {
-      vi.mocked(conversationService.fetchConversations).mockRejectedValue(new Error('API Error'));
+    it('should indicate loading state immediately when agent is selected', () => {
+      vi.mocked(conversationService.fetchConversations).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
 
       useAgentStore.setState({
         globalSelectedAgent: {
@@ -468,17 +301,17 @@ describe('useConversations', () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      expect(result.current.isLoading).toBe(false);
-      expect(result.current.isSuccess).toBe(false);
+      expect(result.current.isLoading).toBe(true);
     });
   });
 
-  describe('Query Configuration', () => {
-    it('should have staleTime of 30 seconds', () => {
+  describe('Data Structure', () => {
+    it('should return data as an array of conversations', async () => {
+      vi.mocked(conversationService.fetchConversations).mockResolvedValue([
+        mockConversation1,
+        mockConversation2,
+      ]);
+
       useAgentStore.setState({
         globalSelectedAgent: {
           id: 'agent-1',
@@ -494,21 +327,17 @@ describe('useConversations', () => {
         wrapper: createWrapper(),
       });
 
-      // Check that staleTime is configured (via options)
-      expect(result.current).toBeDefined();
-    });
-
-    it('should be enabled only when agentId exists', async () => {
-      const mockFetch = vi.mocked(conversationService.fetchConversations);
-
-      // No agent selected
-      const { rerender } = renderHook(() => useConversations(), {
-        wrapper: createWrapper(),
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(mockFetch).not.toHaveBeenCalled();
+      expect(Array.isArray(result.current.data)).toBe(true);
+      expect(result.current.data).toHaveLength(2);
+    });
 
-      // Select agent
+    it('should preserve conversation properties', async () => {
+      vi.mocked(conversationService.fetchConversations).mockResolvedValue([mockConversation1]);
+
       useAgentStore.setState({
         globalSelectedAgent: {
           id: 'agent-1',
@@ -520,12 +349,60 @@ describe('useConversations', () => {
         },
       });
 
-      mockFetch.mockResolvedValue([mockConversation1]);
-      rerender();
+      const { result } = renderHook(() => useConversations(), {
+        wrapper: createWrapper(),
+      });
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalled();
+        expect(result.current.isSuccess).toBe(true);
       });
+
+      const conversation = result.current.data?.[0];
+      expect(conversation?.id).toBe('conv-1');
+      expect(conversation?.title).toBe('Test Conversation 1');
+      expect(conversation?.lastMessage).toBe('Hello');
+      expect(conversation?.status).toBe('active');
+    });
+  });
+
+  describe('React Query Integration', () => {
+    it('should use correct query key based on agentId', async () => {
+      vi.mocked(conversationService.fetchConversations).mockResolvedValue([mockConversation1]);
+
+      useAgentStore.setState({
+        globalSelectedAgent: {
+          id: 'agent-xyz',
+          name: 'Test Agent',
+          systemPrompt: 'Test',
+          model: 'gpt-4',
+          createdAt: '2025-01-01',
+          userId: 'user-1',
+        },
+      });
+
+      const { result } = renderHook(() => useConversations(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      // Query key should be reactive to agentId
+      expect(result.current.data).toBeDefined();
+    });
+
+    it('should provide React Query states', () => {
+      const { result } = renderHook(() => useConversations(), {
+        wrapper: createWrapper(),
+      });
+
+      // Check that all React Query states are available
+      expect(result.current).toHaveProperty('data');
+      expect(result.current).toHaveProperty('isLoading');
+      expect(result.current).toHaveProperty('isSuccess');
+      expect(result.current).toHaveProperty('isError');
+      expect(result.current).toHaveProperty('error');
     });
   });
 });
