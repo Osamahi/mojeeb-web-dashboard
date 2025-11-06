@@ -4,7 +4,7 @@
  * NO animations, NO glass effects - just professional simplicity
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -12,12 +12,10 @@ import { agentService } from '../services/agentService';
 import { useAgentStore } from '../stores/agentStore';
 import AgentCard from '../components/AgentCard';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function AgentsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
   const setAgents = useAgentStore((state) => state.setAgents);
 
   // Fetch agents - backend handles role-based filtering
@@ -42,15 +40,6 @@ export default function AgentsPage() {
       setAgents(agents);
     }
   }, [agents, setAgents]);
-
-  // Client-side search filtering (optional UX enhancement)
-  const filteredAgents = agents?.filter((agent) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      agent.name.toLowerCase().includes(query) ||
-      agent.description?.toLowerCase().includes(query)
-    );
-  });
 
   if (isLoading) {
     return (
@@ -96,45 +85,25 @@ export default function AgentsPage() {
         </Link>
       </div>
 
-      {/* Search Bar - Minimal */}
-      <div className="bg-white rounded-lg p-4 border border-neutral-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-          <Input
-            type="text"
-            placeholder="Search agents by name or description..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
-
       {/* Agents List - Vertical Cards */}
-      {filteredAgents && filteredAgents.length > 0 ? (
+      {agents && agents.length > 0 ? (
         <div className="space-y-4">
-          {filteredAgents.map((agent) => (
+          {agents.map((agent) => (
             <AgentCard key={agent.id} agent={agent} />
           ))}
         </div>
       ) : (
         <EmptyState
           icon={Search}
-          title={searchQuery ? 'No agents found' : 'No agents yet'}
-          description={
-            searchQuery
-              ? 'Try adjusting your search query'
-              : 'Create your first AI agent to get started'
-          }
+          title="No agents yet"
+          description="Create your first AI agent to get started"
           action={
-            !searchQuery ? (
-              <Link to="/agents/new">
-                <Button variant="primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Agent
-                </Button>
-              </Link>
-            ) : undefined
+            <Link to="/agents/new">
+              <Button variant="primary">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Agent
+              </Button>
+            </Link>
           }
         />
       )}

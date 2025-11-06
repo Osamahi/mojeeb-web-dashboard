@@ -5,11 +5,11 @@
  */
 
 import { Link } from 'react-router-dom';
-import { Edit2, Trash2, Crown, ArrowRight } from 'lucide-react';
+import { Edit2, Trash2, Crown } from 'lucide-react';
+import { format } from 'date-fns';
 import type { Agent, AgentStatus } from '../types';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 
 interface AgentCardProps {
   agent: Agent;
@@ -22,6 +22,27 @@ export default function AgentCard({ agent }: AgentCardProps) {
     deleted: 'danger',
   };
 
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) {
+      return 'No date';
+    }
+
+    // Check for default .NET DateTime ("0001-01-01")
+    if (dateString.startsWith('0001-01-01')) {
+      return 'No date';
+    }
+
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      return format(date, 'MMM d, yyyy');
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -31,13 +52,13 @@ export default function AgentCard({ agent }: AgentCardProps) {
 
   return (
     <Link to={`/agents/${agent.id}`} className="block">
-      <div className="bg-white rounded-lg border border-neutral-200 p-5 transition-colors duration-200 hover:border-neutral-300">
+      <div className="bg-white rounded-lg border border-neutral-200 p-4 transition-colors duration-200 hover:border-neutral-300">
         {/* Header */}
-        <div className="flex items-start gap-4 mb-4">
+        <div className="flex items-center gap-3">
           <Avatar
             src={agent.avatarUrl}
             name={agent.name}
-            size="lg"
+            size="md"
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -48,9 +69,14 @@ export default function AgentCard({ agent }: AgentCardProps) {
                 <Crown className="w-4 h-4 text-warning flex-shrink-0" title="Owner" />
               )}
             </div>
-            <Badge variant={statusVariants[agent.status]} className="text-xs">
-              {agent.status}
-            </Badge>
+            <div className="flex items-center gap-2 text-xs text-neutral-500">
+              <Badge variant={statusVariants[agent.status]} className="text-xs">
+                {agent.status}
+              </Badge>
+              <span>Created: {formatDate(agent.createdAt)}</span>
+              <span>•</span>
+              <span>Updated: {formatDate(agent.updatedAt)}</span>
+            </div>
           </div>
 
           {/* Inline Action Buttons */}
@@ -74,39 +100,6 @@ export default function AgentCard({ agent }: AgentCardProps) {
                 <Trash2 className="w-4 h-4 text-error" />
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Description */}
-        <p className="text-neutral-600 text-sm line-clamp-2 min-h-[40px] mb-4">
-          {agent.description || 'No description provided'}
-        </p>
-
-        {/* Footer Stats */}
-        <div className="flex items-center justify-between pt-4 border-t border-neutral-200">
-          <div className="flex items-center gap-4 text-xs text-neutral-500">
-            {agent.knowledgeBaseCount !== undefined && (
-              <div>
-                <span className="font-medium text-neutral-950">
-                  {agent.knowledgeBaseCount}
-                </span>
-                {' '}Knowledge Bases
-              </div>
-            )}
-            {agent.conversationCount !== undefined && (
-              <div>
-                <span className="font-medium text-neutral-950">
-                  {agent.conversationCount}
-                </span>
-                {' '}Conversations
-              </div>
-            )}
-          </div>
-
-          {/* View Details Link */}
-          <div className="flex items-center gap-1 text-sm text-brand-cyan hover:text-brand-cyan/80 transition-colors">
-            <span>View</span>
-            <ArrowRight className="w-4 h-4" />
           </div>
         </div>
       </div>
