@@ -4,11 +4,12 @@
  * NO animations, NO glass effects - just professional simplicity
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { agentService } from '../services/agentService';
+import { useAgentStore } from '../stores/agentStore';
 import AgentCard from '../components/AgentCard';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -17,6 +18,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 
 export default function AgentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const setAgents = useAgentStore((state) => state.setAgents);
 
   // Fetch agents - backend handles role-based filtering
   const { data: agents, isLoading, error } = useQuery({
@@ -33,6 +35,13 @@ export default function AgentsPage() {
       }
     },
   });
+
+  // Sync agents to Zustand store when data changes
+  useEffect(() => {
+    if (agents) {
+      setAgents(agents);
+    }
+  }, [agents, setAgents]);
 
   // Client-side search filtering (optional UX enhancement)
   const filteredAgents = agents?.filter((agent) => {

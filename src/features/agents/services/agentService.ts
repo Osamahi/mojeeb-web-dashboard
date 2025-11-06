@@ -7,7 +7,6 @@ import type {
   CreateKnowledgeBaseRequest,
   UpdateKnowledgeBaseRequest,
 } from '../types/agent.types';
-import { useAgentStore } from '../stores/agentStore';
 
 class AgentService {
   /**
@@ -15,7 +14,6 @@ class AgentService {
    */
   async getAgents(): Promise<Agent[]> {
     const { data } = await api.get<{ success: boolean; message: string | null; data: Agent[] }>('/api/agents');
-    useAgentStore.getState().setAgents(data.data);
     return data.data;
   }
 
@@ -24,7 +22,6 @@ class AgentService {
    */
   async getAgent(id: string): Promise<Agent> {
     const { data } = await api.get<Agent>(`/api/agents/${id}`);
-    useAgentStore.getState().setSelectedAgent(data);
     return data;
   }
 
@@ -33,7 +30,6 @@ class AgentService {
    */
   async createAgent(request: CreateAgentRequest): Promise<Agent> {
     const { data } = await api.post<Agent>('/api/agents', request);
-    useAgentStore.getState().addAgent(data);
     return data;
   }
 
@@ -42,7 +38,6 @@ class AgentService {
    */
   async updateAgent(id: string, request: UpdateAgentRequest): Promise<Agent> {
     const { data } = await api.put<Agent>(`/api/agents/${id}`, request);
-    useAgentStore.getState().updateAgent(id, data);
     return data;
   }
 
@@ -51,7 +46,6 @@ class AgentService {
    */
   async deleteAgent(id: string): Promise<void> {
     await api.delete(`/api/agents/${id}`);
-    useAgentStore.getState().removeAgent(id);
   }
 
   /**
@@ -59,7 +53,6 @@ class AgentService {
    */
   async getKnowledgeBases(agentId: string): Promise<KnowledgeBase[]> {
     const { data } = await api.get<KnowledgeBase[]>(`/api/agents/${agentId}/knowledgebases`);
-    useAgentStore.getState().setKnowledgeBases(data);
     return data;
   }
 
@@ -76,7 +69,6 @@ class AgentService {
    */
   async createKnowledgeBase(request: CreateKnowledgeBaseRequest): Promise<KnowledgeBase> {
     const { data } = await api.post<KnowledgeBase>('/api/knowledgebases', request);
-    useAgentStore.getState().addKnowledgeBase(data);
     return data;
   }
 
@@ -85,7 +77,6 @@ class AgentService {
    */
   async updateKnowledgeBase(id: string, request: UpdateKnowledgeBaseRequest): Promise<KnowledgeBase> {
     const { data } = await api.put<KnowledgeBase>(`/api/knowledgebases/${id}`, request);
-    useAgentStore.getState().updateKnowledgeBase(id, data);
     return data;
   }
 
@@ -94,7 +85,6 @@ class AgentService {
    */
   async deleteKnowledgeBase(id: string): Promise<void> {
     await api.delete(`/api/knowledgebases/${id}`);
-    useAgentStore.getState().removeKnowledgeBase(id);
   }
 
   /**

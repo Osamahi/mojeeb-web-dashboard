@@ -145,7 +145,10 @@ export const useAgentStore = create<AgentState>()(
     }),
     {
       name: 'mojeeb-agent-storage',
-      partialize: (state) => ({ globalSelectedAgent: state.globalSelectedAgent }),
+      partialize: (state) => ({
+        agents: state.agents,
+        globalSelectedAgent: state.globalSelectedAgent
+      }),
     }
   )
 );

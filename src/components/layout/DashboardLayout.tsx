@@ -1,15 +1,37 @@
+import { useRef, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Sidebar } from './Sidebar';
 import { MobileHeader } from './MobileHeader';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import GlobalAgentSelector from '@/features/agents/components/GlobalAgentSelector';
 import { useAgentDataReload } from '@/features/agents/hooks/useAgentDataReload';
+import { agentService } from '@/features/agents/services/agentService';
+import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
 
 export const DashboardLayout = () => {
   const reloadAgentData = useAgentDataReload();
   const isMobile = useIsMobile();
+  const { setAgents, initializeAgentSelection } = useAgentStore();
+  const hasInitialized = useRef(false);
+
+  // Fetch agents on mount - critical for GlobalAgentSelector to work on refresh
+  const { data: agents, isLoading } = useQuery({
+    queryKey: ['agents'],
+    queryFn: () => agentService.getAgents(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Sync agents to store and initialize selection ONCE
+  useEffect(() => {
+    if (!isLoading && agents && !hasInitialized.current) {
+      setAgents(agents);
+      initializeAgentSelection();
+      hasInitialized.current = true;
+    }
+  }, [isLoading, agents, setAgents, initializeAgentSelection]);
 
   return (
     <>
