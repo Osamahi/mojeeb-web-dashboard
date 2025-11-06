@@ -4,7 +4,7 @@
  * Provides graceful error handling with fallback UI
  */
 
-import { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from './ui/Button';
 
@@ -146,7 +146,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   Try Again
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="md"
                   onClick={this.handleReload}
                 >
@@ -154,7 +154,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   Reload Page
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="md"
                   onClick={this.handleGoHome}
                 >

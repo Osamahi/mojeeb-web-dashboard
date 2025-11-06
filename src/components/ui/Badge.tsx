@@ -4,7 +4,7 @@
  * Variants: default, primary (cyan), success (green), warning, danger
  */
 
-import { HTMLAttributes, forwardRef } from 'react';
+import { type HTMLAttributes, forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 

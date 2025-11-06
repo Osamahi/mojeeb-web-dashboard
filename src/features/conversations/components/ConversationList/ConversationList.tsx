@@ -1,11 +1,12 @@
 /**
  * Conversation List Component
  * WhatsApp-style conversation list with real-time updates via React Query
+ * Infinite scroll pagination for better performance
  */
 
-import { useRef, UIEvent } from 'react';
-import { RefreshCw } from 'lucide-react';
-import { useConversations } from '../../hooks/useConversations';
+import { useRef, UIEvent, useMemo } from 'react';
+import { RefreshCw, Loader2 } from 'lucide-react';
+import { useInfiniteConversations } from '../../hooks/useInfiniteConversations';
 import { useConversationSubscription } from '../../hooks/useConversationSubscription';
 import { useConversationStore } from '../../stores/conversationStore';
 import ConversationListItem from './ConversationListItem';
@@ -18,8 +19,16 @@ interface ConversationListProps {
 }
 
 export default function ConversationList({ agentId, onConversationSelect }: ConversationListProps) {
-  // Fetch conversations via React Query - auto-refetches when agentId changes
-  const { data: conversations = [], isLoading, error, refetch } = useConversations();
+  // Fetch conversations with infinite scroll via React Query
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteConversations();
 
   // Subscribe to real-time updates - automatically syncs with React Query cache
   useConversationSubscription();
@@ -30,16 +39,20 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
 
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Handle scroll for infinite loading (TODO: Implement with React Query infinite queries)
+  // Flatten paginated data into single array
+  const conversations = useMemo(() => {
+    return data?.pages.flatMap((page) => page) ?? [];
+  }, [data]);
+
+  // Handle scroll for infinite loading
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     const element = e.currentTarget;
     const scrolledToBottom =
       element.scrollHeight - element.scrollTop <= element.clientHeight + 200;
 
-    // TODO: Implement infinite scroll with useInfiniteQuery
-    // if (scrolledToBottom && hasNextPage && !isFetchingNextPage) {
-    //   fetchNextPage();
-    // }
+    if (scrolledToBottom && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
   };
 
   // Handle conversation selection
@@ -125,8 +138,20 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
           />
         ))}
 
-        {/* TODO: Add infinite scroll with React Query useInfiniteQuery */}
-        {/* Loading more indicator and hasMore state will be added when implementing pagination */}
+        {/* Loading more indicator */}
+        {isFetchingNextPage && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="w-5 h-5 animate-spin text-neutral-500" />
+            <span className="ml-2 text-sm text-neutral-500">Loading more conversations...</span>
+          </div>
+        )}
+
+        {/* End of list indicator */}
+        {!hasNextPage && conversations.length > 0 && (
+          <div className="text-center py-4 text-sm text-neutral-500">
+            No more conversations
+          </div>
+        )}
       </div>
 
       {/* Error state */}

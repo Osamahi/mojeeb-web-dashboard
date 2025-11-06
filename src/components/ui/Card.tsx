@@ -4,7 +4,7 @@
  * NO shadows, NO gradients - just white background with subtle border
  */
 
-import { HTMLAttributes, forwardRef } from 'react';
+import { type HTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {

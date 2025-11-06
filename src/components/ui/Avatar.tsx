@@ -4,7 +4,7 @@
  * Displays initials with brand gradient when no image is provided
  */
 
-import { HTMLAttributes, forwardRef } from 'react';
+import { type HTMLAttributes, forwardRef } from 'react';
 import { cn, getInitials } from '@/lib/utils';
 
 export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {

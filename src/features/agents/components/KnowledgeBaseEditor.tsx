@@ -68,7 +68,6 @@ export default function KnowledgeBaseEditor({
               <KnowledgeBaseItem
                 key={kb.id}
                 knowledgeBase={kb}
-                agentId={agentId}
                 onUpdate={onRefetch}
               />
             ))}

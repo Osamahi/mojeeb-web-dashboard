@@ -4,7 +4,7 @@
  * Used for loading states throughout the dashboard
  */
 
-import { HTMLAttributes, forwardRef } from 'react';
+import { type HTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {

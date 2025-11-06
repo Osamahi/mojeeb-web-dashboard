@@ -1,4 +1,4 @@
-import { HTMLAttributes, ReactNode, forwardRef, useEffect } from 'react';
+import { type HTMLAttributes, type ReactNode, forwardRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

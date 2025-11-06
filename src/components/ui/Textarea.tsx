@@ -4,7 +4,7 @@
  * Features: Label, error states, character count, auto-expanding height
  */
 
-import { TextareaHTMLAttributes, forwardRef, useEffect, useRef, useState } from 'react';
+import { type TextareaHTMLAttributes, forwardRef, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {

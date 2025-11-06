@@ -4,7 +4,7 @@
  * Variants: primary (cyan), secondary (outline), ghost (text-only)
  */
 
-import { ButtonHTMLAttributes, forwardRef } from 'react';
+import { type ButtonHTMLAttributes, forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';

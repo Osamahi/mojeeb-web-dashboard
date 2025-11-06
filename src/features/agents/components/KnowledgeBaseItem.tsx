@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   ChevronDown,
@@ -28,16 +28,13 @@ import { logger } from '@/lib/logger';
 
 interface KnowledgeBaseItemProps {
   knowledgeBase: KnowledgeBase;
-  agentId: string;
   onUpdate: () => void;
 }
 
 export default function KnowledgeBaseItem({
   knowledgeBase,
-  agentId,
   onUpdate,
 }: KnowledgeBaseItemProps) {
-  const queryClient = useQueryClient();
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);

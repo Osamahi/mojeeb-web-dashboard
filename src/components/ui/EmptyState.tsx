@@ -1,4 +1,4 @@
-import { HTMLAttributes, ReactNode, forwardRef } from 'react';
+import { type HTMLAttributes, type ReactNode, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Inbox } from 'lucide-react';
 
