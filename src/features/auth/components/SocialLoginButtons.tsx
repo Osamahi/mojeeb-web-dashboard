@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
 import AppleSignin from 'react-apple-signin-auth';
+import { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { authService } from '../services/authService';
 import { env } from '@/config/env';
@@ -28,9 +29,10 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
         await authService.loginWithGoogle(tokenResponse.access_token);
         toast.success('Welcome to Mojeeb!');
         navigate('/conversations');
-      } catch (error: any) {
+      } catch (error) {
+        const axiosError = error as AxiosError<{ message?: string }>;
         logger.error('Google sign-in error', error);
-        toast.error(error?.response?.data?.message || 'Google sign-in failed. Please try again.');
+        toast.error(axiosError?.response?.data?.message || 'Google sign-in failed. Please try again.');
       } finally {
         setIsGoogleLoading(false);
       }
@@ -40,16 +42,17 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
     },
   });
 
-  const handleAppleSignIn = async (response: any) => {
+  const handleAppleSignIn = async (response: { authorization: { id_token: string } }) => {
     setIsAppleLoading(true);
     try {
       const idToken = response.authorization.id_token;
       await authService.loginWithApple(idToken);
       toast.success('Welcome to Mojeeb!');
       navigate('/conversations');
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
       logger.error('Apple sign-in error', error);
-      toast.error(error?.response?.data?.message || 'Apple sign-in failed. Please try again.');
+      toast.error(axiosError?.response?.data?.message || 'Apple sign-in failed. Please try again.');
     } finally {
       setIsAppleLoading(false);
     }
@@ -114,11 +117,11 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
           usePopup: true,
         }}
         onSuccess={handleAppleSignIn}
-        onError={(error: any) => {
+        onError={(error: unknown) => {
           logger.error('Apple sign-in error', error);
           toast.error('Apple sign-in was cancelled or failed');
         }}
-        render={(props: any) => (
+        render={(props: unknown) => (
           <button
             {...props}
             disabled={disabled || isAppleLoading}

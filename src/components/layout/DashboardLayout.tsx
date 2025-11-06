@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { Sidebar } from './Sidebar';
 import { MobileHeader } from './MobileHeader';
 import { UserProfileDropdown } from './UserProfileDropdown';
@@ -21,7 +22,7 @@ export const DashboardLayout = () => {
     queryKey: queryKeys.agents(),
     queryFn: () => agentService.getAgents(),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: AxiosError) => {
       // Don't retry on authentication errors (401, 403)
       if (error?.response?.status === 401 || error?.response?.status === 403) {
         return false;

@@ -4,7 +4,7 @@
  * Real-time updates with auto-scroll
  */
 
-import { useEffect, useRef, UIEvent } from 'react';
+import { useEffect, useRef, UIEvent, useCallback } from 'react';
 import { ArrowLeft, Bot, User } from 'lucide-react';
 import type { Conversation } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
@@ -85,7 +85,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   };
 
   // Handle send message
-  const handleSendMessage = async (message: string) => {
+  const handleSendMessage = useCallback(async (message: string) => {
     if (!globalSelectedAgent) return;
 
     await sendMessageWithAI({
@@ -93,7 +93,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
       message,
       agentId: globalSelectedAgent.id,
     });
-  };
+  }, [conversation.id, globalSelectedAgent, sendMessageWithAI]);
 
   // Extract profile picture
   const profilePictureUrl = conversation.customer_metadata?.profile_picture;

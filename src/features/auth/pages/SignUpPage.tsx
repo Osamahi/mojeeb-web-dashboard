@@ -8,6 +8,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { AxiosError } from 'axios';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -45,16 +46,17 @@ export const SignUpPage = () => {
       });
       toast.success('Account created successfully!');
       navigate('/conversations');
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string; error?: string; errors?: Array<{ message: string }> }>;
       logger.error('Registration error', error);
-      logger.error('Error response', error.response?.data);
+      logger.error('Error response', axiosError.response?.data);
 
       // Extract detailed error message
       const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.response?.data?.errors?.[0]?.message ||
-        error.message ||
+        axiosError.response?.data?.message ||
+        axiosError.response?.data?.error ||
+        axiosError.response?.data?.errors?.[0]?.message ||
+        axiosError.message ||
         'Registration failed. Please try again.';
 
       setError(errorMessage);

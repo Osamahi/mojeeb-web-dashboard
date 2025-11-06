@@ -8,9 +8,23 @@ import api from '@/lib/api';
 import type { TeamMember, TeamRole, InviteTeamMemberRequest, InviteTeamMemberResponse, TeamStats } from '../types';
 import { logger } from '@/lib/logger';
 
+interface CollaboratorInfo {
+  user_id: string;
+  email: string;
+  full_name: string;
+  role: TeamRole;
+  granted_at: string;
+}
+
+interface CollaboratorsApiResponse {
+  owner?: CollaboratorInfo;
+  collaborators?: CollaboratorInfo[];
+  totalUsers?: number;
+}
+
 interface CollaboratorsResponse {
   owner: TeamMember;
-  collaborators: TeamMember[];  // Changed from 'members' to 'collaborators'
+  collaborators: TeamMember[];
   totalUsers: number;
 }
 
@@ -21,7 +35,7 @@ class TeamService {
    */
   async getTeamMembers(agentId: string): Promise<TeamMember[]> {
     try {
-      const { data } = await api.get<{ success: boolean; data: any }>(
+      const { data } = await api.get<{ success: boolean; data: CollaboratorsApiResponse }>(
         `/api/agents/${agentId}/collaborators`
       );
 
@@ -29,7 +43,7 @@ class TeamService {
       const responseData = data.data || data;
 
       // Map backend CollaboratorInfo to frontend TeamMember
-      const mapCollaboratorToTeamMember = (collaborator: any): TeamMember => ({
+      const mapCollaboratorToTeamMember = (collaborator: CollaboratorInfo): TeamMember => ({
         id: collaborator.user_id,
         email: collaborator.email,
         name: collaborator.full_name,

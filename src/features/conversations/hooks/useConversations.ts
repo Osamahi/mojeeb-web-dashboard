@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { queryKeys } from '@/lib/queryKeys';
 import { fetchConversations } from '../services/conversationService';
@@ -48,7 +49,7 @@ export function useConversations() {
     },
     enabled: !!agentId,
     staleTime: 30 * 1000, // 30 seconds
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: AxiosError) => {
       // Don't retry on authentication errors (401, 403)
       if (error?.response?.status === 401 || error?.response?.status === 403) {
         return false;

@@ -229,7 +229,7 @@ export const components = {
  */
 export function getColor(path: string): string {
   const parts = path.split('.');
-  let value: any = colors;
+  let value: Record<string, unknown> = colors as Record<string, unknown>;
 
   for (const part of parts) {
     value = value[part];

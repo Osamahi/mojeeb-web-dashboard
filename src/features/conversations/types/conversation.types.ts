@@ -23,7 +23,7 @@ export enum ConversationSentiment {
 export interface CustomerMetadata {
   profile_picture?: string;
   platform?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Conversation {

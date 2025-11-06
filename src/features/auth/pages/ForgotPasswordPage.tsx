@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { AxiosError } from 'axios';
 import { motion } from 'framer-motion';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -32,8 +33,9 @@ export const ForgotPasswordPage = () => {
       await authService.forgotPassword(data);
       setIsSuccess(true);
       toast.success('Password reset link sent to your email');
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send reset link');
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      toast.error(axiosError.response?.data?.message || 'Failed to send reset link');
     } finally {
       setIsLoading(false);
     }

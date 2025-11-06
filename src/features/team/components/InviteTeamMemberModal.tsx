@@ -35,7 +35,7 @@ export default function InviteTeamMemberModal({ isOpen, onClose, agentId }: Invi
       queryClient.invalidateQueries({ queryKey: queryKeys.teamStats(agentId) });
       handleClose();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.response?.data?.message || 'Failed to invite team member');
     },
   });

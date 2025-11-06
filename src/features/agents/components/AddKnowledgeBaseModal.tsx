@@ -75,7 +75,7 @@ export default function AddKnowledgeBaseModal({
       onClose();
       onSuccess();
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       logger.error('Error creating KB', error);
       if (error.message !== 'Validation failed') {
         toast.error('Failed to create knowledge base');
