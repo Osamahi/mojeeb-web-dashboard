@@ -1,7 +1,17 @@
 import axios, { AxiosError } from 'axios';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import {
+  setTokens,
+  getAccessToken,
+  getRefreshToken,
+  clearTokens,
+} from './tokenManager';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5267';
+// Re-export token management functions for backward compatibility
+export { setTokens, getAccessToken, getRefreshToken, clearTokens };
+
+// Export API_URL for use in other modules (e.g., AuthInitializer)
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5267';
 const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT) || 30000;
 
 // Create axios instance
@@ -12,20 +22,6 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
-// Token management - Read from localStorage dynamically to avoid race conditions
-export const setTokens = (access: string, refresh: string) => {
-  localStorage.setItem('accessToken', access);
-  localStorage.setItem('refreshToken', refresh);
-};
-
-export const getAccessToken = () => localStorage.getItem('accessToken');
-export const getRefreshToken = () => localStorage.getItem('refreshToken');
-
-export const clearTokens = () => {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
-};
 
 // Request interceptor - Add JWT token (read from localStorage each time to avoid race conditions)
 api.interceptors.request.use(
@@ -121,15 +117,15 @@ api.interceptors.response.use(
       }
 
       try {
-        const { data } = await axios.post(`${API_URL}/api/auth/refresh`, {
-          refreshToken: storedRefreshToken,
-        });
+        // Use centralized authService.refreshToken to avoid code duplication
+        const { authService } = await import('@/features/auth/services/authService');
+        const tokens = await authService.refreshToken(storedRefreshToken);
 
-        setTokens(data.accessToken, data.refreshToken);
-        processQueue(null, data.accessToken);
+        setTokens(tokens.accessToken, tokens.refreshToken);
+        processQueue(null, tokens.accessToken);
 
         if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
         }
 
         return api(originalRequest);

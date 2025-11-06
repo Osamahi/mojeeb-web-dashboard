@@ -59,6 +59,13 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
     },
   });
 
+  // Define handleSave BEFORE using it in useEffect (fixes hoisting error)
+  const handleSave = useCallback(() => {
+    if (isModified && !saveMutation.isPending) {
+      saveMutation.mutate();
+    }
+  }, [isModified, saveMutation]);
+
   // Debounced auto-save
   useEffect(() => {
     if (!isModified) return;
@@ -69,12 +76,6 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
 
     return () => clearTimeout(timeout);
   }, [name, prompt, description, isModified, handleSave]);
-
-  const handleSave = useCallback(() => {
-    if (isModified && !saveMutation.isPending) {
-      saveMutation.mutate();
-    }
-  }, [isModified, saveMutation]);
 
   const formatLastSaved = () => {
     if (!lastSaved) return null;

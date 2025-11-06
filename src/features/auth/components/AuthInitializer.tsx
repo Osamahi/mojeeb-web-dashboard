@@ -1,8 +1,8 @@
 import { useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { getAccessToken, getRefreshToken, setTokens } from '@/lib/api';
-import axios from 'axios';
+import { getAccessToken, getRefreshToken, setTokens } from '@/lib/tokenManager';
+import { authService } from '../services/authService';
 
 interface AuthInitializerProps {
   children: ReactNode;
@@ -51,13 +51,11 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
           console.log('AuthInitializer: Access token missing, attempting refresh...');
 
           try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5267';
-            const { data } = await axios.post(`${API_URL}/api/auth/refresh`, {
-              refreshToken: refreshToken,
-            });
+            // Use centralized authService.refreshToken to avoid code duplication
+            const tokens = await authService.refreshToken(refreshToken);
 
             // Store new tokens
-            setTokens(data.accessToken, data.refreshToken);
+            setTokens(tokens.accessToken, tokens.refreshToken);
 
             console.log('AuthInitializer: Token refresh successful');
             setIsInitializing(false);

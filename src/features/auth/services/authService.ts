@@ -1,4 +1,6 @@
 import api from '@/lib/api';
+import axios from 'axios';
+import { API_URL } from '@/lib/api';
 import type {
   LoginCredentials,
   RegisterData,
@@ -188,6 +190,25 @@ class AuthService {
    */
   getUser(): User | null {
     return useAuthStore.getState().user;
+  }
+
+  /**
+   * Refresh access token using refresh token
+   * Centralized token refresh logic to avoid duplication
+   *
+   * Note: Uses raw axios instead of api instance to avoid triggering interceptors
+   * and causing recursion when called from the response interceptor
+   */
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+    const { data } = await axios.post<any>(`${API_URL}/api/auth/refresh`, {
+      refreshToken: refreshToken,
+    });
+
+    // Backend returns snake_case, convert to camelCase
+    return {
+      accessToken: data.accessToken || data.access_token,
+      refreshToken: data.refreshToken || data.refresh_token,
+    };
   }
 }
 

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '../types/auth.types';
-import { setTokens as setApiTokens, clearTokens as clearApiTokens } from '@/lib/api';
+import { setTokens as setApiTokens, clearTokens as clearApiTokens } from '@/lib/tokenManager';
 
 interface AuthState {
   user: User | null;
