@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '../types/auth.types';
 import { setTokens as setApiTokens, clearTokens as clearApiTokens } from '@/lib/tokenManager';
+import { setSentryUser, clearSentryUser } from '@/lib/sentry';
 
 interface AuthState {
   user: User | null;
@@ -36,6 +37,10 @@ export const useAuthStore = create<AuthState>()(
 
       setAuth: (user, accessToken, refreshToken) => {
         setApiTokens(accessToken, refreshToken);
+
+        // Set Sentry user context for error tracking
+        setSentryUser(user.id, user.email, user.name);
+
         set({
           user,
           accessToken,
@@ -46,6 +51,10 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         clearApiTokens();
+
+        // Clear Sentry user context on logout
+        clearSentryUser();
+
         set({
           user: null,
           accessToken: null,

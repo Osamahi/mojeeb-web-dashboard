@@ -9,6 +9,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import AppleSignin from 'react-apple-signin-auth';
 import { toast } from 'sonner';
 import { authService } from '../services/authService';
+import { env } from '@/config/env';
 
 interface SocialLoginButtonsProps {
   disabled?: boolean;
@@ -106,9 +107,9 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
       {/* Apple Sign In */}
       <AppleSignin
         authOptions={{
-          clientId: import.meta.env.VITE_APPLE_CLIENT_ID,
+          clientId: env.VITE_APPLE_CLIENT_ID || '',
           scope: 'email name',
-          redirectURI: import.meta.env.VITE_APPLE_REDIRECT_URI,
+          redirectURI: env.VITE_APPLE_REDIRECT_URI || '',
           usePopup: true,
         }}
         onSuccess={handleAppleSignIn}

@@ -6,13 +6,14 @@ import {
   getRefreshToken,
   clearTokens,
 } from './tokenManager';
+import { env } from '@/config/env';
 
 // Re-export token management functions for backward compatibility
 export { setTokens, getAccessToken, getRefreshToken, clearTokens };
 
 // Export API_URL for use in other modules (e.g., AuthInitializer)
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5267';
-const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT) || 30000;
+export const API_URL = env.VITE_API_URL;
+const API_TIMEOUT = env.VITE_API_TIMEOUT;
 
 // Create axios instance
 const api = axios.create({
