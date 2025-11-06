@@ -5,6 +5,7 @@
  * Assistant = BLACK background + WHITE text
  */
 
+import { memo } from 'react';
 import { Copy } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import type { ChatMessage } from '../../types';
@@ -18,7 +19,7 @@ interface ChatMessageBubbleProps {
   message: ChatMessage;
 }
 
-export default function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
+const ChatMessageBubble = memo(function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
   const isUser = isCustomerMessage(message);
   const isDeleted = isMessageDeleted(message);
   const attachments = parseAttachments(message.attachments);
@@ -131,4 +132,6 @@ export default function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
       </div>
     </div>
   );
-}
+});
+
+export default ChatMessageBubble;

@@ -4,6 +4,7 @@
  * NO animations, NO gradients - just clean borders and minimal hover states
  */
 
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Edit2, Trash2, Crown, Sliders } from 'lucide-react';
 import { format } from 'date-fns';
@@ -15,7 +16,7 @@ interface AgentCardProps {
   agent: Agent;
 }
 
-export default function AgentCard({ agent }: AgentCardProps) {
+const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   const statusVariants: Record<AgentStatus, 'default' | 'primary' | 'success' | 'warning' | 'danger'> = {
     draft: 'warning',
     active: 'success',
@@ -112,4 +113,6 @@ export default function AgentCard({ agent }: AgentCardProps) {
       </div>
     </Link>
   );
-}
+});
+
+export default AgentCard;

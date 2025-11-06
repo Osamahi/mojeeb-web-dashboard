@@ -225,4 +225,13 @@ export const handlers = [
       updated_at: new Date().toISOString(),
     });
   }),
+
+  // ========== File Upload Endpoints ==========
+
+  // Upload image/avatar (multipart/form-data)
+  http.post(`${API_URL}/api/chat/upload-image`, () => {
+    return HttpResponse.json({
+      url: 'https://example.com/mock-upload.jpg',
+    });
+  }),
 ];

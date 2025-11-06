@@ -3,6 +3,7 @@
  * WhatsApp-style conversation preview with avatar, name, last message, timestamp
  */
 
+import { memo } from 'react';
 import { User, Bot } from 'lucide-react';
 import type { Conversation } from '../../types';
 import { formatConversationTime } from '../../utils/timeFormatters';
@@ -17,7 +18,7 @@ interface ConversationListItemProps {
   onSelect: () => void;
 }
 
-export default function ConversationListItem({
+const ConversationListItem = memo(function ConversationListItem({
   conversation,
   isSelected,
   onSelect,
@@ -110,4 +111,6 @@ export default function ConversationListItem({
       </div>
     </div>
   );
-}
+});
+
+export default ConversationListItem;

@@ -1,17 +1,21 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import { LoginPage } from './features/auth/pages/LoginPage';
-import { SignUpPage } from './features/auth/pages/SignUpPage';
-import { ForgotPasswordPage } from './features/auth/pages/ForgotPasswordPage';
-import { DashboardLayout } from './components/layout/DashboardLayout';
-import { ConversationsPage } from './pages/ConversationsPage';
-import { SettingsPage } from './pages/SettingsPage';
-import AgentsPage from './features/agents/pages/AgentsPage';
-import StudioPage from './features/agents/pages/StudioPage';
-import UsersPage from './features/users/pages/UsersPage';
-import TeamPage from './features/team/pages/TeamPage';
 import { useAuthStore } from './features/auth/stores/authStore';
 import { Role } from './features/auth/types/auth.types';
 import { AuthInitializer } from './features/auth/components/AuthInitializer';
+import { PageSpinner } from './components/ui/Spinner';
+
+// Lazy load all page components for code splitting
+const LoginPage = lazy(() => import('./features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const SignUpPage = lazy(() => import('./features/auth/pages/SignUpPage').then(m => ({ default: m.SignUpPage })));
+const ForgotPasswordPage = lazy(() => import('./features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const DashboardLayout = lazy(() => import('./components/layout/DashboardLayout').then(m => ({ default: m.DashboardLayout })));
+const ConversationsPage = lazy(() => import('./pages/ConversationsPage').then(m => ({ default: m.ConversationsPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const AgentsPage = lazy(() => import('./features/agents/pages/AgentsPage'));
+const StudioPage = lazy(() => import('./features/agents/pages/StudioPage'));
+const UsersPage = lazy(() => import('./features/users/pages/UsersPage'));
+const TeamPage = lazy(() => import('./features/team/pages/TeamPage'));
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -22,7 +26,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   // Wrap with AuthInitializer to validate tokens before rendering
-  return <AuthInitializer>{children}</AuthInitializer>;
+  return (
+    <AuthInitializer>
+      <Suspense fallback={<PageSpinner />}>
+        {children}
+      </Suspense>
+    </AuthInitializer>
+  );
 };
 
 // SuperAdmin-only route wrapper
@@ -38,7 +48,11 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/conversations" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <Suspense fallback={<PageSpinner />}>
+      {children}
+    </Suspense>
+  );
 };
 
 // Public route wrapper (redirect to conversations if already authenticated)
@@ -49,7 +63,11 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/conversations" replace />;
   }
 
-  return <>{children}</>;
+  return (
+    <Suspense fallback={<PageSpinner />}>
+      {children}
+    </Suspense>
+  );
 };
 
 export const router = createBrowserRouter([
