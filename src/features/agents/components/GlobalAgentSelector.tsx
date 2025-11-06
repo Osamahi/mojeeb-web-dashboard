@@ -121,7 +121,7 @@ export default function GlobalAgentSelector({ onAgentSwitch }: GlobalAgentSelect
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-neutral-200 rounded-lg shadow-lg overflow-hidden z-50 max-h-[400px] overflow-y-auto">
+        <div className="absolute top-full right-0 md:left-0 md:right-auto mt-2 w-[90vw] max-w-xs md:w-64 bg-white border border-neutral-200 rounded-lg shadow-lg overflow-hidden z-50 max-h-[400px] overflow-y-auto">
           {/* Agent List */}
           <div className="py-1">
             {agents.map((agent) => (
