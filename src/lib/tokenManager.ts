@@ -8,15 +8,46 @@
 
 import SecureLS from 'secure-ls';
 import { logger } from './logger';
+import { env } from '@/config/env';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
+
+/**
+ * Generate a secure encryption key based on environment or browser fingerprint
+ * This provides basic obfuscation - for production, use environment variable
+ */
+const getEncryptionKey = (): string => {
+  // Use environment variable if provided (recommended for production)
+  if (env.VITE_TOKEN_ENCRYPTION_KEY) {
+    return env.VITE_TOKEN_ENCRYPTION_KEY;
+  }
+
+  // Fallback: Generate key from browser fingerprint + app identifier
+  // NOTE: This is obfuscation, not true security. Set VITE_TOKEN_ENCRYPTION_KEY for production.
+  const userAgent = navigator.userAgent;
+  const screen = `${window.screen.width}x${window.screen.height}`;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const appSecret = 'mojeeb-v1'; // App-specific identifier
+
+  const fingerprint = `${userAgent}-${screen}-${timezone}-${appSecret}`;
+
+  // Simple hash function to generate consistent key from fingerprint
+  let hash = 0;
+  for (let i = 0; i < fingerprint.length; i++) {
+    const char = fingerprint.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+
+  return `mojeeb-${Math.abs(hash).toString(36)}-v1`;
+};
 
 // Initialize SecureLS with AES encryption
 const secureStorage = new SecureLS({
   encodingType: 'aes',
   isCompression: false, // Disable compression to avoid issues with JWT strings
-  encryptionSecret: 'mojeeb-secure-tokens-v1', // Secret key for AES encryption
+  encryptionSecret: getEncryptionKey(),
 });
 
 /**

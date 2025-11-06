@@ -16,6 +16,9 @@ import {
   type RealtimeEventType,
 } from '../services/conversationService';
 import { chatApiService } from '../services/chatApiService';
+import { logger } from '@/lib/logger';
+import type { CatchError } from '@/lib/errors';
+import { getErrorMessage } from '@/lib/errors';
 
 const CHAT_PAGE_SIZE = 50;
 
@@ -98,9 +101,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         isLoading: false,
         currentConversationId: conversationId,
       });
-    } catch (error: any) {
-      console.error('Error fetching messages:', error);
-      set({ error: error.message, isLoading: false });
+    } catch (error: CatchError) {
+      logger.error('Error fetching messages', error instanceof Error ? error : new Error(String(error)));
+      set({ error: getErrorMessage(error), isLoading: false });
     }
   },
 
@@ -114,9 +117,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
       // Messages will appear via real-time subscription
       set({ isSending: false });
-    } catch (error: any) {
-      console.error('Error sending message with AI:', error);
-      set({ error: error.message, isSending: false });
+    } catch (error: CatchError) {
+      logger.error('Error sending message with AI', error instanceof Error ? error : new Error(String(error)));
+      set({ error: getErrorMessage(error), isSending: false });
       throw error;
     }
   },
@@ -136,9 +139,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
       // Message will appear via real-time subscription
       set({ isSending: false });
-    } catch (error: any) {
-      console.error('Error sending admin message:', error);
-      set({ error: error.message, isSending: false });
+    } catch (error: CatchError) {
+      logger.error('Error sending admin message', error instanceof Error ? error : new Error(String(error)));
+      set({ error: getErrorMessage(error), isSending: false });
       throw error;
     }
   },
@@ -173,9 +176,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       });
 
       set({ isSending: false });
-    } catch (error: any) {
-      console.error('Error uploading images:', error);
-      set({ error: error.message, isSending: false });
+    } catch (error: CatchError) {
+      logger.error('Error uploading images', error instanceof Error ? error : new Error(String(error)));
+      set({ error: getErrorMessage(error), isSending: false });
       throw error;
     }
   },

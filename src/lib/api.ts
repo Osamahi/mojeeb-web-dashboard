@@ -7,6 +7,8 @@ import {
   clearTokens,
 } from './tokenManager';
 import { env } from '@/config/env';
+import { shouldRetry, calculateExponentialDelay, sleep } from './retryConfig';
+import { logger } from './logger';
 
 // Re-export token management functions for backward compatibility
 export { setTokens, getAccessToken, getRefreshToken, clearTokens };
@@ -70,7 +72,10 @@ const shouldRedirectToLogin = (): boolean => {
 
   // Prevent redirect if we just redirected recently (redirect loop protection)
   if (timeSinceLastRedirect < REDIRECT_COOLDOWN) {
-    console.warn('Redirect loop detected - skipping redirect to login');
+    logger.warn('Redirect loop detected - skipping redirect to login', {
+      timeSinceLastRedirect,
+      cooldown: REDIRECT_COOLDOWN,
+    });
     return false;
   }
 
@@ -90,7 +95,15 @@ const redirectToLogin = () => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+      _retryCount?: number;
+    };
+
+    // Initialize retry count if not present
+    if (!originalRequest._retryCount) {
+      originalRequest._retryCount = 0;
+    }
 
     // If 401 and not already retried, attempt token refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -138,6 +151,40 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
+
+    // Handle retryable errors with exponential backoff (429, 5xx, network errors)
+    const attemptNumber = originalRequest._retryCount + 1;
+
+    if (shouldRetry(error, attemptNumber)) {
+      originalRequest._retryCount = attemptNumber;
+
+      const delay = calculateExponentialDelay(attemptNumber - 1);
+
+      logger.info('Retrying request with exponential backoff', {
+        url: originalRequest.url,
+        method: originalRequest.method,
+        attemptNumber,
+        delay,
+        status: error.response?.status,
+      });
+
+      // Wait for the calculated delay
+      await sleep(delay);
+
+      // Retry the request
+      return api(originalRequest);
+    }
+
+    // If we get here, either:
+    // 1. Error is not retryable (4xx client error)
+    // 2. Max retries exceeded
+    // 3. Other non-retryable condition
+    logger.error('Request failed after retries', error, {
+      url: originalRequest.url,
+      method: originalRequest.method,
+      status: error.response?.status,
+      retryCount: originalRequest._retryCount,
+    });
 
     return Promise.reject(error);
   }

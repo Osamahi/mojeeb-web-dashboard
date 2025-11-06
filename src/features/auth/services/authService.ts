@@ -13,6 +13,7 @@ import type {
 import { useAuthStore } from '../stores/authStore';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { logger } from '@/lib/logger';
 
 // API Response Types (snake_case from backend)
 interface ApiAuthResponse {
@@ -37,7 +38,7 @@ class AuthService {
       await agentService.getAgents();
       useAgentStore.getState().initializeAgentSelection();
     } catch (error) {
-      console.error('Failed to initialize agent selection:', error);
+      logger.error('Failed to initialize agent selection', error instanceof Error ? error : new Error(String(error)));
       // Don't fail the authentication if agent initialization fails
     }
   }
@@ -144,7 +145,7 @@ class AuthService {
     try {
       await api.post('/api/auth/logout');
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error('Logout error', error instanceof Error ? error : new Error(String(error)));
     } finally {
       // Clear auth state regardless of API call result
       useAuthStore.getState().logout();

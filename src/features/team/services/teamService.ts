@@ -6,6 +6,7 @@
 
 import api from '@/lib/api';
 import type { TeamMember, TeamRole, InviteTeamMemberRequest, InviteTeamMemberResponse, TeamStats } from '../types';
+import { logger } from '@/lib/logger';
 
 interface CollaboratorsResponse {
   owner: TeamMember;
@@ -52,7 +53,7 @@ class TeamService {
 
       return allMembers;
     } catch (error) {
-      console.error('Failed to fetch team members:', error);
+      logger.error('Failed to fetch team members', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -65,7 +66,7 @@ class TeamService {
       const teamMembers = await this.getTeamMembers(agentId);
       return teamMembers.filter((member) => member.role === role);
     } catch (error) {
-      console.error(`Failed to fetch team members with role ${role}:`, error);
+      logger.error(`Failed to fetch team members with role ${role}`, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -87,7 +88,7 @@ class TeamService {
 
       return stats;
     } catch (error) {
-      console.error('Failed to fetch team stats:', error);
+      logger.error('Failed to fetch team stats', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -111,7 +112,7 @@ class TeamService {
       );
       return data;
     } catch (error) {
-      console.error('Failed to invite team member:', error);
+      logger.error('Failed to invite team member', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -132,7 +133,7 @@ class TeamService {
         role: newRole,
       });
     } catch (error) {
-      console.error(`Failed to update role for user ${userId}:`, error);
+      logger.error(`Failed to update role for user ${userId}`, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -155,7 +156,7 @@ class TeamService {
         },
       });
     } catch (error) {
-      console.error(`Failed to remove team member ${userId}:`, error);
+      logger.error(`Failed to remove team member ${userId}`, error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }

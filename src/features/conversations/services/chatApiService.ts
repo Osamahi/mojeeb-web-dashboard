@@ -5,6 +5,7 @@
 
 import api from '@/lib/api';
 import type { ChatMessage, SendMessageWithAIRequest } from '../types';
+import { logger } from '@/lib/logger';
 
 class ChatApiService {
   /**
@@ -25,7 +26,7 @@ class ChatApiService {
 
       return data;
     } catch (error) {
-      console.error('Error sending message with AI:', error);
+      logger.error('Error sending message with AI', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -54,7 +55,7 @@ class ChatApiService {
 
       return data;
     } catch (error) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -88,7 +89,7 @@ class ChatApiService {
 
       return data.attachment;
     } catch (error) {
-      console.error('Error uploading media:', error);
+      logger.error('Error uploading media', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
@@ -114,7 +115,7 @@ class ChatApiService {
 
       return JSON.stringify({ images: attachments });
     } catch (error) {
-      console.error('Error uploading images:', error);
+      logger.error('Error uploading images', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }

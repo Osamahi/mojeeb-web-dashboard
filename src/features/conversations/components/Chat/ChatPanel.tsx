@@ -52,7 +52,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
       // Unsubscribe on unmount
       unsubscribe();
     };
-  }, [conversation.id]); // Only conversation.id dependency
+  }, [conversation.id, fetchMessages, subscribe, unsubscribe]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {

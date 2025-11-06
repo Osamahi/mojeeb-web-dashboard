@@ -12,6 +12,7 @@ import type {
   UpdateConversationRequest,
 } from '../types';
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 const PAGE_SIZE = 20;
 const CHAT_PAGE_SIZE = 50;
@@ -41,7 +42,7 @@ export const fetchConversations = async ({
     .range(offset, offset + limit - 1);
 
   if (error) {
-    console.error('Error fetching conversations:', error);
+    logger.error('Error fetching conversations', error);
     throw error;
   }
 
@@ -69,7 +70,7 @@ export const fetchMessages = async ({
     .range(offset, offset + limit - 1);
 
   if (error) {
-    console.error('Error fetching messages:', error);
+    logger.error('Error fetching messages', error);
     throw error;
   }
 
@@ -212,7 +213,7 @@ export const updateConversation = async ({
     .single();
 
   if (error) {
-    console.error('Error updating conversation:', error);
+    logger.error('Error updating conversation', error);
     throw error;
   }
 
@@ -228,7 +229,7 @@ export const markConversationAsRead = async (conversationId: string): Promise<vo
     .eq('id', conversationId);
 
   if (error) {
-    console.error('Error marking conversation as read:', error);
+    logger.error('Error marking conversation as read', error);
     throw error;
   }
 };
@@ -255,7 +256,7 @@ export const updateMessage = async ({
     .single();
 
   if (error) {
-    console.error('Error updating message:', error);
+    logger.error('Error updating message', error);
     throw error;
   }
 
@@ -274,7 +275,7 @@ export const softDeleteMessage = async (messageId: string): Promise<void> => {
     .eq('id', messageId);
 
   if (error) {
-    console.error('Error deleting message:', error);
+    logger.error('Error deleting message', error);
     throw error;
   }
 };
@@ -296,7 +297,7 @@ export const toggleAIMode = async (
     .single();
 
   if (error) {
-    console.error('Error toggling AI mode:', error);
+    logger.error('Error toggling AI mode', error);
     throw error;
   }
 

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Agent, KnowledgeBase } from '../types/agent.types';
+import { logger } from '@/lib/logger';
 
 interface AgentState {
   agents: Agent[];
@@ -82,7 +83,7 @@ export const useAgentStore = create<AgentState>()(
         const agent = agents.find((a) => a.id === agentId);
 
         if (!agent) {
-          console.error('Agent not found:', agentId);
+          logger.error('Agent not found', new Error(`Agent ID: ${agentId}`));
           return;
         }
 
@@ -97,7 +98,7 @@ export const useAgentStore = create<AgentState>()(
             await onReload();
           }
         } catch (error) {
-          console.error('Error switching agent:', error);
+          logger.error('Error switching agent', error instanceof Error ? error : new Error(String(error)));
           set({ error: error instanceof Error ? error.message : 'Failed to switch agent' });
         } finally {
           set({ isAgentSwitching: false });
