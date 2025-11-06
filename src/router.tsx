@@ -6,6 +6,7 @@ import { DashboardLayout } from './components/layout/DashboardLayout';
 import { ConversationsPage } from './pages/ConversationsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import AgentsPage from './features/agents/pages/AgentsPage';
+import StudioPage from './features/agents/pages/StudioPage';
 import UsersPage from './features/users/pages/UsersPage';
 import TeamPage from './features/team/pages/TeamPage';
 import { useAuthStore } from './features/auth/stores/authStore';
@@ -89,6 +90,10 @@ export const router = createBrowserRouter([
       {
         path: 'agents',
         element: <AgentsPage />,
+      },
+      {
+        path: 'studio',
+        element: <StudioPage />,
       },
       {
         path: 'team',

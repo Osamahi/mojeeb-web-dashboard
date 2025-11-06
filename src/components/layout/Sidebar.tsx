@@ -17,11 +17,13 @@ import {
   UserCog,
   MessageSquare,
   Settings,
+  Sliders,
 } from 'lucide-react';
 import { Role } from '@/features/auth/types/auth.types';
 import { useUIStore } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
 
@@ -35,6 +37,7 @@ interface NavigationItem {
 const navigation: NavigationItem[] = [
   { name: 'Conversations', href: '/conversations', icon: MessageSquare },
   { name: 'Agents', href: '/agents', icon: Bot },
+  { name: 'Studio', href: '/studio', icon: Sliders },
   { name: 'Team', href: '/team', icon: UserCog },
   { name: 'Users', href: '/users', icon: Users, requireSuperAdmin: true },
   { name: 'Settings', href: '/settings', icon: Settings },
@@ -43,6 +46,7 @@ const navigation: NavigationItem[] = [
 export const Sidebar = () => {
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
+  const currentAgent = useAgentStore((state) => state.globalSelectedAgent);
   const isMobile = useIsMobile();
 
   const {
@@ -137,6 +141,10 @@ export const Sidebar = () => {
                 .filter((item) => {
                   // Hide SuperAdmin-only items if user is not SuperAdmin
                   if (item.requireSuperAdmin && user?.role !== Role.SuperAdmin) {
+                    return false;
+                  }
+                  // Hide Studio if no current agent selected
+                  if (item.name === 'Studio' && !currentAgent) {
                     return false;
                   }
                   return true;

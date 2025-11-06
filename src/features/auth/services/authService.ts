@@ -77,6 +77,41 @@ class AuthService {
   }
 
   /**
+   * Login with Apple Sign-In
+   */
+  async loginWithApple(idToken: string): Promise<AuthResponse> {
+    const { data } = await api.post<any>('/api/auth/oauth', {
+      provider: 'apple',
+      access_token: idToken,
+      id_token: idToken,
+      email: null,
+      name: null,
+      avatar_url: null,
+    });
+
+    // Backend returns snake_case, convert to camelCase
+    const authResponse: AuthResponse = {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      user: data.user,
+    };
+
+    // Update auth store
+    useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
+
+    // After successful login, fetch agents and initialize selection
+    try {
+      await agentService.getAgents();
+      useAgentStore.getState().initializeAgentSelection();
+    } catch (error) {
+      console.error('Failed to initialize agent selection:', error);
+      // Don't fail the login if agent initialization fails
+    }
+
+    return authResponse;
+  }
+
+  /**
    * Register new user
    */
   async register(registerData: RegisterData): Promise<AuthResponse> {

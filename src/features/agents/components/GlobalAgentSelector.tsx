@@ -8,17 +8,10 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAgentStore } from '../stores/agentStore';
-import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/utils';
-import type { AgentStatus } from '../types';
 
-interface GlobalAgentSelectorProps {
-  onAgentSwitch?: () => Promise<void>;
-}
-
-export default function GlobalAgentSelector({ onAgentSwitch }: GlobalAgentSelectorProps) {
+export default function GlobalAgentSelector() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -46,18 +39,13 @@ export default function GlobalAgentSelector({ onAgentSwitch }: GlobalAgentSelect
     setIsOpen(false);
     if (globalSelectedAgent?.id === agentId) return;
 
-    await switchAgent(agentId, onAgentSwitch);
+    // No callback needed - React Query will auto-refetch queries with agentId in keys
+    await switchAgent(agentId);
   };
 
   const handleCreateAgent = () => {
     setIsOpen(false);
     navigate('/agents/new');
-  };
-
-  const statusVariants: Record<AgentStatus, 'default' | 'primary' | 'success' | 'warning' | 'danger'> = {
-    draft: 'warning',
-    active: 'success',
-    deleted: 'danger',
   };
 
   // Show loading spinner during agent switching

@@ -5,23 +5,34 @@ import { Sidebar } from './Sidebar';
 import { MobileHeader } from './MobileHeader';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import GlobalAgentSelector from '@/features/agents/components/GlobalAgentSelector';
-import { useAgentDataReload } from '@/features/agents/hooks/useAgentDataReload';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { queryKeys } from '@/lib/queryKeys';
 import { cn } from '@/lib/utils';
 
 export const DashboardLayout = () => {
-  const reloadAgentData = useAgentDataReload();
   const isMobile = useIsMobile();
   const { setAgents, initializeAgentSelection } = useAgentStore();
   const hasInitialized = useRef(false);
 
   // Fetch agents on mount - critical for GlobalAgentSelector to work on refresh
   const { data: agents, isLoading } = useQuery({
-    queryKey: ['agents'],
+    queryKey: queryKeys.agents(),
     queryFn: () => agentService.getAgents(),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: (failureCount, error: any) => {
+      // Don't retry on authentication errors (401, 403)
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      // Don't retry on rate limiting
+      if (error?.response?.status === 429) {
+        return false;
+      }
+      // Retry other errors up to 2 times
+      return failureCount < 2;
+    },
   });
 
   // Sync agents to store and initialize selection ONCE
@@ -31,7 +42,9 @@ export const DashboardLayout = () => {
       initializeAgentSelection();
       hasInitialized.current = true;
     }
-  }, [isLoading, agents, setAgents, initializeAgentSelection]);
+    // Zustand functions are stable - no need in dependency array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, agents]);
 
   return (
     <>
@@ -53,7 +66,7 @@ export const DashboardLayout = () => {
 
             {/* Center: Agent Selector */}
             <div className="flex-1 flex items-center justify-center max-w-md">
-              <GlobalAgentSelector onAgentSwitch={reloadAgentData} />
+              <GlobalAgentSelector />
             </div>
 
             {/* Right: User Profile */}

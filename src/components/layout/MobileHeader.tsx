@@ -8,12 +8,10 @@ import { Menu, X } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import GlobalAgentSelector from '@/features/agents/components/GlobalAgentSelector';
-import { useAgentDataReload } from '@/features/agents/hooks/useAgentDataReload';
 
 export const MobileHeader = () => {
   const isMobile = useIsMobile();
   const { isSidebarOpen, toggleSidebar } = useUIStore();
-  const reloadAgentData = useAgentDataReload();
 
   // Only render on mobile
   if (!isMobile) return null;
@@ -45,7 +43,7 @@ export const MobileHeader = () => {
 
       {/* Agent Selector */}
       <div className="ml-auto">
-        <GlobalAgentSelector onAgentSwitch={reloadAgentData} />
+        <GlobalAgentSelector />
       </div>
     </header>
   );

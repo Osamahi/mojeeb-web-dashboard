@@ -8,6 +8,7 @@ import { X, Mail, User, Shield } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { teamService } from '../services/teamService';
+import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import type { TeamRole, InviteTeamMemberRequest } from '../types';
@@ -30,8 +31,8 @@ export default function InviteTeamMemberModal({ isOpen, onClose, agentId }: Invi
     mutationFn: (data: InviteTeamMemberRequest) => teamService.inviteTeamMember(agentId, data),
     onSuccess: () => {
       toast.success('Team member invited successfully!');
-      queryClient.invalidateQueries({ queryKey: ['team-members', agentId] });
-      queryClient.invalidateQueries({ queryKey: ['team-stats', agentId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teamMembers(agentId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.teamStats(agentId) });
       handleClose();
     },
     onError: (error: any) => {

@@ -13,21 +13,23 @@ import InviteTeamMemberModal from '../components/InviteTeamMemberModal';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { useAgentContext } from '@/hooks/useAgentContext';
+import { queryKeys } from '@/lib/queryKeys';
 import NoAgentEmptyState from '@/features/agents/components/NoAgentEmptyState';
 
 export default function TeamPage() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const globalSelectedAgent = useAgentStore((state) => state.globalSelectedAgent);
+  const { agent: globalSelectedAgent, agentId } = useAgentContext();
 
+  // Fetch team members - automatically refetches when agentId changes
   const {
     data: teamMembers,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['team-members', globalSelectedAgent?.id],
-    queryFn: () => teamService.getTeamMembers(globalSelectedAgent!.id),
-    enabled: !!globalSelectedAgent?.id,
+    queryKey: queryKeys.teamMembers(agentId),
+    queryFn: () => teamService.getTeamMembers(agentId!),
+    enabled: !!agentId,
   });
 
   // Show empty state if no agent is selected

@@ -1,10 +1,12 @@
 /**
  * Conversation List Component
- * WhatsApp-style conversation list with infinite scroll and real-time updates
+ * WhatsApp-style conversation list with real-time updates via React Query
  */
 
-import { useEffect, useRef, UIEvent } from 'react';
+import { useRef, UIEvent } from 'react';
 import { RefreshCw } from 'lucide-react';
+import { useConversations } from '../../hooks/useConversations';
+import { useConversationSubscription } from '../../hooks/useConversationSubscription';
 import { useConversationStore } from '../../stores/conversationStore';
 import ConversationListItem from './ConversationListItem';
 import { ConversationListSkeleton, NoConversationsState } from '../shared/LoadingSkeleton';
@@ -16,47 +18,28 @@ interface ConversationListProps {
 }
 
 export default function ConversationList({ agentId, onConversationSelect }: ConversationListProps) {
-  const {
-    conversations,
-    selectedConversation,
-    isLoading,
-    hasMore,
-    error,
-    fetchConversations,
-    selectConversation,
-    loadMore,
-    subscribe,
-    unsubscribe,
-  } = useConversationStore();
+  // Fetch conversations via React Query - auto-refetches when agentId changes
+  const { data: conversations = [], isLoading, error, refetch } = useConversations();
+
+  // Subscribe to real-time updates - automatically syncs with React Query cache
+  useConversationSubscription();
+
+  // UI state from Zustand store
+  const selectedConversation = useConversationStore((state) => state.selectedConversation);
+  const selectConversation = useConversationStore((state) => state.selectConversation);
 
   const listRef = useRef<HTMLDivElement>(null);
-  const isInitialMount = useRef(true);
 
-  // Initial fetch and subscribe on mount or agent change
-  useEffect(() => {
-    if (!agentId) return;
-
-    // Fetch conversations
-    fetchConversations(agentId, true);
-
-    // Subscribe to real-time updates
-    subscribe(agentId);
-
-    return () => {
-      // Unsubscribe on unmount
-      unsubscribe();
-    };
-  }, [agentId]); // Only agentId dependency to avoid loops
-
-  // Handle scroll for infinite loading
+  // Handle scroll for infinite loading (TODO: Implement with React Query infinite queries)
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     const element = e.currentTarget;
     const scrolledToBottom =
       element.scrollHeight - element.scrollTop <= element.clientHeight + 200;
 
-    if (scrolledToBottom && hasMore && !isLoading) {
-      loadMore(agentId);
-    }
+    // TODO: Implement infinite scroll with useInfiniteQuery
+    // if (scrolledToBottom && hasNextPage && !isFetchingNextPage) {
+    //   fetchNextPage();
+    // }
   };
 
   // Handle conversation selection
@@ -70,7 +53,7 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
 
   // Handle refresh
   const handleRefresh = () => {
-    fetchConversations(agentId, true);
+    refetch();
   };
 
   // Loading state - initial load
@@ -142,25 +125,16 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
           />
         ))}
 
-        {/* Loading more indicator */}
-        {isLoading && conversations.length > 0 && (
-          <div className="flex items-center justify-center py-4">
-            <RefreshCw className="w-5 h-5 animate-spin text-neutral-400" />
-          </div>
-        )}
-
-        {/* No more conversations */}
-        {!hasMore && conversations.length > 0 && (
-          <div className="text-center py-4 text-sm text-neutral-500">
-            No more conversations
-          </div>
-        )}
+        {/* TODO: Add infinite scroll with React Query useInfiniteQuery */}
+        {/* Loading more indicator and hasMore state will be added when implementing pagination */}
       </div>
 
       {/* Error state */}
       {error && (
         <div className="px-4 py-3 bg-red-50 border-t border-red-200">
-          <p className="text-sm text-red-600">{error}</p>
+          <p className="text-sm text-red-600">
+            {error instanceof Error ? error.message : 'Failed to load conversations'}
+          </p>
           <Button
             onClick={handleRefresh}
             className="mt-2"

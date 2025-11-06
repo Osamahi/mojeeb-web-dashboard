@@ -5,7 +5,7 @@
  */
 
 import { Link } from 'react-router-dom';
-import { Edit2, Trash2, Crown } from 'lucide-react';
+import { Edit2, Trash2, Crown, Sliders } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Agent, AgentStatus } from '../types';
 import { Avatar } from '@/components/ui/Avatar';
@@ -47,7 +47,6 @@ export default function AgentCard({ agent }: AgentCardProps) {
     e.preventDefault();
     e.stopPropagation();
     // TODO: Implement delete confirmation modal
-    console.log('Delete agent:', agent.id);
   };
 
   return (
@@ -56,7 +55,7 @@ export default function AgentCard({ agent }: AgentCardProps) {
         {/* Header */}
         <div className="flex items-center gap-3">
           <Avatar
-            src={agent.avatarUrl}
+            src={agent.avatarUrl ?? undefined}
             name={agent.name}
             size="md"
           />
@@ -81,6 +80,14 @@ export default function AgentCard({ agent }: AgentCardProps) {
 
           {/* Inline Action Buttons */}
           <div className="flex items-center gap-1">
+            <Link
+              to="/studio"
+              onClick={(e) => e.stopPropagation()}
+              className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
+              title="Open Studio"
+            >
+              <Sliders className="w-4 h-4 text-neutral-600" />
+            </Link>
             {agent.canEdit && (
               <Link
                 to={`/agents/${agent.id}/edit`}

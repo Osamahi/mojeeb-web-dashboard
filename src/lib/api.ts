@@ -12,32 +12,26 @@ const api = axios.create({
   },
 });
 
-// Token management
-let accessToken: string | null = localStorage.getItem('accessToken');
-let refreshToken: string | null = localStorage.getItem('refreshToken');
-
+// Token management - Read from localStorage dynamically to avoid race conditions
 export const setTokens = (access: string, refresh: string) => {
-  accessToken = access;
-  refreshToken = refresh;
   localStorage.setItem('accessToken', access);
   localStorage.setItem('refreshToken', refresh);
 };
 
-export const getAccessToken = () => accessToken;
-export const getRefreshToken = () => refreshToken;
+export const getAccessToken = () => localStorage.getItem('accessToken');
+export const getRefreshToken = () => localStorage.getItem('refreshToken');
 
 export const clearTokens = () => {
-  accessToken = null;
-  refreshToken = null;
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
 };
 
-// Request interceptor - Add JWT token
+// Request interceptor - Add JWT token (read from localStorage each time to avoid race conditions)
 api.interceptors.request.use(
   (config: any) => {
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    const token = getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -51,6 +45,10 @@ let failedQueue: Array<{
   reject: (reason?: any) => void;
 }> = [];
 
+// Prevent redirect loops
+let lastRedirectTime = 0;
+const REDIRECT_COOLDOWN = 5000; // 5 seconds
+
 const processQueue = (error: AxiosError | null, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
@@ -61,6 +59,32 @@ const processQueue = (error: AxiosError | null, token: string | null = null) => 
   });
 
   failedQueue = [];
+};
+
+const shouldRedirectToLogin = (): boolean => {
+  const now = Date.now();
+  const timeSinceLastRedirect = now - lastRedirectTime;
+
+  // Prevent redirect if already on login page
+  if (window.location.pathname === '/login') {
+    return false;
+  }
+
+  // Prevent redirect if we just redirected recently (redirect loop protection)
+  if (timeSinceLastRedirect < REDIRECT_COOLDOWN) {
+    console.warn('Redirect loop detected - skipping redirect to login');
+    return false;
+  }
+
+  return true;
+};
+
+const redirectToLogin = () => {
+  if (shouldRedirectToLogin()) {
+    lastRedirectTime = Date.now();
+    clearTokens();
+    window.location.href = '/login';
+  }
 };
 
 api.interceptors.response.use(
@@ -89,8 +113,7 @@ api.interceptors.response.use(
       const storedRefreshToken = getRefreshToken();
 
       if (!storedRefreshToken) {
-        clearTokens();
-        window.location.href = '/login';
+        redirectToLogin();
         return Promise.reject(error);
       }
 
@@ -109,8 +132,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError as AxiosError, null);
-        clearTokens();
-        window.location.href = '/login';
+        redirectToLogin();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

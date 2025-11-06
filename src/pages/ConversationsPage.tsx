@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { useAgentContext } from '@/hooks/useAgentContext';
 import { useConversationStore } from '@/features/conversations/stores/conversationStore';
 import { useChatStore } from '@/features/conversations/stores/chatStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -17,7 +17,7 @@ import ConversationEmptyState from '@/features/conversations/components/shared/C
 
 export const ConversationsPage = () => {
   const isMobile = useIsMobile();
-  const globalSelectedAgent = useAgentStore((state) => state.globalSelectedAgent);
+  const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const selectedConversation = useConversationStore((state) => state.selectedConversation);
   const selectConversation = useConversationStore((state) => state.selectConversation);
 
@@ -27,7 +27,7 @@ export const ConversationsPage = () => {
   useEffect(() => {
     selectConversation(null);
     setShowChat(false);
-  }, [globalSelectedAgent?.id, selectConversation]);
+  }, [agentId, selectConversation]);
 
   // Show empty state if no agent is selected
   if (!globalSelectedAgent) {

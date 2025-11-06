@@ -24,8 +24,6 @@ class TeamService {
         `/api/agents/${agentId}/collaborators`
       );
 
-      console.log('API Response:', data);
-
       // Handle different response structures
       const responseData = data.data || data;
 
