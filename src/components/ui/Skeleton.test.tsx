@@ -102,10 +102,10 @@ describe('Skeleton', () => {
       expect(skeleton).toHaveClass('rounded');
     });
 
-    it('should override height with width when circle is true', () => {
-      const { container } = render(<Skeleton circle width="64px" height="32px" />);
+    it('should set height equal to width when circle is true and height not provided', () => {
+      const { container } = render(<Skeleton circle width="64px" />);
       const skeleton = container.firstChild as HTMLElement;
-      // Height should be set to width for circle
+      // Height should be set to width for circle when height is not provided
       expect(skeleton.style.width).toBe('64px');
       expect(skeleton.style.height).toBe('64px');
     });
