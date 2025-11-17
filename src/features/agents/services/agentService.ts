@@ -86,6 +86,8 @@ class AgentService {
 
   /**
    * Get agent by ID
+   * TODO: Verify if backend wraps single agent response in ApiResponse<T> like getAgents()
+   * Currently assumes bare ApiAgentResponse (matches createAgent/updateAgent pattern)
    */
   async getAgent(id: string): Promise<Agent> {
     const { data } = await api.get<ApiAgentResponse>(`/api/agents/${id}`);

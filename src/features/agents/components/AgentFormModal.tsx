@@ -94,6 +94,10 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
     }
 
     if (isEditMode) {
+      if (!agent) {
+        toast.error('Cannot update: agent data is missing');
+        return;
+      }
       updateMutation.mutate(formData);
     } else {
       createMutation.mutate(formData);
