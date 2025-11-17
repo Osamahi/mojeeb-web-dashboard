@@ -36,12 +36,14 @@ export const DashboardLayout = () => {
     },
   });
 
-  // Sync agents to store and initialize selection ONCE
+  // Sync agents to store whenever data changes, initialize selection ONCE
   useEffect(() => {
-    if (!isLoading && agents && !hasInitialized.current) {
-      setAgents(agents);
-      initializeAgentSelection();
-      hasInitialized.current = true;
+    if (!isLoading && agents) {
+      setAgents(agents);  // Always sync agents to store
+      if (!hasInitialized.current) {
+        initializeAgentSelection();  // Only initialize selection once
+        hasInitialized.current = true;
+      }
     }
     // Zustand functions are stable - no need in dependency array
     // eslint-disable-next-line react-hooks/exhaustive-deps

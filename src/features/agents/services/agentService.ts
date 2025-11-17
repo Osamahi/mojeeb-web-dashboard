@@ -96,7 +96,18 @@ class AgentService {
    * Create new agent
    */
   async createAgent(request: CreateAgentRequest): Promise<Agent> {
-    const { data } = await api.post<ApiAgentResponse>('/api/agents', request);
+    // Transform camelCase to snake_case for backend
+    const snakeCaseRequest = {
+      name: request.name,
+      description: request.description,
+      persona_prompt: request.personaPrompt,
+      language: request.language,
+      platform_target: request.platformTarget,
+      allow_handoff: request.allowHandoff,
+      model_provider: request.modelProvider,
+      avatar_url: request.avatarUrl,
+    };
+    const { data } = await api.post<ApiAgentResponse>('/api/agents', snakeCaseRequest);
     return this.transformAgent(data);
   }
 

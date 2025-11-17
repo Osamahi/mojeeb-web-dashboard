@@ -1,0 +1,278 @@
+/**
+ * Account Selection Step
+ * Allows user to select which Facebook page (and optionally Instagram account) to connect
+ */
+
+import { useState, useCallback, useMemo } from 'react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { cn } from '@/lib/utils';
+import { useFacebookPages } from '../../hooks/useAddConnection';
+import type { FacebookPage, InstagramAccount, OAuthIntegrationType } from '../../types';
+
+type AccountSelectStepProps = {
+  tempConnectionId: string;
+  platform: OAuthIntegrationType;
+  onSelect: (pageId: string, instagramAccount?: InstagramAccount) => void;
+  onBack: () => void;
+  isConnecting: boolean;
+};
+
+export function AccountSelectStep({
+  tempConnectionId,
+  platform,
+  onSelect,
+  onBack,
+  isConnecting,
+}: AccountSelectStepProps) {
+  const { data, isLoading, error, refetch } = useFacebookPages(tempConnectionId);
+  const [selectedPage, setSelectedPage] = useState<FacebookPage | null>(null);
+  const [selectedInstagram, setSelectedInstagram] = useState<InstagramAccount | null>(null);
+
+  const handlePageSelect = useCallback((page: FacebookPage) => {
+    setSelectedPage(prev => {
+      if (prev?.id === page.id) {
+        // Deselect
+        setSelectedInstagram(null);
+        return null;
+      }
+      setSelectedInstagram(null);
+      return page;
+    });
+  }, []);
+
+  const handleInstagramSelect = useCallback((account: InstagramAccount) => {
+    setSelectedInstagram(prev => (prev?.id === account.id ? null : account));
+  }, []);
+
+  const handleConnect = useCallback(() => {
+    if (selectedPage) {
+      onSelect(selectedPage.id, selectedInstagram || undefined);
+    }
+  }, [selectedPage, selectedInstagram, onSelect]);
+
+  // Validate image URL for security (prevent XSS)
+  const isValidImageUrl = useCallback((url: string | null): boolean => {
+    if (!url) return false;
+    try {
+      const parsed = new URL(url);
+      return ['https:', 'http:'].includes(parsed.protocol);
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Format follower count
+  const formatFollowers = useMemo(() => (count: number) => {
+    if (!Number.isFinite(count) || count < 0) return '0';
+    if (count >= 1000000) {
+      return `${(count / 1000000).toFixed(1)}M`;
+    }
+    if (count >= 1000) {
+      return `${(count / 1000).toFixed(1)}K`;
+    }
+    return count.toString();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-neutral-900">Loading Pages...</h3>
+          <p className="mt-1 text-sm text-neutral-600">Fetching your available pages</p>
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-20 w-full rounded-lg" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <ErrorState
+          icon={<AlertCircle className="h-12 w-12" />}
+          title="Failed to Load Pages"
+          description={error.message || 'Unable to fetch your pages. Please try again.'}
+          onRetry={() => refetch()}
+          retryLabel="Retry"
+        />
+        <div className="flex justify-start">
+          <Button variant="ghost" onClick={onBack}>
+            Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data?.pages || data.pages.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-yellow-500" />
+          <h3 className="mt-4 text-lg font-semibold text-neutral-900">No Pages Found</h3>
+          <p className="mt-2 text-sm text-neutral-600">
+            We couldn't find any Facebook pages you have admin access to.
+            <br />
+            Make sure you're an admin of the page you want to connect.
+          </p>
+        </div>
+        <div className="flex justify-start">
+          <Button variant="ghost" onClick={onBack}>
+            Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h3 className="text-lg font-semibold text-neutral-900">Select Page to Connect</h3>
+        <p className="mt-1 text-sm text-neutral-600">
+          {platform === 'instagram'
+            ? 'Choose a Facebook page with a linked Instagram account'
+            : 'Choose which Facebook page to connect to your agent'}
+        </p>
+      </div>
+
+      {/* Pages list */}
+      <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
+        {data.pages.map(page => (
+          <div key={page.id} className="space-y-2">
+            {/* Facebook Page */}
+            <button
+              onClick={() => handlePageSelect(page)}
+              className={cn(
+                'flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all',
+                selectedPage?.id === page.id
+                  ? 'border-neutral-900 bg-neutral-50 ring-1 ring-neutral-900'
+                  : 'border-neutral-200 bg-white hover:border-neutral-400'
+              )}
+            >
+              {/* Page avatar */}
+              <div className="relative flex-shrink-0">
+                {isValidImageUrl(page.profilePictureUrl) ? (
+                  <img
+                    src={page.profilePictureUrl!}
+                    alt={`${page.name} profile`}
+                    className="h-12 w-12 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                  </div>
+                )}
+                {selectedPage?.id === page.id && (
+                  <div className="absolute -right-1 -top-1 rounded-full bg-neutral-900 p-0.5">
+                    <CheckCircle2 className="h-4 w-4 text-white" />
+                  </div>
+                )}
+              </div>
+
+              {/* Page info */}
+              <div className="flex-1 min-w-0">
+                <h4 className="truncate font-medium text-neutral-900">{page.name}</h4>
+                <p className="text-xs text-neutral-500">{page.category}</p>
+                <p className="text-xs text-neutral-500">{formatFollowers(page.followerCount)} followers</p>
+              </div>
+
+              {/* Instagram indicator */}
+              {page.instagramAccounts.length > 0 && (
+                <div className="flex-shrink-0">
+                  <span className="inline-flex items-center rounded-full bg-pink-100 px-2 py-0.5 text-xs font-medium text-pink-700">
+                    {page.instagramAccounts.length} IG
+                  </span>
+                </div>
+              )}
+            </button>
+
+            {/* Nested Instagram accounts */}
+            {selectedPage?.id === page.id &&
+              page.instagramAccounts.length > 0 &&
+              platform === 'instagram' && (
+                <div className="ml-6 space-y-2 border-l-2 border-neutral-200 pl-4">
+                  <p className="text-xs font-medium text-neutral-600">Select Instagram Account:</p>
+                  {page.instagramAccounts.map(ig => (
+                    <button
+                      key={ig.id}
+                      onClick={() => handleInstagramSelect(ig)}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all',
+                        selectedInstagram?.id === ig.id
+                          ? 'border-pink-500 bg-pink-50 ring-1 ring-pink-500'
+                          : 'border-neutral-200 bg-white hover:border-neutral-400'
+                      )}
+                    >
+                      {/* IG avatar */}
+                      <div className="relative flex-shrink-0">
+                        {isValidImageUrl(ig.profilePictureUrl) ? (
+                          <img
+                            src={ig.profilePictureUrl!}
+                            alt={`Instagram profile picture for @${ig.username}`}
+                            className="h-10 w-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-100 text-pink-600">
+                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z" />
+                            </svg>
+                          </div>
+                        )}
+                        {selectedInstagram?.id === ig.id && (
+                          <div className="absolute -right-1 -top-1 rounded-full bg-pink-500 p-0.5">
+                            <CheckCircle2 className="h-3 w-3 text-white" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* IG info */}
+                      <div className="flex-1 min-w-0">
+                        <h5 className="truncate font-medium text-neutral-900">@{ig.username}</h5>
+                        <p className="text-xs text-neutral-500">{formatFollowers(ig.followerCount)} followers</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+          </div>
+        ))}
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" onClick={onBack} disabled={isConnecting}>
+          Back
+        </Button>
+        <Button
+          onClick={handleConnect}
+          disabled={!selectedPage || isConnecting || (platform === 'instagram' && !selectedInstagram)}
+          isLoading={isConnecting}
+        >
+          {isConnecting
+            ? 'Connecting...'
+            : `Connect ${platform === 'instagram' && selectedInstagram ? 'Instagram' : 'Facebook'}`}
+        </Button>
+      </div>
+
+      {/* Help text */}
+      {platform === 'instagram' && selectedPage && selectedPage.instagramAccounts.length === 0 && (
+        <div className="rounded-lg bg-yellow-50 p-3">
+          <p className="text-xs text-yellow-700">
+            <strong>No Instagram account linked.</strong> This Facebook page doesn't have a linked Instagram
+            Business account. Please link one in Facebook's Business Suite first.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

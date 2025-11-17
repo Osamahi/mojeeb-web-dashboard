@@ -42,6 +42,27 @@ export const API_PATHS = {
   CONNECTIONS: '/api/social/connections',
   CONNECTION: (id: string) => `/api/social/connections/${id}`,
   HEALTH_CHECK: (id: string) => `/api/FacebookBusinessOAuth/check-health/${id}`,
+  // OAuth endpoints
+  OAUTH_AUTHORIZE: '/api/FacebookBusinessOAuth/authorize',
+  OAUTH_PAGES: (tempConnectionId: string) => `/api/FacebookBusinessOAuth/pages/${tempConnectionId}`,
+  OAUTH_CONNECT_PAGE: '/api/FacebookBusinessOAuth/connect-page',
+} as const;
+
+/**
+ * OAuth configuration
+ */
+export const OAUTH_CONFIG = {
+  /** Popup window dimensions */
+  POPUP_WIDTH: 600,
+  POPUP_HEIGHT: 700,
+  /** Timeout for OAuth flow (5 minutes) */
+  TIMEOUT_MS: 5 * 60 * 1000,
+  /** Storage keys for OAuth state */
+  STORAGE_KEYS: {
+    STATE: 'oauth_state',
+    TEMP_CONNECTION_ID: 'oauth_temp_connection_id',
+    PLATFORM: 'oauth_platform',
+  },
 } as const;
 
 /**

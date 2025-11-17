@@ -4,10 +4,11 @@
  */
 
 import { useState } from 'react';
-import { Link2, RefreshCw } from 'lucide-react';
+import { Link2, RefreshCw, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useConnections } from '../hooks/useConnections';
 import { ConnectionsList } from '../components/ConnectionsList';
+import { AddConnectionModal } from '../components/AddConnectionModal';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -16,6 +17,7 @@ import NoAgentEmptyState from '@/features/agents/components/NoAgentEmptyState';
 
 export default function ConnectionsPage() {
   const [showHealthStatus, setShowHealthStatus] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { agent: globalSelectedAgent } = useAgentContext();
 
   const { data: connections, isLoading, error, refetch, isFetching } = useConnections();
@@ -58,6 +60,17 @@ export default function ConnectionsPage() {
           >
             {showHealthStatus ? 'Hide Health Status' : 'Show Health Status'}
           </Button>
+
+          {/* Add Connection Button */}
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Connection
+          </Button>
         </div>
       </motion.div>
 
@@ -99,6 +112,9 @@ export default function ConnectionsPage() {
           />
         )}
       </motion.div>
+
+      {/* Add Connection Modal */}
+      <AddConnectionModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
     </div>
   );
 }

@@ -5,7 +5,7 @@
  */
 
 import { memo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Edit2, Trash2, Crown, Sliders } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Agent, AgentStatus } from '../types';
@@ -17,6 +17,8 @@ interface AgentCardProps {
 }
 
 const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
+  const navigate = useNavigate();
+
   const statusVariants: Record<AgentStatus, 'default' | 'primary' | 'success' | 'warning' | 'danger'> = {
     draft: 'warning',
     active: 'success',
@@ -50,6 +52,18 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
     // TODO: Implement delete confirmation modal
   };
 
+  const handleStudioClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate('/studio');
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/agents/${agent.id}/edit`);
+  };
+
   return (
     <Link to={`/agents/${agent.id}`} className="block">
       <div className="bg-white rounded-lg border border-neutral-200 p-4 transition-colors duration-200 hover:border-neutral-300">
@@ -81,23 +95,21 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
 
           {/* Inline Action Buttons */}
           <div className="flex items-center gap-1">
-            <Link
-              to="/studio"
-              onClick={(e) => e.stopPropagation()}
+            <button
+              onClick={handleStudioClick}
               className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
               title="Open Studio"
             >
               <Sliders className="w-4 h-4 text-neutral-600" />
-            </Link>
+            </button>
             {agent.canEdit && (
-              <Link
-                to={`/agents/${agent.id}/edit`}
-                onClick={(e) => e.stopPropagation()}
+              <button
+                onClick={handleEditClick}
                 className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
                 title="Edit agent"
               >
                 <Edit2 className="w-4 h-4 text-neutral-600" />
-              </Link>
+              </button>
             )}
             {agent.canDelete && (
               <button

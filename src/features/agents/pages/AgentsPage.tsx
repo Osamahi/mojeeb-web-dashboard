@@ -6,10 +6,11 @@
  * NOTE: This page reads agents from Zustand store - DashboardLayout handles fetching
  */
 
+import { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useAgentStore } from '../stores/agentStore';
 import AgentCard from '../components/AgentCard';
+import CreateAgentModal from '../components/CreateAgentModal';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -18,6 +19,7 @@ export default function AgentsPage() {
   // Read agents from store - DashboardLayout handles fetching and syncing
   const agents = useAgentStore((state) => state.agents);
   const isLoading = useAgentStore((state) => state.isLoading);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Show loading state
   if (isLoading || !agents) {
@@ -38,12 +40,10 @@ export default function AgentsPage() {
             Manage your intelligent AI assistants
           </p>
         </div>
-        <Link to="/agents/new">
-          <Button variant="primary" size="lg">
-            <Plus className="w-5 h-5 mr-2" />
-            Create Agent
-          </Button>
-        </Link>
+        <Button variant="primary" size="lg" onClick={() => setIsCreateModalOpen(true)}>
+          <Plus className="w-5 h-5 mr-2" />
+          Create Agent
+        </Button>
       </div>
 
       {/* Agents List - Vertical Cards */}
@@ -59,15 +59,19 @@ export default function AgentsPage() {
           title="No agents yet"
           description="Create your first AI agent to get started"
           action={
-            <Link to="/agents/new">
-              <Button variant="primary">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Agent
-              </Button>
-            </Link>
+            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Agent
+            </Button>
           }
         />
       )}
+
+      {/* Create Agent Modal */}
+      <CreateAgentModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </div>
   );
 }

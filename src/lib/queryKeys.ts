@@ -95,6 +95,13 @@ export const queryKeys = {
    */
   connectionHealth: (connectionId: string | undefined) => ['connection-health', connectionId] as const,
 
+  /**
+   * Query key for fetching available Facebook pages after OAuth
+   * @param {string | null} tempConnectionId - Temporary connection ID from OAuth callback
+   * @returns {readonly ['facebook-pages', string | null]} Query key tuple
+   */
+  facebookPages: (tempConnectionId: string | null) => ['facebook-pages', tempConnectionId] as const,
+
   // ==================== Analytics Queries ====================
 
   /**

@@ -7,6 +7,18 @@ import type {
   ApiPlatformConnectionResponse,
   ApiConnectionHealthResponse,
   PlatformType,
+  OAuthInitiationResponse,
+  FacebookPagesResponse,
+  ConnectPageRequest,
+  ConnectPageResponse,
+  ApiOAuthInitiationResponse,
+  ApiFacebookPagesResponse,
+  ApiConnectPageResponse,
+  ApiFacebookPage,
+  ApiInstagramAccount,
+  FacebookPage,
+  InstagramAccount,
+  OAuthIntegrationType,
 } from '../types';
 import { VALID_PLATFORMS, API_PATHS } from '../constants';
 
@@ -199,6 +211,123 @@ class ConnectionService {
     } catch (error) {
       logger.error('Error checking connection health', { connectionId, error });
       handleApiError(error, 'Connection', connectionId);
+    }
+  }
+
+  // ==================== OAuth Methods ====================
+
+  /**
+   * Transform Instagram account from API response
+   */
+  private transformInstagramAccount(apiAccount: ApiInstagramAccount): InstagramAccount {
+    return {
+      id: apiAccount.id,
+      username: apiAccount.username,
+      followerCount: apiAccount.follower_count,
+      profilePictureUrl: apiAccount.profile_picture_url ?? null,
+    };
+  }
+
+  /**
+   * Transform Facebook page from API response
+   */
+  private transformFacebookPage(apiPage: ApiFacebookPage): FacebookPage {
+    return {
+      id: apiPage.id,
+      name: apiPage.name,
+      category: apiPage.category,
+      followerCount: apiPage.follower_count,
+      profilePictureUrl: apiPage.profile_picture_url ?? null,
+      accessToken: apiPage.access_token,
+      instagramAccounts: (apiPage.instagram_accounts ?? []).map(account =>
+        this.transformInstagramAccount(account)
+      ),
+    };
+  }
+
+  /**
+   * Initiate Facebook/Instagram OAuth flow
+   * Returns the authorization URL to redirect the user to
+   */
+  async initiateFacebookOAuth(
+    agentId: string,
+    integrationType: OAuthIntegrationType = 'facebook'
+  ): Promise<OAuthInitiationResponse> {
+    try {
+      const { data } = await api.get<ApiOAuthInitiationResponse>(API_PATHS.OAUTH_AUTHORIZE, {
+        params: { agentId, integrationType },
+      });
+
+      logger.info('OAuth flow initiated', { agentId, integrationType });
+
+      // Transform from snake_case to camelCase
+      return {
+        authorizationUrl: data.authorization_url,
+        integrationType: data.integration_type,
+        agentId: data.agent_id,
+      };
+    } catch (error) {
+      logger.error('Error initiating OAuth flow', { agentId, integrationType, error });
+      handleApiError(error, 'OAuth', agentId);
+    }
+  }
+
+  /**
+   * Fetch available Facebook pages after OAuth authorization
+   */
+  async fetchAvailablePages(tempConnectionId: string): Promise<FacebookPagesResponse> {
+    try {
+      const { data } = await api.get<ApiFacebookPagesResponse>(
+        API_PATHS.OAUTH_PAGES(tempConnectionId)
+      );
+
+      const pages = data.pages.map(page => this.transformFacebookPage(page));
+
+      logger.info('Fetched available pages', {
+        tempConnectionId,
+        pageCount: pages.length,
+      });
+
+      return {
+        pages,
+        tempConnectionId,
+      };
+    } catch (error) {
+      logger.error('Error fetching available pages', { tempConnectionId, error });
+      handleApiError(error, 'OAuth Pages', tempConnectionId);
+    }
+  }
+
+  /**
+   * Connect a selected Facebook page (and optionally Instagram account)
+   */
+  async connectSelectedPage(request: ConnectPageRequest): Promise<ConnectPageResponse> {
+    try {
+      const payload = {
+        tempConnectionId: request.tempConnectionId,
+        pageId: request.pageId,
+        ...(request.instagramAccountId && {
+          instagramAccountId: request.instagramAccountId,
+          instagramUsername: request.instagramUsername,
+        }),
+      };
+
+      const { data } = await api.post<ApiConnectPageResponse>(API_PATHS.OAUTH_CONNECT_PAGE, payload);
+
+      logger.info('Page connected successfully', {
+        connectionId: data.connection_id,
+        platform: data.platform,
+      });
+
+      return {
+        success: data.success,
+        connectionId: data.connection_id,
+        platform: data.platform,
+        message: data.message,
+      };
+    } catch (error) {
+      logger.error('Error connecting page', { request, error });
+      handleApiError(error, 'Connection', request.pageId);
     }
   }
 }

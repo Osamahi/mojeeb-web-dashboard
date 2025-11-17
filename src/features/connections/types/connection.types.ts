@@ -1,6 +1,86 @@
 // Platform types matching backend enum
 export type PlatformType = 'web' | 'widget' | 'facebook' | 'instagram' | 'whatsapp' | 'tiktok' | 'twitter' | 'linkedin';
 
+// OAuth connection types
+export type OAuthIntegrationType = 'facebook' | 'instagram';
+
+export type InstagramAccount = {
+  id: string;
+  username: string;
+  followerCount: number;
+  profilePictureUrl: string | null;
+};
+
+export type FacebookPage = {
+  id: string;
+  name: string;
+  category: string;
+  followerCount: number;
+  profilePictureUrl: string | null;
+  accessToken: string;
+  instagramAccounts: InstagramAccount[];
+};
+
+export type OAuthInitiationResponse = {
+  authorizationUrl: string;
+  integrationType: string;
+  agentId: string;
+};
+
+export type FacebookPagesResponse = {
+  pages: FacebookPage[];
+  tempConnectionId: string;
+};
+
+export type ConnectPageRequest = {
+  tempConnectionId: string;
+  pageId: string;
+  instagramAccountId?: string;
+  instagramUsername?: string;
+};
+
+export type ConnectPageResponse = {
+  success: boolean;
+  connectionId: string;
+  platform: string;
+  message: string;
+};
+
+// API Response types for OAuth (snake_case from backend)
+export interface ApiFacebookPage {
+  id: string;
+  name: string;
+  category: string;
+  follower_count: number;
+  profile_picture_url?: string;
+  access_token: string;
+  instagram_accounts?: ApiInstagramAccount[];
+}
+
+export interface ApiInstagramAccount {
+  id: string;
+  username: string;
+  follower_count: number;
+  profile_picture_url?: string;
+}
+
+export interface ApiOAuthInitiationResponse {
+  authorization_url: string;
+  integration_type: string;
+  agent_id: string;
+}
+
+export interface ApiFacebookPagesResponse {
+  pages: ApiFacebookPage[];
+}
+
+export interface ApiConnectPageResponse {
+  success: boolean;
+  connection_id: string;
+  platform: string;
+  message: string;
+}
+
 export type PlatformConnection = {
   id: string;
   agentId: string;
