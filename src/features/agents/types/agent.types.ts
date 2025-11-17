@@ -21,7 +21,7 @@ export type Agent = {
   conversationCount?: number;
   knowledgeBaseCount?: number;
   ownerName?: string;
-  userRole?: number;
+  userRole?: string;
   userPermissions?: string[];
   accessSource?: 'legacy' | 'rbac' | 'globaladmin';
   isOwner?: boolean;

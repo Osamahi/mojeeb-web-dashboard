@@ -4,7 +4,7 @@
  * NO animations, NO gradients - just clean borders and minimal hover states
  */
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Edit2, Trash2, Crown, Sliders } from 'lucide-react';
 import { format } from 'date-fns';
@@ -15,6 +15,7 @@ import type { Agent, AgentStatus } from '../types';
 import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
 import { useConfirm } from '@/hooks/useConfirm';
+import AgentFormModal from './AgentFormModal';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 
@@ -26,6 +27,7 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialogComponent } = useConfirm();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: () => agentService.deleteAgent(agent.id),
@@ -96,12 +98,18 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate(`/agents/${agent.id}/edit`);
+    setIsEditModalOpen(true);
   };
 
   return (
     <>
       {ConfirmDialogComponent}
+      <AgentFormModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        mode="edit"
+        agent={agent}
+      />
       <Link to={`/agents/${agent.id}`} className="block">
         <div className="bg-white rounded-lg border border-neutral-200 p-4 transition-colors duration-200 hover:border-neutral-300">
           {/* Header */}

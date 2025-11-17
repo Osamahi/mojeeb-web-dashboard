@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { useAgentStore } from '../stores/agentStore';
 import AgentCard from '../components/AgentCard';
-import CreateAgentModal from '../components/CreateAgentModal';
+import AgentFormModal from '../components/AgentFormModal';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -68,9 +68,10 @@ export default function AgentsPage() {
       )}
 
       {/* Create Agent Modal */}
-      <CreateAgentModal
+      <AgentFormModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+        mode="create"
       />
     </div>
   );

@@ -1,9 +1,9 @@
 /**
- * Create Agent Modal
- * Modal dialog for creating a new AI agent
+ * Agent Form Modal
+ * Modal dialog for creating or editing an AI agent
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -12,19 +12,33 @@ import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import type { CreateAgentRequest } from '../types';
+import type { Agent, CreateAgentRequest, UpdateAgentRequest } from '../types';
 
-interface CreateAgentModalProps {
+interface AgentFormModalProps {
   isOpen: boolean;
   onClose: () => void;
+  mode: 'create' | 'edit';
+  agent?: Agent; // Required for edit mode
 }
 
-export default function CreateAgentModal({ isOpen, onClose }: CreateAgentModalProps) {
+export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFormModalProps) {
   const queryClient = useQueryClient();
+  const isEditMode = mode === 'edit';
+
   const [formData, setFormData] = useState<CreateAgentRequest>({
     name: '',
     personaPrompt: '',
   });
+
+  // Populate form when editing
+  useEffect(() => {
+    if (isEditMode && agent && isOpen) {
+      setFormData({
+        name: agent.name,
+        personaPrompt: agent.personaPrompt ?? '',
+      });
+    }
+  }, [isEditMode, agent, isOpen]);
 
   const createMutation = useMutation({
     mutationFn: (data: CreateAgentRequest) => agentService.createAgent(data),
@@ -41,6 +55,24 @@ export default function CreateAgentModal({ isOpen, onClose }: CreateAgentModalPr
       }
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: UpdateAgentRequest) => agentService.updateAgent(agent!.id, data),
+    onSuccess: () => {
+      toast.success('Agent updated successfully!');
+      queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
+      handleClose();
+    },
+    onError: (error: unknown) => {
+      if (isAxiosError(error)) {
+        toast.error(error.response?.data?.message || 'Failed to update agent');
+      } else {
+        toast.error('An unexpected error occurred');
+      }
+    },
+  });
+
+  const isPending = isEditMode ? updateMutation.isPending : createMutation.isPending;
 
   const handleClose = () => {
     setFormData({ name: '', personaPrompt: '' });
@@ -61,7 +93,11 @@ export default function CreateAgentModal({ isOpen, onClose }: CreateAgentModalPr
       return;
     }
 
-    createMutation.mutate(formData);
+    if (isEditMode) {
+      updateMutation.mutate(formData);
+    } else {
+      createMutation.mutate(formData);
+    }
   };
 
   if (!isOpen) return null;
@@ -72,9 +108,11 @@ export default function CreateAgentModal({ isOpen, onClose }: CreateAgentModalPr
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-neutral-200">
           <div>
-            <h2 className="text-xl font-semibold text-neutral-950">Create Agent</h2>
+            <h2 className="text-xl font-semibold text-neutral-950">
+              {isEditMode ? 'Edit Agent' : 'Create Agent'}
+            </h2>
             <p className="text-sm text-neutral-600 mt-1">
-              Set up your new AI assistant
+              {isEditMode ? 'Update your AI assistant' : 'Set up your new AI assistant'}
             </p>
           </div>
           <button
@@ -124,7 +162,7 @@ export default function CreateAgentModal({ isOpen, onClose }: CreateAgentModalPr
               variant="outline"
               onClick={handleClose}
               className="flex-1"
-              disabled={createMutation.isPending}
+              disabled={isPending}
             >
               Cancel
             </Button>
@@ -132,9 +170,12 @@ export default function CreateAgentModal({ isOpen, onClose }: CreateAgentModalPr
               type="submit"
               variant="primary"
               className="flex-1"
-              disabled={createMutation.isPending}
+              disabled={isPending}
             >
-              {createMutation.isPending ? 'Creating...' : 'Create'}
+              {isPending
+                ? (isEditMode ? 'Saving...' : 'Creating...')
+                : (isEditMode ? 'Save' : 'Create')
+              }
             </Button>
           </div>
         </form>
