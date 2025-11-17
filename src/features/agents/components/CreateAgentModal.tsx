@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { isAxiosError } from 'axios';
 import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/Button';
@@ -32,8 +33,12 @@ export default function CreateAgentModal({ isOpen, onClose }: CreateAgentModalPr
       queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
       handleClose();
     },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
-      toast.error(error?.response?.data?.message || 'Failed to create agent');
+    onError: (error: unknown) => {
+      if (isAxiosError(error)) {
+        toast.error(error.response?.data?.message || 'Failed to create agent');
+      } else {
+        toast.error('An unexpected error occurred');
+      }
     },
   });
 

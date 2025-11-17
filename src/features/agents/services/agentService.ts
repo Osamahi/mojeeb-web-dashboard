@@ -115,7 +115,19 @@ class AgentService {
    * Update agent
    */
   async updateAgent(id: string, request: UpdateAgentRequest): Promise<Agent> {
-    const { data } = await api.put<ApiAgentResponse>(`/api/agents/${id}`, request);
+    // Transform camelCase to snake_case for backend
+    const snakeCaseRequest = {
+      name: request.name,
+      description: request.description,
+      persona_prompt: request.personaPrompt,
+      language: request.language,
+      platform_target: request.platformTarget,
+      allow_handoff: request.allowHandoff,
+      model_provider: request.modelProvider,
+      avatar_url: request.avatarUrl,
+      status: request.status,
+    };
+    const { data } = await api.put<ApiAgentResponse>(`/api/agents/${id}`, snakeCaseRequest);
     return this.transformAgent(data);
   }
 

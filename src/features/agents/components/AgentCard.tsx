@@ -8,7 +8,12 @@ import { memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Edit2, Trash2, Crown, Sliders } from 'lucide-react';
 import { format } from 'date-fns';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { isAxiosError } from 'axios';
 import type { Agent, AgentStatus } from '../types';
+import { agentService } from '../services/agentService';
+import { queryKeys } from '@/lib/queryKeys';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 
@@ -18,6 +23,22 @@ interface AgentCardProps {
 
 const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: () => agentService.deleteAgent(agent.id),
+    onSuccess: () => {
+      toast.success(`Agent "${agent.name}" deleted successfully`);
+      queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
+    },
+    onError: (error: unknown) => {
+      if (isAxiosError(error)) {
+        toast.error(error.response?.data?.message || 'Failed to delete agent');
+      } else {
+        toast.error('An unexpected error occurred');
+      }
+    },
+  });
 
   const statusVariants: Record<AgentStatus, 'default' | 'primary' | 'success' | 'warning' | 'danger'> = {
     draft: 'warning',
@@ -49,7 +70,13 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // TODO: Implement delete confirmation modal
+
+    if (deleteMutation.isPending) return;
+
+    const confirmed = window.confirm(`Are you sure you want to delete "${agent.name}"? This action cannot be undone.`);
+    if (confirmed) {
+      deleteMutation.mutate();
+    }
   };
 
   const handleStudioClick = (e: React.MouseEvent) => {
@@ -114,10 +141,11 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
             {agent.canDelete && (
               <button
                 onClick={handleDelete}
-                className="p-2 hover:bg-error/10 rounded-md transition-colors"
+                className="p-2 hover:bg-error/10 rounded-md transition-colors disabled:opacity-50"
                 title="Delete agent"
+                disabled={deleteMutation.isPending}
               >
-                <Trash2 className="w-4 h-4 text-error" />
+                <Trash2 className={`w-4 h-4 text-error ${deleteMutation.isPending ? 'animate-pulse' : ''}`} />
               </button>
             )}
           </div>
