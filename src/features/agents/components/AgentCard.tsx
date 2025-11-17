@@ -14,6 +14,7 @@ import { isAxiosError } from 'axios';
 import type { Agent, AgentStatus } from '../types';
 import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 
@@ -24,6 +25,7 @@ interface AgentCardProps {
 const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialogComponent } = useConfirm();
 
   const deleteMutation = useMutation({
     mutationFn: () => agentService.deleteAgent(agent.id),
@@ -67,13 +69,19 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
     }
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (deleteMutation.isPending) return;
 
-    const confirmed = window.confirm(`Are you sure you want to delete "${agent.name}"? This action cannot be undone.`);
+    const confirmed = await confirm({
+      title: 'Delete Agent',
+      message: `Are you sure you want to delete "${agent.name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      variant: 'danger',
+    });
+
     if (confirmed) {
       deleteMutation.mutate();
     }
@@ -92,66 +100,69 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   };
 
   return (
-    <Link to={`/agents/${agent.id}`} className="block">
-      <div className="bg-white rounded-lg border border-neutral-200 p-4 transition-colors duration-200 hover:border-neutral-300">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Avatar
-            src={agent.avatarUrl ?? undefined}
-            name={agent.name}
-            size="md"
-          />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-neutral-950 text-base truncate">
-                {agent.name}
-              </h3>
-              {agent.isOwner && (
-                <Crown className="w-4 h-4 text-warning flex-shrink-0" title="Owner" />
+    <>
+      {ConfirmDialogComponent}
+      <Link to={`/agents/${agent.id}`} className="block">
+        <div className="bg-white rounded-lg border border-neutral-200 p-4 transition-colors duration-200 hover:border-neutral-300">
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <Avatar
+              src={agent.avatarUrl ?? undefined}
+              name={agent.name}
+              size="md"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-semibold text-neutral-950 text-base truncate">
+                  {agent.name}
+                </h3>
+                {agent.isOwner && (
+                  <Crown className="w-4 h-4 text-warning flex-shrink-0" title="Owner" />
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-xs text-neutral-500">
+                <Badge variant={statusVariants[agent.status]} className="text-xs">
+                  {agent.status}
+                </Badge>
+                <span>Created: {formatDate(agent.createdAt)}</span>
+                <span>•</span>
+                <span>Updated: {formatDate(agent.updatedAt)}</span>
+              </div>
+            </div>
+
+            {/* Inline Action Buttons */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleStudioClick}
+                className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
+                title="Open Studio"
+              >
+                <Sliders className="w-4 h-4 text-neutral-600" />
+              </button>
+              {agent.canEdit && (
+                <button
+                  onClick={handleEditClick}
+                  className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
+                  title="Edit agent"
+                >
+                  <Edit2 className="w-4 h-4 text-neutral-600" />
+                </button>
+              )}
+              {agent.canDelete && (
+                <button
+                  onClick={handleDelete}
+                  className="p-2 hover:bg-error/10 rounded-md transition-colors disabled:opacity-50"
+                  title="Delete agent"
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className={`w-4 h-4 text-error ${deleteMutation.isPending ? 'animate-pulse' : ''}`} />
+                </button>
               )}
             </div>
-            <div className="flex items-center gap-2 text-xs text-neutral-500">
-              <Badge variant={statusVariants[agent.status]} className="text-xs">
-                {agent.status}
-              </Badge>
-              <span>Created: {formatDate(agent.createdAt)}</span>
-              <span>•</span>
-              <span>Updated: {formatDate(agent.updatedAt)}</span>
-            </div>
-          </div>
-
-          {/* Inline Action Buttons */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={handleStudioClick}
-              className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
-              title="Open Studio"
-            >
-              <Sliders className="w-4 h-4 text-neutral-600" />
-            </button>
-            {agent.canEdit && (
-              <button
-                onClick={handleEditClick}
-                className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
-                title="Edit agent"
-              >
-                <Edit2 className="w-4 h-4 text-neutral-600" />
-              </button>
-            )}
-            {agent.canDelete && (
-              <button
-                onClick={handleDelete}
-                className="p-2 hover:bg-error/10 rounded-md transition-colors disabled:opacity-50"
-                title="Delete agent"
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 className={`w-4 h-4 text-error ${deleteMutation.isPending ? 'animate-pulse' : ''}`} />
-              </button>
-            )}
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </>
   );
 });
 
