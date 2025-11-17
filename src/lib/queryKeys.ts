@@ -79,6 +79,22 @@ export const queryKeys = {
    */
   teamStats: (agentId: string | undefined) => ['team-stats', agentId] as const,
 
+  // ==================== Connection Queries ====================
+
+  /**
+   * Query key for fetching platform connections by agent
+   * @param {string | undefined} agentId - The agent ID
+   * @returns {readonly ['connections', string | undefined]} Query key tuple
+   */
+  connections: (agentId: string | undefined) => ['connections', agentId] as const,
+
+  /**
+   * Query key for fetching connection health status
+   * @param {string | undefined} connectionId - The connection ID
+   * @returns {readonly ['connection-health', string | undefined]} Query key tuple
+   */
+  connectionHealth: (connectionId: string | undefined) => ['connection-health', connectionId] as const,
+
   // ==================== Analytics Queries ====================
 
   /**

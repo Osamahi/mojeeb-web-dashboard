@@ -16,6 +16,7 @@ const AgentsPage = lazy(() => import('./features/agents/pages/AgentsPage'));
 const StudioPage = lazy(() => import('./features/agents/pages/StudioPage'));
 const UsersPage = lazy(() => import('./features/users/pages/UsersPage'));
 const TeamPage = lazy(() => import('./features/team/pages/TeamPage'));
+const ConnectionsPage = lazy(() => import('./features/connections/pages/ConnectionsPage'));
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -118,6 +119,10 @@ export const router = createBrowserRouter([
       {
         path: 'team',
         element: <TeamPage />,
+      },
+      {
+        path: 'connections',
+        element: <ConnectionsPage />,
       },
       {
         path: 'users',

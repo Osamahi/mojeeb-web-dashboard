@@ -12,6 +12,7 @@ export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
   alt?: string;
   name?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  onError?: () => void;
 }
 
 const sizeClasses = {
@@ -22,7 +23,7 @@ const sizeClasses = {
 };
 
 export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
-  ({ className, src, alt, name, size = 'md', ...props }, ref) => {
+  ({ className, src, alt, name, size = 'md', onError, ...props }, ref) => {
     const initials = name ? getInitials(name) : '?';
 
     return (
@@ -40,6 +41,7 @@ export const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
             src={src}
             alt={alt || name || 'Avatar'}
             className="w-full h-full object-cover"
+            onError={onError}
           />
         ) : (
           <div

@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Settings,
   Sliders,
+  Link2,
 } from 'lucide-react';
 import { Role } from '@/features/auth/types/auth.types';
 import { useUIStore } from '@/stores/uiStore';
@@ -39,6 +40,7 @@ const navigation: NavigationItem[] = [
   { name: 'Agents', href: '/agents', icon: Bot },
   { name: 'Studio', href: '/studio', icon: Sliders },
   { name: 'Team', href: '/team', icon: UserCog },
+  { name: 'Connections', href: '/connections', icon: Link2 },
   { name: 'Users', href: '/users', icon: Users, requireSuperAdmin: true },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
