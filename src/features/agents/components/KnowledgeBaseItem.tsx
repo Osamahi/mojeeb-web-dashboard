@@ -16,6 +16,9 @@ import {
   X,
   Tag,
   Plus,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 import type { KnowledgeBase } from '../types/agent.types';
 import { agentService } from '../services/agentService';
@@ -130,6 +133,42 @@ export default function KnowledgeBaseItem({
 
   const contentPreview = content.substring(0, 80) + (content.length > 80 ? '...' : '');
 
+  // Status badge component
+  const renderStatusBadge = () => {
+    const status = typeof knowledgeBase.status === 'string'
+      ? knowledgeBase.status.toLowerCase()
+      : 'ready';
+
+    if (status === 'processing' || status === 'indexing') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          Processing
+        </span>
+      );
+    }
+
+    if (status === 'ready' || status === 'active' || status === 'indexed') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700">
+          <CheckCircle className="w-3 h-3" />
+          Ready
+        </span>
+      );
+    }
+
+    if (status === 'error' || status === 'failed') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700">
+          <AlertCircle className="w-3 h-3" />
+          Error
+        </span>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <>
       {ConfirmDialogComponent}
@@ -153,7 +192,10 @@ export default function KnowledgeBaseItem({
 
             {/* KB Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-neutral-950 truncate">{knowledgeBase.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium text-neutral-950 truncate">{knowledgeBase.name}</h3>
+                {renderStatusBadge()}
+              </div>
               {!isExpanded && (
                 <>
                   <p className="text-sm text-neutral-500 mt-1 line-clamp-1">

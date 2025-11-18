@@ -8,16 +8,19 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { FileText, BookOpen } from 'lucide-react';
 import { agentService } from '../services/agentService';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import NoAgentEmptyState from '../components/NoAgentEmptyState';
 import PromptEditor from '../components/PromptEditor';
 import KnowledgeBaseEditor from '../components/KnowledgeBaseEditor';
+import TestChat from '../components/TestChat';
 import { logger } from '@/lib/logger';
 
 export default function StudioPage() {
@@ -96,16 +99,31 @@ export default function StudioPage() {
       <div className="h-full flex flex-col overflow-hidden">
         {/* Content - Scroll */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Prompt Editor */}
-          <PromptEditor agent={agent} />
+          {/* Agent Configuration - Collapsible */}
+          <CollapsibleSection
+            id="agent-config-mobile"
+            title="Agent Configuration"
+            icon={<FileText className="w-5 h-5" />}
+            defaultExpanded={true}
+          >
+            <PromptEditor agent={agent} />
+          </CollapsibleSection>
 
-          {/* Knowledge Bases */}
-          <KnowledgeBaseEditor
-            agentId={agent.id}
-            knowledgeBases={knowledgeBases || []}
-            isLoading={isLoadingKBs}
-            onRefetch={() => refetchKBs()}
-          />
+          {/* Knowledge Bases - Collapsible */}
+          <CollapsibleSection
+            id="knowledge-bases-mobile"
+            title="Knowledge Bases"
+            icon={<BookOpen className="w-5 h-5" />}
+            count={knowledgeBases?.length || 0}
+            defaultExpanded={false}
+          >
+            <KnowledgeBaseEditor
+              agentId={agent.id}
+              knowledgeBases={knowledgeBases || []}
+              isLoading={isLoadingKBs}
+              onRefetch={() => refetchKBs()}
+            />
+          </CollapsibleSection>
         </div>
       </div>
     );
@@ -120,16 +138,31 @@ export default function StudioPage() {
           {/* Left Panel: Configuration */}
           <Panel defaultSize={40} minSize={30} maxSize={60}>
             <div className="h-full overflow-y-auto bg-neutral-50 p-6 space-y-6">
-              {/* Prompt Editor */}
-              <PromptEditor agent={agent} />
+              {/* Agent Configuration - Collapsible */}
+              <CollapsibleSection
+                id="agent-config-desktop"
+                title="Agent Configuration"
+                icon={<FileText className="w-5 h-5" />}
+                defaultExpanded={true}
+              >
+                <PromptEditor agent={agent} />
+              </CollapsibleSection>
 
-              {/* Knowledge Bases */}
-              <KnowledgeBaseEditor
-                agentId={agent.id}
-                knowledgeBases={knowledgeBases || []}
-                isLoading={isLoadingKBs}
-                onRefetch={() => refetchKBs()}
-              />
+              {/* Knowledge Bases - Collapsible */}
+              <CollapsibleSection
+                id="knowledge-bases-desktop"
+                title="Knowledge Bases"
+                icon={<BookOpen className="w-5 h-5" />}
+                count={knowledgeBases?.length || 0}
+                defaultExpanded={false}
+              >
+                <KnowledgeBaseEditor
+                  agentId={agent.id}
+                  knowledgeBases={knowledgeBases || []}
+                  isLoading={isLoadingKBs}
+                  onRefetch={() => refetchKBs()}
+                />
+              </CollapsibleSection>
             </div>
           </Panel>
 
@@ -138,17 +171,7 @@ export default function StudioPage() {
 
           {/* Right Panel: Test Chat */}
           <Panel defaultSize={60}>
-            <div className="h-full bg-white flex items-center justify-center p-6">
-              <div className="text-center max-w-md">
-                <h2 className="text-xl font-semibold text-neutral-950 mb-2">
-                  Test Chat
-                </h2>
-                <p className="text-neutral-600 text-sm">
-                  Test chat functionality will be available here once the
-                  backend endpoint is ready.
-                </p>
-              </div>
-            </div>
+            <TestChat agentId={agent.id} />
           </Panel>
         </PanelGroup>
       </div>
