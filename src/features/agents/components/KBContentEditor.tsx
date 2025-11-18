@@ -18,11 +18,13 @@ import { cn } from '@/lib/utils';
 interface KBContentEditorProps {
   knowledgeBase: KnowledgeBase;
   onUpdate: () => void;
+  onNameChange: (newName: string) => void;
 }
 
 export default function KBContentEditor({
   knowledgeBase,
   onUpdate,
+  onNameChange,
 }: KBContentEditorProps) {
   const [name, setName] = useState(knowledgeBase.name);
   const [content, setContent] = useState(knowledgeBase.content);
@@ -47,6 +49,7 @@ export default function KBContentEditor({
     onSuccess: () => {
       setIsModified(false);
       setShowSuccessMessage(true);
+      onNameChange(name); // Update parent's displayed name immediately
       onUpdate();
 
       // Hide success message after 2 seconds

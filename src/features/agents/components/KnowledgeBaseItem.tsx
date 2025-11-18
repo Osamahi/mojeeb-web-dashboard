@@ -25,6 +25,7 @@ export default function KnowledgeBaseItem({
 }: KnowledgeBaseItemProps) {
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [currentName, setCurrentName] = useState(knowledgeBase.name);
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -75,7 +76,7 @@ export default function KnowledgeBaseItem({
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-semibold text-neutral-950 mb-1 truncate">
-              {toTitleCase(knowledgeBase.name)}
+              {toTitleCase(currentName)}
             </h3>
             {!isExpanded && (
               <p className="text-sm text-neutral-500 line-clamp-2">
@@ -107,7 +108,11 @@ export default function KnowledgeBaseItem({
         {/* Expanded Editor */}
         {isExpanded && (
           <div className="mt-4 pt-4 border-t border-neutral-100">
-            <KBContentEditor knowledgeBase={knowledgeBase} onUpdate={onUpdate} />
+            <KBContentEditor
+              knowledgeBase={knowledgeBase}
+              onUpdate={onUpdate}
+              onNameChange={setCurrentName}
+            />
           </div>
         )}
       </div>
