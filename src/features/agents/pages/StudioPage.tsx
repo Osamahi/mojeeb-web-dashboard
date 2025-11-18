@@ -120,26 +120,16 @@ export default function StudioPage() {
         <div className="flex flex-col overflow-hidden border-r border-neutral-200">
           {/* Header Section - Matches other pages */}
           <div className="px-6 pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <EditableTitle
-                  value={agent.name}
-                  suffix=" Knowledge"
-                  onSave={(newName) => updateAgentNameMutation.mutateAsync(newName)}
-                  className="text-2xl font-semibold text-neutral-950"
-                />
-                <p className="text-sm text-neutral-600 mt-1">
-                  Configure your agent's instructions and knowledge base
-                </p>
-              </div>
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => setIsAddKBModalOpen(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Knowledge
-              </Button>
+            <div>
+              <EditableTitle
+                value={agent.name}
+                suffix=" Knowledge"
+                onSave={(newName) => updateAgentNameMutation.mutateAsync(newName)}
+                className="text-2xl font-semibold text-neutral-950"
+              />
+              <p className="text-sm text-neutral-600 mt-1">
+                Configure your agent's instructions and knowledge base
+              </p>
             </div>
           </div>
 
@@ -165,10 +155,22 @@ export default function StudioPage() {
                   ))}
                 </>
               ) : (
-                <div className="text-center py-8 text-sm text-neutral-600">
-                  No knowledge bases yet. Click "Add Knowledge" above to get started.
+                <div className="text-center py-8 text-sm text-neutral-500">
+                  No knowledge bases yet. Click "Add Knowledge" below to get started.
                 </div>
               )}
+
+              {/* Add Knowledge Button - At end of list */}
+              <div className="flex justify-center pt-2">
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setIsAddKBModalOpen(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Knowledge
+                </Button>
+              </div>
             </div>
           </div>
         </div>

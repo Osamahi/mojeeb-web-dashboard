@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Lock } from 'lucide-react';
 import type { Agent } from '../types/agent.types';
 import PromptEditor from './PromptEditor';
 
@@ -30,7 +30,7 @@ export default function MainInstructionCard({ agent }: MainInstructionCardProps)
             Main Instructions
           </h3>
           {!isExpanded && (
-            <p className="text-sm text-neutral-600 line-clamp-2">
+            <p className="text-sm text-neutral-500 line-clamp-2">
               {contentPreview}
             </p>
           )}
@@ -47,10 +47,10 @@ export default function MainInstructionCard({ agent }: MainInstructionCardProps)
           </button>
           <button
             disabled
-            className="p-2 rounded-lg text-neutral-300 cursor-not-allowed"
+            className="p-2 rounded-lg text-neutral-400 cursor-not-allowed"
             title="Main Instructions cannot be deleted"
           >
-            <Trash2 className="w-4 h-4" />
+            <Lock className="w-4 h-4" />
           </button>
         </div>
       </div>

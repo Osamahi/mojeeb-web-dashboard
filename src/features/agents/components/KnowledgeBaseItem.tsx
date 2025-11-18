@@ -55,6 +55,13 @@ export default function KnowledgeBaseItem({
     }
   };
 
+  // Convert to Title Case for consistent display
+  const toTitleCase = (str: string) => {
+    return str.replace(/\w\S*/g, (txt) =>
+      txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+    );
+  };
+
   // Content preview
   const contentPreview = knowledgeBase.content.substring(0, 120) +
     (knowledgeBase.content.length > 120 ? '...' : '');
@@ -68,9 +75,9 @@ export default function KnowledgeBaseItem({
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-semibold text-neutral-950 mb-1 truncate">
-              {knowledgeBase.name}
+              {toTitleCase(knowledgeBase.name)}
             </h3>
-            <p className="text-sm text-neutral-600 line-clamp-2">
+            <p className="text-sm text-neutral-500 line-clamp-2">
               {contentPreview}
             </p>
           </div>
