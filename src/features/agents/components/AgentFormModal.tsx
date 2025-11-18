@@ -110,7 +110,7 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-lg w-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-neutral-200">
+        <div className="flex items-center justify-between p-4 border-b border-neutral-200">
           <div>
             <h2 className="text-xl font-semibold text-neutral-950">
               {isEditMode ? 'Edit Agent' : 'Create Agent'}
@@ -128,7 +128,7 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {/* Agent Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-neutral-700 mb-1">

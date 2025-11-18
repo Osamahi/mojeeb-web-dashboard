@@ -1,7 +1,7 @@
 /**
  * Mojeeb Knowledge Base Editor Component
- * List and manage knowledge bases for an agent
- * Features: Add, edit, delete knowledge bases
+ * Clean list of knowledge bases with minimal design
+ * Simplified for tab-based layout
  */
 
 import { useState } from 'react';
@@ -29,41 +29,27 @@ export default function KnowledgeBaseEditor({
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border border-neutral-200 p-6">
-        <div className="flex items-center justify-center py-8">
-          <Spinner size="md" />
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <Spinner size="md" />
       </div>
     );
   }
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-neutral-200 p-6 space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-neutral-950 flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
-              Knowledge Bases ({knowledgeBases.length})
-            </h2>
-            <p className="text-sm text-neutral-500 mt-1">
-              Add and manage knowledge bases for your agent
-            </p>
-          </div>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setIsAddModalOpen(true)}
-          >
+      {/* Knowledge Base List */}
+      <div className="space-y-4">
+        {/* Add KB Button */}
+        <div className="flex justify-end">
+          <Button variant="primary" size="md" onClick={() => setIsAddModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Add KB
+            Add Knowledge Base
           </Button>
         </div>
 
-        {/* Knowledge Base List */}
+        {/* KB Cards */}
         {knowledgeBases.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {knowledgeBases.map((kb) => (
               <KnowledgeBaseItem
                 key={kb.id}
@@ -73,17 +59,19 @@ export default function KnowledgeBaseEditor({
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 border border-dashed border-neutral-300 rounded-lg">
-            <BookOpen className="w-12 h-12 text-neutral-400 mx-auto mb-3" />
-            <p className="text-sm font-medium text-neutral-950 mb-1">
-              No knowledge bases yet
-            </p>
-            <p className="text-sm text-neutral-500 mb-4">
-              Add knowledge bases to provide context to your agent
+          <div className="text-center py-12 bg-white rounded-lg border border-dashed border-neutral-300">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-100 mb-4">
+              <BookOpen className="w-8 h-8 text-neutral-400" />
+            </div>
+            <h3 className="text-base font-medium text-neutral-950 mb-2">
+              No Knowledge Bases Yet
+            </h3>
+            <p className="text-sm text-neutral-600 mb-6 max-w-md mx-auto">
+              Add knowledge bases to provide context and information to your agent.
             </p>
             <Button
-              variant="secondary"
-              size="sm"
+              variant="primary"
+              size="md"
               onClick={() => setIsAddModalOpen(true)}
             >
               <Plus className="w-4 h-4 mr-2" />

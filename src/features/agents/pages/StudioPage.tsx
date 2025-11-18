@@ -1,33 +1,35 @@
 /**
  * Mojeeb Agent Studio Page
- * Edit agent prompts, manage knowledge bases, and test chat
- * Split-panel layout with minimal design
+ * 2/3 + 1/3 split layout with sticky test chat
+ * Left: Main Instruction + Knowledge sections
+ * Right: Embedded test chat
  */
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { FileText, BookOpen } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import { agentService } from '../services/agentService';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { CollapsibleSection } from '@/components/ui/CollapsibleSection';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { EditableTitle } from '@/components/ui/EditableTitle';
 import NoAgentEmptyState from '../components/NoAgentEmptyState';
-import PromptEditor from '../components/PromptEditor';
-import KnowledgeBaseEditor from '../components/KnowledgeBaseEditor';
+import MainInstructionCard from '../components/MainInstructionCard';
+import KnowledgeBaseItem from '../components/KnowledgeBaseItem';
+import AddKnowledgeBaseModal from '../components/AddKnowledgeBaseModal';
 import TestChat from '../components/TestChat';
 import { logger } from '@/lib/logger';
 
 export default function StudioPage() {
-  const isMobile = useIsMobile();
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
+  const queryClient = useQueryClient();
+  const [isAddKBModalOpen, setIsAddKBModalOpen] = useState(false);
 
-  // Fetch agent data - automatically refetches when agentId changes
+  // Fetch agent data
   const {
     data: agent,
     isLoading,
@@ -38,7 +40,7 @@ export default function StudioPage() {
     enabled: !!agentId,
   });
 
-  // Fetch knowledge bases for this agent - automatically refetches when agentId changes
+  // Fetch knowledge bases
   const {
     data: knowledgeBases,
     isLoading: isLoadingKBs,
@@ -47,6 +49,23 @@ export default function StudioPage() {
     queryKey: queryKeys.knowledgeBases(agentId),
     queryFn: () => agentService.getKnowledgeBases(agentId!),
     enabled: !!agentId,
+  });
+
+  // Update agent name mutation
+  const updateAgentNameMutation = useMutation({
+    mutationFn: async (newName: string) => {
+      return agentService.updateAgent(agentId!, { name: newName });
+    },
+    onSuccess: (updatedAgent) => {
+      queryClient.setQueryData(queryKeys.agent(agentId), updatedAgent);
+      queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
+      toast.success('Agent name updated');
+    },
+    onError: (error) => {
+      logger.error('Error updating agent name', error);
+      toast.error('Failed to update agent name');
+      throw error; // Re-throw to let EditableTitle handle it
+    },
   });
 
   // Log errors
@@ -93,88 +112,83 @@ export default function StudioPage() {
     );
   }
 
-  // Mobile layout (stacked)
-  if (isMobile) {
-    return (
-      <div className="h-full flex flex-col overflow-hidden">
-        {/* Content - Scroll */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Agent Configuration - Collapsible */}
-          <CollapsibleSection
-            id="agent-config-mobile"
-            title="Agent Configuration"
-            icon={<FileText className="w-5 h-5" />}
-            defaultExpanded={true}
-          >
-            <PromptEditor agent={agent} />
-          </CollapsibleSection>
+  return (
+    <>
+      {/* 2/3 + 1/3 Split Layout */}
+      <div className="h-full grid grid-cols-[2fr_1fr] bg-neutral-50">
+        {/* Left Column - 2/3 Width - Knowledge Sections */}
+        <div className="flex flex-col overflow-hidden border-r border-neutral-200">
+          {/* Header Section - Matches other pages */}
+          <div className="px-6 py-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <EditableTitle
+                  value={agent.name}
+                  suffix=" Knowledge"
+                  onSave={(newName) => updateAgentNameMutation.mutateAsync(newName)}
+                  className="text-2xl font-semibold text-neutral-950"
+                />
+                <p className="text-sm text-neutral-600 mt-1">
+                  Configure your agent's instructions and knowledge base
+                </p>
+              </div>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => setIsAddKBModalOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Knowledge
+              </Button>
+            </div>
+          </div>
 
-          {/* Knowledge Bases - Collapsible */}
-          <CollapsibleSection
-            id="knowledge-bases-mobile"
-            title="Knowledge Bases"
-            icon={<BookOpen className="w-5 h-5" />}
-            count={knowledgeBases?.length || 0}
-            defaultExpanded={false}
-          >
-            <KnowledgeBaseEditor
-              agentId={agent.id}
-              knowledgeBases={knowledgeBases || []}
-              isLoading={isLoadingKBs}
-              onRefetch={() => refetchKBs()}
-            />
-          </CollapsibleSection>
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="px-6 py-6 space-y-4">
+              {/* Main Instruction Card - Matches KB card UI, but undeletable */}
+              <MainInstructionCard agent={agent} />
+
+              {/* Knowledge Base Cards */}
+              {isLoadingKBs ? (
+                <div className="flex items-center justify-center py-12">
+                  <Spinner size="md" />
+                </div>
+              ) : knowledgeBases && knowledgeBases.length > 0 ? (
+                <>
+                  {knowledgeBases.map((kb) => (
+                    <KnowledgeBaseItem
+                      key={kb.id}
+                      knowledgeBase={kb}
+                      onUpdate={() => refetchKBs()}
+                    />
+                  ))}
+                </>
+              ) : (
+                <div className="text-center py-8 text-sm text-neutral-600">
+                  No knowledge bases yet. Click "Add Knowledge" above to get started.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - 1/3 Width - Sticky Test Chat */}
+        <div className="flex flex-col bg-white overflow-hidden">
+          <TestChat agentId={agent.id} />
         </div>
       </div>
-    );
-  }
 
-  // Desktop layout (split-panel)
-  return (
-    <div className="h-full flex flex-col overflow-hidden">
-      {/* Split-panel content */}
-      <div className="flex-1 overflow-hidden">
-        <PanelGroup direction="horizontal">
-          {/* Left Panel: Configuration */}
-          <Panel defaultSize={40} minSize={30} maxSize={60}>
-            <div className="h-full overflow-y-auto bg-neutral-50 p-6 space-y-6">
-              {/* Agent Configuration - Collapsible */}
-              <CollapsibleSection
-                id="agent-config-desktop"
-                title="Agent Configuration"
-                icon={<FileText className="w-5 h-5" />}
-                defaultExpanded={true}
-              >
-                <PromptEditor agent={agent} />
-              </CollapsibleSection>
-
-              {/* Knowledge Bases - Collapsible */}
-              <CollapsibleSection
-                id="knowledge-bases-desktop"
-                title="Knowledge Bases"
-                icon={<BookOpen className="w-5 h-5" />}
-                count={knowledgeBases?.length || 0}
-                defaultExpanded={false}
-              >
-                <KnowledgeBaseEditor
-                  agentId={agent.id}
-                  knowledgeBases={knowledgeBases || []}
-                  isLoading={isLoadingKBs}
-                  onRefetch={() => refetchKBs()}
-                />
-              </CollapsibleSection>
-            </div>
-          </Panel>
-
-          {/* Resize Handle */}
-          <PanelResizeHandle className="w-px bg-neutral-200 hover:bg-brand-cyan transition-colors" />
-
-          {/* Right Panel: Test Chat */}
-          <Panel defaultSize={60}>
-            <TestChat agentId={agent.id} />
-          </Panel>
-        </PanelGroup>
-      </div>
-    </div>
+      {/* Add Knowledge Base Modal */}
+      <AddKnowledgeBaseModal
+        isOpen={isAddKBModalOpen}
+        onClose={() => setIsAddKBModalOpen(false)}
+        agentId={agent.id}
+        onSuccess={() => {
+          refetchKBs();
+          setIsAddKBModalOpen(false);
+        }}
+      />
+    </>
   );
 }

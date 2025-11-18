@@ -1,20 +1,20 @@
 /**
  * Mojeeb Prompt Editor Component
- * Edit agent name and persona prompt with auto-save
- * Features: Dirty state tracking, character count, debounced auto-save
+ * Simplified interface for editing agent prompt
+ * Auto-save with minimal design
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Save, Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import type { Agent } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
-import { Button } from '@/components/ui/Button';
 import { logger } from '@/lib/logger';
+import { cn } from '@/lib/utils';
 
 interface PromptEditorProps {
   agent: Agent;
@@ -24,7 +24,6 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
   const queryClient = useQueryClient();
   const [name, setName] = useState(agent.name);
   const [prompt, setPrompt] = useState(agent.personaPrompt || '');
-  const [description, setDescription] = useState(agent.description || '');
   const [isModified, setIsModified] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
@@ -32,10 +31,9 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
   useEffect(() => {
     const hasChanges =
       name !== agent.name ||
-      prompt !== (agent.personaPrompt || '') ||
-      description !== (agent.description || '');
+      prompt !== (agent.personaPrompt || '');
     setIsModified(hasChanges);
-  }, [name, prompt, description, agent]);
+  }, [name, prompt, agent]);
 
   // Save mutation
   const saveMutation = useMutation({
@@ -43,7 +41,6 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
       return agentService.updateAgent(agent.id, {
         name,
         personaPrompt: prompt,
-        description,
       });
     },
     onSuccess: (updatedAgent) => {
@@ -60,7 +57,7 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
     },
   });
 
-  // Define handleSave BEFORE using it in useEffect (fixes hoisting error)
+  // Auto-save handler
   const handleSave = useCallback(() => {
     if (isModified && !saveMutation.isPending) {
       saveMutation.mutate();
@@ -76,91 +73,91 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
     }, 2000); // Auto-save after 2 seconds of inactivity
 
     return () => clearTimeout(timeout);
-  }, [name, prompt, description, isModified, handleSave]);
+  }, [name, prompt, isModified, handleSave]);
 
   const formatLastSaved = () => {
     if (!lastSaved) return null;
     const seconds = Math.floor((Date.now() - lastSaved.getTime()) / 1000);
-    if (seconds < 60) return 'Saved just now';
+    if (seconds < 60) return 'just now';
     const minutes = Math.floor(seconds / 60);
-    return `Saved ${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
   };
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-neutral-950">
-            Agent Configuration
-          </h2>
-          <p className="text-sm text-neutral-500 mt-1">
-            Edit your agent's name, description, and persona prompt
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Save status indicator */}
-          {saveMutation.isPending ? (
-            <span className="text-sm text-neutral-500 flex items-center gap-2">
-              <span className="w-2 h-2 bg-brand-cyan rounded-full animate-pulse" />
-              Saving...
-            </span>
-          ) : isModified ? (
-            <span className="text-sm text-warning flex items-center gap-2">
-              <span className="w-2 h-2 bg-warning rounded-full" />
-              Unsaved changes
-            </span>
-          ) : lastSaved ? (
-            <span className="text-sm text-success flex items-center gap-2">
-              <Check className="w-4 h-4" />
-              {formatLastSaved()}
-            </span>
-          ) : null}
+    <div className="space-y-6">
+      {/* Save Status Indicator */}
+      <div className="flex items-center justify-end text-sm">
+        {saveMutation.isPending ? (
+          <span className="text-neutral-600 flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Saving...
+          </span>
+        ) : isModified ? (
+          <span className="text-amber-600 flex items-center gap-2">
+            <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+            Unsaved changes
+          </span>
+        ) : lastSaved ? (
+          <span className="text-green-600 flex items-center gap-2">
+            <Check className="w-4 h-4" />
+            Saved {formatLastSaved()}
+          </span>
+        ) : null}
+      </div>
 
-          {/* Manual save button */}
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleSave}
-            disabled={!isModified || saveMutation.isPending}
-          >
-            <Save className="w-4 h-4 mr-2" />
-            Save
-          </Button>
+      {/* Form Fields */}
+      <div className="space-y-6 bg-white rounded-lg border border-neutral-200 p-4">
+        {/* Agent Name */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-2">
+            Agent Name
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter agent name..."
+            disabled={saveMutation.isPending}
+            className={cn(
+              'w-full px-4 py-2.5 rounded-lg',
+              'bg-neutral-50 border border-neutral-200',
+              'focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent',
+              'placeholder:text-neutral-400',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+              'text-base text-neutral-950',
+              'transition-all duration-200'
+            )}
+          />
+        </div>
+
+        {/* Persona Prompt */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-2">
+            Persona Instructions
+          </label>
+          <Textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="You are a helpful assistant who..."
+            showCharCount
+            autoResize
+            minHeight={200}
+            maxHeight={600}
+            disabled={saveMutation.isPending}
+          />
+          <p className="text-xs text-neutral-500 mt-2">
+            Define your agent's personality, tone, and behavior. Be specific.
+          </p>
         </div>
       </div>
 
-      {/* Agent Name */}
-      <Input
-        label="Agent Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Enter agent name..."
-        disabled={saveMutation.isPending}
-      />
-
-      {/* Description (Optional) */}
-      <Input
-        label="Description (Optional)"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Brief description of your agent..."
-        disabled={saveMutation.isPending}
-      />
-
-      {/* Persona Prompt */}
-      <Textarea
-        label="Persona Prompt"
-        helperText="Define your agent's personality, tone, and behavior"
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="You are a helpful assistant..."
-        showCharCount
-        autoResize
-        minHeight={120}
-        maxHeight={500}
-        disabled={saveMutation.isPending}
-      />
+      {/* Auto-save info */}
+      <div className="flex items-center gap-2 text-xs text-neutral-500">
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Auto-saves after 2 seconds of inactivity</span>
+      </div>
     </div>
   );
 }

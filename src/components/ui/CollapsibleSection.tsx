@@ -18,6 +18,8 @@ interface CollapsibleSectionProps {
   count?: number;
   /** Optional actions to show on the right side of header */
   actions?: ReactNode;
+  /** Preview text to show when collapsed */
+  preview?: string;
   /** Content to show when expanded */
   children: ReactNode;
   /** Default expanded state (if no localStorage value exists) */
@@ -32,6 +34,7 @@ export function CollapsibleSection({
   icon,
   count,
   actions,
+  preview,
   children,
   defaultExpanded = true,
   className = '',
@@ -52,50 +55,60 @@ export function CollapsibleSection({
   };
 
   return (
-    <div className={`bg-white rounded-lg border border-neutral-200 overflow-hidden ${className}`}>
-      {/* Header - Clickable */}
-      <button
-        onClick={toggleExpanded}
-        className="w-full flex items-center justify-between p-4 hover:bg-neutral-50 transition-colors"
-        aria-expanded={isExpanded}
-        aria-controls={`collapsible-content-${id}`}
-      >
-        <div className="flex items-center gap-3">
+    <div className={`space-y-4 ${className}`}>
+      {/* Header - Clickable to expand/collapse */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={toggleExpanded}
+          className="flex items-center gap-3 hover:opacity-70 transition-opacity group flex-1 text-left"
+          aria-expanded={isExpanded}
+          aria-controls={`collapsible-content-${id}`}
+        >
           {/* Chevron Icon - Rotates on expand/collapse */}
           <ChevronDown
-            className={`w-5 h-5 text-neutral-600 transition-transform duration-200 ease-in-out ${
+            className={`w-5 h-5 text-neutral-600 transition-transform duration-200 ease-in-out flex-shrink-0 ${
               isExpanded ? 'rotate-0' : '-rotate-90'
             }`}
           />
 
           {/* Optional Icon */}
-          {icon && <div className="text-neutral-600">{icon}</div>}
+          {icon && <div className="text-neutral-600 flex-shrink-0">{icon}</div>}
 
-          {/* Title */}
-          <h3 className="text-lg font-semibold text-neutral-950">{title}</h3>
+          {/* Title and Preview */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-neutral-950">{title}</h2>
+              {/* Optional Count Badge */}
+              {count !== undefined && (
+                <span className="text-sm text-neutral-500">({count})</span>
+              )}
+            </div>
+            {/* Preview text when collapsed */}
+            {!isExpanded && preview && (
+              <p className="text-sm text-neutral-500 mt-1 line-clamp-1">
+                {preview}
+              </p>
+            )}
+          </div>
+        </button>
 
-          {/* Optional Count Badge */}
-          {count !== undefined && (
-            <span className="text-sm text-neutral-500">({count})</span>
-          )}
-        </div>
-
-        {/* Optional Actions (only show when expanded or if critical) */}
-        {actions && <div onClick={(e) => e.stopPropagation()}>{actions}</div>}
-      </button>
+        {/* Optional Actions (e.g., "+ Add KB") */}
+        {actions && (
+          <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+            {actions}
+          </div>
+        )}
+      </div>
 
       {/* Content - Expandable */}
-      <div
-        id={`collapsible-content-${id}`}
-        className={`transition-all duration-300 ease-in-out ${
-          isExpanded ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
-        style={{
-          overflow: isExpanded ? 'visible' : 'hidden',
-        }}
-      >
-        <div className="p-4 pt-0 border-t border-neutral-100">{children}</div>
-      </div>
+      {isExpanded && (
+        <div
+          id={`collapsible-content-${id}`}
+          className="animate-in slide-in-from-top-2 duration-200"
+        >
+          {children}
+        </div>
+      )}
     </div>
   );
 }
