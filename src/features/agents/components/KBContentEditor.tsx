@@ -1,16 +1,17 @@
 /**
  * Knowledge Base Content Editor Component
  * Inline editor for KB name and content
- * Auto-save with minimal design
+ * Manual save with minimal design
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Check, Loader2 } from 'lucide-react';
 import type { KnowledgeBase } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { Textarea } from '@/components/ui/Textarea';
+import { Button } from '@/components/ui/Button';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +27,7 @@ export default function KBContentEditor({
   const [name, setName] = useState(knowledgeBase.name);
   const [content, setContent] = useState(knowledgeBase.content);
   const [isModified, setIsModified] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Check if data has been modified
   useEffect(() => {
@@ -45,9 +46,13 @@ export default function KBContentEditor({
     },
     onSuccess: () => {
       setIsModified(false);
-      setLastSaved(new Date());
-      toast.success('Knowledge base updated');
+      setShowSuccessMessage(true);
       onUpdate();
+
+      // Hide success message after 2 seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 2000);
     },
     onError: (error) => {
       logger.error('Error saving KB', error);
@@ -55,54 +60,14 @@ export default function KBContentEditor({
     },
   });
 
-  // Auto-save handler
-  const handleSave = useCallback(() => {
+  const handleSave = () => {
     if (isModified && !saveMutation.isPending) {
       saveMutation.mutate();
     }
-  }, [isModified, saveMutation]);
-
-  // Debounced auto-save
-  useEffect(() => {
-    if (!isModified) return;
-
-    const timeout = setTimeout(() => {
-      handleSave();
-    }, 2000); // Auto-save after 2 seconds of inactivity
-
-    return () => clearTimeout(timeout);
-  }, [name, content, isModified, handleSave]);
-
-  const formatLastSaved = () => {
-    if (!lastSaved) return null;
-    const seconds = Math.floor((Date.now() - lastSaved.getTime()) / 1000);
-    if (seconds < 60) return 'just now';
-    const minutes = Math.floor(seconds / 60);
-    return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
   };
 
   return (
-    <div className="space-y-6">
-      {/* Save Status Indicator */}
-      <div className="flex items-center justify-end text-sm">
-        {saveMutation.isPending ? (
-          <span className="text-neutral-600 flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Saving...
-          </span>
-        ) : isModified ? (
-          <span className="text-amber-600 flex items-center gap-2">
-            <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-            Unsaved changes
-          </span>
-        ) : lastSaved ? (
-          <span className="text-green-600 flex items-center gap-2">
-            <Check className="w-4 h-4" />
-            Saved {formatLastSaved()}
-          </span>
-        ) : null}
-      </div>
-
+    <div className="space-y-4">
       {/* Form Fields */}
       <div className="space-y-4 bg-white rounded-lg border border-neutral-200 p-4">
         {/* Knowledge Base Name */}
@@ -133,6 +98,29 @@ export default function KBContentEditor({
           maxHeight={600}
           disabled={saveMutation.isPending}
         />
+      </div>
+
+      {/* Save Button / Status */}
+      <div className="flex items-center justify-end">
+        {saveMutation.isPending ? (
+          <span className="text-sm text-neutral-600 flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Saving...
+          </span>
+        ) : showSuccessMessage ? (
+          <span className="text-sm text-green-600 flex items-center gap-2">
+            <Check className="w-4 h-4" />
+            Saved successfully
+          </span>
+        ) : isModified ? (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSave}
+          >
+            Save
+          </Button>
+        ) : null}
       </div>
     </div>
   );
