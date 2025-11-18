@@ -57,3 +57,46 @@
     animation: shimmer 2s infinite;
   }
 }
+
+/* TipTap Editor Styles - Minimal Prose */
+.ProseMirror {
+  @apply outline-none;
+  min-height: inherit;
+}
+
+.ProseMirror p {
+  @apply mb-3 last:mb-0;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  @apply pl-6 mb-3;
+}
+
+.ProseMirror ul {
+  @apply list-disc;
+}
+
+.ProseMirror ol {
+  @apply list-decimal;
+}
+
+.ProseMirror li {
+  @apply mb-1;
+}
+
+.ProseMirror strong {
+  @apply font-semibold;
+}
+
+.ProseMirror em {
+  @apply italic;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-neutral-400;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

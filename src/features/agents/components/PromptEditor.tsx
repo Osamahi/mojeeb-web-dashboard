@@ -11,7 +11,7 @@ import { Check } from 'lucide-react';
 import type { Agent } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
-import { Textarea } from '@/components/ui/Textarea';
+import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { Button } from '@/components/ui/Button';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
@@ -86,11 +86,10 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
           )}
         />
 
-        <Textarea
+        <RichTextEditor
           value={editPrompt}
-          onChange={(e) => setEditPrompt(e.target.value)}
+          onChange={(value) => setEditPrompt(value)}
           placeholder="You are a helpful assistant who..."
-          autoResize
           minHeight={150}
           maxHeight={500}
           disabled={saveMutation.isPending}

@@ -12,7 +12,7 @@ import type { KnowledgeBase } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { useConfirm } from '@/hooks/useConfirm';
 import { logger } from '@/lib/logger';
-import { Textarea } from '@/components/ui/Textarea';
+import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
@@ -140,8 +140,11 @@ export default function KnowledgeBaseItem({
             {toTitleCase(currentName)}
           </h3>
 
-          {/* Hover Actions - GitHub Style (visible on hover) */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Hover Actions - GitHub Style (visible on hover or when expanded) */}
+          <div className={cn(
+            'flex items-center gap-1 transition-opacity',
+            isExpanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          )}>
             {!isEditing && (
               <>
                 <button
@@ -193,11 +196,10 @@ export default function KnowledgeBaseItem({
                     )}
                   />
 
-                  <Textarea
+                  <RichTextEditor
                     value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
+                    onChange={(value) => setEditContent(value)}
                     placeholder="Enter the knowledge base content..."
-                    autoResize
                     minHeight={150}
                     maxHeight={500}
                     disabled={updateMutation.isPending}
@@ -231,9 +233,10 @@ export default function KnowledgeBaseItem({
             ) : (
               // View Mode - Clean Read-only
               <div className="pt-4 space-y-3">
-                <p className="text-sm text-neutral-700 whitespace-pre-wrap leading-relaxed">
-                  {knowledgeBase.content}
-                </p>
+                <div
+                  className="text-sm text-neutral-700 leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: knowledgeBase.content }}
+                />
 
                 {/* Success Message */}
                 {showSuccessMessage && (

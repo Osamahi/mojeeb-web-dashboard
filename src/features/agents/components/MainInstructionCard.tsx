@@ -37,8 +37,11 @@ export default function MainInstructionCard({ agent }: MainInstructionCardProps)
           Main Instructions
         </h3>
 
-        {/* Hover Actions - GitHub Style */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Hover Actions - GitHub Style (visible on hover or when expanded) */}
+        <div className={cn(
+          'flex items-center gap-1 transition-opacity',
+          isExpanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        )}>
           <button
             onClick={(e) => {
               e.stopPropagation();
