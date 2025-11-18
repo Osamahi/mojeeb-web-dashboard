@@ -65,12 +65,14 @@ export default function TestChat({ agentId }: TestChatProps) {
   const [isInitializing, setIsInitializing] = useState(true);
   const [conversation, setConversation] = useState<StudioConversation | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
   const isSendingRef = useRef(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Clear timeout helper
   const clearAITimeout = useCallback(() => {
@@ -82,6 +84,13 @@ export default function TestChat({ agentId }: TestChatProps) {
 
   // Unsubscribe helper
   const unsubscribeChannel = useCallback(() => {
+    // Clear typing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+
+    // Unsubscribe from channel
     if (channelRef.current) {
       channelRef.current.unsubscribe();
       channelRef.current = null;
@@ -121,6 +130,32 @@ export default function TestChat({ agentId }: TestChatProps) {
       }
     };
 
+    // Handle typing broadcasts
+    const handleTyping = (payload: { payload: { user_id: string; is_typing: boolean } }) => {
+      if (!isMountedRef.current) return;
+
+      const { user_id, is_typing } = payload.payload;
+
+      // Only show typing indicator if it's not from the studio user (us)
+      if (user_id !== 'studio_user') {
+        setIsOtherUserTyping(is_typing);
+
+        // Auto-hide typing indicator after 3 seconds of no updates
+        if (is_typing) {
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+          }
+          typingTimeoutRef.current = setTimeout(() => {
+            setIsOtherUserTyping(false);
+          }, 3000);
+        } else {
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+          }
+        }
+      }
+    };
+
     const channel = supabase
       .channel(`test_chat_${conversationId}`)
       .on('postgres_changes', {
@@ -135,6 +170,7 @@ export default function TestChat({ agentId }: TestChatProps) {
         table: 'chats',
         filter: `conversation_id=eq.${conversationId}`,
       }, handleUpdate)
+      .on('broadcast', { event: 'typing' }, handleTyping)
       .subscribe((status, err) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           logger.error(`Subscription ${status.toLowerCase()}`, err);
@@ -377,13 +413,26 @@ export default function TestChat({ agentId }: TestChatProps) {
               );
             })}
 
-            {/* Loading indicator - shows while waiting for AI response */}
-            {isSending && (
-              <div className="flex justify-start" role="status" aria-live="polite">
-                <div className="bg-neutral-100 rounded-2xl p-4 border border-neutral-200">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-neutral-600" aria-hidden="true" />
-                    <span className="text-sm text-neutral-600">AI is thinking...</span>
+            {/* Typing indicator - shows based on broadcast events */}
+            {isOtherUserTyping && (
+              <div className="flex justify-start" role="status" aria-live="polite" aria-label="AI is typing">
+                <div className="bg-neutral-100 rounded-2xl px-5 py-4 border border-neutral-200">
+                  <div className="flex gap-1">
+                    <span
+                      className="w-2 h-2 bg-neutral-600 rounded-full animate-bounce"
+                      style={{ animationDelay: '0ms', animationDuration: '1s' }}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="w-2 h-2 bg-neutral-600 rounded-full animate-bounce"
+                      style={{ animationDelay: '150ms', animationDuration: '1s' }}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="w-2 h-2 bg-neutral-600 rounded-full animate-bounce"
+                      style={{ animationDelay: '300ms', animationDuration: '1s' }}
+                      aria-hidden="true"
+                    />
                   </div>
                 </div>
               </div>
