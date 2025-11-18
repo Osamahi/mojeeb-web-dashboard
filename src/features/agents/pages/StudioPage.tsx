@@ -5,10 +5,9 @@
  */
 
 import { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { ArrowLeft, Save } from 'lucide-react';
 import { agentService } from '../services/agentService';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { queryKeys } from '@/lib/queryKeys';
@@ -22,7 +21,6 @@ import KnowledgeBaseEditor from '../components/KnowledgeBaseEditor';
 import { logger } from '@/lib/logger';
 
 export default function StudioPage() {
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
 
@@ -96,29 +94,6 @@ export default function StudioPage() {
   if (isMobile) {
     return (
       <div className="h-full flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="bg-white border-b border-neutral-200 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/agents')}
-                className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-lg font-semibold text-neutral-950">
-                  {agent.name}
-                </h1>
-                <p className="text-sm text-neutral-500">Studio</p>
-              </div>
-            </div>
-            <Button variant="primary" size="sm">
-              <Save className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
         {/* Content - Scroll */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Prompt Editor */}
@@ -139,37 +114,6 @@ export default function StudioPage() {
   // Desktop layout (split-panel)
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="bg-white border-b border-neutral-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm">
-            <Link
-              to="/agents"
-              className="text-neutral-600 hover:text-neutral-950 transition-colors"
-            >
-              Agents
-            </Link>
-            <span className="text-neutral-400">/</span>
-            <span className="text-neutral-950 font-medium">{agent.name}</span>
-            <span className="text-neutral-400">/</span>
-            <span className="text-neutral-600">Studio</span>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-3">
-            <Button variant="secondary" size="sm" onClick={() => navigate('/agents')}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <Button variant="primary" size="sm">
-              <Save className="w-4 h-4 mr-2" />
-              Save All
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Split-panel content */}
       <div className="flex-1 overflow-hidden">
         <PanelGroup direction="horizontal">
