@@ -135,7 +135,7 @@ export default function StudioPage() {
                 </>
               ) : (
                 <div className="text-center py-8 text-sm text-neutral-500">
-                  No knowledge bases yet. Click "Add Knowledge" below to get started.
+                  Add knowledge below to help your agent provide better answers.
                 </div>
               )}
 
