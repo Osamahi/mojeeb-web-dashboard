@@ -119,7 +119,7 @@ export default function StudioPage() {
         {/* Left Column - 2/3 Width - Knowledge Sections */}
         <div className="flex flex-col overflow-hidden border-r border-neutral-200">
           {/* Header Section - Matches other pages */}
-          <div className="px-6 py-6">
+          <div className="px-6 pt-6">
             <div className="flex items-start justify-between">
               <div>
                 <EditableTitle

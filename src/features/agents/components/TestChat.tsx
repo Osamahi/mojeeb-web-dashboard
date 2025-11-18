@@ -103,8 +103,8 @@ export default function TestChat({ agentId }: TestChatProps) {
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-neutral-200">
+      {/* Header - Matches Knowledge section padding */}
+      <div className="flex items-center justify-between px-6 py-6 border-b border-neutral-200">
         <div>
           <h2 className="text-lg font-semibold text-neutral-950">Test Chat</h2>
           <p className="text-xs text-neutral-500 mt-0.5">

@@ -104,11 +104,10 @@ export function EditableTitle({
       onClick={() => setIsEditing(true)}
       className="group flex items-center gap-2 hover:opacity-70 transition-opacity"
     >
-      <h1 className={cn('text-left', className)}>
-        {value}
-        {suffix}
+      <h1 className={cn('text-left whitespace-nowrap', className)}>
+        {value}{suffix}
       </h1>
-      <Edit2 className="w-4 h-4 text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Edit2 className="w-4 h-4 text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
     </button>
   );
 }
