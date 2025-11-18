@@ -23,19 +23,26 @@ interface PromptEditorProps {
 
 export default function PromptEditor({ agent }: PromptEditorProps) {
   const queryClient = useQueryClient();
-  const [editName, setEditName] = useState(agent.name);
-  // Convert plain text to HTML on initial load
+  const [editName, setEditName] = useState(agent.name || '');
   const [editPrompt, setEditPrompt] = useState(plainTextToHtml(agent.personaPrompt || ''));
   const [isModified, setIsModified] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
+  // Update form when agent changes (for agent switching)
+  useEffect(() => {
+    if (agent?.id) {
+      setEditName(agent.name || '');
+      setEditPrompt(plainTextToHtml(agent.personaPrompt || ''));
+    }
+  }, [agent?.id]);
+
   // Check if data has been modified
   useEffect(() => {
     const hasChanges =
-      editName !== agent.name ||
+      editName !== (agent.name || '') ||
       editPrompt !== plainTextToHtml(agent.personaPrompt || '');
     setIsModified(hasChanges);
-  }, [editName, editPrompt, agent]);
+  }, [editName, editPrompt, agent.name, agent.personaPrompt]);
 
   // Save mutation
   const saveMutation = useMutation({
@@ -75,7 +82,7 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
       <div className="space-y-3">
         <input
           type="text"
-          value={editName}
+          value={editName || ''}
           onChange={(e) => setEditName(e.target.value)}
           placeholder="Agent name..."
           disabled={saveMutation.isPending}
@@ -89,7 +96,7 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
         />
 
         <RichTextEditor
-          value={editPrompt}
+          value={editPrompt || '<p></p>'}
           onChange={(value) => setEditPrompt(value)}
           placeholder="You are a helpful assistant who..."
           minHeight={150}
@@ -104,7 +111,7 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
           variant="secondary"
           size="sm"
           onClick={() => {
-            setEditName(agent.name);
+            setEditName(agent.name || '');
             setEditPrompt(plainTextToHtml(agent.personaPrompt || ''));
           }}
           disabled={saveMutation.isPending}

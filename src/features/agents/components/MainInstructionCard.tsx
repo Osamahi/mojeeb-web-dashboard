@@ -2,20 +2,42 @@
  * Main Instructions Card Component
  * GitHub-style accordion matching KnowledgeBaseItem
  * Contains agent prompt - NOT deletable (only editable)
+ * Auto-detects selected agent using useAgentContext
  */
 
 import { useState } from 'react';
 import { ChevronRight, Edit2, Lock } from 'lucide-react';
-import type { Agent } from '../types/agent.types';
+import { useQuery } from '@tanstack/react-query';
+import { useAgentContext } from '@/hooks/useAgentContext';
+import { agentService } from '../services/agentService';
+import { queryKeys } from '@/lib/queryKeys';
 import PromptEditor from './PromptEditor';
 import { cn } from '@/lib/utils';
 
-interface MainInstructionCardProps {
-  agent: Agent;
-}
-
-export default function MainInstructionCard({ agent }: MainInstructionCardProps) {
+export default function MainInstructionCard() {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Get current agent from context
+  const { agentId } = useAgentContext();
+
+  // Fetch agent data
+  const { data: agent, isLoading } = useQuery({
+    queryKey: queryKeys.agent(agentId),
+    queryFn: () => agentService.getAgent(agentId!),
+    enabled: !!agentId,
+  });
+
+  // Loading skeleton
+  if (isLoading || !agent) {
+    return (
+      <div className="bg-white rounded-lg border border-neutral-200 animate-pulse">
+        <div className="flex items-center gap-3 p-4">
+          <div className="w-5 h-5 bg-neutral-200 rounded" />
+          <div className="flex-1 h-5 bg-neutral-200 rounded" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">

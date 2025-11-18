@@ -16,7 +16,6 @@ import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { EditableTitle } from '@/components/ui/EditableTitle';
 import NoAgentEmptyState from '../components/NoAgentEmptyState';
 import MainInstructionCard from '../components/MainInstructionCard';
 import KnowledgeBaseItem from '../components/KnowledgeBaseItem';
@@ -49,23 +48,6 @@ export default function StudioPage() {
     queryKey: queryKeys.knowledgeBases(agentId),
     queryFn: () => agentService.getKnowledgeBases(agentId!),
     enabled: !!agentId,
-  });
-
-  // Update agent name mutation
-  const updateAgentNameMutation = useMutation({
-    mutationFn: async (newName: string) => {
-      return agentService.updateAgent(agentId!, { name: newName });
-    },
-    onSuccess: (updatedAgent) => {
-      queryClient.setQueryData(queryKeys.agent(agentId), updatedAgent);
-      queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
-      toast.success('Agent name updated');
-    },
-    onError: (error) => {
-      logger.error('Error updating agent name', error);
-      toast.error('Failed to update agent name');
-      throw error; // Re-throw to let EditableTitle handle it
-    },
   });
 
   // Log errors
@@ -121,12 +103,9 @@ export default function StudioPage() {
           {/* Header Section - Matches other pages */}
           <div className="px-6 pt-6">
             <div>
-              <EditableTitle
-                value={agent.name}
-                suffix=" Knowledge"
-                onSave={(newName) => updateAgentNameMutation.mutateAsync(newName)}
-                className="text-2xl font-semibold text-neutral-950"
-              />
+              <h1 className="text-2xl font-semibold text-neutral-950">
+                Agent Knowledge
+              </h1>
               <p className="text-sm text-neutral-600 mt-1">
                 Configure your agent's instructions and knowledge base
               </p>
@@ -137,7 +116,7 @@ export default function StudioPage() {
           <div className="flex-1 overflow-y-auto">
             <div className="px-6 py-6 space-y-4">
               {/* Main Instruction Card - Matches KB card UI, but undeletable */}
-              <MainInstructionCard agent={agent} />
+              <MainInstructionCard />
 
               {/* Knowledge Base Cards */}
               {isLoadingKBs ? (

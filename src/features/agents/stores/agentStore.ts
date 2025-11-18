@@ -45,7 +45,17 @@ export const useAgentStore = create<AgentState>()(
     (set, get) => ({
       ...initialState,
 
-      setAgents: (agents) => set({ agents }),
+      setAgents: (agents) => set((state) => {
+        // Sync globalSelectedAgent with updated data from agents list
+        const updatedGlobalAgent = state.globalSelectedAgent
+          ? agents.find(a => a.id === state.globalSelectedAgent.id) || state.globalSelectedAgent
+          : null;
+
+        return {
+          agents,
+          globalSelectedAgent: updatedGlobalAgent
+        };
+      }),
 
       addAgent: (agent) =>
         set((state) => ({
