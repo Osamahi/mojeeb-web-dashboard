@@ -4,9 +4,10 @@
  * Contains agent prompt - NOT deletable (only editable)
  * Auto-detects selected agent using useAgentContext
  * View/Edit mode pattern matching Knowledge Base cards
+ * Expands by default if no knowledge bases exist
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -29,6 +30,20 @@ export default function MainInstructionCard() {
     queryFn: () => agentService.getAgent(agentId!),
     enabled: !!agentId,
   });
+
+  // Fetch knowledge bases to check if any exist
+  const { data: knowledgeBases } = useQuery({
+    queryKey: queryKeys.knowledgeBases(agentId),
+    queryFn: () => agentService.getKnowledgeBases(agentId!),
+    enabled: !!agentId,
+  });
+
+  // Expand by default if no knowledge bases exist
+  useEffect(() => {
+    if (knowledgeBases !== undefined && knowledgeBases.length === 0) {
+      setIsExpanded(true);
+    }
+  }, [knowledgeBases]);
 
   // Loading skeleton
   if (isLoading || !agent) {

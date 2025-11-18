@@ -158,8 +158,8 @@ class AgentService {
    * Create knowledge base
    */
   async createKnowledgeBase(request: CreateKnowledgeBaseRequest): Promise<KnowledgeBase> {
-    const { data } = await api.post<KnowledgeBase>('/api/knowledgebases', request);
-    return data;
+    const { data } = await api.post<ApiResponse<KnowledgeBase>>('/api/knowledgebases', request);
+    return data.data;
   }
 
   /**

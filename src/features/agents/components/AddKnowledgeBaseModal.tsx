@@ -38,7 +38,7 @@ export default function AddKnowledgeBaseModal({
       // Validate
       const validationErrors: { name?: string; content?: string } = {};
       if (!name.trim()) {
-        validationErrors.name = 'Name is required';
+        validationErrors.name = 'Title is required';
       }
       if (!content.trim()) {
         validationErrors.content = 'Content is required';
@@ -61,7 +61,7 @@ export default function AddKnowledgeBaseModal({
       return kb;
     },
     onSuccess: () => {
-      toast.success('Knowledge base created and linked');
+      toast.success('Knowledge created and linked');
       // Reset form
       setName('');
       setContent('');
@@ -72,7 +72,7 @@ export default function AddKnowledgeBaseModal({
     onError: (error: Error) => {
       logger.error('Error creating KB', error);
       if (error.message !== 'Validation failed') {
-        toast.error('Failed to create knowledge base');
+        toast.error('Failed to create knowledge');
       }
     },
   });
@@ -96,15 +96,15 @@ export default function AddKnowledgeBaseModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add Knowledge Base"
-      description="Create a new knowledge base and link it to this agent"
+      title="Add Knowledge"
+      description="Create a new knowledge section for your agent"
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Name */}
+        {/* Title */}
         <Input
-          label="Name"
-          placeholder="Enter knowledge base name..."
+          label="Title"
+          placeholder="Enter knowledge title..."
           value={name}
           onChange={(e) => {
             setName(e.target.value);
@@ -147,7 +147,7 @@ export default function AddKnowledgeBaseModal({
             variant="primary"
             disabled={createMutation.isPending}
           >
-            {createMutation.isPending ? 'Creating...' : 'Create Knowledge Base'}
+            {createMutation.isPending ? 'Creating...' : 'Add Knowledge'}
           </Button>
         </div>
       </form>
