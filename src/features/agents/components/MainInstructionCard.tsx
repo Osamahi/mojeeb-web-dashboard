@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { ChevronRight, Edit2, Lock } from 'lucide-react';
+import { ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { agentService } from '../services/agentService';
@@ -79,7 +79,7 @@ export default function MainInstructionCard() {
             className="p-1.5 rounded text-neutral-400 cursor-not-allowed"
             title="Main Instructions cannot be deleted"
           >
-            <Lock className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
