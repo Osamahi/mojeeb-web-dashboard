@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { plainTextToHtml } from '@/lib/textUtils';
 
 interface KnowledgeBaseItemProps {
   knowledgeBase: KnowledgeBase;
@@ -30,14 +31,16 @@ export default function KnowledgeBaseItem({
   const [isEditing, setIsEditing] = useState(false);
   const [currentName, setCurrentName] = useState(knowledgeBase.name);
   const [editName, setEditName] = useState(knowledgeBase.name);
-  const [editContent, setEditContent] = useState(knowledgeBase.content);
+  // Convert plain text to HTML on initial load
+  const [editContent, setEditContent] = useState(plainTextToHtml(knowledgeBase.content));
   const [isModified, setIsModified] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Check if data has been modified
   useEffect(() => {
     const hasChanges =
-      editName !== knowledgeBase.name || editContent !== knowledgeBase.content;
+      editName !== knowledgeBase.name ||
+      editContent !== plainTextToHtml(knowledgeBase.content);
     setIsModified(hasChanges);
   }, [editName, editContent, knowledgeBase]);
 
@@ -214,7 +217,7 @@ export default function KnowledgeBaseItem({
                     onClick={() => {
                       setIsEditing(false);
                       setEditName(knowledgeBase.name);
-                      setEditContent(knowledgeBase.content);
+                      setEditContent(plainTextToHtml(knowledgeBase.content));
                     }}
                     disabled={updateMutation.isPending}
                   >
@@ -235,7 +238,7 @@ export default function KnowledgeBaseItem({
               <div className="pt-4 space-y-3">
                 <div
                   className="text-sm text-neutral-700 leading-relaxed prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: knowledgeBase.content }}
+                  dangerouslySetInnerHTML={{ __html: plainTextToHtml(knowledgeBase.content) }}
                 />
 
                 {/* Success Message */}

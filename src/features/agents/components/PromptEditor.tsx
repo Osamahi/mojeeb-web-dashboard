@@ -15,6 +15,7 @@ import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { Button } from '@/components/ui/Button';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
+import { plainTextToHtml } from '@/lib/textUtils';
 
 interface PromptEditorProps {
   agent: Agent;
@@ -23,7 +24,8 @@ interface PromptEditorProps {
 export default function PromptEditor({ agent }: PromptEditorProps) {
   const queryClient = useQueryClient();
   const [editName, setEditName] = useState(agent.name);
-  const [editPrompt, setEditPrompt] = useState(agent.personaPrompt || '');
+  // Convert plain text to HTML on initial load
+  const [editPrompt, setEditPrompt] = useState(plainTextToHtml(agent.personaPrompt || ''));
   const [isModified, setIsModified] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
@@ -31,7 +33,7 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
   useEffect(() => {
     const hasChanges =
       editName !== agent.name ||
-      editPrompt !== (agent.personaPrompt || '');
+      editPrompt !== plainTextToHtml(agent.personaPrompt || '');
     setIsModified(hasChanges);
   }, [editName, editPrompt, agent]);
 
@@ -103,7 +105,7 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
           size="sm"
           onClick={() => {
             setEditName(agent.name);
-            setEditPrompt(agent.personaPrompt || '');
+            setEditPrompt(plainTextToHtml(agent.personaPrompt || ''));
           }}
           disabled={saveMutation.isPending}
         >
