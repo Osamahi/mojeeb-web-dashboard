@@ -1,86 +1,113 @@
 /**
  * Test Chat Service
- * API calls for testing agent responses
- * TODO: Implement actual backend endpoint integration
+ * API calls for testing agent responses in studio mode
+ * Uses production endpoints - no backend changes required
  */
 
-import { apiClient } from '@/lib/apiClient';
+import api from '@/lib/api';
 import { logger } from '@/lib/logger';
 
-export interface TestMessageRequest {
+// Types
+export interface WidgetConfiguration {
+  id: string;
+  agent_id: string;
+  name: string;
+}
+
+export interface StudioConversation {
+  id: string;
+  customer_id: string;
+  customer_name: string;
+  agent_id: string;
+  source: string;
+  status: number;
+  is_ai: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SendMessageRequest {
+  conversationId: string;
+  message: string;
   agentId: string;
-  message: string;
-  conversationHistory?: Array<{
-    role: 'user' | 'assistant';
-    content: string;
-  }>;
+  messageType?: number;
+  attachments?: string | null;
+  source?: string | null;
+  platformConversationId?: string | null;
 }
 
-export interface TestMessageResponse {
+export interface MessageResponse {
+  id: string;
+  conversation_id: string;
   message: string;
-  timestamp: string;
+  message_type: number;
+  sender_id: string | null;
+  sender_role: number;
+  status: number;
+  created_at: string;
+  updated_at: string;
 }
 
-class TestChatService {
-  /**
-   * Send a test message to the agent
-   * @param request - Test message request
-   * @returns Agent's response
-   */
-  async sendMessage(request: TestMessageRequest): Promise<TestMessageResponse> {
-    try {
-      // TODO: Replace with actual backend endpoint
-      // const response = await apiClient.post<TestMessageResponse>(
-      //   `/api/agents/${request.agentId}/test-message`,
-      //   {
-      //     message: request.message,
-      //     conversationHistory: request.conversationHistory,
-      //   }
-      // );
+// Constants
+const STUDIO_CUSTOMER_NAME = 'studio_preview_user';
+const MESSAGE_TYPE_TEXT = 1;
 
-      // Placeholder response for now
-      logger.info('Test message sent', { agentId: request.agentId, message: request.message });
+/**
+ * Fetch widget configuration for agent
+ */
+async function getAgentWidget(agentId: string): Promise<WidgetConfiguration> {
+  const { data } = await api.get<{ data: WidgetConfiguration }>(
+    `/api/widget/by-agent/${agentId}`
+  );
+  return data.data;
+}
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      return {
-        message: `Test response: I received your message "${request.message}". The backend test endpoint will be implemented soon.`,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      logger.error('Failed to send test message', error);
-      throw error;
+/**
+ * Initialize studio test conversation
+ */
+async function initStudioConversation(widgetId: string): Promise<StudioConversation> {
+  const { data } = await api.post<StudioConversation>(
+    '/api/conversations/initiate-widget-conversation',
+    {
+      widget_id: widgetId,
+      customer_name: STUDIO_CUSTOMER_NAME,
+      customer_metadata: null,
+      initial_message: null,
+      customer_id: null,
     }
+  );
+
+  if (!data.is_ai) {
+    logger.warn('Conversation AI disabled - responses will not be generated');
   }
 
-  /**
-   * Stream test message (for real-time streaming responses)
-   * @param request - Test message request
-   * @param onChunk - Callback for each chunk of the response
-   */
-  async streamMessage(
-    request: TestMessageRequest,
-    onChunk: (chunk: string) => void
-  ): Promise<void> {
-    try {
-      // TODO: Implement streaming endpoint
-      // This would use Server-Sent Events (SSE) or WebSocket
-      logger.info('Stream message started', { agentId: request.agentId });
-
-      // Placeholder: simulate streaming
-      const fullResponse = `Streaming test response: I received "${request.message}". Streaming will be implemented with the backend.`;
-      const words = fullResponse.split(' ');
-
-      for (const word of words) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        onChunk(word + ' ');
-      }
-    } catch (error) {
-      logger.error('Failed to stream test message', error);
-      throw error;
-    }
-  }
+  return data;
 }
 
-export const testChatService = new TestChatService();
+/**
+ * Send test message and trigger AI response
+ * AI response arrives via Supabase real-time
+ */
+async function sendTestMessage(request: SendMessageRequest): Promise<MessageResponse> {
+  const { data } = await api.post<MessageResponse>(
+    '/api/chat/generate-response',
+    {
+      conversationId: request.conversationId,
+      message: request.message,
+      agentId: request.agentId,
+      messageType: request.messageType ?? MESSAGE_TYPE_TEXT,
+      attachments: request.attachments ?? null,
+      source: request.source ?? null,
+      platformConversationId: request.platformConversationId ?? null,
+    }
+  );
+
+  return data;
+}
+
+export const testChatService = {
+  getAgentWidget,
+  initStudioConversation,
+  sendTestMessage,
+};
