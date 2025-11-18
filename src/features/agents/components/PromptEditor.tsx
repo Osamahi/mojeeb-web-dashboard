@@ -19,9 +19,11 @@ import { plainTextToHtml } from '@/lib/textUtils';
 
 interface PromptEditorProps {
   agent: Agent;
+  onSave?: () => void;
+  onCancel?: () => void;
 }
 
-export default function PromptEditor({ agent }: PromptEditorProps) {
+export default function PromptEditor({ agent, onSave, onCancel }: PromptEditorProps) {
   const queryClient = useQueryClient();
   const [editName, setEditName] = useState(agent.name || '');
   const [editPrompt, setEditPrompt] = useState(plainTextToHtml(agent.personaPrompt || ''));
@@ -63,6 +65,11 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
       setTimeout(() => {
         setShowSuccessMessage(false);
       }, 2000);
+
+      // Call onSave callback if provided
+      if (onSave) {
+        onSave();
+      }
     },
     onError: (error) => {
       logger.error('Error saving agent', error);
@@ -113,6 +120,9 @@ export default function PromptEditor({ agent }: PromptEditorProps) {
           onClick={() => {
             setEditName(agent.name || '');
             setEditPrompt(plainTextToHtml(agent.personaPrompt || ''));
+            if (onCancel) {
+              onCancel();
+            }
           }}
           disabled={saveMutation.isPending}
         >

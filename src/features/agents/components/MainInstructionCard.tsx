@@ -3,6 +3,7 @@
  * GitHub-style accordion matching KnowledgeBaseItem
  * Contains agent prompt - NOT deletable (only editable)
  * Auto-detects selected agent using useAgentContext
+ * View/Edit mode pattern matching Knowledge Base cards
  */
 
 import { useState } from 'react';
@@ -13,9 +14,11 @@ import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
 import PromptEditor from './PromptEditor';
 import { cn } from '@/lib/utils';
+import { plainTextToHtml } from '@/lib/textUtils';
 
 export default function MainInstructionCard() {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Get current agent from context
   const { agentId } = useAgentContext();
@@ -68,6 +71,7 @@ export default function MainInstructionCard() {
             onClick={(e) => {
               e.stopPropagation();
               setIsExpanded(true);
+              setIsEditing(true);
             }}
             className="p-1.5 hover:bg-neutral-100 rounded transition-colors text-neutral-600 hover:text-neutral-950"
             title="Edit"
@@ -88,7 +92,36 @@ export default function MainInstructionCard() {
       {isExpanded && (
         <div className="px-4 pb-4 border-t border-neutral-100">
           <div className="pt-4">
-            <PromptEditor agent={agent} />
+            {isEditing ? (
+              <PromptEditor
+                agent={agent}
+                onSave={() => setIsEditing(false)}
+                onCancel={() => setIsEditing(false)}
+              />
+            ) : (
+              <div className="space-y-6">
+                {/* Agent Name Section */}
+                <div>
+                  <h4 className="text-xs font-normal text-neutral-400 mb-1">
+                    Agent Name
+                  </h4>
+                  <p className="text-sm text-neutral-700 leading-relaxed">
+                    {agent.name || 'Untitled Agent'}
+                  </p>
+                </div>
+
+                {/* Instructions Section */}
+                <div>
+                  <h4 className="text-xs font-normal text-neutral-400 mb-1">
+                    Instructions
+                  </h4>
+                  <div
+                    className="text-sm text-neutral-700 leading-relaxed prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: plainTextToHtml(agent.personaPrompt || '') }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
