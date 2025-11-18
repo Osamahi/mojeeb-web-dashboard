@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Edit2, Trash2, Check, Loader2 } from 'lucide-react';
+import { ChevronRight, Edit2, Trash2, Check, X } from 'lucide-react';
 import type { KnowledgeBase } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -53,6 +53,7 @@ export default function KnowledgeBaseItem({
       setIsModified(false);
       setShowSuccessMessage(true);
       setCurrentName(editName);
+      setIsEditing(false); // Close edit mode after save
       onUpdate();
 
       // Hide success message after 2 seconds
@@ -116,122 +117,131 @@ export default function KnowledgeBaseItem({
     <>
       {ConfirmDialogComponent}
 
-      <div className="bg-white rounded-lg border border-neutral-200 p-4 hover:border-neutral-300 transition-colors">
-        {/* Header with Name and Actions */}
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <div
-            className="flex-1 min-w-0"
-            onClick={() => {
-              if (!isEditing) {
-                setIsExpanded(!isExpanded);
-                if (isExpanded) setIsEditing(false); // Close editing when collapsing
-              }
-            }}
-          >
-            {!isEditing ? (
-              <div className="cursor-pointer">
-                <h3 className="text-base font-semibold text-neutral-950 mb-1 truncate">
-                  {toTitleCase(currentName)}
-                </h3>
-                {!isExpanded && (
-                  <p className="text-sm text-neutral-500 line-clamp-2">
-                    {contentPreview}
-                  </p>
-                )}
-              </div>
-            ) : (
-              // Name input in header when editing
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Knowledge base name..."
-                disabled={updateMutation.isPending}
-                className={cn(
-                  'w-full px-4 py-2.5 rounded-lg',
-                  'bg-neutral-50 border border-neutral-200',
-                  'focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent',
-                  'placeholder:text-neutral-400',
-                  'disabled:opacity-50 disabled:cursor-not-allowed',
-                  'text-base text-neutral-950',
-                  'transition-all duration-200'
-                )}
-              />
+      <div className="bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">
+        {/* Accordion Header - GitHub Style */}
+        <div
+          className="flex items-center gap-3 p-4 cursor-pointer"
+          onClick={() => {
+            if (!isEditing) {
+              setIsExpanded(!isExpanded);
+            }
+          }}
+        >
+          {/* Chevron indicator */}
+          <ChevronRight
+            className={cn(
+              'w-5 h-5 text-neutral-400 transition-transform duration-200 flex-shrink-0',
+              isExpanded && 'rotate-90'
             )}
-          </div>
+          />
 
-          {/* Action Buttons - Icon Only */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!isExpanded) setIsExpanded(true);
-                setIsEditing(!isEditing);
-              }}
-              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors text-neutral-600 hover:text-neutral-950"
-              title={isEditing ? 'Cancel Edit' : 'Edit'}
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete();
-              }}
-              disabled={deleteMutation.isPending}
-              className="p-2 hover:bg-red-50 rounded-lg transition-colors text-neutral-600 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Delete"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+          {/* Title */}
+          <h3 className="flex-1 text-base font-semibold text-neutral-950 truncate">
+            {toTitleCase(currentName)}
+          </h3>
+
+          {/* Hover Actions - GitHub Style (visible on hover) */}
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {!isEditing && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!isExpanded) setIsExpanded(true);
+                    setIsEditing(true);
+                  }}
+                  className="p-1.5 hover:bg-neutral-100 rounded transition-colors text-neutral-600 hover:text-neutral-950"
+                  title="Edit"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
+                  disabled={deleteMutation.isPending}
+                  className="p-1.5 hover:bg-red-50 rounded transition-colors text-neutral-600 hover:text-red-600 disabled:opacity-50"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Expanded Content */}
+        {/* Accordion Content - Smooth Transition */}
         {isExpanded && (
-          <div className="mt-4 pt-4 border-t border-neutral-100 space-y-4">
+          <div className="px-4 pb-4 space-y-3 border-t border-neutral-100">
             {isEditing ? (
               <>
-                {/* Content Editor */}
-                <Textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  placeholder="Enter the knowledge base content..."
-                  autoResize
-                  minHeight={200}
-                  maxHeight={600}
-                  disabled={updateMutation.isPending}
-                />
+                {/* Edit Mode - Inline */}
+                <div className="pt-4 space-y-3">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Knowledge base name..."
+                    disabled={updateMutation.isPending}
+                    className={cn(
+                      'w-full px-3 py-2 rounded-lg text-sm',
+                      'bg-neutral-50 border border-neutral-200',
+                      'focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent',
+                      'placeholder:text-neutral-400',
+                      'disabled:opacity-50 disabled:cursor-not-allowed'
+                    )}
+                  />
 
-                {/* Save Button / Status */}
-                <div className="flex items-center justify-end">
-                  {updateMutation.isPending ? (
-                    <span className="text-sm text-neutral-600 flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </span>
-                  ) : showSuccessMessage ? (
-                    <span className="text-sm text-green-600 flex items-center gap-2">
-                      <Check className="w-4 h-4" />
-                      Saved successfully
-                    </span>
-                  ) : isModified ? (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={handleSave}
-                    >
-                      Save
-                    </Button>
-                  ) : null}
+                  <Textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    placeholder="Enter the knowledge base content..."
+                    autoResize
+                    minHeight={150}
+                    maxHeight={500}
+                    disabled={updateMutation.isPending}
+                  />
+                </div>
+
+                {/* Actions - GitHub Style */}
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditName(knowledgeBase.name);
+                      setEditContent(knowledgeBase.content);
+                    }}
+                    disabled={updateMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={!isModified || updateMutation.isPending}
+                  >
+                    {updateMutation.isPending ? 'Saving...' : 'Save'}
+                  </Button>
                 </div>
               </>
             ) : (
-              // Read-only view
-              <div className="prose prose-sm max-w-none">
-                <p className="text-sm text-neutral-700 whitespace-pre-wrap">
+              // View Mode - Clean Read-only
+              <div className="pt-4 space-y-3">
+                <p className="text-sm text-neutral-700 whitespace-pre-wrap leading-relaxed">
                   {knowledgeBase.content}
                 </p>
+
+                {/* Success Message */}
+                {showSuccessMessage && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <Check className="w-4 h-4" />
+                    Saved successfully
+                  </div>
+                )}
               </div>
             )}
           </div>
