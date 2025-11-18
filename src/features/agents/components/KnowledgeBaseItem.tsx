@@ -7,12 +7,12 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Edit2, Trash2, FileText } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import type { KnowledgeBase } from '../types/agent.types';
 import { agentService } from '../services/agentService';
-import { Button } from '@/components/ui/Button';
 import { useConfirm } from '@/hooks/useConfirm';
 import { logger } from '@/lib/logger';
+import KBContentEditor from './KBContentEditor';
 
 interface KnowledgeBaseItemProps {
   knowledgeBase: KnowledgeBase;
@@ -24,7 +24,7 @@ export default function KnowledgeBaseItem({
   onUpdate,
 }: KnowledgeBaseItemProps) {
   const { confirm, ConfirmDialogComponent } = useConfirm();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Delete mutation
   const deleteMutation = useMutation({
@@ -77,17 +77,19 @@ export default function KnowledgeBaseItem({
             <h3 className="text-base font-semibold text-neutral-950 mb-1 truncate">
               {toTitleCase(knowledgeBase.name)}
             </h3>
-            <p className="text-sm text-neutral-500 line-clamp-2">
-              {contentPreview}
-            </p>
+            {!isExpanded && (
+              <p className="text-sm text-neutral-500 line-clamp-2">
+                {contentPreview}
+              </p>
+            )}
           </div>
 
           {/* Action Buttons - Icon Only */}
           <div className="flex items-center gap-1 ml-4">
             <button
-              onClick={() => setIsEditModalOpen(true)}
+              onClick={() => setIsExpanded(!isExpanded)}
               className="p-2 hover:bg-neutral-100 rounded-lg transition-colors text-neutral-600 hover:text-neutral-950"
-              title="Edit"
+              title={isExpanded ? 'Close' : 'Edit'}
             >
               <Edit2 className="w-4 h-4" />
             </button>
@@ -101,27 +103,14 @@ export default function KnowledgeBaseItem({
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Edit Modal - TODO: Create EditKnowledgeBaseModal component */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-4">
-            <h2 className="text-lg font-semibold mb-4">Edit Knowledge Base</h2>
-            <p className="text-sm text-neutral-600 mb-4">
-              Editing functionality coming soon. For now, please delete and recreate.
-            </p>
-            <div className="flex justify-end">
-              <Button
-                variant="secondary"
-                onClick={() => setIsEditModalOpen(false)}
-              >
-                Close
-              </Button>
-            </div>
+        {/* Expanded Editor */}
+        {isExpanded && (
+          <div className="mt-4 pt-4 border-t border-neutral-100">
+            <KBContentEditor knowledgeBase={knowledgeBase} onUpdate={onUpdate} />
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }

@@ -5,9 +5,8 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Trash2, Loader2 } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 
 interface TestMessage {
@@ -88,11 +87,6 @@ export default function TestChat({ agentId }: TestChatProps) {
     }
   };
 
-  const handleClear = () => {
-    setMessages([]);
-    toast.success('Conversation cleared');
-  };
-
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -103,27 +97,6 @@ export default function TestChat({ agentId }: TestChatProps) {
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Header - Matches Knowledge section padding */}
-      <div className="flex items-center justify-between px-6 py-6 border-b border-neutral-200">
-        <div>
-          <h2 className="text-lg font-semibold text-neutral-950">Test Chat</h2>
-          <p className="text-xs text-neutral-500 mt-0.5">
-            Test your agent's responses in real-time
-          </p>
-        </div>
-        {messages.length > 0 && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleClear}
-            className="flex items-center gap-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            Clear
-          </Button>
-        )}
-      </div>
-
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
