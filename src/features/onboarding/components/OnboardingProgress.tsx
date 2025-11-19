@@ -17,29 +17,7 @@ export const OnboardingProgress = ({
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
   return (
-    <div className="w-full max-w-2xl mx-auto mb-4">
-      {/* Step dots */}
-      <div className="flex justify-center gap-2 mb-3">
-        {Array.from({ length: totalSteps }).map((_, index) => {
-          const isCompleted = currentStep > index;
-          const isCurrent = currentStep === index;
-
-          return (
-            <div
-              key={index}
-              className={`
-                w-2 h-2 rounded-full transition-all duration-300
-                ${
-                  isCompleted || isCurrent
-                    ? 'bg-black'
-                    : 'bg-neutral-300'
-                }
-              `}
-            />
-          );
-        })}
-      </div>
-
+    <div className="w-full max-w-2xl mx-auto mb-8">
       {/* Progress bar */}
       <div className="relative h-1 bg-neutral-200 rounded-full overflow-hidden">
         <div
