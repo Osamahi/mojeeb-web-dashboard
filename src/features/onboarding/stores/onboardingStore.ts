@@ -29,7 +29,7 @@ interface OnboardingState {
 }
 
 const initialData: OnboardingData = {
-  agentName: 'Support Assistant',
+  agentName: '',
   selectedPurposes: [],
   knowledgeContent: '',
   createdAgentId: null,

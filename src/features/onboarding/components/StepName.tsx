@@ -68,7 +68,7 @@ export const StepName = ({ onNext }: StepNameProps) => {
           className="w-full h-12 text-base"
           disabled={name.trim().length < 2}
         >
-          Create My Agent →
+          Continue →
         </Button>
       </form>
     </div>

@@ -185,7 +185,7 @@ export const OnboardingWizard = () => {
           )}
 
           {/* Step Content */}
-          <div className="mt-8">
+          <div className="mt-4">
             {renderStep()}
           </div>
         </div>
