@@ -127,15 +127,22 @@ class AuthService {
    * Register new user
    */
   async register(registerData: RegisterData): Promise<AuthResponse> {
-    const { data } = await api.post<AuthResponse>('/api/auth/register', registerData);
+    const { data } = await api.post<ApiAuthResponse>('/api/auth/register', registerData);
+
+    // Backend returns snake_case, convert to camelCase
+    const authResponse: AuthResponse = {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      user: data.user,
+    };
 
     // Update auth store
-    useAuthStore.getState().setAuth(data.user, data.accessToken, data.refreshToken);
+    useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
 
-    // After successful registration, fetch agents and initialize selection
-    await this.initializeAgentData();
+    // Note: Agent checking is handled in SignUpPage component for new users
+    // Existing users logging in will have agents fetched via initializeAgentData() in login()
 
-    return data;
+    return authResponse;
   }
 
   /**

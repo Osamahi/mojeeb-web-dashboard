@@ -9,6 +9,7 @@ import { PageSpinner } from './components/ui/Spinner';
 const LoginPage = lazy(() => import('./features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignUpPage = lazy(() => import('./features/auth/pages/SignUpPage').then(m => ({ default: m.SignUpPage })));
 const ForgotPasswordPage = lazy(() => import('./features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const OnboardingWizard = lazy(() => import('./features/onboarding/pages/OnboardingWizard'));
 const DashboardLayout = lazy(() => import('./components/layout/DashboardLayout').then(m => ({ default: m.DashboardLayout })));
 const ConversationsPage = lazy(() => import('./pages/ConversationsPage').then(m => ({ default: m.ConversationsPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
@@ -57,11 +58,11 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Public route wrapper (redirect to conversations if already authenticated)
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+// Public route wrapper (redirect if already authenticated)
+const PublicRoute = ({ children, allowAuthenticatedAccess = false }: { children: React.ReactNode; allowAuthenticatedAccess?: boolean }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  if (isAuthenticated) {
+  if (isAuthenticated && !allowAuthenticatedAccess) {
     return <Navigate to="/conversations" replace />;
   }
 
@@ -88,9 +89,17 @@ export const router = createBrowserRouter([
   {
     path: '/signup',
     element: (
-      <PublicRoute>
+      <PublicRoute allowAuthenticatedAccess={true}>
         <SignUpPage />
       </PublicRoute>
+    ),
+  },
+  {
+    path: '/onboarding',
+    element: (
+      <ProtectedRoute>
+        <OnboardingWizard />
+      </ProtectedRoute>
     ),
   },
   {

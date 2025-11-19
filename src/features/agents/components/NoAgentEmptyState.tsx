@@ -22,7 +22,7 @@ export default function NoAgentEmptyState({
   const navigate = useNavigate();
 
   const handleCreateAgent = () => {
-    navigate('/agents/new');
+    navigate('/agents');
   };
 
   return (

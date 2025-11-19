@@ -3,7 +3,7 @@
  * Clean registration experience matching login page style
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +16,8 @@ import { toast } from 'sonner';
 import { AuthPageLayout } from '../components/AuthPageLayout';
 import { AuthFooterLink } from '../components/AuthFooterLink';
 import { logger } from '@/lib/logger';
+import { agentService } from '@/features/agents/services/agentService';
+import { useAuthStore } from '../stores/authStore';
 
 const signUpSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -29,23 +31,53 @@ export const SignUpPage = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const { register, handleSubmit, formState: { errors } } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
   });
+
+  // Redirect already-authenticated users who visit /signup directly
+  useEffect(() => {
+    if (isAuthenticated && !hasSubmitted) {
+      navigate('/conversations', { replace: true });
+    }
+  }, [isAuthenticated, hasSubmitted, navigate]); // React to state changes
 
   const onSubmit = async (data: SignUpForm) => {
     setIsLoading(true);
     setError(null);
 
     try {
+      // Register the user
       await authService.register({
         name: data.name,
         email: data.email,
         password: data.password,
       });
+
+      // Mark that registration succeeded (prevents edge case redirect)
+      setHasSubmitted(true);
+
       toast.success('Account created successfully!');
-      navigate('/conversations');
+
+      // Check if user needs onboarding (no agents) or can go straight to conversations
+      try {
+        const agents = await agentService.getAgents();
+
+        if (agents.length === 0) {
+          // New user with no agents - send to onboarding
+          navigate('/onboarding', { replace: true });
+        } else {
+          // User already has agents (edge case) - skip onboarding
+          navigate('/conversations', { replace: true });
+        }
+      } catch (agentError) {
+        // If agent check fails, default to onboarding (safe fallback)
+        logger.warn('Failed to check agents after signup, defaulting to onboarding', agentError);
+        navigate('/onboarding', { replace: true });
+      }
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string; error?: string; errors?: Array<{ message: string }> }>;
       logger.error('Registration error', error);
