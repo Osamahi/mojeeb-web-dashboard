@@ -163,11 +163,14 @@ export const OnboardingWizard = () => {
               <span className="text-xl font-bold text-neutral-900">Mojeeb</span>
             </div>
 
-            {/* Progress indicator in header */}
+            {/* Skip button in header */}
             {currentStep < OnboardingStep.Success && (
-              <div className="text-sm text-neutral-600">
-                Step {currentStep + 1} of 4
-              </div>
+              <button
+                onClick={() => navigate('/conversations')}
+                className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+              >
+                Skip
+              </button>
             )}
           </div>
         </div>
@@ -187,21 +190,6 @@ export const OnboardingWizard = () => {
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-neutral-200 py-4">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-sm text-neutral-500">
-            Need help?{' '}
-            <a
-              href="mailto:support@mojeeb.com"
-              className="text-neutral-900 hover:underline"
-            >
-              Contact Support
-            </a>
-          </p>
-        </div>
-      </footer>
 
       {/* Exit Intent Modal */}
       <ExitIntentModal
