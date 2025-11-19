@@ -45,129 +45,102 @@ export const StepPurpose = ({ onNext, onBack }: StepPurposeProps) => {
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-neutral-900 mb-3">
-          What will your agent do?
-        </h2>
-        <p className="text-neutral-600 text-base">
-          Select up to 3 purposes that best describe your agent's role
-        </p>
+    <div className="w-full">
+      {/* Mobile-first heading - left-aligned */}
+      <h1 className="text-3xl sm:text-4xl font-bold text-neutral-950 mb-2 tracking-tight">
+        What will your agent do?
+      </h1>
+      <p className="text-sm sm:text-base text-neutral-600 mb-6">
+        Choose up to 3 purposes for your agent
+      </p>
+
+      {/* Selection counter */}
+      <div className="mb-4 text-sm text-neutral-600">
+        {selectedPurposes.length} of 3 selected
+        {selectedPurposes.length >= 3 && (
+          <span className="ml-2 text-neutral-700 font-medium">
+            (Maximum reached)
+          </span>
+        )}
       </div>
 
-      {/* Social Proof - Most Popular Badge */}
-      <div className="text-center mb-8">
-        <p className="text-sm text-neutral-500">
-          Most popular: Customer Support (65%)
-        </p>
-      </div>
-
-      {/* All 8 Purpose Templates (Phase 3 optimization) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+      {/* Vertical card list with radio buttons */}
+      <div className="space-y-3 mb-8">
         {AGENT_PURPOSES.map((purpose) => {
           const selected = isSelected(purpose.id);
-          const isMaxSelected = selectedPurposes.length >= 3 && !selected;
+          const disabled = !selected && selectedPurposes.length >= 3;
 
           return (
             <button
               key={purpose.id}
               type="button"
-              onClick={() => handlePurposeClick(purpose)}
-              disabled={isMaxSelected}
+              onClick={() => !disabled && handlePurposeClick(purpose)}
+              disabled={disabled}
               className={`
-                relative p-6 rounded-lg border-2 text-left transition-all
+                w-full px-4 py-4 rounded-xl border-2 text-left transition-all
+                flex items-start gap-3
                 ${
                   selected
                     ? 'border-black bg-neutral-50'
                     : 'border-neutral-200 bg-white hover:border-neutral-300'
                 }
-                ${isMaxSelected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
             >
-              {/* Popular Badge */}
-              {purpose.isPopular && (
-                <div className="absolute top-3 right-3">
-                  <span className="px-2 py-1 text-xs font-medium bg-black text-white rounded">
-                    Popular
-                  </span>
-                </div>
-              )}
-
-              {/* Selection Checkbox */}
-              <div className="flex items-start gap-4">
+              {/* Radio button */}
+              <div className="flex-shrink-0 mt-0.5">
                 <div
                   className={`
-                    flex-shrink-0 w-6 h-6 rounded border-2 flex items-center justify-center transition-all
-                    ${
-                      selected
-                        ? 'border-black bg-black'
-                        : 'border-neutral-300 bg-white'
-                    }
+                    w-5 h-5 rounded-full border-2 flex items-center justify-center
+                    ${selected ? 'border-black' : 'border-neutral-400'}
                   `}
                 >
-                  {selected && (
-                    <svg
-                      className="w-4 h-4 text-white"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                  {selected && <div className="w-3 h-3 rounded-full bg-black" />}
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">{purpose.icon}</span>
+                  <span className="text-base font-semibold text-neutral-900">
+                    {purpose.label}
+                  </span>
+                  {purpose.isPopular && (
+                    <span className="px-2 py-0.5 text-xs font-medium bg-neutral-900 text-white rounded-full">
+                      Popular
+                    </span>
                   )}
                 </div>
-
-                {/* Content */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">{purpose.icon}</span>
-                    <h3 className="text-lg font-semibold text-neutral-900">
-                      {purpose.label}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-neutral-600">
-                    {purpose.description}
-                  </p>
-                </div>
+                <p className="text-sm text-neutral-600 line-clamp-2">
+                  {purpose.description}
+                </p>
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* Selection Count */}
-      <div className="text-center mb-6">
-        <p className="text-sm text-neutral-500">
-          {selectedPurposes.length} of 3 selected
-          {selectedPurposes.length >= 3 && (
-            <span className="ml-2 text-neutral-700 font-medium">
-              (Maximum reached)
-            </span>
-          )}
-        </p>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-4">
-        <Button
-          variant="outline"
-          onClick={onBack}
-          className="flex-1 h-12 text-base"
+      {/* Back button - text link bottom left (mobile-friendly) */}
+      <button
+        onClick={onBack}
+        className="text-sm text-neutral-600 hover:text-neutral-900 flex items-center gap-1 transition-colors"
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
         >
-          ← Back
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          disabled={selectedPurposes.length === 0}
-          className="flex-1 h-12 text-base"
-        >
-          Generate Agent Personality →
-        </Button>
-      </div>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+        Back
+      </button>
     </div>
   );
 };

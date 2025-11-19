@@ -1,6 +1,6 @@
 /**
  * Onboarding Progress Component
- * Minimal progress indicator for onboarding wizard
+ * Thin horizontal progress bar for mobile-first onboarding
  */
 
 import { OnboardingStep } from '../types/onboarding.types';
@@ -14,29 +14,21 @@ export const OnboardingProgress = ({
   currentStep,
   totalSteps = 4,
 }: OnboardingProgressProps) => {
-  return (
-    <div
-      className="w-full max-w-2xl mx-auto mb-8"
-      role="navigation"
-      aria-label={`Step ${currentStep + 1} of ${totalSteps}`}
-    >
-      <div className="flex items-center justify-center gap-2">
-        {Array.from({ length: totalSteps }).map((_, index) => {
-          const isActiveOrCompleted = index <= currentStep;
+  const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
-          return (
-            <div
-              key={index}
-              className="w-2 h-2 rounded-full transition-colors duration-300"
-              style={{
-                backgroundColor: isActiveOrCompleted
-                  ? 'rgb(10, 10, 10)' // MinimalColors.black
-                  : 'rgb(163, 163, 163)', // MinimalColors.grey300
-              }}
-              aria-hidden="true"
-            />
-          );
-        })}
+  return (
+    <div className="w-full">
+      {/* Thin progress bar - full width at top */}
+      <div className="h-1 bg-neutral-200">
+        <div
+          className="h-full bg-black transition-all duration-500 ease-out"
+          style={{ width: `${progressPercentage}%` }}
+          role="progressbar"
+          aria-valuenow={currentStep + 1}
+          aria-valuemin={1}
+          aria-valuemax={totalSteps}
+          aria-label={`Step ${currentStep + 1} of ${totalSteps}`}
+        />
       </div>
     </div>
   );

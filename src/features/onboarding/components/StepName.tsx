@@ -44,46 +44,40 @@ export const StepName = ({ onNext }: StepNameProps) => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold text-neutral-950 mb-4 tracking-tight">
-          Name Your Agent
-        </h1>
-        <p className="text-base text-neutral-600 max-w-md mx-auto">
-          What's your business or brand name?
-        </p>
-      </div>
+    <div className="w-full">
+      {/* Mobile-first heading - left-aligned */}
+      <h1 className="text-3xl sm:text-4xl font-bold text-neutral-950 mb-2 tracking-tight">
+        Name Your Agent
+      </h1>
+      <p className="text-sm sm:text-base text-neutral-600 mb-8">
+        What's your business or brand name?
+      </p>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-5">
+      {/* Form - FAB handles submission */}
+      <form onSubmit={handleSubmit}>
         <div className="relative">
-          <Input
+          <input
+            id="agentName"
             type="text"
-            placeholder="e.g., Your Business Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            error={error}
+            placeholder="e.g., Your Business Name"
             autoFocus
-            className="text-base"
+            className="w-full px-4 py-3 text-base border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
           />
           {isValid && !error && (
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
               <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
           )}
+          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         </div>
-
-        {/* CTA Button */}
-        <Button
-          type="submit"
-          className="w-full h-12 text-base"
-          disabled={name.trim().length < 2}
-        >
-          Continue →
-        </Button>
       </form>
     </div>
   );

@@ -48,84 +48,107 @@ export const StepSuccess = ({ onComplete }: StepSuccessProps) => {
         width={windowSize.width}
         height={windowSize.height}
         recycle={false}
-        numberOfPieces={500}
+        numberOfPieces={200}
         gravity={0.3}
       />
 
-      {/* Success Content */}
-      <div className="w-full max-w-md mx-auto text-center">
-        {/* Success Icon */}
-        <div className="mb-8">
-          <div className="w-24 h-24 mx-auto bg-green-100 rounded-full flex items-center justify-center">
-            <svg
-              className="w-12 h-12 text-green-600"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
+      {/* Success content - mobile-first, left-aligned */}
+      <div className="w-full">
+        {/* Success icon */}
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
+          <svg
+            className="w-8 h-8 sm:w-10 sm:h-10 text-green-600"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clipRule="evenodd"
+            />
+          </svg>
         </div>
 
-        {/* Message */}
-        <h2 className="text-3xl font-bold text-neutral-900 mb-3">
-          Your AI Agent is Ready!
-        </h2>
-
-        <p className="text-lg text-neutral-600 mb-2">
-          <span className="font-semibold">{data.agentName}</span> is configured and
-          ready to assist
-        </p>
-
-        <p className="text-sm text-neutral-500 mb-8">
+        {/* Heading */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-neutral-950 mb-3 tracking-tight">
+          You're all set!
+        </h1>
+        <p className="text-base sm:text-lg text-neutral-600 mb-8">
+          {data.agentName} is ready to help your customers
           {data.selectedPurposes.length > 0 && (
-            <>
-              Specialized in:{' '}
-              <span className="font-medium">
-                {data.selectedPurposes.map((p) => p.label).join(', ')}
-              </span>
-            </>
+            <span className="block text-sm text-neutral-500 mt-2">
+              Specialized in: {data.selectedPurposes.map((p) => p.label).join(', ')}
+            </span>
           )}
         </p>
 
         {/* Auto-redirect message */}
-        <p className="text-sm text-neutral-500 mb-6">
-          Redirecting you to your dashboard...
-        </p>
+        <div className="inline-flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg text-sm text-neutral-700 mb-8">
+          <div className="w-4 h-4 border-2 border-neutral-400 border-t-neutral-900 rounded-full animate-spin" />
+          Redirecting to dashboard...
+        </div>
 
-        {/* Manual Continue Button */}
-        <Button
-          onClick={onComplete}
-          className="w-full h-12 text-base"
-        >
-          Go to Dashboard →
-        </Button>
-
-        {/* Next Steps Preview */}
-        <div className="mt-12 p-6 bg-neutral-50 rounded-lg border border-neutral-200 text-left">
-          <h3 className="text-sm font-semibold text-neutral-900 mb-3">
+        {/* What's Next - compact */}
+        <div className="bg-white border border-neutral-200 rounded-xl p-4">
+          <h2 className="text-sm font-semibold text-neutral-900 mb-3">
             What's Next?
-          </h3>
-          <ul className="space-y-2 text-sm text-neutral-600">
+          </h2>
+          <ul className="space-y-2 text-sm text-neutral-700">
             <li className="flex items-start gap-2">
-              <span className="text-green-600 mt-0.5">✓</span>
-              <span>Start chatting with your agent</span>
+              <svg
+                className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>Customize your agent's appearance</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-green-600 mt-0.5">✓</span>
-              <span>Add more knowledge and customize settings</span>
+              <svg
+                className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>Add more knowledge to improve responses</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-green-600 mt-0.5">✓</span>
-              <span>Invite team members to collaborate</span>
+              <svg
+                className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>Install the chat widget on your website</span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-green-600 mt-0.5">✓</span>
-              <span>Deploy your agent to your website</span>
+              <svg
+                className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>Start your first conversation</span>
             </li>
           </ul>
         </div>
