@@ -78,7 +78,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
               >
                 {/* Header */}
                 {(title || description) && (
-                  <div className="border-b border-neutral-200 px-6 py-4">
+                  <div className="px-6 py-4">
                     <div className="flex items-start justify-between">
                       <div>
                         {title && (

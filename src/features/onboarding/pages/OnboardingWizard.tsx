@@ -323,7 +323,7 @@ export const OnboardingWizard = () => {
         isOpen={showSkipModal}
         onClose={handleSkipCancel}
         title="Skip onboarding?"
-        confirmText="Skip"
+        confirmText="Yes, Skip"
         onConfirm={handleSkipConfirm}
       />
 

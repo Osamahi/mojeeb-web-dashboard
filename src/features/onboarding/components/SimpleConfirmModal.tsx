@@ -30,12 +30,12 @@ export const SimpleConfirmModal = ({
 
         {/* Buttons - stacked vertically */}
         <div className="space-y-3">
-          {/* Cancel button - primary/focused (black) */}
+          {/* Back button - primary/focused (black) */}
           <button
             onClick={onClose}
             className="w-full px-4 py-3.5 bg-black text-white text-base font-medium rounded-xl hover:bg-neutral-800 transition-colors"
           >
-            Cancel
+            Back
           </button>
 
           {/* Skip button - secondary (text only) */}

@@ -163,11 +163,8 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
           <h3 className="text-xl font-semibold text-neutral-900 mb-2">
             Request Submitted!
           </h3>
-          <p className="text-sm text-neutral-600 mb-4">
-            We'll call you at
-          </p>
-          <p className="text-lg font-medium text-neutral-900 mb-6">
-            {formatPhoneForDisplay(submittedPhone)}
+          <p className="text-sm text-neutral-600 mb-6">
+            We'll call you at {formatPhoneForDisplay(submittedPhone)}
           </p>
 
           <div className="space-y-2">
