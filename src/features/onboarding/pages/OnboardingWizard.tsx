@@ -14,6 +14,7 @@ import { StepKnowledge } from '../components/StepKnowledge';
 import { StepSuccess } from '../components/StepSuccess';
 import { ExitIntentModal } from '../components/ExitIntentModal';
 import { SimpleConfirmModal } from '../components/SimpleConfirmModal';
+import { DemoCallModal } from '../components/DemoCallModal';
 import { agentService } from '@/features/agents/services/agentService';
 import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
@@ -24,6 +25,9 @@ export const OnboardingWizard = () => {
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
+  const [demoCallRequested, setDemoCallRequested] = useState(false);
+  const [submittedPhone, setSubmittedPhone] = useState('');
 
   // Handle browser back button and exit intent
   useEffect(() => {
@@ -223,11 +227,36 @@ export const OnboardingWizard = () => {
       {currentStep < OnboardingStep.Success && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-3 sm:px-6 sm:py-4 z-10">
           <div className="max-w-3xl mx-auto flex items-center justify-between">
-            {/* Left: Back button (subtle) */}
-            {currentStep > OnboardingStep.Name ? (
+            {/* Left: Request demo call button */}
+            {demoCallRequested ? (
+              <div className="text-xs flex items-center gap-2 text-neutral-500">
+                <span className="flex items-center gap-1">
+                  <svg
+                    className="w-3 h-3"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Demo call requested
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowDemoModal(true)}
+                  className="text-neutral-500 hover:text-neutral-900 underline transition-colors"
+                >
+                  Edit
+                </button>
+              </div>
+            ) : (
               <button
-                onClick={previousStep}
-                className="text-sm text-neutral-600 hover:text-neutral-900 flex items-center gap-1 transition-colors"
+                type="button"
+                onClick={() => setShowDemoModal(true)}
+                className="text-sm text-neutral-600 hover:text-neutral-900 flex items-center gap-1.5 transition-colors underline"
               >
                 <svg
                   className="w-4 h-4"
@@ -239,13 +268,11 @@ export const OnboardingWizard = () => {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M15 19l-7-7 7-7"
+                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                   />
                 </svg>
-                Back
+                Request free demo phone call
               </button>
-            ) : (
-              <div />
             )}
 
             {/* Right: Circular arrow button */}
@@ -298,6 +325,17 @@ export const OnboardingWizard = () => {
         title="Skip onboarding?"
         confirmText="Skip"
         onConfirm={handleSkipConfirm}
+      />
+
+      {/* Demo Call Modal */}
+      <DemoCallModal
+        isOpen={showDemoModal}
+        onClose={() => setShowDemoModal(false)}
+        onSuccess={(phone) => {
+          setDemoCallRequested(true);
+          setSubmittedPhone(phone);
+        }}
+        initialPhone={submittedPhone}
       />
     </div>
   );
