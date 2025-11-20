@@ -76,11 +76,6 @@ export const useOnboardingStore = create<OnboardingState>()(
           const { selectedPurposes } = state.data;
           const isSelected = selectedPurposes.some((p) => p.id === purpose.id);
 
-          // Limit to max 3 purposes
-          if (!isSelected && selectedPurposes.length >= 3) {
-            return state;
-          }
-
           const newPurposes = isSelected
             ? selectedPurposes.filter((p) => p.id !== purpose.id)
             : [...selectedPurposes, purpose];

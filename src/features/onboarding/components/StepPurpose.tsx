@@ -51,51 +51,52 @@ export const StepPurpose = ({ onNext, onBack }: StepPurposeProps) => {
         What will your agent do?
       </h1>
       <p className="text-sm sm:text-base text-neutral-600 mb-6">
-        Choose up to 3 purposes for your agent
+        Choose the purpose of your agent
       </p>
 
-      {/* Selection counter */}
-      <div className="mb-4 text-sm text-neutral-600">
-        {selectedPurposes.length} of 3 selected
-        {selectedPurposes.length >= 3 && (
-          <span className="ml-2 text-neutral-700 font-medium">
-            (Maximum reached)
-          </span>
-        )}
-      </div>
-
-      {/* Vertical card list with radio buttons */}
-      <div className="space-y-3 mb-8">
+      {/* Vertical card list with checkboxes */}
+      <div className="space-y-3 mb-20">
         {AGENT_PURPOSES.map((purpose) => {
           const selected = isSelected(purpose.id);
-          const disabled = !selected && selectedPurposes.length >= 3;
 
           return (
             <button
               key={purpose.id}
               type="button"
-              onClick={() => !disabled && handlePurposeClick(purpose)}
-              disabled={disabled}
+              onClick={() => handlePurposeClick(purpose)}
               className={`
                 w-full px-4 py-4 rounded-xl border-2 text-left transition-all
-                flex items-start gap-3
+                flex items-start gap-3 cursor-pointer
                 ${
                   selected
                     ? 'border-black bg-neutral-50'
                     : 'border-neutral-200 bg-white hover:border-neutral-300'
                 }
-                ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
             >
-              {/* Radio button */}
+              {/* Checkbox */}
               <div className="flex-shrink-0 mt-0.5">
                 <div
                   className={`
-                    w-5 h-5 rounded-full border-2 flex items-center justify-center
-                    ${selected ? 'border-black' : 'border-neutral-400'}
+                    w-5 h-5 rounded border-2 flex items-center justify-center
+                    ${selected ? 'border-black bg-black' : 'border-neutral-400 bg-white'}
                   `}
                 >
-                  {selected && <div className="w-3 h-3 rounded-full bg-black" />}
+                  {selected && (
+                    <svg
+                      className="w-3 h-3 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={3}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  )}
                 </div>
               </div>
 
@@ -120,27 +121,6 @@ export const StepPurpose = ({ onNext, onBack }: StepPurposeProps) => {
           );
         })}
       </div>
-
-      {/* Back button - text link bottom left (mobile-friendly) */}
-      <button
-        onClick={onBack}
-        className="text-sm text-neutral-600 hover:text-neutral-900 flex items-center gap-1 transition-colors"
-      >
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        Back
-      </button>
     </div>
   );
 };

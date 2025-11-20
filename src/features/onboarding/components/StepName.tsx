@@ -55,7 +55,7 @@ export const StepName = ({ onNext }: StepNameProps) => {
 
       {/* Form - FAB handles submission */}
       <form onSubmit={handleSubmit}>
-        <div className="relative">
+        <div className="relative mb-20">
           <input
             id="agentName"
             type="text"

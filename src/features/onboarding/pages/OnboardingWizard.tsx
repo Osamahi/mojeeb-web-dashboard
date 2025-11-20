@@ -189,12 +189,11 @@ export const OnboardingWizard = () => {
       <header className="bg-white border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex items-center justify-between max-w-3xl mx-auto">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-black rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-lg">M</span>
-            </div>
-            <span className="text-lg sm:text-xl font-semibold text-neutral-900">Mojeeb</span>
-          </div>
+          <img
+            src="/mojeeb-logo.png"
+            alt="Mojeeb"
+            className="h-5"
+          />
 
           {/* Skip button - with confirmation modal */}
           {currentStep < OnboardingStep.Success && (
@@ -220,40 +219,68 @@ export const OnboardingWizard = () => {
         </div>
       </main>
 
-      {/* Floating Action Button - Bottom right */}
+      {/* Bottom Bar - Back button + Arrow button */}
       {currentStep < OnboardingStep.Success && (
-        <button
-          onClick={handleFABClick}
-          disabled={!canProceed}
-          aria-label="Continue to next step"
-          className={`
-            fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-10
-            w-14 h-14 sm:w-16 sm:h-16
-            rounded-full
-            flex items-center justify-center
-            shadow-lg hover:shadow-xl
-            transition-all duration-200
-            ${
-              !canProceed
-                ? 'bg-neutral-300 cursor-not-allowed'
-                : 'bg-black text-white hover:scale-105 active:scale-95'
-            }
-          `}
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-3 sm:px-6 sm:py-4 z-10">
+          <div className="max-w-3xl mx-auto flex items-center justify-between">
+            {/* Left: Back button (subtle) */}
+            {currentStep > OnboardingStep.Name ? (
+              <button
+                onClick={previousStep}
+                className="text-sm text-neutral-600 hover:text-neutral-900 flex items-center gap-1 transition-colors"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+                Back
+              </button>
+            ) : (
+              <div />
+            )}
+
+            {/* Right: Circular arrow button */}
+            <button
+              onClick={handleFABClick}
+              disabled={!canProceed}
+              aria-label="Continue to next step"
+              className={`
+                w-12 h-12 sm:w-14 sm:h-14
+                rounded-full
+                flex items-center justify-center
+                transition-all duration-200
+                ${
+                  !canProceed
+                    ? 'bg-neutral-300 cursor-not-allowed'
+                    : 'bg-black text-white hover:bg-neutral-800'
+                }
+              `}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Exit Intent Modal */}
