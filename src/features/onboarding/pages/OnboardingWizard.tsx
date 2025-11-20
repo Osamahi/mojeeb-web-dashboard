@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { OnboardingStep } from '../types/onboarding.types';
 import { OnboardingProgress } from '../components/OnboardingProgress';
@@ -16,12 +17,17 @@ import { ExitIntentModal } from '../components/ExitIntentModal';
 import { SimpleConfirmModal } from '../components/SimpleConfirmModal';
 import { DemoCallModal } from '../components/DemoCallModal';
 import { agentService } from '@/features/agents/services/agentService';
+import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { queryKeys } from '@/lib/queryKeys';
 import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 
 export const OnboardingWizard = () => {
   const navigate = useNavigate();
-  const { currentStep, nextStep, previousStep, setStep, data, completeOnboarding } = useOnboardingStore();
+  const queryClient = useQueryClient();
+  const { currentStep, nextStep, previousStep, setStep, data, setCreatedAgentId, completeOnboarding } = useOnboardingStore();
+  const addAgent = useAgentStore((state) => state.addAgent);
+  const setGlobalSelectedAgent = useAgentStore((state) => state.setGlobalSelectedAgent);
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
@@ -58,14 +64,6 @@ export const OnboardingWizard = () => {
     };
   }, [currentStep, previousStep]);
 
-  // Create agent when reaching success step
-  useEffect(() => {
-    if (currentStep === OnboardingStep.Success && !isCreatingAgent && !data.createdAgentId) {
-      handleCreateAgent();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep]);
-
   const handleCreateAgent = async () => {
     setIsCreatingAgent(true);
 
@@ -76,44 +74,100 @@ export const OnboardingWizard = () => {
         .join('\n\n');
 
       // Create the agent
+      logger.info('Creating agent with name:', data.agentName);
       const agent = await agentService.createAgent({
         name: data.agentName,
         personaPrompt,
       });
 
+      logger.info('Agent created successfully with ID:', agent.id);
+
+      // Add the newly created agent to the agent store immediately
+      // This ensures it's available when we try to switch to it after redirect
+      addAgent(agent);
+
+      // Pre-select the agent globally so it's ready before redirect
+      // This eliminates the delay on the conversations page
+      setGlobalSelectedAgent(agent);
+      logger.info('Agent pre-selected globally:', agent.name);
+
+      // Save the created agent ID to the store
+      setCreatedAgentId(agent.id);
+
       // Create knowledge base if content was provided
       if (data.knowledgeContent && data.knowledgeContent.trim()) {
-        const kb = await agentService.createKnowledgeBase({
-          name: `${data.agentName} Knowledge Base`,
-          content: data.knowledgeContent,
-        });
+        logger.info('Creating knowledge base for agent:', agent.id);
 
-        // Link knowledge base to agent
-        await agentService.linkKnowledgeBase(agent.id, kb.id);
+        try {
+          const kb = await agentService.createKnowledgeBase({
+            name: `${data.agentName} Knowledge Base`,
+            content: data.knowledgeContent,
+          });
+
+          // Link knowledge base to agent
+          await agentService.linkKnowledgeBase(agent.id, kb.id);
+          logger.info('Knowledge base linked successfully');
+          toast.success('Agent created with knowledge base!');
+        } catch (kbError) {
+          // Don't fail entire onboarding if KB creation fails
+          logger.error('Knowledge base creation failed:', kbError);
+          const kbErrorMsg = (kbError as any)?.response?.data?.message || (kbError as Error)?.message || 'Unknown error';
+          logger.error('KB Error details:', kbErrorMsg);
+          toast.warning('Agent created successfully, but knowledge base failed. You can add it later from Studio.');
+        }
+      } else {
+        toast.success('Agent created successfully!');
       }
 
-      toast.success('Agent created successfully!');
+      // Advance to success step after successful creation
+      nextStep();
     } catch (error) {
       logger.error('Failed to create agent:', error);
-      toast.error('Failed to create agent. Please try again.');
-      // Go back to purpose step on error
-      setStep(OnboardingStep.Purpose);
+      const errorMsg = (error as any)?.response?.data?.message || (error as Error)?.message || 'Unknown error';
+      logger.error('Error details:', errorMsg);
+      toast.error(`Failed to create agent: ${errorMsg}`);
+      // Stay on current step on error - don't go back
+      throw error; // Re-throw to be caught by caller
     } finally {
       setIsCreatingAgent(false);
     }
   };
 
-  const handleStepComplete = () => {
-    nextStep();
+  const handleStepComplete = async () => {
+    // If completing Knowledge step (or skipping it), create the agent
+    if (currentStep === OnboardingStep.Knowledge) {
+      try {
+        await handleCreateAgent();
+        // handleCreateAgent will call nextStep() on success
+      } catch (error) {
+        // Error already handled and toasted in handleCreateAgent
+        // Stay on Knowledge step
+      }
+    } else {
+      // For other steps, just advance
+      nextStep();
+    }
   };
 
-  const handleSkipKnowledge = () => {
-    nextStep();
+  const handleSkipKnowledge = async () => {
+    // User is skipping knowledge, but still need to create agent
+    try {
+      await handleCreateAgent();
+      // handleCreateAgent will call nextStep() on success
+    } catch (error) {
+      // Error already handled and toasted in handleCreateAgent
+      // Stay on Knowledge step
+    }
   };
 
   const handleOnboardingComplete = () => {
     completeOnboarding();
-    // Redirect to dashboard
+
+    // CRITICAL: Invalidate React Query cache to force refetch on next mount
+    // This ensures DashboardLayout gets fresh agents list including newly created agent
+    queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
+
+    // Agent is already pre-selected globally, no need for URL param
     navigate('/conversations');
   };
 
@@ -278,7 +332,7 @@ export const OnboardingWizard = () => {
             {/* Right: Circular arrow button */}
             <button
               onClick={handleFABClick}
-              disabled={!canProceed}
+              disabled={!canProceed || isCreatingAgent}
               aria-label="Continue to next step"
               className={`
                 w-12 h-12 sm:w-14 sm:h-14
@@ -286,25 +340,29 @@ export const OnboardingWizard = () => {
                 flex items-center justify-center
                 transition-all duration-200
                 ${
-                  !canProceed
+                  !canProceed || isCreatingAgent
                     ? 'bg-neutral-300 cursor-not-allowed'
                     : 'bg-black text-white hover:bg-neutral-800'
                 }
               `}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              {isCreatingAgent ? (
+                <div className="w-5 h-5 border-2 border-neutral-500 border-t-neutral-800 rounded-full animate-spin" />
+              ) : (
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              )}
             </button>
           </div>
         </div>

@@ -96,7 +96,11 @@ export const useOnboardingStore = create<OnboardingState>()(
         })),
 
       // Completion
-      completeOnboarding: () => set({ hasCompletedOnboarding: true }),
+      completeOnboarding: () => set({
+        hasCompletedOnboarding: true,
+        currentStep: OnboardingStep.Name,
+        data: initialData, // Clear form data after completion
+      }),
 
       // Reset
       resetOnboarding: () =>
@@ -110,6 +114,8 @@ export const useOnboardingStore = create<OnboardingState>()(
       name: 'mojeeb-onboarding-storage',
       partialize: (state) => ({
         hasCompletedOnboarding: state.hasCompletedOnboarding,
+        currentStep: state.currentStep,
+        data: state.data,
       }),
     }
   )

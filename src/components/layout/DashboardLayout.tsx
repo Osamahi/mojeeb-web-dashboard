@@ -5,6 +5,7 @@ import { AxiosError } from 'axios';
 import { Sidebar } from './Sidebar';
 import { MobileHeader } from './MobileHeader';
 import { UserProfileDropdown } from './UserProfileDropdown';
+import { OnboardingPromptBanner } from './OnboardingPromptBanner';
 import GlobalAgentSelector from '@/features/agents/components/GlobalAgentSelector';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
@@ -90,6 +91,9 @@ export const DashboardLayout = () => {
           'h-full overflow-y-auto',
           isMobile ? 'pt-16' : 'pt-16 pl-20',  // Mobile: header padding, Desktop: top bar + sidebar padding
         )}>
+          {/* Onboarding Prompt Banner - Shows when no agents exist */}
+          <OnboardingPromptBanner />
+
           <Outlet />
         </main>
       </div>

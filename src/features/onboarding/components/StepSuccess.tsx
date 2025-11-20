@@ -4,9 +4,9 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/Button';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import Confetti from 'react-confetti';
+import { logger } from '@/lib/logger';
 
 interface StepSuccessProps {
   onComplete: () => void;
@@ -32,13 +32,19 @@ export const StepSuccess = ({ onComplete }: StepSuccessProps) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Auto-advance after 3 seconds
+  // Simple 2-second celebration before redirect
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 3000);
+    logger.info('🎉 StepSuccess mounted - showing celebration');
 
-    return () => clearTimeout(timer);
+    // Fixed 2-second delay to enjoy confetti and read "What's Next"
+    const timer = setTimeout(() => {
+      logger.info('✅ Redirecting to dashboard');
+      onComplete();
+    }, 2000);
+
+    return () => {
+      clearTimeout(timer);
+    };
   }, [onComplete]);
 
   return (

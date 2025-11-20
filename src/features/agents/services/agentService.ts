@@ -107,8 +107,20 @@ class AgentService {
       model_provider: request.modelProvider,
       avatar_url: request.avatarUrl,
     };
-    const { data } = await api.post<ApiAgentResponse>('/api/agents', snakeCaseRequest);
-    return this.transformAgent(data);
+
+    // Backend returns minimal response { id, name, status } or { Id, Name, Status }
+    const response = await api.post('/api/agents', snakeCaseRequest);
+    console.log('Agent creation response:', response.data);
+
+    // Try both lowercase and uppercase property names
+    const agentId = response.data?.id || response.data?.Id;
+
+    // Fetch full agent details using the returned ID
+    if (agentId) {
+      return await this.getAgent(agentId);
+    }
+
+    throw new Error(`Agent creation returned invalid response - missing agent ID. Response: ${JSON.stringify(response.data)}`);
   }
 
   /**
