@@ -94,32 +94,9 @@ export const OnboardingWizard = () => {
       // Save the created agent ID to the store
       setCreatedAgentId(agent.id);
 
-      // Create knowledge base if content was provided
-      if (data.knowledgeContent && data.knowledgeContent.trim()) {
-        logger.info('Creating knowledge base for agent:', agent.id);
+      toast.success('Agent created successfully!');
 
-        try {
-          const kb = await agentService.createKnowledgeBase({
-            name: `${data.agentName} Knowledge Base`,
-            content: data.knowledgeContent,
-          });
-
-          // Link knowledge base to agent
-          await agentService.linkKnowledgeBase(agent.id, kb.id);
-          logger.info('Knowledge base linked successfully');
-          toast.success('Agent created with knowledge base!');
-        } catch (kbError) {
-          // Don't fail entire onboarding if KB creation fails
-          logger.error('Knowledge base creation failed:', kbError);
-          const kbErrorMsg = (kbError as any)?.response?.data?.message || (kbError as Error)?.message || 'Unknown error';
-          logger.error('KB Error details:', kbErrorMsg);
-          toast.warning('Agent created successfully, but knowledge base failed. You can add it later from Studio.');
-        }
-      } else {
-        toast.success('Agent created successfully!');
-      }
-
-      // Advance to success step after successful creation
+      // Advance to success step (KB creation will happen there)
       nextStep();
     } catch (error) {
       logger.error('Failed to create agent:', error);
@@ -216,7 +193,14 @@ export const OnboardingWizard = () => {
         );
 
       case OnboardingStep.Success:
-        return <StepSuccess onComplete={handleOnboardingComplete} />;
+        return (
+          <StepSuccess
+            onComplete={handleOnboardingComplete}
+            agentId={data.createdAgentId}
+            agentName={data.agentName}
+            knowledgeContent={data.knowledgeContent}
+          />
+        );
 
       default:
         return null;

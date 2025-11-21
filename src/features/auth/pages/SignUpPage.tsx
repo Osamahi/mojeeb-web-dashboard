@@ -22,7 +22,7 @@ import { useAuthStore } from '../stores/authStore';
 const signUpSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters').max(100, 'Password cannot exceed 100 characters'),
 });
 
 type SignUpForm = z.infer<typeof signUpSchema>;
@@ -49,6 +49,10 @@ export const SignUpPage = () => {
     setIsLoading(true);
     setError(null);
 
+    // Mark submission BEFORE register to prevent useEffect redirect race condition
+    // (authService.register sets isAuthenticated=true, which would trigger the useEffect)
+    setHasSubmitted(true);
+
     try {
       // Register the user
       await authService.register({
@@ -56,9 +60,6 @@ export const SignUpPage = () => {
         email: data.email,
         password: data.password,
       });
-
-      // Mark that registration succeeded (prevents edge case redirect)
-      setHasSubmitted(true);
 
       toast.success('Account created successfully!');
 
@@ -93,6 +94,8 @@ export const SignUpPage = () => {
 
       setError(errorMessage);
       toast.error(errorMessage);
+      // Reset hasSubmitted so user can retry (and useEffect guard works correctly)
+      setHasSubmitted(false);
     } finally {
       setIsLoading(false);
     }
