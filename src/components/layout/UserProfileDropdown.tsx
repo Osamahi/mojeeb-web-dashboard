@@ -31,9 +31,15 @@ export const UserProfileDropdown = () => {
     }
   }, [isOpen]);
 
-  const handleLogout = async () => {
-    await authService.logout();
+  const handleLogout = () => {
+    // 1. Clear local state immediately (tokens, user data)
+    useAuthStore.getState().logout();
+
+    // 2. Redirect immediately - don't wait for API
     window.location.href = '/login';
+
+    // 3. Fire-and-forget: invalidate refresh token on server (optional, non-blocking)
+    authService.logout().catch(() => {});
   };
 
   return (
