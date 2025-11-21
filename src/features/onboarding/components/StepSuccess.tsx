@@ -1,33 +1,51 @@
 /**
  * Step 4: Success Screen
- * Celebration screen with confetti and KB creation before redirect
+ * Creates agent and KB with real-time progress, then shows completion with manual redirect
  */
 
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { agentService } from '@/features/agents/services/agentService';
+import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { queryKeys } from '@/lib/queryKeys';
 import Confetti from 'react-confetti';
 import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
+import type { AgentPurpose } from '../types/onboarding.types';
 
 interface StepSuccessProps {
   onComplete: () => void;
-  agentId: string | null;
+  onReadyChange: (isReady: boolean) => void;
   agentName: string;
+  selectedPurposes: AgentPurpose[];
   knowledgeContent: string;
 }
 
-type ProgressPhase = 'agent' | 'knowledge' | 'redirecting' | 'complete';
+type CreationPhase = 'creating-agent' | 'adding-knowledge' | 'ready' | 'error';
 
-export const StepSuccess = ({ onComplete, agentId, agentName, knowledgeContent }: StepSuccessProps) => {
-  const { data } = useOnboardingStore();
+interface PhaseStatus {
+  agent: 'pending' | 'loading' | 'success' | 'error';
+  knowledge: 'pending' | 'loading' | 'success' | 'error' | 'skipped';
+}
+
+export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurposes, knowledgeContent }: StepSuccessProps) => {
+  const queryClient = useQueryClient();
+  const { setCreatedAgentId } = useOnboardingStore();
+  const addAgent = useAgentStore((state) => state.addAgent);
+  const setGlobalSelectedAgent = useAgentStore((state) => state.setGlobalSelectedAgent);
+
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
-
-  const [phase, setPhase] = useState<ProgressPhase>('agent');
-  const [kbError, setKbError] = useState<string | null>(null);
+  const [phase, setPhase] = useState<CreationPhase>('creating-agent');
+  const [status, setStatus] = useState<PhaseStatus>({
+    agent: 'pending',
+    knowledge: knowledgeContent.trim() ? 'pending' : 'skipped',
+  });
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [createdAgentId, setLocalCreatedAgentId] = useState<string | null>(null);
 
   // Update window size on resize
   useEffect(() => {
@@ -42,263 +60,207 @@ export const StepSuccess = ({ onComplete, agentId, agentName, knowledgeContent }
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Main onboarding completion flow with 3 phases (5 seconds total)
+  // Main creation flow
   useEffect(() => {
     let mounted = true;
 
-    const completeOnboarding = async () => {
+    const runCreationFlow = async () => {
       try {
-        // Phase 1: Show "Agent created" for 1 second
-        logger.info('🎉 StepSuccess Phase 1: Agent created celebration');
-        setPhase('agent');
-        await sleep(1000);
+        // Phase 1: Create Agent
+        logger.info('🚀 Creating agent:', agentName);
+        setPhase('creating-agent');
+        setStatus(prev => ({ ...prev, agent: 'loading' }));
+
+        const personaPrompt = selectedPurposes
+          .map((purpose) => purpose.prompt)
+          .join('\n\n');
+
+        const agent = await agentService.createAgent({
+          name: agentName,
+          personaPrompt,
+        });
 
         if (!mounted) return;
 
-        // Phase 2: Create knowledge base if content exists (3 seconds)
-        if (knowledgeContent && knowledgeContent.trim() && agentId) {
-          logger.info('📚 StepSuccess Phase 2: Creating knowledge base');
-          setPhase('knowledge');
+        logger.info('✅ Agent created:', agent.id);
+        setStatus(prev => ({ ...prev, agent: 'success' }));
+        setLocalCreatedAgentId(agent.id);
+        setCreatedAgentId(agent.id);
 
-          const kbStartTime = Date.now();
+        // Add to store and select
+        addAgent(agent);
+        setGlobalSelectedAgent(agent);
+
+        // Phase 2: Create Knowledge Base (if content exists)
+        if (knowledgeContent.trim()) {
+          logger.info('📚 Creating knowledge base...');
+          setPhase('adding-knowledge');
+          setStatus(prev => ({ ...prev, knowledge: 'loading' }));
 
           try {
-            // 10-second timeout for KB creation
-            await Promise.race([
-              createKnowledgeBase(agentId, agentName, knowledgeContent),
-              timeout(10000, 'Knowledge base creation timed out')
-            ]);
+            const kb = await agentService.createKnowledgeBase({
+              name: `${agentName} Knowledge Base`,
+              content: knowledgeContent,
+            });
 
             if (!mounted) return;
-            logger.info('✅ Knowledge base created successfully');
-          } catch (kbError) {
-            // Don't fail onboarding if KB creation fails
-            logger.error('❌ Knowledge base creation failed:', kbError);
-            const errorMsg = (kbError as any)?.response?.data?.message || (kbError as Error)?.message || 'Unknown error';
-            setKbError(errorMsg);
-            toast.warning('Agent created successfully, but knowledge base failed. You can add it later from Studio.');
-          }
 
-          // Ensure this phase takes at least 3 seconds total
-          const kbElapsed = Date.now() - kbStartTime;
-          const remainingKbTime = Math.max(0, 3000 - kbElapsed);
-          if (remainingKbTime > 0) {
-            await sleep(remainingKbTime);
+            // Link KB to agent
+            await agentService.linkKnowledgeBase(agent.id, kb.id);
+
+            if (!mounted) return;
+
+            logger.info('✅ Knowledge base created and linked');
+            setStatus(prev => ({ ...prev, knowledge: 'success' }));
+          } catch (kbError) {
+            logger.error('❌ Knowledge base creation failed:', kbError);
+            setStatus(prev => ({ ...prev, knowledge: 'error' }));
+            toast.warning('Agent created, but knowledge base failed. You can add it later.');
+            // Don't fail the whole flow - continue to ready state
           }
-        } else {
-          // No knowledge content - show empty phase for 3 seconds
-          logger.info('⏭️  No knowledge content, skipping KB creation');
-          await sleep(3000);
         }
 
         if (!mounted) return;
 
-        // Phase 3: Show "Redirecting..." for 1 second
-        logger.info('🔄 StepSuccess Phase 3: Preparing redirect');
-        setPhase('redirecting');
-        await sleep(1000);
+        // Phase 3: Ready!
+        setPhase('ready');
+        onReadyChange(true);
 
-        if (!mounted) return;
-
-        // Phase 4: Complete and redirect
-        logger.info('✅ StepSuccess Phase 4: Completing onboarding');
-        setPhase('complete');
-        onComplete();
+        // Invalidate queries so dashboard has fresh data
+        queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
 
       } catch (error) {
-        logger.error('❌ Unexpected error in onboarding completion:', error);
-        // Still redirect even on error
-        if (mounted) {
-          await sleep(1000);
-          onComplete();
-        }
+        logger.error('❌ Agent creation failed:', error);
+        if (!mounted) return;
+
+        const errorMsg = (error as any)?.response?.data?.message || (error as Error)?.message || 'Unknown error';
+        setErrorMessage(errorMsg);
+        setStatus(prev => ({ ...prev, agent: 'error' }));
+        setPhase('error');
+        toast.error(`Failed to create agent: ${errorMsg}`);
       }
     };
 
-    completeOnboarding();
+    runCreationFlow();
 
     return () => {
       mounted = false;
     };
-  }, [onComplete, agentId, agentName, knowledgeContent]);
+  }, [agentName, selectedPurposes, knowledgeContent, addAgent, setGlobalSelectedAgent, setCreatedAgentId, queryClient, onReadyChange]);
 
-  // Helper: Create KB with proper error handling
-  const createKnowledgeBase = async (agentId: string, agentName: string, content: string) => {
-    logger.info('Creating knowledge base for agent:', agentId);
-
-    const kb = await agentService.createKnowledgeBase({
-      name: `${agentName} Knowledge Base`,
-      content: content,
+  // Retry handler
+  const handleRetry = () => {
+    setErrorMessage(null);
+    setStatus({
+      agent: 'pending',
+      knowledge: knowledgeContent.trim() ? 'pending' : 'skipped',
     });
-
-    // Link knowledge base to agent
-    await agentService.linkKnowledgeBase(agentId, kb.id);
-    logger.info('Knowledge base linked successfully');
+    setPhase('creating-agent');
+    // Trigger re-run by changing a dependency (using key in parent would be cleaner but this works)
+    window.location.reload();
   };
 
-  // Helper: Sleep utility
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-  // Helper: Timeout utility
-  const timeout = (ms: number, message: string) =>
-    new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms));
-
-  // Render progress message based on phase
-  const renderProgressMessage = () => {
-    switch (phase) {
-      case 'agent':
+  // Render status icon
+  const StatusIcon = ({ state }: { state: 'pending' | 'loading' | 'success' | 'error' | 'skipped' }) => {
+    switch (state) {
+      case 'loading':
         return (
-          <div className="inline-flex items-center gap-2 px-3 py-2 bg-green-50 rounded-lg text-sm text-green-700 mb-8">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-            Agent created successfully
-          </div>
+          <div className="w-5 h-5 border-2 border-neutral-300 border-t-black rounded-full animate-spin" />
         );
-
-      case 'knowledge':
+      case 'success':
         return (
-          <div className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg text-sm text-blue-700 mb-8">
-            <div className="w-4 h-4 border-2 border-blue-400 border-t-blue-700 rounded-full animate-spin" />
-            Adding knowledge base...
-          </div>
+          <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
         );
-
-      case 'redirecting':
+      case 'error':
         return (
-          <div className="inline-flex items-center gap-2 px-3 py-2 bg-neutral-100 rounded-lg text-sm text-neutral-700 mb-8">
-            <div className="w-4 h-4 border-2 border-neutral-400 border-t-neutral-900 rounded-full animate-spin" />
-            Redirecting to dashboard...
-          </div>
+          <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
         );
-
-      default:
-        return null;
+      case 'skipped':
+        return (
+          <svg className="w-5 h-5 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+          </svg>
+        );
+      default: // pending
+        return (
+          <div className="w-5 h-5 rounded-full border-2 border-neutral-300" />
+        );
     }
   };
 
   return (
     <>
-      {/* Confetti */}
-      <Confetti
-        width={windowSize.width}
-        height={windowSize.height}
-        recycle={false}
-        numberOfPieces={200}
-        gravity={0.3}
-      />
+      {/* Confetti - only show when ready */}
+      {phase === 'ready' && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.3}
+        />
+      )}
 
-      {/* Success content - mobile-first, left-aligned */}
+      {/* Content - same structure as other steps */}
       <div className="w-full">
-        {/* Success icon */}
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
-          <svg
-            className="w-8 h-8 sm:w-10 sm:h-10 text-green-600"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </div>
-
-        {/* Heading */}
-        <h1 className="text-3xl sm:text-4xl font-bold text-neutral-950 mb-3 tracking-tight">
-          You're all set!
+        {/* Title - matching other steps */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-neutral-950 mb-2 tracking-tight">
+          {phase === 'ready' ? "You're all set!" : phase === 'error' ? 'Something went wrong' : 'Setting up your agent...'}
         </h1>
-        <p className="text-base sm:text-lg text-neutral-600 mb-8">
-          {agentName} is ready to help your customers
-          {data.selectedPurposes.length > 0 && (
-            <span className="block text-sm text-neutral-500 mt-2">
-              Specialized in: {data.selectedPurposes.map((p) => p.label).join(', ')}
-            </span>
-          )}
+        <p className="text-sm sm:text-base text-neutral-600 mb-8">
+          {phase === 'ready'
+            ? `${agentName} is ready to help your customers`
+            : phase === 'error'
+            ? 'We encountered an error while creating your agent'
+            : `Creating ${agentName}...`
+          }
         </p>
 
-        {/* Dynamic progress message */}
-        {renderProgressMessage()}
+        {/* Progress Steps */}
+        <div className="bg-white border border-neutral-200 rounded-xl p-5 mb-20">
+          <div className="space-y-4">
+            {/* Step 1: Agent Creation */}
+            <div className="flex items-center gap-3">
+              <StatusIcon state={status.agent} />
+              <span className={`text-sm ${status.agent === 'loading' ? 'text-neutral-900 font-medium' : status.agent === 'success' ? 'text-green-700' : status.agent === 'error' ? 'text-red-700' : 'text-neutral-500'}`}>
+                {status.agent === 'loading' ? 'Creating agent...' : status.agent === 'success' ? 'Agent created' : status.agent === 'error' ? 'Failed to create agent' : 'Create agent'}
+              </span>
+            </div>
 
-        {/* Error message if KB creation failed */}
-        {kbError && (
-          <div className="inline-flex items-center gap-2 px-3 py-2 bg-yellow-50 rounded-lg text-sm text-yellow-700 mb-8">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Knowledge base setup incomplete
+            {/* Step 2: Knowledge Base */}
+            <div className="flex items-center gap-3">
+              <StatusIcon state={status.knowledge} />
+              <span className={`text-sm ${status.knowledge === 'loading' ? 'text-neutral-900 font-medium' : status.knowledge === 'success' ? 'text-green-700' : status.knowledge === 'error' ? 'text-yellow-700' : status.knowledge === 'skipped' ? 'text-neutral-400' : 'text-neutral-500'}`}>
+                {status.knowledge === 'loading' ? 'Adding knowledge base...' : status.knowledge === 'success' ? 'Knowledge base added' : status.knowledge === 'error' ? 'Knowledge base failed (can add later)' : status.knowledge === 'skipped' ? 'No knowledge to add' : 'Add knowledge base'}
+              </span>
+            </div>
+
+            {/* Step 3: Ready */}
+            <div className="flex items-center gap-3">
+              <StatusIcon state={phase === 'ready' ? 'success' : 'pending'} />
+              <span className={`text-sm ${phase === 'ready' ? 'text-green-700' : 'text-neutral-500'}`}>
+                {phase === 'ready' ? 'Agent is ready!' : 'Finishing up'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {errorMessage && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-red-700">{errorMessage}</p>
+            <button
+              onClick={handleRetry}
+              className="mt-3 text-sm text-red-700 underline hover:text-red-900"
+            >
+              Try Again
+            </button>
           </div>
         )}
-
-        {/* What's Next - compact */}
-        <div className="bg-white border border-neutral-200 rounded-xl p-4">
-          <h2 className="text-sm font-semibold text-neutral-900 mb-3">
-            What's Next?
-          </h2>
-          <ul className="space-y-2 text-sm text-neutral-700">
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Customize your agent's appearance</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Add more knowledge to improve responses</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Install the chat widget on your website</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Start your first conversation</span>
-            </li>
-          </ul>
-        </div>
       </div>
     </>
   );

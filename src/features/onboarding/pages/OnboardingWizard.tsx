@@ -29,6 +29,7 @@ export const OnboardingWizard = () => {
   const addAgent = useAgentStore((state) => state.addAgent);
   const setGlobalSelectedAgent = useAgentStore((state) => state.setGlobalSelectedAgent);
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+  const [isSuccessReady, setIsSuccessReady] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
@@ -110,31 +111,14 @@ export const OnboardingWizard = () => {
     }
   };
 
-  const handleStepComplete = async () => {
-    // If completing Knowledge step (or skipping it), create the agent
-    if (currentStep === OnboardingStep.Knowledge) {
-      try {
-        await handleCreateAgent();
-        // handleCreateAgent will call nextStep() on success
-      } catch (error) {
-        // Error already handled and toasted in handleCreateAgent
-        // Stay on Knowledge step
-      }
-    } else {
-      // For other steps, just advance
-      nextStep();
-    }
+  const handleStepComplete = () => {
+    // All steps just advance to next - agent creation happens in Success step
+    nextStep();
   };
 
-  const handleSkipKnowledge = async () => {
-    // User is skipping knowledge, but still need to create agent
-    try {
-      await handleCreateAgent();
-      // handleCreateAgent will call nextStep() on success
-    } catch (error) {
-      // Error already handled and toasted in handleCreateAgent
-      // Stay on Knowledge step
-    }
+  const handleSkipKnowledge = () => {
+    // Skip knowledge and go to Success step - agent creation happens there
+    nextStep();
   };
 
   const handleOnboardingComplete = () => {
@@ -196,8 +180,9 @@ export const OnboardingWizard = () => {
         return (
           <StepSuccess
             onComplete={handleOnboardingComplete}
-            agentId={data.createdAgentId}
+            onReadyChange={setIsSuccessReady}
             agentName={data.agentName}
+            selectedPurposes={data.selectedPurposes}
             knowledgeContent={data.knowledgeContent}
           />
         );
@@ -238,14 +223,12 @@ export const OnboardingWizard = () => {
           />
 
           {/* Skip button - with confirmation modal */}
-          {currentStep < OnboardingStep.Success && (
-            <button
-              onClick={handleSkipClick}
-              className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
-            >
-              Skip
-            </button>
-          )}
+          <button
+            onClick={handleSkipClick}
+            className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+          >
+            Skip
+          </button>
         </div>
       </header>
 
@@ -262,11 +245,10 @@ export const OnboardingWizard = () => {
       </main>
 
       {/* Bottom Bar - Back button + Arrow button */}
-      {currentStep < OnboardingStep.Success && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-3 sm:px-6 sm:py-4 z-10">
-          <div className="max-w-3xl mx-auto flex items-center justify-between">
-            {/* Left: Request demo call button */}
-            {demoCallRequested ? (
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 px-4 py-3 sm:px-6 sm:py-4 z-10">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          {/* Left: Request demo call button */}
+          {demoCallRequested ? (
               <div className="text-xs flex items-center gap-2 text-neutral-500">
                 <span className="flex items-center gap-1">
                   <svg
@@ -313,7 +295,26 @@ export const OnboardingWizard = () => {
               </button>
             )}
 
-            {/* Right: Circular arrow button */}
+          {/* Right: Button - Arrow for steps, "Go to Dashboard" for Success */}
+          {currentStep === OnboardingStep.Success ? (
+            <button
+              onClick={handleOnboardingComplete}
+              disabled={!isSuccessReady}
+              className={`
+                px-6 py-3
+                rounded-full
+                font-medium
+                transition-all duration-200
+                ${
+                  !isSuccessReady
+                    ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
+                    : 'bg-black text-white hover:bg-neutral-800'
+                }
+              `}
+            >
+              Go to Dashboard
+            </button>
+          ) : (
             <button
               onClick={handleFABClick}
               disabled={!canProceed || isCreatingAgent}
@@ -348,9 +349,9 @@ export const OnboardingWizard = () => {
                 </svg>
               )}
             </button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Exit Intent Modal */}
       <ExitIntentModal
