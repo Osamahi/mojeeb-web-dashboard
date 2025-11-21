@@ -222,13 +222,22 @@ export const OnboardingWizard = () => {
             className="h-5"
           />
 
-          {/* Skip button - with confirmation modal */}
-          <button
-            onClick={handleSkipClick}
-            className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
-          >
-            Skip
-          </button>
+          {/* Skip / Go to dashboard button */}
+          {currentStep === OnboardingStep.Success && isSuccessReady ? (
+            <button
+              onClick={handleOnboardingComplete}
+              className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+            >
+              Go to dashboard
+            </button>
+          ) : (
+            <button
+              onClick={handleSkipClick}
+              className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+            >
+              Skip
+            </button>
+          )}
         </div>
       </header>
 
@@ -295,7 +304,7 @@ export const OnboardingWizard = () => {
               </button>
             )}
 
-          {/* Right: Button - Arrow for steps, "Go to Dashboard" for Success */}
+          {/* Right: Button - Arrow for steps, "Try your agent" for Success */}
           {currentStep === OnboardingStep.Success ? (
             <button
               onClick={handleOnboardingComplete}
@@ -312,7 +321,7 @@ export const OnboardingWizard = () => {
                 }
               `}
             >
-              Go to Dashboard
+              Try your agent
             </button>
           ) : (
             <button

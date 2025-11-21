@@ -220,14 +220,14 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
           }
         </p>
 
-        {/* Progress Steps */}
+        {/* Progress Steps & Next Steps - Combined */}
         <div className="bg-white border border-neutral-200 rounded-xl p-5 mb-20">
           <div className="space-y-4">
             {/* Step 1: Agent Creation */}
             <div className="flex items-center gap-3">
               <StatusIcon state={status.agent} />
               <span className={`text-sm ${status.agent === 'loading' ? 'text-neutral-900 font-medium' : status.agent === 'success' ? 'text-green-700' : status.agent === 'error' ? 'text-red-700' : 'text-neutral-500'}`}>
-                {status.agent === 'loading' ? 'Creating agent...' : status.agent === 'success' ? 'Agent created' : status.agent === 'error' ? 'Failed to create agent' : 'Create agent'}
+                {status.agent === 'loading' ? 'Creating agent...' : status.agent === 'success' ? '✨ Your agent was created successfully' : status.agent === 'error' ? 'Failed to create agent' : 'Create agent'}
               </span>
             </div>
 
@@ -235,7 +235,7 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
             <div className="flex items-center gap-3">
               <StatusIcon state={status.knowledge} />
               <span className={`text-sm ${status.knowledge === 'loading' ? 'text-neutral-900 font-medium' : status.knowledge === 'success' ? 'text-green-700' : status.knowledge === 'error' ? 'text-yellow-700' : status.knowledge === 'skipped' ? 'text-neutral-400' : 'text-neutral-500'}`}>
-                {status.knowledge === 'loading' ? 'Adding knowledge base...' : status.knowledge === 'success' ? 'Knowledge base added' : status.knowledge === 'error' ? 'Knowledge base failed (can add later)' : status.knowledge === 'skipped' ? 'No knowledge to add' : 'Add knowledge base'}
+                {status.knowledge === 'loading' ? 'Adding knowledge base...' : status.knowledge === 'success' ? '📚 Your knowledge has been added' : status.knowledge === 'error' ? 'Knowledge base failed (can add later)' : status.knowledge === 'skipped' ? 'No knowledge to add' : 'Add knowledge base'}
               </span>
             </div>
 
@@ -243,9 +243,32 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
             <div className="flex items-center gap-3">
               <StatusIcon state={phase === 'ready' ? 'success' : 'pending'} />
               <span className={`text-sm ${phase === 'ready' ? 'text-green-700' : 'text-neutral-500'}`}>
-                {phase === 'ready' ? 'Agent is ready!' : 'Finishing up'}
+                {phase === 'ready' ? '🎉 Your agent is now fully ready' : 'Finishing up'}
               </span>
             </div>
+          </div>
+
+          {/* Next Steps - animate in when ready */}
+          <div
+            className={`overflow-hidden transition-all duration-500 ease-out ${
+              phase === 'ready' ? 'max-h-96 opacity-100 mt-6 pt-5 border-t border-neutral-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <h3 className="text-sm font-semibold text-neutral-900 mb-4">Next Steps</h3>
+            <ul className="space-y-3">
+              <li className="flex items-center gap-3 text-sm text-neutral-600">
+                <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">4</span>
+                💬 Try your agent now
+              </li>
+              <li className="flex items-center gap-3 text-sm text-neutral-600">
+                <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">5</span>
+                🎓 Add more knowledge anytime
+              </li>
+              <li className="flex items-center gap-3 text-sm text-neutral-600">
+                <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">6</span>
+                🔗 Connect it to Facebook, Instagram, your website & more
+              </li>
+            </ul>
           </div>
         </div>
 
