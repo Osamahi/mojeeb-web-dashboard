@@ -54,15 +54,22 @@ const secureStorage = new SecureLS({
  * Store both access and refresh tokens in encrypted localStorage
  */
 export const setTokens = (accessToken: string, refreshToken: string): void => {
+  console.time('⏱️ TOKEN-MANAGER: setTokens total');
   try {
+    console.time('⏱️ TOKEN-MANAGER: secureStorage.set accessToken');
     secureStorage.set(ACCESS_TOKEN_KEY, accessToken);
+    console.timeEnd('⏱️ TOKEN-MANAGER: secureStorage.set accessToken');
+
+    console.time('⏱️ TOKEN-MANAGER: secureStorage.set refreshToken');
     secureStorage.set(REFRESH_TOKEN_KEY, refreshToken);
+    console.timeEnd('⏱️ TOKEN-MANAGER: secureStorage.set refreshToken');
   } catch (error) {
     logger.error('Failed to store tokens securely', error);
     // Fallback to regular localStorage if encryption fails
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   }
+  console.timeEnd('⏱️ TOKEN-MANAGER: setTokens total');
 };
 
 /**

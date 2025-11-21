@@ -42,10 +42,16 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
   const [phase, setPhase] = useState<CreationPhase>('creating-agent');
   const [status, setStatus] = useState<PhaseStatus>({
     agent: 'pending',
-    knowledge: knowledgeContent.trim() ? 'pending' : 'skipped',
+    knowledge: 'pending', // Always start pending, will change to skipped with animation if no content
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [createdAgentId, setLocalCreatedAgentId] = useState<string | null>(null);
+
+  // Animation states for Next Steps reveal (4, 5, 6)
+  const [showNextStep4, setShowNextStep4] = useState(false);
+  const [showNextStep5, setShowNextStep5] = useState(false);
+  const [showNextStep6, setShowNextStep6] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Update window size on resize
   useEffect(() => {
@@ -116,8 +122,10 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
             logger.error('❌ Knowledge base creation failed:', kbError);
             setStatus(prev => ({ ...prev, knowledge: 'error' }));
             toast.warning('Agent created, but knowledge base failed. You can add it later.');
-            // Don't fail the whole flow - continue to ready state
           }
+        } else {
+          // No knowledge - mark as skipped
+          setStatus(prev => ({ ...prev, knowledge: 'skipped' }));
         }
 
         if (!mounted) return;
@@ -126,8 +134,25 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
         setPhase('ready');
         onReadyChange(true);
 
+        // Show confetti briefly
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 1500);
+
         // Invalidate queries so dashboard has fresh data
         queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
+
+        // Animate Next Steps (4, 5, 6) sequentially
+        await new Promise(resolve => setTimeout(resolve, 500));
+        if (!mounted) return;
+        setShowNextStep4(true);
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+        if (!mounted) return;
+        setShowNextStep5(true);
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+        if (!mounted) return;
+        setShowNextStep6(true);
 
       } catch (error) {
         logger.error('❌ Agent creation failed:', error);
@@ -153,21 +178,25 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
     setErrorMessage(null);
     setStatus({
       agent: 'pending',
-      knowledge: knowledgeContent.trim() ? 'pending' : 'skipped',
+      knowledge: 'pending',
     });
+    setShowNextStep4(false);
+    setShowNextStep5(false);
+    setShowNextStep6(false);
     setPhase('creating-agent');
     // Trigger re-run by changing a dependency (using key in parent would be cleaner but this works)
     window.location.reload();
   };
 
-  // Render status icon
-  const StatusIcon = ({ state }: { state: 'pending' | 'loading' | 'success' | 'error' | 'skipped' }) => {
+  // Render status icon with step number
+  const StatusIcon = ({ state, stepNumber }: { state: 'pending' | 'loading' | 'success' | 'error' | 'skipped', stepNumber?: number }) => {
     switch (state) {
       case 'loading':
         return (
           <div className="w-5 h-5 border-2 border-neutral-300 border-t-black rounded-full animate-spin" />
         );
       case 'success':
+      case 'skipped': // Skipped also shows green checkmark
         return (
           <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -179,29 +208,25 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
           </svg>
         );
-      case 'skipped':
+      default: // pending - show step number
         return (
-          <svg className="w-5 h-5 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-          </svg>
-        );
-      default: // pending
-        return (
-          <div className="w-5 h-5 rounded-full border-2 border-neutral-300" />
+          <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">
+            {stepNumber}
+          </span>
         );
     }
   };
 
   return (
     <>
-      {/* Confetti - only show when ready */}
-      {phase === 'ready' && (
+      {/* Confetti - brief burst */}
+      {showConfetti && (
         <Confetti
           width={windowSize.width}
           height={windowSize.height}
           recycle={false}
-          numberOfPieces={200}
-          gravity={0.3}
+          numberOfPieces={100}
+          gravity={0.4}
         />
       )}
 
@@ -209,11 +234,11 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
       <div className="w-full">
         {/* Title - matching other steps */}
         <h1 className="text-3xl sm:text-4xl font-bold text-neutral-950 mb-2 tracking-tight">
-          {phase === 'ready' ? "You're all set!" : phase === 'error' ? 'Something went wrong' : 'Setting up your agent...'}
+          {phase === 'ready' ? "Congratulations!" : phase === 'error' ? 'Something went wrong' : 'Setting up your agent...'}
         </h1>
         <p className="text-sm sm:text-base text-neutral-600 mb-8">
           {phase === 'ready'
-            ? `${agentName} is ready to help your customers`
+            ? 'Your agent is ready to help customers'
             : phase === 'error'
             ? 'We encountered an error while creating your agent'
             : `Creating ${agentName}...`
@@ -225,51 +250,52 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
           <div className="space-y-4">
             {/* Step 1: Agent Creation */}
             <div className="flex items-center gap-3">
-              <StatusIcon state={status.agent} />
-              <span className={`text-sm ${status.agent === 'loading' ? 'text-neutral-900 font-medium' : status.agent === 'success' ? 'text-green-700' : status.agent === 'error' ? 'text-red-700' : 'text-neutral-500'}`}>
+              <StatusIcon state={status.agent} stepNumber={1} />
+              <span className={`text-sm transition-colors duration-300 ${status.agent === 'loading' ? 'text-neutral-900 font-medium' : status.agent === 'success' ? 'text-green-700' : status.agent === 'error' ? 'text-red-700' : 'text-neutral-500'}`}>
                 {status.agent === 'loading' ? 'Creating agent...' : status.agent === 'success' ? '✨ Your agent was created successfully' : status.agent === 'error' ? 'Failed to create agent' : 'Create agent'}
               </span>
             </div>
 
             {/* Step 2: Knowledge Base */}
             <div className="flex items-center gap-3">
-              <StatusIcon state={status.knowledge} />
-              <span className={`text-sm ${status.knowledge === 'loading' ? 'text-neutral-900 font-medium' : status.knowledge === 'success' ? 'text-green-700' : status.knowledge === 'error' ? 'text-yellow-700' : status.knowledge === 'skipped' ? 'text-neutral-400' : 'text-neutral-500'}`}>
-                {status.knowledge === 'loading' ? 'Adding knowledge base...' : status.knowledge === 'success' ? '📚 Your knowledge has been added' : status.knowledge === 'error' ? 'Knowledge base failed (can add later)' : status.knowledge === 'skipped' ? 'No knowledge to add' : 'Add knowledge base'}
+              <StatusIcon state={status.knowledge} stepNumber={2} />
+              <span className={`text-sm transition-colors duration-300 ${status.knowledge === 'loading' ? 'text-neutral-900 font-medium' : status.knowledge === 'success' ? 'text-green-700' : status.knowledge === 'error' ? 'text-yellow-700' : status.knowledge === 'skipped' ? 'text-green-700' : 'text-neutral-500'}`}>
+                {status.knowledge === 'loading' ? 'Adding knowledge base...' : status.knowledge === 'success' ? '📚 Your knowledge has been added' : status.knowledge === 'error' ? 'Knowledge base failed (can add later)' : status.knowledge === 'skipped' ? '📚 Knowledge to be added later' : 'Add knowledge base'}
               </span>
             </div>
 
             {/* Step 3: Ready */}
             <div className="flex items-center gap-3">
-              <StatusIcon state={phase === 'ready' ? 'success' : 'pending'} />
-              <span className={`text-sm ${phase === 'ready' ? 'text-green-700' : 'text-neutral-500'}`}>
+              <StatusIcon state={phase === 'ready' ? 'success' : 'pending'} stepNumber={3} />
+              <span className={`text-sm transition-colors duration-300 ${phase === 'ready' ? 'text-green-700' : 'text-neutral-500'}`}>
                 {phase === 'ready' ? '🎉 Your agent is now fully ready' : 'Finishing up'}
               </span>
             </div>
           </div>
 
-          {/* Next Steps - animate in when ready */}
-          <div
-            className={`overflow-hidden transition-all duration-500 ease-out ${
-              phase === 'ready' ? 'max-h-96 opacity-100 mt-6 pt-5 border-t border-neutral-100' : 'max-h-0 opacity-0'
-            }`}
-          >
-            <h3 className="text-sm font-semibold text-neutral-900 mb-4">Next Steps</h3>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-3 text-sm text-neutral-600">
-                <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">4</span>
-                💬 Try your agent now
-              </li>
-              <li className="flex items-center gap-3 text-sm text-neutral-600">
-                <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">5</span>
-                🎓 Add more knowledge anytime
-              </li>
-              <li className="flex items-center gap-3 text-sm text-neutral-600">
-                <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">6</span>
-                🔗 Connect it to Facebook, Instagram, your website & more
-              </li>
-            </ul>
-          </div>
+          {/* Next Steps - animate in sequentially when ready */}
+          {phase === 'ready' && (
+            <div className="mt-6">
+              <h3 className={`text-sm font-semibold text-neutral-900 mb-4 transition-all duration-500 ${showNextStep4 ? 'opacity-100' : 'opacity-0'}`}>Next Steps:</h3>
+              <ul className="space-y-3">
+                {/* Step 4 */}
+                <li className={`flex items-center gap-3 text-sm text-neutral-600 transition-all duration-[600ms] ${showNextStep4 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-3 scale-95'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                  <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">4</span>
+                  💬 Try your agent now
+                </li>
+                {/* Step 5 */}
+                <li className={`flex items-center gap-3 text-sm text-neutral-600 transition-all duration-[600ms] ${showNextStep5 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-3 scale-95'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                  <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">5</span>
+                  🎓 Add more knowledge anytime
+                </li>
+                {/* Step 6 */}
+                <li className={`flex items-center gap-3 text-sm text-neutral-600 transition-all duration-[600ms] ${showNextStep6 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-3 scale-95'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}>
+                  <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">6</span>
+                  🔗 Connect it to Facebook, Instagram, your website & more
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Error Message */}

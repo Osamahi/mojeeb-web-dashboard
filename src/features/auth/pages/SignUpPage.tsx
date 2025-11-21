@@ -54,17 +54,25 @@ export const SignUpPage = () => {
 
     try {
       // Register the user
+      console.time('⏱️ SIGNUP-TOTAL');
+      console.time('⏱️ SIGNUP-API');
       await authService.register({
         name: data.name,
         email: data.email,
         password: data.password,
       });
+      console.timeEnd('⏱️ SIGNUP-API');
 
+      console.time('⏱️ SIGNUP-TOAST');
       toast.success('Account created successfully!');
+      console.timeEnd('⏱️ SIGNUP-TOAST');
 
       // New signups always go to onboarding (they won't have any agents yet)
       // This saves an extra API call and improves perceived performance
+      console.time('⏱️ SIGNUP-NAVIGATE');
       navigate('/onboarding', { replace: true });
+      console.timeEnd('⏱️ SIGNUP-NAVIGATE');
+      console.timeEnd('⏱️ SIGNUP-TOTAL');
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string; error?: string; errors?: Array<{ message: string }> }>;
       logger.error('Registration error', error);
