@@ -16,7 +16,6 @@ import { toast } from 'sonner';
 import { AuthPageLayout } from '../components/AuthPageLayout';
 import { AuthFooterLink } from '../components/AuthFooterLink';
 import { logger } from '@/lib/logger';
-import { agentService } from '@/features/agents/services/agentService';
 import { useAuthStore } from '../stores/authStore';
 
 const signUpSchema = z.object({
@@ -63,22 +62,9 @@ export const SignUpPage = () => {
 
       toast.success('Account created successfully!');
 
-      // Check if user needs onboarding (no agents) or can go straight to conversations
-      try {
-        const agents = await agentService.getAgents();
-
-        if (agents.length === 0) {
-          // New user with no agents - send to onboarding
-          navigate('/onboarding', { replace: true });
-        } else {
-          // User already has agents (edge case) - skip onboarding
-          navigate('/conversations', { replace: true });
-        }
-      } catch (agentError) {
-        // If agent check fails, default to onboarding (safe fallback)
-        logger.warn('Failed to check agents after signup, defaulting to onboarding', agentError);
-        navigate('/onboarding', { replace: true });
-      }
+      // New signups always go to onboarding (they won't have any agents yet)
+      // This saves an extra API call and improves perceived performance
+      navigate('/onboarding', { replace: true });
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string; error?: string; errors?: Array<{ message: string }> }>;
       logger.error('Registration error', error);
