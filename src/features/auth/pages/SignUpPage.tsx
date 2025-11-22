@@ -17,6 +17,7 @@ import { AuthPageLayout } from '../components/AuthPageLayout';
 import { AuthFooterLink } from '../components/AuthFooterLink';
 import { logger } from '@/lib/logger';
 import { useAuthStore } from '../stores/authStore';
+import { useOnboardingStore } from '@/features/onboarding/stores/onboardingStore';
 
 const signUpSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -66,6 +67,10 @@ export const SignUpPage = () => {
       console.time('⏱️ SIGNUP-TOAST');
       toast.success('Account created successfully!');
       console.timeEnd('⏱️ SIGNUP-TOAST');
+
+      // Clear any stale onboarding state before starting fresh
+      // Ensures new signups always begin onboarding from step 0 with clean form data
+      useOnboardingStore.getState().resetOnboarding();
 
       // New signups always go to onboarding (they won't have any agents yet)
       // This saves an extra API call and improves perceived performance
