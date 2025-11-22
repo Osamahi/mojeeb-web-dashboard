@@ -24,9 +24,18 @@ interface CreateOnboardingAgentResult {
   knowledgeBase: KnowledgeBase | null;
 }
 
+type OnboardingProgressPhase =
+  | 'creating-agent'
+  | 'agent-created'
+  | 'creating-knowledge'
+  | 'knowledge-created'
+  | 'knowledge-skipped'
+  | 'knowledge-failed';
+
 interface UseOnboardingAgentMutationOptions {
   onSuccess?: (data: CreateOnboardingAgentResult) => void;
   onError?: (error: Error) => void;
+  onProgress?: (phase: OnboardingProgressPhase) => void;
 }
 
 export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationOptions) => {
@@ -50,6 +59,9 @@ export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationO
 
       logger.info('✅ Agent created', { agentId: agent.id });
 
+      // ✅ Report progress: Agent created
+      options?.onProgress?.('agent-created');
+
       // Step 2: Add to store and select globally
       addAgent(agent);
       setGlobalSelectedAgent(agent);
@@ -58,6 +70,9 @@ export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationO
       let knowledgeBase: KnowledgeBase | null = null;
       if (params.knowledgeContent.trim()) {
         logger.info('📚 Creating knowledge base', { agentId: agent.id });
+
+        // ✅ Report progress: Starting KB creation
+        options?.onProgress?.('creating-knowledge');
 
         try {
           knowledgeBase = await agentService.createKnowledgeBase({
@@ -69,11 +84,21 @@ export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationO
           await agentService.linkKnowledgeBase(agent.id, knowledgeBase.id);
 
           logger.info('✅ Knowledge base created and linked', { knowledgeBaseId: knowledgeBase.id });
+
+          // ✅ Report progress: KB created successfully
+          options?.onProgress?.('knowledge-created');
         } catch (kbError) {
           logger.error('❌ Knowledge base creation failed', kbError instanceof Error ? kbError : new Error(String(kbError)));
+
+          // ✅ Report progress: KB creation failed
+          options?.onProgress?.('knowledge-failed');
+
           // Don't fail the whole mutation - agent was created successfully
           toast.warning('Agent created, but knowledge base failed. You can add it later.');
         }
+      } else {
+        // ✅ Report progress: KB skipped (no content)
+        options?.onProgress?.('knowledge-skipped');
       }
 
       return { agent, knowledgeBase };

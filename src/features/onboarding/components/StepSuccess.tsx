@@ -94,15 +94,28 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
 
   // Create mutation with success/error callbacks
   const mutation = useOnboardingAgentMutation({
+    onProgress: (phase) => {
+      // Update UI state in real-time as mutation progresses
+      switch (phase) {
+        case 'agent-created':
+          setStatus({ agent: 'success', knowledge: 'pending' });
+          break;
+        case 'creating-knowledge':
+          setStatus({ agent: 'success', knowledge: 'loading' });
+          break;
+        case 'knowledge-created':
+          setStatus({ agent: 'success', knowledge: 'success' });
+          break;
+        case 'knowledge-skipped':
+          setStatus({ agent: 'success', knowledge: 'skipped' });
+          break;
+        case 'knowledge-failed':
+          setStatus({ agent: 'success', knowledge: 'error' });
+          break;
+      }
+    },
     onSuccess: (data) => {
-      const hasKnowledge = knowledgeContent.trim().length > 0;
-      const kbStatus = data.knowledgeBase
-        ? 'success'
-        : hasKnowledge ? 'error' : 'skipped';
-
-      // ✅ FIX: Update all status states IMMEDIATELY and SYNCHRONOUSLY
-      // This prevents race conditions if component unmounts before timeout fires
-      setStatus({ agent: 'success', knowledge: kbStatus });
+      // Status is already set by onProgress - just handle final "ready" state
       setCreatedAgentId(data.agent.id);
       setPhase('ready');
       onReadyChange(true);
