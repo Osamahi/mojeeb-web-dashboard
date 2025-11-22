@@ -5,6 +5,7 @@
 
 import { getBrowserMetadata } from '../utils/countryDetector';
 import { ANIMATION_TIMINGS } from '../constants/timings';
+import { logger } from '@/lib/logger';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mojeebapi.azurewebsites.net';
 
@@ -26,6 +27,15 @@ export interface DemoCallResponse {
 }
 
 /**
+ * Sanitize user input to prevent injection attacks
+ * Removes potentially dangerous characters: < > " '
+ */
+function sanitizeInput(input: string | undefined): string | undefined {
+  if (!input) return input;
+  return input.trim().replace(/[<>"']/g, '');
+}
+
+/**
  * Submit demo call request to API with 10-second timeout
  */
 export async function submitDemoCallRequest(
@@ -34,9 +44,13 @@ export async function submitDemoCallRequest(
 ): Promise<DemoCallResponse> {
   const metadata = getBrowserMetadata();
 
+  // Sanitize inputs to prevent injection attacks
+  const sanitizedPhone = sanitizeInput(phone) || phone;
+  const sanitizedCompanyName = sanitizeInput(companyName);
+
   const payload: DemoCallRequest = {
-    phone,
-    companyName,
+    phone: sanitizedPhone,
+    companyName: sanitizedCompanyName,
     source: 'organic',
     ...metadata,
   };
@@ -74,14 +88,14 @@ export async function submitDemoCallRequest(
 
     // Handle timeout specifically
     if (error instanceof Error && error.name === 'AbortError') {
-      console.error('Request timed out');
+      logger.error('Demo call request timed out', { phone: sanitizedPhone });
       return {
         success: false,
         message: 'Request timed out. Please check your connection and try again.',
       };
     }
 
-    console.error('Error submitting demo call request:', error);
+    logger.error('Error submitting demo call request', error instanceof Error ? error : new Error(String(error)));
     return {
       success: false,
       message: 'Failed to submit your request. Please try again.',

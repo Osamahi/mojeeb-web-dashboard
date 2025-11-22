@@ -5,10 +5,28 @@
 
 import { useState, useEffect } from 'react';
 import { useOnboardingStore } from '../stores/onboardingStore';
+import { VALIDATION_RULES } from '../constants/validationRules';
+import { CheckCircleIcon } from '@/shared/components/icons';
 
 interface StepNameProps {
   onNext: () => void;
 }
+
+/**
+ * Validate agent name against minimum length requirement
+ * @param name - The agent name to validate
+ * @returns Object with validation result and error message
+ */
+const validateAgentName = (name: string): { isValid: boolean; error: string } => {
+  const trimmed = name.trim();
+  if (trimmed.length < VALIDATION_RULES.AGENT_NAME_MIN_LENGTH) {
+    return {
+      isValid: false,
+      error: `Agent name must be at least ${VALIDATION_RULES.AGENT_NAME_MIN_LENGTH} characters`,
+    };
+  }
+  return { isValid: true, error: '' };
+};
 
 export const StepName = ({ onNext }: StepNameProps) => {
   const { data, setAgentName } = useOnboardingStore();
@@ -18,13 +36,11 @@ export const StepName = ({ onNext }: StepNameProps) => {
 
   // Update store when name changes
   useEffect(() => {
-    const trimmedName = name.trim();
-    if (trimmedName.length >= 2) {
+    const validation = validateAgentName(name);
+    setIsValid(validation.isValid);
+    if (validation.isValid) {
       setAgentName(name);
       setError('');
-      setIsValid(true);
-    } else {
-      setIsValid(false);
     }
   }, [name, setAgentName]);
 
@@ -32,8 +48,9 @@ export const StepName = ({ onNext }: StepNameProps) => {
     e.preventDefault();
 
     // Validation
-    if (name.trim().length < 2) {
-      setError('Agent name must be at least 2 characters');
+    const validation = validateAgentName(name);
+    if (!validation.isValid) {
+      setError(validation.error);
       return;
     }
 
@@ -65,13 +82,7 @@ export const StepName = ({ onNext }: StepNameProps) => {
           />
           {isValid && !error && (
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-              <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <CheckCircleIcon />
             </div>
           )}
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}

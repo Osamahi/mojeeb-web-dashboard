@@ -3,12 +3,14 @@
  * Collects phone numbers for free demo call requests
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { ModalActions } from '@/components/ui/ModalActions';
 import { ChevronDown } from 'lucide-react';
 import { submitDemoCallRequest } from '../services/demoCallService';
 import { detectCountryFromTimezone } from '../utils/countryDetector';
+import { logger } from '@/lib/logger';
+import { CheckCircleIcon } from '@/shared/components/icons';
 import {
   formatPhoneNumber,
   formatPhoneForDisplay,
@@ -35,6 +37,7 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedPhone, setSubmittedPhone] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Load countries data on mount
   useEffect(() => {
@@ -50,7 +53,7 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
         setSelectedCountry(defaultCountry);
       })
       .catch((error) => {
-        console.error('Error loading countries:', error);
+        logger.error('Error loading countries data', error instanceof Error ? error : new Error(String(error)));
       });
   }, []);
 
@@ -87,6 +90,23 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
       setHasError(false);
     }
   }, [phoneNumber]);
+
+  // Click-outside detection for country dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowCountryDropdown(false);
+      }
+    };
+
+    if (showCountryDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCountryDropdown]);
 
   // Format phone number as user types
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,17 +168,7 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
         // Success State
         <div className="text-center py-4">
           <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-8 h-8 text-green-600"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <CheckCircleIcon className="w-8 h-8 text-green-600" />
           </div>
 
           <h3 className="text-xl font-semibold text-neutral-900 mb-2">
@@ -188,7 +198,7 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
           <div className="relative">
             <div className="flex gap-2">
               {/* Country Dropdown */}
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
                   onClick={() => setShowCountryDropdown(!showCountryDropdown)}
