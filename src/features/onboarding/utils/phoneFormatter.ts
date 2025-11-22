@@ -29,7 +29,12 @@ function extractDigits(value: string): string {
  * Example: "1234567890" with format "XX XXX XXXX" -> "12 345 6789"
  */
 export function formatPhoneNumber(value: string, format: string): string {
+  // Guard against invalid inputs
+  if (!value || !format) return '';
+
   const digits = extractDigits(value);
+  if (digits.length === 0) return '';
+
   let formatted = '';
   let digitIndex = 0;
 
@@ -72,6 +77,9 @@ export function formatPhoneForDisplay(fullPhone: string): string {
  * Validate phone number (minimum digits based on validation rules)
  */
 export function validatePhoneNumber(value: string): boolean {
+  // Guard against invalid input
+  if (!value) return false;
+
   const digits = extractDigits(value);
   return digits.length >= VALIDATION_RULES.PHONE_MIN_DIGITS;
 }
@@ -81,6 +89,9 @@ export function validatePhoneNumber(value: string): boolean {
  * Example: dialCode="+966", number="501234567" -> "+966501234567"
  */
 export function getFullPhoneNumber(dialCode: string, number: string): string {
+  // Guard against invalid inputs
+  if (!dialCode || !number) return '';
+
   const digits = extractDigits(number);
   return `${dialCode}${digits}`;
 }

@@ -8,11 +8,9 @@ import { useOnboardingStore } from '../stores/onboardingStore';
 
 interface StepKnowledgeProps {
   onNext: () => void;
-  onSkip: () => void;
-  onBack: () => void;
 }
 
-export const StepKnowledge = ({ onNext, onSkip, onBack }: StepKnowledgeProps) => {
+export const StepKnowledge = ({ onNext }: StepKnowledgeProps) => {
   const { data, setKnowledgeContent } = useOnboardingStore();
   const [content, setContent] = useState(data.knowledgeContent);
 

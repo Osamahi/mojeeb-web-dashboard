@@ -12,7 +12,6 @@ import type { AgentPurpose } from '../types/onboarding.types';
 import { CheckCircleIcon, ErrorCircleIcon } from '@/shared/components/icons';
 
 interface StepSuccessProps {
-  onComplete: () => void;
   onReadyChange: (isReady: boolean) => void;
   agentName: string;
   selectedPurposes: AgentPurpose[];
@@ -60,7 +59,7 @@ const getErrorMessage = (error: unknown): string => {
   return 'Failed to create agent';
 };
 
-export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurposes, knowledgeContent }: StepSuccessProps) => {
+export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowledgeContent }: StepSuccessProps) => {
   const { setCreatedAgentId } = useOnboardingStore();
   const hasTriggeredCreation = useRef(false);
   const isMountedRef = useRef(true); // Track component lifecycle
@@ -126,15 +125,15 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
       safeSetTimeout(() => setShowConfetti(false), ANIMATION_TIMINGS.CONFETTI_DURATION);
 
       // ✅ Trigger Next Steps animations with stagger timing
-      // Using very small delays that will complete before any unmount
+      // Using safeSetTimeout ensures proper cleanup on unmount
       // requestAnimationFrame ensures animations trigger on next frame
       requestAnimationFrame(() => {
-        setTimeout(() => setShowNextStep4(true), ANIMATION_TIMINGS.NEXT_STEP_OFFSET_1);
-        setTimeout(() => setShowNextStep5(true), ANIMATION_TIMINGS.NEXT_STEP_OFFSET_2);
-        setTimeout(() => setShowNextStep6(true), ANIMATION_TIMINGS.NEXT_STEP_OFFSET_3);
+        safeSetTimeout(() => setShowNextStep4(true), ANIMATION_TIMINGS.NEXT_STEP_OFFSET_1);
+        safeSetTimeout(() => setShowNextStep5(true), ANIMATION_TIMINGS.NEXT_STEP_OFFSET_2);
+        safeSetTimeout(() => setShowNextStep6(true), ANIMATION_TIMINGS.NEXT_STEP_OFFSET_3);
       });
     },
-    onError: (error) => {
+    onError: (_error) => {
       setStatus({ agent: 'error', knowledge: 'pending' });
       setPhase('error');
     },

@@ -23,8 +23,8 @@ interface ApiAuthResponse {
 }
 
 interface ApiRefreshResponse {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  refresh_token: string;
 }
 
 class AuthService {
@@ -219,10 +219,10 @@ class AuthService {
       refreshToken: refreshToken,
     });
 
-    // Backend returns camelCase for refresh endpoint
+    // Backend returns snake_case, convert to camelCase
     return {
-      accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
     };
   }
 }

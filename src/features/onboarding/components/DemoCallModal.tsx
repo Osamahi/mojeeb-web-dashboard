@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { ModalActions } from '@/components/ui/ModalActions';
 import { ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
 import { submitDemoCallRequest } from '../services/demoCallService';
 import { detectCountryFromTimezone } from '../utils/countryDetector';
 import { logger } from '@/lib/logger';
@@ -57,15 +58,17 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
       });
   }, []);
 
-  // Re-populate form when modal opens with initialPhone
+  // Re-populate form with initialPhone whenever dependencies are ready
+  // Runs when countries load OR initialPhone changes, regardless of modal open state
   useEffect(() => {
-    if (isOpen && initialPhone && countries.length > 0) {
+    if (initialPhone && countries.length > 0 && selectedCountry) {
       // Find matching country by dial code
       const matchedCountry = countries.find((c) =>
         initialPhone.startsWith(c.dialCode)
       );
 
-      if (matchedCountry) {
+      // Only update if we found a different country or phone changed
+      if (matchedCountry && matchedCountry.code !== selectedCountry.code) {
         setSelectedCountry(matchedCountry);
 
         // Extract phone number without dial code
@@ -75,7 +78,7 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
         setPhoneNumber(formatted);
       }
     }
-  }, [isOpen, initialPhone, countries]);
+  }, [initialPhone, countries, selectedCountry]);
 
   // Validate phone number
   useEffect(() => {
@@ -135,7 +138,7 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
       setSubmittedPhone(fullPhone);
       onSuccess?.(fullPhone);
     } else {
-      alert(result.message || 'Failed to submit request. Please try again.');
+      toast.error(result.message || 'Failed to submit request. Please try again.');
       setHasError(true);
     }
   };

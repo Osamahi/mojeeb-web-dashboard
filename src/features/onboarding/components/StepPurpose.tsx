@@ -3,7 +3,7 @@
  * Select agent purpose templates (pre-select Customer Support by default)
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { AGENT_PURPOSES } from '../constants/agentPurposes';
 import type { AgentPurpose } from '../types/onboarding.types';
@@ -11,33 +11,29 @@ import { CheckmarkIcon } from '@/shared/components/icons';
 
 interface StepPurposeProps {
   onNext: () => void;
-  onBack: () => void;
 }
 
-export const StepPurpose = ({ onNext, onBack }: StepPurposeProps) => {
+export const StepPurpose = ({ onNext }: StepPurposeProps) => {
   const { data, togglePurpose, setSelectedPurposes } = useOnboardingStore();
   const selectedPurposes = data.selectedPurposes;
+  const hasPreselected = useRef(false);
 
   // Pre-select Customer Support on mount (Phase 3 optimization)
+  // Use ref to ensure this only runs once, preventing unnecessary re-renders
   useEffect(() => {
-    if (selectedPurposes.length === 0) {
+    if (!hasPreselected.current && selectedPurposes.length === 0) {
       const customerSupport = AGENT_PURPOSES.find(
         (p) => p.id === 'customer-support'
       );
       if (customerSupport) {
         setSelectedPurposes([customerSupport]);
+        hasPreselected.current = true;
       }
     }
   }, [selectedPurposes.length, setSelectedPurposes]);
 
   const handlePurposeClick = (purpose: AgentPurpose) => {
     togglePurpose(purpose);
-  };
-
-  const handleSubmit = () => {
-    if (selectedPurposes.length > 0) {
-      onNext();
-    }
   };
 
   const isSelected = (purposeId: string) => {

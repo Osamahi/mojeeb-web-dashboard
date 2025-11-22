@@ -68,8 +68,8 @@ export const handlers = [
 
     if (body.refreshToken === 'mock-refresh-token') {
       return HttpResponse.json({
-        accessToken: 'new-mock-access-token',
-        refreshToken: 'new-mock-refresh-token',
+        access_token: 'new-mock-access-token',
+        refresh_token: 'new-mock-refresh-token',
       });
     }
 

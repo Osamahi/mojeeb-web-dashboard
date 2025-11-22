@@ -3,7 +3,23 @@
  * Detects user's country based on browser timezone and screen size
  */
 
-// Timezone to country code mapping (same as mojeeb-landing)
+/**
+ * Timezone to country code mapping
+ *
+ * NOTE: This mapping covers ~60 common timezones, primarily focused on
+ * Middle East, North Africa, Europe, and major global cities.
+ *
+ * Limitations:
+ * - Only covers ~60 out of 400+ IANA timezones
+ * - Some timezones map to multiple countries (e.g., Europe/Paris could be France, Monaco, or Belgium)
+ * - Unmapped timezones default to 'SA' (Saudi Arabia) as fallback
+ *
+ * For production with broader coverage, consider using a library like:
+ * - 'countries-and-timezones'
+ * - 'tz-lookup'
+ *
+ * This mapping is duplicated from mojeeb-landing for consistency.
+ */
 const TIMEZONE_TO_COUNTRY: Record<string, string> = {
   'Africa/Cairo': 'EG',
   'Asia/Riyadh': 'SA',
@@ -84,7 +100,8 @@ export function getBrowserMetadata() {
   const screenResolution = `${window.screen.width}x${window.screen.height}`;
   const platform = navigator.platform;
   const language = navigator.language;
-  const country = detectCountryFromTimezone();
+  // Use timezone lookup directly to avoid duplicate Intl.DateTimeFormat call
+  const country = TIMEZONE_TO_COUNTRY[timezone] || 'SA';
 
   // Detect device type from screen width
   let deviceType: 'mobile' | 'tablet' | 'desktop';

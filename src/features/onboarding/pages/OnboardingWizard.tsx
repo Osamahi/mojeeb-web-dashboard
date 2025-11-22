@@ -23,7 +23,7 @@ import { PhoneIcon, ArrowRightIcon, CheckCircleIcon } from '@/shared/components/
 export const OnboardingWizard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { currentStep, nextStep, previousStep, setStep, data, completeOnboarding } = useOnboardingStore();
+  const { currentStep, nextStep, previousStep, data, completeOnboarding } = useOnboardingStore();
   const [isSuccessReady, setIsSuccessReady] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
@@ -116,7 +116,6 @@ export const OnboardingWizard = () => {
         return (
           <StepPurpose
             onNext={handleStepComplete}
-            onBack={previousStep}
           />
         );
 
@@ -124,15 +123,12 @@ export const OnboardingWizard = () => {
         return (
           <StepKnowledge
             onNext={handleStepComplete}
-            onSkip={handleSkipKnowledge}
-            onBack={previousStep}
           />
         );
 
       case OnboardingStep.Success:
         return (
           <StepSuccess
-            onComplete={handleOnboardingComplete}
             onReadyChange={setIsSuccessReady}
             agentName={data.agentName}
             selectedPurposes={data.selectedPurposes}
