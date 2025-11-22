@@ -54,22 +54,27 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
         ? 'success'
         : hasKnowledge ? 'error' : 'skipped';
 
-      console.log('📊 STATE UPDATE - Setting status', {
-        agent: 'success',
-        knowledge: kbStatus,
-        agentId: data.agent.id,
-      });
-
-      // Update status and agent ID
-      setStatus({ agent: 'success', knowledge: kbStatus });
+      // Step 1: Show agent success first
+      console.log('📊 STATE UPDATE - Agent success');
+      setStatus({ agent: 'success', knowledge: 'pending' });
       setCreatedAgentId(data.agent.id);
 
       // Sequence phase transitions properly with timing
       if (hasKnowledge) {
-        console.log('📚 HAS KNOWLEDGE - Setting adding-knowledge phase');
-        setPhase('adding-knowledge');
+        // Step 2: Show KB loading phase
+        setTimeout(() => {
+          console.log('📚 HAS KNOWLEDGE - Setting adding-knowledge phase with loading');
+          setPhase('adding-knowledge');
+          setStatus({ agent: 'success', knowledge: 'loading' });
+        }, 600); // Wait 600ms to show agent success
 
-        // Wait 800ms to show KB phase, then transition to ready
+        // Step 3: Show KB success
+        setTimeout(() => {
+          console.log('✅ KB SUCCESS - Setting knowledge status to success');
+          setStatus({ agent: 'success', knowledge: kbStatus });
+        }, 1200); // Wait another 600ms to show KB loading
+
+        // Step 4: Transition to ready
         setTimeout(() => {
           console.log('🎉 TRANSITIONING TO READY PHASE (with KB)');
           setPhase('ready');
@@ -90,27 +95,31 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
             console.log('🔢 Showing Next Step 6');
             setShowNextStep6(true);
           }, 1500);
-        }, 800);
+        }, 1800); // Wait another 600ms to show KB success
       } else {
-        console.log('⚡ NO KNOWLEDGE - Going straight to ready phase');
-        setPhase('ready');
-        onReadyChange(true);
+        // No knowledge - wait a bit then go to ready
+        setTimeout(() => {
+          console.log('⚡ NO KNOWLEDGE - Going to ready phase');
+          setStatus({ agent: 'success', knowledge: 'skipped' });
+          setPhase('ready');
+          onReadyChange(true);
 
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 1500);
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 1500);
 
-        setTimeout(() => {
-          console.log('🔢 Showing Next Step 4');
-          setShowNextStep4(true);
-        }, 500);
-        setTimeout(() => {
-          console.log('🔢 Showing Next Step 5');
-          setShowNextStep5(true);
-        }, 1000);
-        setTimeout(() => {
-          console.log('🔢 Showing Next Step 6');
-          setShowNextStep6(true);
-        }, 1500);
+          setTimeout(() => {
+            console.log('🔢 Showing Next Step 4');
+            setShowNextStep4(true);
+          }, 500);
+          setTimeout(() => {
+            console.log('🔢 Showing Next Step 5');
+            setShowNextStep5(true);
+          }, 1000);
+          setTimeout(() => {
+            console.log('🔢 Showing Next Step 6');
+            setShowNextStep6(true);
+          }, 1500);
+        }, 600); // Wait 600ms to show agent success
       }
     },
     onError: (error) => {
