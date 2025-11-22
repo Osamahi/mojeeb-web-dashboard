@@ -11,6 +11,11 @@ import EmojiPicker from 'emoji-picker-react';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
+// Constants
+const MAX_TEXTAREA_HEIGHT_PX = 120;
+const EMOJI_PICKER_WIDTH = 350;
+const EMOJI_PICKER_HEIGHT = 400;
+
 interface MessageComposerProps {
   onSendMessage: (message: string) => Promise<void>;
   isSending: boolean;
@@ -36,7 +41,7 @@ export default function MessageComposer({
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_TEXTAREA_HEIGHT_PX)}px`;
     }
   }, [message]);
 
@@ -48,15 +53,23 @@ export default function MessageComposer({
   // Close emoji picker on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+      const target = event.target;
+      if (
+        target instanceof Node &&
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(target)
+      ) {
         setShowEmojiPicker(false);
       }
     };
 
     if (showEmojiPicker) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [showEmojiPicker]);
 
   const handleSend = async () => {
@@ -72,7 +85,11 @@ export default function MessageComposer({
         textareaRef.current.style.height = 'auto';
       }
     } catch (error) {
-      logger.error('Failed to send message', error);
+      logger.error('Failed to send message', error, {
+        messageLength: trimmedMessage.length,
+        component: 'MessageComposer',
+        isAIMode,
+      });
     }
   };
 
@@ -125,7 +142,7 @@ export default function MessageComposer({
         )}
         style={{
           minHeight: '32px',
-          maxHeight: '120px',
+          maxHeight: `${MAX_TEXTAREA_HEIGHT_PX}px`,
         }}
         aria-label="Message input"
         aria-multiline="true"
@@ -180,8 +197,8 @@ export default function MessageComposer({
               >
                 <EmojiPicker
                   onEmojiClick={handleEmojiClick}
-                  width={350}
-                  height={400}
+                  width={EMOJI_PICKER_WIDTH}
+                  height={EMOJI_PICKER_HEIGHT}
                   searchPlaceHolder="Search emoji..."
                 />
               </div>

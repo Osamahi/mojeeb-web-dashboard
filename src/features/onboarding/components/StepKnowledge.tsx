@@ -21,29 +21,21 @@ export const StepKnowledge = ({ onNext }: StepKnowledgeProps) => {
     setKnowledgeContent(newContent);
   };
 
-  const handleSubmit = () => {
-    setKnowledgeContent(content);
-    onNext();
-  };
-
   return (
     <div className="w-full">
       <StepHeading>Add Knowledge</StepHeading>
       <StepSubtitle>Provide information your agent needs to answer customers</StepSubtitle>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit}>
-        <div className="mb-20">
-          <textarea
-            id="knowledge"
-            value={content}
-            onChange={handleContentChange}
-            rows={8}
-            placeholder="FAQs, product info, opening hours, price...etc"
-            className="w-full px-4 py-3 text-sm font-mono border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors resize-none"
-          />
-        </div>
-      </form>
+      <div className="mb-20">
+        <textarea
+          id="knowledge"
+          value={content}
+          onChange={handleContentChange}
+          rows={8}
+          placeholder="FAQs, product info, opening hours, price...etc"
+          className="w-full px-4 py-3 text-sm font-mono border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors resize-none"
+        />
+      </div>
     </div>
   );
 };

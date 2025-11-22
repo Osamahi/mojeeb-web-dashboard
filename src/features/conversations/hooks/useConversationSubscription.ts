@@ -17,6 +17,25 @@ type InfiniteData<T> = {
 };
 
 /**
+ * Helper function to move a conversation to the top of the first page
+ * Used when a conversation receives a new message
+ */
+const moveConversationToTop = (
+  pages: Conversation[][],
+  conversation: Conversation,
+  fromPageIndex: number
+): Conversation[][] => {
+  const updatedPages = [...pages];
+  // Remove from current position
+  updatedPages[fromPageIndex] = updatedPages[fromPageIndex].filter(
+    (c) => c.id !== conversation.id
+  );
+  // Add to top of first page
+  updatedPages[0] = [conversation, ...updatedPages[0]];
+  return updatedPages;
+};
+
+/**
  * React hook for managing real-time conversation subscriptions.
  *
  * This hook automatically subscribes to conversation updates for the currently selected agent
@@ -139,17 +158,12 @@ export function useConversationSubscription() {
             });
 
             // If new message and not already at top of first page, move it there
-            if (hasNewMessage && (foundPageIndex !== 0 || foundConvIndex !== 0)) {
-              // Remove from current position
-              updatedPages[foundPageIndex] = updatedPages[foundPageIndex].filter(
-                (c) => c.id !== conversation.id
-              );
-              // Add to top of first page
-              updatedPages[0] = [updatedConv, ...updatedPages[0]];
-            }
+            const finalPages = hasNewMessage && (foundPageIndex !== 0 || foundConvIndex !== 0)
+              ? moveConversationToTop(updatedPages, updatedConv, foundPageIndex)
+              : updatedPages;
 
             return {
-              pages: updatedPages,
+              pages: finalPages,
               pageParams: old.pageParams,
             };
           });

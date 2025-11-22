@@ -20,6 +20,7 @@ import { ChatMessagesSkeleton } from '../shared/LoadingSkeleton';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface ChatPanelProps {
   conversation: Conversation;
@@ -70,7 +71,11 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         selectConversation(context.previousConversation);
       }
       toast.error('Failed to switch mode');
-      console.error('Toggle mode error:', error);
+      logger.error('Failed to toggle AI/Human mode', error, {
+        conversationId: conversation.id,
+        currentMode: conversation.is_ai,
+        attemptedMode: !conversation.is_ai,
+      });
     },
   });
 
@@ -114,13 +119,21 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
       previousScrollHeight.current = element.scrollHeight;
 
       // Load more messages
-      fetchMessages(conversation.id, false).then(() => {
-        // Restore scroll position after loading
-        if (messagesContainerRef.current) {
-          const newScrollHeight = messagesContainerRef.current.scrollHeight;
-          messagesContainerRef.current.scrollTop = newScrollHeight - previousScrollHeight.current;
-        }
-      });
+      fetchMessages(conversation.id, false)
+        .then(() => {
+          // Restore scroll position after loading
+          if (messagesContainerRef.current) {
+            const newScrollHeight = messagesContainerRef.current.scrollHeight;
+            messagesContainerRef.current.scrollTop = newScrollHeight - previousScrollHeight.current;
+          }
+        })
+        .catch((error) => {
+          logger.error('Failed to load older messages', error, {
+            conversationId: conversation.id,
+            component: 'ChatPanel',
+          });
+          toast.error('Failed to load older messages');
+        });
     }
   };
 

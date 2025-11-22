@@ -19,6 +19,7 @@ import { DemoCallModal } from '../components/DemoCallModal';
 import { queryKeys } from '@/lib/queryKeys';
 import { VALIDATION_RULES } from '../constants/validationRules';
 import { PhoneIcon, ArrowRightIcon, CheckCircleIcon } from '@/shared/components/icons';
+import { PrimaryButton } from '../components/shared/PrimaryButton';
 
 export const OnboardingWizard = () => {
   const navigate = useNavigate();
@@ -146,10 +147,6 @@ export const OnboardingWizard = () => {
     }
   })();
 
-  const handleFABClick = () => {
-    handleStepComplete();
-  };
-
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">
       {/* Header - Minimal mobile-optimized */}
@@ -224,42 +221,22 @@ export const OnboardingWizard = () => {
 
           {/* Right: Button - Arrow for steps, "Try your agent" for Success */}
           {currentStep === OnboardingStep.Success ? (
-            <button
+            <PrimaryButton
               onClick={handleOnboardingComplete}
               disabled={!isSuccessReady}
-              className={`
-                px-6 py-3
-                rounded-full
-                font-medium
-                transition-all duration-200
-                ${
-                  !isSuccessReady
-                    ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
-                    : 'bg-black text-white hover:bg-neutral-800'
-                }
-              `}
+              variant="rounded"
             >
               Try your agent
-            </button>
+            </PrimaryButton>
           ) : (
-            <button
-              onClick={handleFABClick}
+            <PrimaryButton
+              onClick={handleStepComplete}
               disabled={!canProceed}
+              variant="fab"
               aria-label="Continue to next step"
-              className={`
-                w-12 h-12 sm:w-14 sm:h-14
-                rounded-full
-                flex items-center justify-center
-                transition-all duration-200
-                ${
-                  !canProceed
-                    ? 'bg-neutral-300 cursor-not-allowed'
-                    : 'bg-black text-white hover:bg-neutral-800'
-                }
-              `}
             >
               <ArrowRightIcon />
-            </button>
+            </PrimaryButton>
           )}
         </div>
       </div>

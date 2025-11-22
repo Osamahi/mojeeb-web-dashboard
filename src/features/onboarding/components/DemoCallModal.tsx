@@ -13,6 +13,7 @@ import { detectCountryFromTimezone } from '../utils/countryDetector';
 import { logger } from '@/lib/logger';
 import { CheckCircleIcon } from '@/shared/components/icons';
 import type { BaseModalProps } from '../types/onboarding.types';
+import { PrimaryButton } from './shared/PrimaryButton';
 import {
   formatPhoneNumber,
   formatPhoneForDisplay,
@@ -245,17 +246,13 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess }: DemoCallModalProps
           </div>
 
           {/* Submit Button */}
-          <button
+          <PrimaryButton
             type="submit"
             disabled={!isValid || isSubmitting}
-            className={`w-full px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
-              !isValid || isSubmitting
-                ? 'bg-neutral-300 text-neutral-500 cursor-not-allowed'
-                : 'bg-black text-white hover:bg-neutral-800'
-            }`}
+            variant="pill"
           >
             {isSubmitting ? 'Submitting...' : 'Request Call'}
-          </button>
+          </PrimaryButton>
         </form>
       )}
     </Modal>
