@@ -5,7 +5,7 @@
  */
 
 import { memo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Edit2, Trash2, Crown, Sliders } from 'lucide-react';
 import { format } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -110,8 +110,10 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
         mode="edit"
         agent={agent}
       />
-      <Link to={`/agents/${agent.id}`} className="block">
-        <div className="bg-white rounded-lg border border-neutral-200 p-4 transition-colors duration-200 hover:border-neutral-300">
+      <div
+        onClick={() => setIsEditModalOpen(true)}
+        className="bg-white rounded-lg border border-neutral-200 p-4 transition-colors duration-200 hover:border-neutral-300 cursor-pointer"
+      >
           {/* Header */}
           <div className="flex items-center gap-3">
             <Avatar
@@ -168,8 +170,7 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
               )}
             </div>
           </div>
-        </div>
-      </Link>
+      </div>
     </>
   );
 });
