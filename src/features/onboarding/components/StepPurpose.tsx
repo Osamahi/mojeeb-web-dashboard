@@ -8,6 +8,7 @@ import { useOnboardingStore } from '../stores/onboardingStore';
 import { AGENT_PURPOSES } from '../constants/agentPurposes';
 import type { AgentPurpose } from '../types/onboarding.types';
 import { CheckmarkIcon } from '@/shared/components/icons';
+import { StepHeading, StepSubtitle } from './shared/StepHeading';
 
 interface StepPurposeProps {
   onNext: () => void;
@@ -42,13 +43,8 @@ export const StepPurpose = ({ onNext }: StepPurposeProps) => {
 
   return (
     <div className="w-full">
-      {/* Mobile-first heading - left-aligned */}
-      <h1 className="text-3xl sm:text-4xl font-bold text-neutral-950 mb-2 tracking-tight">
-        What will your agent do?
-      </h1>
-      <p className="text-sm sm:text-base text-neutral-600 mb-6">
-        Choose the purpose of your agent
-      </p>
+      <StepHeading>What will your agent do?</StepHeading>
+      <StepSubtitle>Choose the purpose of your agent</StepSubtitle>
 
       {/* Vertical card list with checkboxes */}
       <div className="space-y-3 mb-20">

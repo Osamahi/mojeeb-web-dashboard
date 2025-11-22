@@ -31,8 +31,15 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user, isAuthenticated: true }),
 
       setTokens: (accessToken, refreshToken) => {
+        console.log(`\n📦 [AuthStore] setTokens called at ${new Date().toISOString()}`);
+        console.log(`   Old Access Token: ${get().accessToken ? get().accessToken?.substring(0, 10) + '...' : 'null'}`);
+        console.log(`   New Access Token: ${accessToken ? accessToken.substring(0, 10) + '...' : 'null'} (${accessToken?.length || 0} chars)`);
+        console.log(`   New Refresh Token: ${refreshToken ? refreshToken.substring(0, 10) + '...' : 'null'} (${refreshToken?.length || 0} chars)`);
+
         setApiTokens(accessToken, refreshToken);
         set({ accessToken, refreshToken });
+
+        console.log(`   ✅ AuthStore state updated`);
       },
 
       setAuth: (user, accessToken, refreshToken) => {
@@ -50,6 +57,10 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        console.log(`\n🚪 [AuthStore] logout called at ${new Date().toISOString()}`);
+        console.log(`   Current user: ${get().user?.email || 'null'}`);
+        console.log(`   Current isAuthenticated: ${get().isAuthenticated}`);
+
         clearApiTokens();
 
         // Clear Sentry user context on logout
@@ -61,6 +72,8 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           isAuthenticated: false,
         });
+
+        console.log(`   ✅ User logged out, all state cleared`);
       },
 
       setLoading: (isLoading) => set({ isLoading }),
@@ -73,21 +86,38 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
+        console.log(`\n💧 [AuthStore] Rehydrating from localStorage at ${new Date().toISOString()}`);
+
         // Critical fix for flickering loop: Validate accessToken exists before setting isAuthenticated
         if (state?.refreshToken && state?.user) {
+          console.log(`   ✅ Found persisted refreshToken and user`);
+          console.log(`      User: ${state.user.email}`);
+          console.log(`      Refresh Token: ${state.refreshToken.substring(0, 10)}...`);
+
           const accessToken = localStorage.getItem('accessToken');
+          console.log(`   🔍 Checking localStorage for accessToken...`);
 
           // Only set isAuthenticated if we have BOTH tokens
           if (accessToken && accessToken.trim() !== '') {
+            console.log(`   ✅ Access token found: ${accessToken.substring(0, 10)}... (${accessToken.length} chars)`);
+            console.log(`   ✅ Setting isAuthenticated = true`);
             state.isAuthenticated = true;
           } else {
+            console.log(`   ⚠️ No access token found - has refresh token but needs to refresh`);
+            console.log(`   ⚠️ Setting isAuthenticated = false (will trigger refresh flow)`);
             // Has refresh token but no access token - trigger auth flow
             state.isAuthenticated = false;
           }
         } else {
+          console.log(`   ❌ No refresh token or user found in persisted state`);
+          console.log(`      Refresh Token: ${state?.refreshToken ? 'exists' : 'missing'}`);
+          console.log(`      User: ${state?.user ? 'exists' : 'missing'}`);
+          console.log(`   ❌ Setting isAuthenticated = false`);
           // No refresh token or user - definitely not authenticated
           state.isAuthenticated = false;
         }
+
+        console.log(`   🏁 Rehydration complete: isAuthenticated = ${state?.isAuthenticated}`);
       },
     }
   )

@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { useOnboardingStore } from '../stores/onboardingStore';
+import { StepHeading, StepSubtitle } from './shared/StepHeading';
 
 interface StepKnowledgeProps {
   onNext: () => void;
@@ -27,13 +28,8 @@ export const StepKnowledge = ({ onNext }: StepKnowledgeProps) => {
 
   return (
     <div className="w-full">
-      {/* Mobile-first heading - left-aligned */}
-      <h1 className="text-3xl sm:text-4xl font-bold text-neutral-950 mb-2 tracking-tight">
-        Add Knowledge
-      </h1>
-      <p className="text-sm sm:text-base text-neutral-600 mb-6">
-        Provide information your agent needs to answer customers
-      </p>
+      <StepHeading>Add Knowledge</StepHeading>
+      <StepSubtitle>Provide information your agent needs to answer customers</StepSubtitle>
 
       {/* Form */}
       <form onSubmit={handleSubmit}>

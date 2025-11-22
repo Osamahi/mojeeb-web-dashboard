@@ -31,39 +31,56 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
 
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log(`\n🔄 [AuthInitializer] Initializing at ${new Date().toISOString()}`);
+      console.log(`   isAuthenticated: ${isAuthenticated}`);
+
       try {
         // If not authenticated, no need to validate tokens
         if (!isAuthenticated) {
+          console.log(`   ℹ️ Not authenticated, skipping token validation`);
           setIsInitializing(false);
           return;
         }
 
+        console.log(`   ✅ User is authenticated, validating tokens...`);
+
         const accessToken = getAccessToken();
         const refreshToken = getRefreshToken();
 
+        console.log(`   📊 Token status:`);
+        console.log(`      Access Token: ${accessToken ? 'EXISTS (' + accessToken.length + ' chars)' : 'MISSING'}`);
+        console.log(`      Refresh Token: ${refreshToken ? 'EXISTS (' + refreshToken.length + ' chars)' : 'MISSING'}`);
+
         // Case 1: Has both tokens - all good
         if (accessToken && refreshToken) {
+          console.log(`   ✅ CASE 1: Both tokens present - initialization complete`);
           setIsInitializing(false);
           return;
         }
 
         // Case 2: Has refresh token but no access token - proactively refresh
         if (!accessToken && refreshToken) {
+          console.log(`   ⚠️ CASE 2: Access token missing, refresh token present`);
+          console.log(`   🔄 Attempting proactive token refresh...`);
           logger.info('AuthInitializer: Access token missing, attempting refresh...');
 
           try {
             // Use centralized authService.refreshToken to avoid code duplication
             const tokens = await authService.refreshToken(refreshToken);
 
+            console.log(`   💾 Storing refreshed tokens...`);
             // Store new tokens
             setTokens(tokens.accessToken, tokens.refreshToken);
 
+            console.log(`   ✅ Proactive refresh successful!`);
             logger.info('AuthInitializer: Token refresh successful');
             setIsInitializing(false);
             return;
           } catch (error) {
+            console.error(`   ❌ Proactive refresh FAILED:`, error);
             logger.error('AuthInitializer: Token refresh failed', error);
             // Token refresh failed - logout and redirect
+            console.log(`   🚪 Logging out and redirecting to login...`);
             logout();
             navigate('/login', { replace: true });
             return;
@@ -72,17 +89,23 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
 
         // Case 3: No tokens but authenticated - inconsistent state, logout
         if (!accessToken && !refreshToken && isAuthenticated) {
+          console.error(`   ❌ CASE 3: Inconsistent state - authenticated but no tokens!`);
+          console.log(`   🚪 Logging out and redirecting to login...`);
           logger.warn('AuthInitializer: Inconsistent auth state - no tokens but isAuthenticated=true');
           logout();
           navigate('/login', { replace: true });
           return;
         }
 
+        console.log(`   ℹ️ No special cases matched, ending initialization`);
+
       } catch (error) {
+        console.error(`   ❌ [AuthInitializer] Unexpected error during initialization:`, error);
         logger.error('AuthInitializer: Unexpected error during initialization', error);
         logout();
         navigate('/login', { replace: true });
       } finally {
+        console.log(`   🏁 [AuthInitializer] Initialization complete, isInitializing = false`);
         setIsInitializing(false);
       }
     };

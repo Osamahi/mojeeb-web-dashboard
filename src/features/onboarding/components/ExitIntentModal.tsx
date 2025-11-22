@@ -6,10 +6,9 @@
 import { Modal } from '@/components/ui/Modal';
 import { ModalActions } from '@/components/ui/ModalActions';
 import { WarningIcon } from '@/shared/components/icons';
+import type { BaseModalProps } from '../types/onboarding.types';
 
-interface ExitIntentModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface ExitIntentModalProps extends BaseModalProps {
   onContinue: () => void;
   onExit: () => void;
 }

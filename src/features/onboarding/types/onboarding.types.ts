@@ -31,3 +31,12 @@ export interface OnboardingProgress {
   completedSteps: OnboardingStep[];
   totalSteps: number;
 }
+
+/**
+ * Base props shared by all modal components
+ * Ensures consistent modal interface across the onboarding feature
+ */
+export interface BaseModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}

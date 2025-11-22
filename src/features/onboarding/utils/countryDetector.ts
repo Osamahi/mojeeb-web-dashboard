@@ -80,13 +80,23 @@ const TIMEZONE_TO_COUNTRY: Record<string, string> = {
 };
 
 /**
+ * Lookup country code from timezone string
+ * Defaults to 'SA' (Saudi Arabia) if timezone is not found in mapping
+ * @param timezone - IANA timezone string (e.g., "America/New_York")
+ * @returns Two-letter country code (e.g., "US", "SA")
+ */
+function getCountryFromTimezone(timezone: string): string {
+  return TIMEZONE_TO_COUNTRY[timezone] || 'SA';
+}
+
+/**
  * Detect user's country from browser timezone
  * Defaults to 'SA' (Saudi Arabia) if not found
  */
 export function detectCountryFromTimezone(): string {
   try {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return TIMEZONE_TO_COUNTRY[timezone] || 'SA';
+    return getCountryFromTimezone(timezone);
   } catch {
     return 'SA';
   }
@@ -100,8 +110,8 @@ export function getBrowserMetadata() {
   const screenResolution = `${window.screen.width}x${window.screen.height}`;
   const platform = navigator.platform;
   const language = navigator.language;
-  // Use timezone lookup directly to avoid duplicate Intl.DateTimeFormat call
-  const country = TIMEZONE_TO_COUNTRY[timezone] || 'SA';
+  // Use helper to look up country code from timezone
+  const country = getCountryFromTimezone(timezone);
 
   // Detect device type from screen width
   let deviceType: 'mobile' | 'tablet' | 'desktop';

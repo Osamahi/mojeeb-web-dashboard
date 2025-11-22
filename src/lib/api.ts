@@ -107,48 +107,69 @@ api.interceptors.response.use(
 
     // If 401 and not already retried, attempt token refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log(`\n🚨 [API Interceptor] 401 Unauthorized detected at ${new Date().toISOString()}`);
+      console.log(`   📍 Request: ${originalRequest.method?.toUpperCase()} ${originalRequest.url}`);
+
       if (isRefreshing) {
+        console.log(`   ⏳ Refresh already in progress, queuing request (queue size: ${failedQueue.length})`);
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
+            console.log(`   ✅ Queue resolved with new token, retrying request`);
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${token}`;
             }
             return api(originalRequest);
           })
-          .catch((err) => Promise.reject(err));
+          .catch((err) => {
+            console.error(`   ❌ Queue rejected, request failed`, err);
+            return Promise.reject(err);
+          });
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
+      console.log(`   🔄 Starting token refresh flow...`);
 
       const storedRefreshToken = getRefreshToken();
 
       if (!storedRefreshToken) {
+        console.error(`   ❌ No refresh token found! Redirecting to login...`);
         redirectToLogin();
         return Promise.reject(error);
       }
+
+      console.log(`   ✅ Refresh token found, calling authService.refreshToken()`);
 
       try {
         // Use centralized authService.refreshToken to avoid code duplication
         const { authService } = await import('@/features/auth/services/authService');
         const tokens = await authService.refreshToken(storedRefreshToken);
 
+        console.log(`   💾 Saving new tokens via setTokens()...`);
         setTokens(tokens.accessToken, tokens.refreshToken);
+        console.log(`   ✅ Tokens saved successfully`);
+
+        console.log(`   📨 Processing queued requests (${failedQueue.length} in queue)...`);
         processQueue(null, tokens.accessToken);
+        console.log(`   ✅ Queue processed`);
 
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
         }
 
+        console.log(`   🔁 Retrying original request with new token...`);
         return api(originalRequest);
       } catch (refreshError) {
+        console.error(`   ❌ [API Interceptor] Token refresh FAILED:`, refreshError);
         processQueue(refreshError as AxiosError, null);
+        console.log(`   🚪 Redirecting to login...`);
         redirectToLogin();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
+        console.log(`   🏁 Refresh flow complete, isRefreshing = false`);
       }
     }
 

@@ -5,10 +5,9 @@
 
 import { Modal } from '@/components/ui/Modal';
 import { ModalActions } from '@/components/ui/ModalActions';
+import type { BaseModalProps } from '../types/onboarding.types';
 
-interface SimpleConfirmModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface SimpleConfirmModalProps extends BaseModalProps {
   title: string;
   confirmText: string;
   onConfirm: () => void;

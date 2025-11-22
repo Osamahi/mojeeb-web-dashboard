@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { VALIDATION_RULES } from '../constants/validationRules';
 import { CheckCircleIcon } from '@/shared/components/icons';
+import { StepHeading, StepSubtitle } from './shared/StepHeading';
 
 interface StepNameProps {
   onNext: () => void;
@@ -60,13 +61,8 @@ export const StepName = ({ onNext }: StepNameProps) => {
 
   return (
     <div className="w-full">
-      {/* Mobile-first heading - left-aligned */}
-      <h1 className="text-3xl sm:text-4xl font-bold text-neutral-950 mb-2 tracking-tight">
-        Name Your Agent
-      </h1>
-      <p className="text-sm sm:text-base text-neutral-600 mb-8">
-        What's your business or brand name?
-      </p>
+      <StepHeading>Name Your Agent</StepHeading>
+      <StepSubtitle>What's your business or brand name?</StepSubtitle>
 
       {/* Form - FAB handles submission */}
       <form onSubmit={handleSubmit}>

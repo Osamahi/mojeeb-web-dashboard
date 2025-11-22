@@ -215,15 +215,39 @@ class AuthService {
    * and causing recursion when called from the response interceptor
    */
   async refreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
-    const { data } = await axios.post<ApiRefreshResponse>(`${API_URL}/api/auth/refresh`, {
-      refreshToken: refreshToken,
-    });
+    const timestamp = new Date().toISOString();
+    console.log(`\n🔄 [AuthService] refreshToken() called at ${timestamp}`);
+    console.log(`   📤 Sending refresh token: ${refreshToken.substring(0, 10)}...${refreshToken.substring(refreshToken.length - 10)}`);
 
-    // Backend returns snake_case, convert to camelCase
-    return {
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
-    };
+    try {
+      const { data } = await axios.post<ApiRefreshResponse>(`${API_URL}/api/auth/refresh`, {
+        refreshToken: refreshToken,
+      });
+
+      console.log(`   📥 Backend response received:`, data);
+      console.log(`   🔍 Raw response keys:`, Object.keys(data));
+      console.log(`   🔍 access_token (snake_case): ${data.access_token ? 'EXISTS' : 'MISSING'} (${data.access_token?.length || 0} chars)`);
+      console.log(`   🔍 refresh_token (snake_case): ${data.refresh_token ? 'EXISTS' : 'MISSING'} (${data.refresh_token?.length || 0} chars)`);
+
+      // Backend returns snake_case, convert to camelCase
+      const result = {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+      };
+
+      console.log(`   ✅ Transformation to camelCase complete:`);
+      console.log(`      accessToken: ${result.accessToken ? result.accessToken.substring(0, 10) + '...' : 'UNDEFINED'} (${result.accessToken?.length || 0} chars)`);
+      console.log(`      refreshToken: ${result.refreshToken ? result.refreshToken.substring(0, 10) + '...' : 'UNDEFINED'} (${result.refreshToken?.length || 0} chars)`);
+
+      return result;
+    } catch (error) {
+      console.error(`   ❌ [AuthService] refreshToken() FAILED:`, error);
+      if (axios.isAxiosError(error)) {
+        console.error(`      Status: ${error.response?.status}`);
+        console.error(`      Response data:`, error.response?.data);
+      }
+      throw error;
+    }
   }
 }
 

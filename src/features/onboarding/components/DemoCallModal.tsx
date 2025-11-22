@@ -12,6 +12,7 @@ import { submitDemoCallRequest } from '../services/demoCallService';
 import { detectCountryFromTimezone } from '../utils/countryDetector';
 import { logger } from '@/lib/logger';
 import { CheckCircleIcon } from '@/shared/components/icons';
+import type { BaseModalProps } from '../types/onboarding.types';
 import {
   formatPhoneNumber,
   formatPhoneForDisplay,
@@ -21,9 +22,7 @@ import {
   type Country,
 } from '../utils/phoneFormatter';
 
-interface DemoCallModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface DemoCallModalProps extends BaseModalProps {
   onSuccess?: (phone: string) => void;
   initialPhone?: string;
 }

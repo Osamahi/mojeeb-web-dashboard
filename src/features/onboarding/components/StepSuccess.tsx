@@ -10,6 +10,10 @@ import { ANIMATION_TIMINGS } from '../constants/timings';
 import Confetti from 'react-confetti';
 import type { AgentPurpose } from '../types/onboarding.types';
 import { CheckCircleIcon, ErrorCircleIcon } from '@/shared/components/icons';
+import { StepHeading, StepSubtitle } from './shared/StepHeading';
+import { StepNumberBadge } from './shared/StepNumberBadge';
+import { NextStepItem } from './shared/NextStepItem';
+import { Card } from './shared/Card';
 
 interface StepSuccessProps {
   onReadyChange: (isReady: boolean) => void;
@@ -62,7 +66,7 @@ const getErrorMessage = (error: unknown): string => {
 export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowledgeContent }: StepSuccessProps) => {
   const { setCreatedAgentId } = useOnboardingStore();
   const hasTriggeredCreation = useRef(false);
-  const isMountedRef = useRef(true); // Track component lifecycle
+  const isMountedRef = useRef(false); // Track component lifecycle - starts false, set to true after mount
   const timeoutIdsRef = useRef<NodeJS.Timeout[]>([]); // Track all timeouts for cleanup
 
   const [windowSize, setWindowSize] = useState({
@@ -138,6 +142,11 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
       setPhase('error');
     },
   });
+
+  // Set mounted flag to true after mount
+  useEffect(() => {
+    isMountedRef.current = true;
+  }, []);
 
   // Cleanup on unmount - clear all timeouts and mark as unmounted
   useEffect(() => {
@@ -215,11 +224,7 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
       case 'error':
         return <ErrorCircleIcon />;
       default: // pending - show step number
-        return (
-          <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">
-            {stepNumber}
-          </span>
-        );
+        return <StepNumberBadge number={stepNumber!} />;
     }
   };
 
@@ -238,21 +243,20 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
 
       {/* Content - same structure as other steps */}
       <div className="w-full">
-        {/* Title - matching other steps */}
-        <h1 className="text-3xl sm:text-4xl font-bold text-neutral-950 mb-2 tracking-tight">
+        <StepHeading>
           {phase === 'ready' ? "Congratulations!" : phase === 'error' ? 'Something went wrong' : 'Setting up your agent...'}
-        </h1>
-        <p className="text-sm sm:text-base text-neutral-600 mb-8">
+        </StepHeading>
+        <StepSubtitle>
           {phase === 'ready'
             ? 'Your agent is ready to help customers'
             : phase === 'error'
             ? 'We encountered an error while creating your agent'
             : `Creating ${agentName}...`
           }
-        </p>
+        </StepSubtitle>
 
         {/* Progress Steps & Next Steps - Combined */}
-        <div className="bg-white border border-neutral-200 rounded-xl p-5 mb-20">
+        <Card className="mb-20">
           <div className="space-y-4">
             {/* Step 1: Agent Creation */}
             <div className="flex items-center gap-3">
@@ -303,25 +307,28 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
             <div className="mt-6">
               <h3 className="text-sm font-semibold text-neutral-900 mb-4">Next Steps:</h3>
               <ul className="space-y-3">
-                {/* Step 4 */}
-                <li className={`flex items-center gap-3 text-sm text-neutral-600 transition-all duration-[600ms] ${showNextStep4 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-3 scale-95'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}>
-                  <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">4</span>
-                  💬 Try your agent now
-                </li>
-                {/* Step 5 */}
-                <li className={`flex items-center gap-3 text-sm text-neutral-600 transition-all duration-[600ms] ${showNextStep5 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-3 scale-95'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}>
-                  <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">5</span>
-                  🎓 Add more knowledge anytime
-                </li>
-                {/* Step 6 */}
-                <li className={`flex items-center gap-3 text-sm text-neutral-600 transition-all duration-[600ms] ${showNextStep6 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-3 scale-95'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}>
-                  <span className="w-5 h-5 rounded-full bg-neutral-100 flex items-center justify-center text-xs text-neutral-500">6</span>
-                  🔗 Connect it to Facebook, Instagram, your website & more
-                </li>
+                <NextStepItem
+                  stepNumber={4}
+                  icon="💬"
+                  text="Try your agent now"
+                  isVisible={showNextStep4}
+                />
+                <NextStepItem
+                  stepNumber={5}
+                  icon="🎓"
+                  text="Add more knowledge anytime"
+                  isVisible={showNextStep5}
+                />
+                <NextStepItem
+                  stepNumber={6}
+                  icon="🔗"
+                  text="Connect it to Facebook, Instagram, your website & more"
+                  isVisible={showNextStep6}
+                />
               </ul>
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Error Message */}
         {mutation.isError && (
