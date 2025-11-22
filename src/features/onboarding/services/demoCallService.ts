@@ -11,7 +11,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mojeebapi.azureweb
 
 export interface DemoCallRequest {
   phone: string; // Full international format: "+966501234567"
-  companyName?: string; // Optional
   source: 'organic' | 'corporate';
   timezone: string;
   screenResolution: string;
@@ -39,18 +38,15 @@ function sanitizeInput(input: string | undefined): string | undefined {
  * Submit demo call request to API with 10-second timeout
  */
 export async function submitDemoCallRequest(
-  phone: string,
-  companyName?: string
+  phone: string
 ): Promise<DemoCallResponse> {
   const metadata = getBrowserMetadata();
 
   // Sanitize inputs to prevent injection attacks
   const sanitizedPhone = sanitizeInput(phone) || phone;
-  const sanitizedCompanyName = sanitizeInput(companyName);
 
   const payload: DemoCallRequest = {
     phone: sanitizedPhone,
-    companyName: sanitizedCompanyName,
     source: 'organic',
     ...metadata,
   };

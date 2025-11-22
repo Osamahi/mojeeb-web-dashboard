@@ -4,7 +4,6 @@
  * Eliminates 50+ lines of duplicate animation pattern code
  */
 
-import React from 'react';
 import { StepNumberBadge } from './StepNumberBadge';
 
 interface NextStepItemProps {

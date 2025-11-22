@@ -26,12 +26,6 @@ export interface OnboardingData {
   createdAgentId: string | null;
 }
 
-export interface OnboardingProgress {
-  currentStep: OnboardingStep;
-  completedSteps: OnboardingStep[];
-  totalSteps: number;
-}
-
 /**
  * Base props shared by all modal components
  * Ensures consistent modal interface across the onboarding feature

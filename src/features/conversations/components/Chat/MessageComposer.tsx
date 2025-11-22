@@ -6,7 +6,7 @@
  */
 
 import { useState, KeyboardEvent, useRef, useEffect } from 'react';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, ChevronDown } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, User } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -188,35 +188,45 @@ export default function MessageComposer({
             )}
           </div>
 
-          {/* AI/Human Mode Toggle */}
+          {/* AI/Human Mode Toggle Switch */}
           {onModeToggle && (
-            <button
-              onClick={onModeToggle}
-              className={cn(
-                'flex items-center gap-1.5',
-                'px-2.5 py-1.5',
-                'rounded-lg',
-                'text-sm font-medium',
-                'border border-neutral-200',
-                'hover:bg-neutral-100',
-                'transition-all duration-150'
-              )}
-              aria-label={`Switch mode. Current: ${isAIMode ? 'AI' : 'Human'}`}
-              title={`Currently in ${isAIMode ? 'AI' : 'Human'} mode. Click to switch.`}
-            >
-              {isAIMode ? (
-                <>
-                  <Bot className="w-4 h-4 text-neutral-700" />
-                  <span className="text-neutral-700">AI</span>
-                </>
-              ) : (
-                <>
-                  <User className="w-4 h-4 text-brand-cyan" />
-                  <span className="text-brand-cyan">Human</span>
-                </>
-              )}
-              <ChevronDown className="w-3 h-3 opacity-50" />
-            </button>
+            <div className="flex items-center gap-2">
+              {/* Label */}
+              <div className="flex items-center gap-1.5">
+                {isAIMode ? (
+                  <>
+                    <Bot className="w-4 h-4 text-neutral-700" />
+                    <span className="text-xs font-medium text-neutral-700">AI</span>
+                  </>
+                ) : (
+                  <>
+                    <User className="w-4 h-4 text-brand-cyan" />
+                    <span className="text-xs font-medium text-brand-cyan">Human</span>
+                  </>
+                )}
+              </div>
+
+              {/* Toggle Switch */}
+              <button
+                onClick={onModeToggle}
+                className={cn(
+                  'relative inline-flex h-6 w-11 items-center rounded-full',
+                  'transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2',
+                  isAIMode ? 'bg-neutral-300' : 'bg-brand-cyan'
+                )}
+                role="switch"
+                aria-checked={!isAIMode}
+                aria-label={`Toggle mode. Currently ${isAIMode ? 'AI' : 'Human'} mode`}
+                title={`Click to switch to ${isAIMode ? 'Human' : 'AI'} mode`}
+              >
+                <span
+                  className={cn(
+                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200',
+                    isAIMode ? 'translate-x-1' : 'translate-x-6'
+                  )}
+                />
+              </button>
+            </div>
           )}
         </div>
 

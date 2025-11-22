@@ -6,9 +6,14 @@
 
 import { useEffect, useRef, UIEvent, useCallback } from 'react';
 import { ArrowLeft, Bot, User } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import type { Conversation } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
+import { useConversationStore } from '../../stores/conversationStore';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { toggleAIMode } from '../../services/conversationService';
+import { queryKeys } from '@/lib/queryKeys';
 import ChatMessageBubble from './ChatMessageBubble';
 import MessageComposer from './MessageComposer';
 import { ChatMessagesSkeleton } from '../shared/LoadingSkeleton';
@@ -22,7 +27,9 @@ interface ChatPanelProps {
 }
 
 export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
+  const queryClient = useQueryClient();
   const globalSelectedAgent = useAgentStore((state) => state.globalSelectedAgent);
+  const selectConversation = useConversationStore((state) => state.selectConversation);
   const {
     messages,
     isLoading,
@@ -37,6 +44,39 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const previousScrollHeight = useRef(0);
+
+  // Toggle AI/Human mode mutation
+  const toggleModeMutation = useMutation({
+    mutationFn: (isAI: boolean) => toggleAIMode(conversation.id, isAI),
+    onMutate: async (newIsAI) => {
+      // Optimistically update the selected conversation in Zustand
+      const updatedConversation = {
+        ...conversation,
+        is_ai: newIsAI,
+      };
+      selectConversation(updatedConversation);
+      return { previousConversation: conversation };
+    },
+    onSuccess: (_data, newIsAI) => {
+      // Invalidate conversations to refresh the list
+      if (globalSelectedAgent?.id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.conversations(globalSelectedAgent.id) });
+      }
+      toast.success(`Switched to ${newIsAI ? 'AI' : 'Human'} mode`);
+    },
+    onError: (error, _variables, context) => {
+      // Rollback on error
+      if (context?.previousConversation) {
+        selectConversation(context.previousConversation);
+      }
+      toast.error('Failed to switch mode');
+      console.error('Toggle mode error:', error);
+    },
+  });
+
+  const handleModeToggle = () => {
+    toggleModeMutation.mutate(!conversation.is_ai);
+  };
 
   // Fetch messages and subscribe on conversation change
   useEffect(() => {
@@ -197,6 +237,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         onSendMessage={handleSendMessage}
         isSending={isSending}
         isAIMode={conversation.is_ai}
+        onModeToggle={handleModeToggle}
         placeholder={
           conversation.is_ai
             ? 'Type a message... (AI will respond)'

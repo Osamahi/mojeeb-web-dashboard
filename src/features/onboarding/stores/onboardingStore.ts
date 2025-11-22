@@ -18,7 +18,6 @@ interface OnboardingState {
   // Actions
   setStep: (step: OnboardingStep) => void;
   nextStep: () => void;
-  previousStep: () => void;
   setAgentName: (name: string) => void;
   setSelectedPurposes: (purposes: AgentPurpose[]) => void;
   togglePurpose: (purpose: AgentPurpose) => void;
@@ -50,13 +49,6 @@ export const useOnboardingStore = create<OnboardingState>()(
         const { currentStep } = get();
         if (currentStep < OnboardingStep.Success) {
           set({ currentStep: currentStep + 1 });
-        }
-      },
-
-      previousStep: () => {
-        const { currentStep } = get();
-        if (currentStep > OnboardingStep.Name) {
-          set({ currentStep: currentStep - 1 });
         }
       },
 

@@ -24,10 +24,9 @@ import {
 
 interface DemoCallModalProps extends BaseModalProps {
   onSuccess?: (phone: string) => void;
-  initialPhone?: string;
 }
 
-export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: DemoCallModalProps) => {
+export const DemoCallModal = ({ isOpen, onClose, onSuccess }: DemoCallModalProps) => {
   const [countries, setCountries] = useState<Country[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
@@ -56,28 +55,6 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
         logger.error('Error loading countries data', error instanceof Error ? error : new Error(String(error)));
       });
   }, []);
-
-  // Re-populate form with initialPhone whenever dependencies are ready
-  // Runs when countries load OR initialPhone changes, regardless of modal open state
-  useEffect(() => {
-    if (initialPhone && countries.length > 0 && selectedCountry) {
-      // Find matching country by dial code
-      const matchedCountry = countries.find((c) =>
-        initialPhone.startsWith(c.dialCode)
-      );
-
-      // Only update if we found a different country or phone changed
-      if (matchedCountry && matchedCountry.code !== selectedCountry.code) {
-        setSelectedCountry(matchedCountry);
-
-        // Extract phone number without dial code
-        const phoneWithoutDialCode = initialPhone.substring(matchedCountry.dialCode.length);
-        // Format according to country format
-        const formatted = formatPhoneNumber(phoneWithoutDialCode, matchedCountry.format);
-        setPhoneNumber(formatted);
-      }
-    }
-  }, [initialPhone, countries, selectedCountry]);
 
   // Validate phone number
   useEffect(() => {

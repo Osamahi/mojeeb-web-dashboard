@@ -10,6 +10,12 @@ import {
 import type { Conversation } from '../types';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+// Type for React Query Infinite Data structure
+type InfiniteData<T> = {
+  pages: T[];
+  pageParams: unknown[];
+};
+
 /**
  * React hook for managing real-time conversation subscriptions.
  *
@@ -48,7 +54,7 @@ export function useConversationSubscription() {
   useEffect(() => {
     if (!agentId) return;
 
-    // Handle real-time events by updating React Query cache
+    // Handle real-time events by updating React Query cache (Infinite Query structure)
     const handleRealtimeEvent = (payload: Conversation[], eventType: RealtimeEventType) => {
       if (!payload || payload.length === 0) return;
 
@@ -57,25 +63,59 @@ export function useConversationSubscription() {
 
       switch (eventType) {
         case 'INSERT':
-          // Add new conversation to the top of the list
-          queryClient.setQueryData<Conversation[]>(queryKey, (old = []) => {
-            // Prevent duplicates
-            if (old.some((c) => c.id === conversation.id)) return old;
-            return [conversation, ...old];
+          // Add new conversation to the top of the first page
+          queryClient.setQueryData<InfiniteData<Conversation[]>>(queryKey, (old) => {
+            if (!old) return old;
+
+            // Check if conversation already exists in any page
+            const exists = old.pages.some((page) =>
+              page.some((c) => c.id === conversation.id)
+            );
+            if (exists) return old;
+
+            // Add to the beginning of the first page
+            const updatedPages = [...old.pages];
+            updatedPages[0] = [conversation, ...updatedPages[0]];
+
+            return {
+              pages: updatedPages,
+              pageParams: old.pageParams,
+            };
           });
           break;
 
         case 'UPDATE':
-          // Update existing conversation
-          queryClient.setQueryData<Conversation[]>(queryKey, (old = []) => {
-            const index = old.findIndex((c) => c.id === conversation.id);
+          // Update existing conversation in its page
+          queryClient.setQueryData<InfiniteData<Conversation[]>>(queryKey, (old) => {
+            if (!old) return old;
 
-            if (index === -1) {
-              // Not found, add to top
-              return [conversation, ...old];
+            let found = false;
+            let foundPageIndex = -1;
+            let foundConvIndex = -1;
+
+            // Find the conversation in the pages
+            for (let pageIndex = 0; pageIndex < old.pages.length; pageIndex++) {
+              const page = old.pages[pageIndex];
+              const convIndex = page.findIndex((c) => c.id === conversation.id);
+              if (convIndex !== -1) {
+                found = true;
+                foundPageIndex = pageIndex;
+                foundConvIndex = convIndex;
+                break;
+              }
             }
 
-            const oldConv = old[index];
+            if (!found) {
+              // Not found, add to top of first page
+              const updatedPages = [...old.pages];
+              updatedPages[0] = [conversation, ...updatedPages[0]];
+              return {
+                pages: updatedPages,
+                pageParams: old.pageParams,
+              };
+            }
+
+            const oldConv = old.pages[foundPageIndex][foundConvIndex];
 
             // Check if there's a new message
             const hasNewMessage =
@@ -89,31 +129,45 @@ export function useConversationSubscription() {
               customer_metadata: conversation.customer_metadata || oldConv.customer_metadata,
             };
 
-            // Create new array with updated conversation
-            const newList = [...old];
-            newList[index] = updatedConv;
+            // Create updated pages
+            const updatedPages = old.pages.map((page, pageIndex) => {
+              if (pageIndex !== foundPageIndex) return page;
 
-            // Move to top if new message and not already at top
-            if (hasNewMessage && index !== 0) {
-              newList.splice(index, 1);
-              newList.unshift(updatedConv);
-            }
-
-            // Sort by last_message_at
-            newList.sort((a, b) => {
-              const aTime = a.last_message_at || a.created_at;
-              const bTime = b.last_message_at || b.created_at;
-              return new Date(bTime).getTime() - new Date(aTime).getTime();
+              const newPage = [...page];
+              newPage[foundConvIndex] = updatedConv;
+              return newPage;
             });
 
-            return newList;
+            // If new message and not already at top of first page, move it there
+            if (hasNewMessage && (foundPageIndex !== 0 || foundConvIndex !== 0)) {
+              // Remove from current position
+              updatedPages[foundPageIndex] = updatedPages[foundPageIndex].filter(
+                (c) => c.id !== conversation.id
+              );
+              // Add to top of first page
+              updatedPages[0] = [updatedConv, ...updatedPages[0]];
+            }
+
+            return {
+              pages: updatedPages,
+              pageParams: old.pageParams,
+            };
           });
           break;
 
         case 'DELETE':
-          // Remove conversation from list
-          queryClient.setQueryData<Conversation[]>(queryKey, (old = []) => {
-            return old.filter((c) => c.id !== conversation.id);
+          // Remove conversation from all pages
+          queryClient.setQueryData<InfiniteData<Conversation[]>>(queryKey, (old) => {
+            if (!old) return old;
+
+            const updatedPages = old.pages.map((page) =>
+              page.filter((c) => c.id !== conversation.id)
+            );
+
+            return {
+              pages: updatedPages,
+              pageParams: old.pageParams,
+            };
           });
           break;
       }

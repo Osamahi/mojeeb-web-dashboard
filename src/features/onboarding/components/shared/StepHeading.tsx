@@ -4,10 +4,10 @@
  * Eliminates 24 lines of duplicate code across 4 step components
  */
 
-import React from 'react';
+import { ReactNode } from 'react';
 
 interface StepHeadingProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 /**

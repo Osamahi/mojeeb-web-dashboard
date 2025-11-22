@@ -4,8 +4,6 @@
  * Eliminates 40+ lines of duplicate badge code in StepSuccess.tsx
  */
 
-import React from 'react';
-
 interface StepNumberBadgeProps {
   number: number;
 }

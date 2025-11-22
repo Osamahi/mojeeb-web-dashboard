@@ -4,10 +4,10 @@
  * Replaces duplicate border/background/padding patterns
  */
 
-import React from 'react';
+import { ReactNode } from 'react';
 
 interface CardProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }
 
