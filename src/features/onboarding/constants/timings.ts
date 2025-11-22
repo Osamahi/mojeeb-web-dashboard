@@ -15,5 +15,3 @@ export const ANIMATION_TIMINGS = {
   // API timeout
   API_TIMEOUT: 10000, // 10 seconds
 } as const;
-
-export type AnimationTiming = typeof ANIMATION_TIMINGS;

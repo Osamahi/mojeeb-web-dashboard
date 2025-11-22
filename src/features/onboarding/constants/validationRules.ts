@@ -12,5 +12,3 @@ export const VALIDATION_RULES = {
   PHONE_MIN_DIGITS: 5,
   PHONE_MAX_DIGITS: 15,
 } as const;
-
-export type ValidationRule = typeof VALIDATION_RULES;

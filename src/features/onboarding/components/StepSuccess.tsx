@@ -137,7 +137,7 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
         safeSetTimeout(() => setShowNextStep6(true), ANIMATION_TIMINGS.NEXT_STEP_OFFSET_3);
       });
     },
-    onError: (_error) => {
+    onError: () => {
       setStatus({ agent: 'error', knowledge: 'pending' });
       setPhase('error');
     },

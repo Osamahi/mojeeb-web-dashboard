@@ -76,7 +76,8 @@ export async function submitDemoCallRequest(
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
+    // Parse response body (required to fully consume response)
+    await response.json();
 
     return {
       success: true,

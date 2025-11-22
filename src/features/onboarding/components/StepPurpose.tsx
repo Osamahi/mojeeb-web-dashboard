@@ -10,11 +10,7 @@ import type { AgentPurpose } from '../types/onboarding.types';
 import { CheckmarkIcon } from '@/shared/components/icons';
 import { StepHeading, StepSubtitle } from './shared/StepHeading';
 
-interface StepPurposeProps {
-  onNext: () => void;
-}
-
-export const StepPurpose = ({ onNext }: StepPurposeProps) => {
+export const StepPurpose = () => {
   const { data, togglePurpose, setSelectedPurposes } = useOnboardingStore();
   const selectedPurposes = data.selectedPurposes;
   const hasPreselected = useRef(false);
