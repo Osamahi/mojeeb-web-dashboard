@@ -16,19 +16,12 @@ import { StepSuccess } from '../components/StepSuccess';
 import { ExitIntentModal } from '../components/ExitIntentModal';
 import { SimpleConfirmModal } from '../components/SimpleConfirmModal';
 import { DemoCallModal } from '../components/DemoCallModal';
-import { agentService } from '@/features/agents/services/agentService';
-import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { queryKeys } from '@/lib/queryKeys';
-import { logger } from '@/lib/logger';
-import { toast } from 'sonner';
 
 export const OnboardingWizard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { currentStep, nextStep, previousStep, setStep, data, setCreatedAgentId, completeOnboarding } = useOnboardingStore();
-  const addAgent = useAgentStore((state) => state.addAgent);
-  const setGlobalSelectedAgent = useAgentStore((state) => state.setGlobalSelectedAgent);
-  const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+  const { currentStep, nextStep, previousStep, setStep, data, completeOnboarding } = useOnboardingStore();
   const [isSuccessReady, setIsSuccessReady] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
@@ -64,52 +57,6 @@ export const OnboardingWizard = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [currentStep, previousStep]);
-
-  const handleCreateAgent = async () => {
-    setIsCreatingAgent(true);
-
-    try {
-      // Generate persona prompt from selected purposes
-      const personaPrompt = data.selectedPurposes
-        .map((purpose) => purpose.prompt)
-        .join('\n\n');
-
-      // Create the agent
-      logger.info('Creating agent with name:', data.agentName);
-      const agent = await agentService.createAgent({
-        name: data.agentName,
-        personaPrompt,
-      });
-
-      logger.info('Agent created successfully with ID:', agent.id);
-
-      // Add the newly created agent to the agent store immediately
-      // This ensures it's available when we try to switch to it after redirect
-      addAgent(agent);
-
-      // Pre-select the agent globally so it's ready before redirect
-      // This eliminates the delay on the conversations page
-      setGlobalSelectedAgent(agent);
-      logger.info('Agent pre-selected globally:', agent.name);
-
-      // Save the created agent ID to the store
-      setCreatedAgentId(agent.id);
-
-      toast.success('Agent created successfully!');
-
-      // Advance to success step (KB creation will happen there)
-      nextStep();
-    } catch (error) {
-      logger.error('Failed to create agent:', error);
-      const errorMsg = (error as any)?.response?.data?.message || (error as Error)?.message || 'Unknown error';
-      logger.error('Error details:', errorMsg);
-      toast.error(`Failed to create agent: ${errorMsg}`);
-      // Stay on current step on error - don't go back
-      throw error; // Re-throw to be caught by caller
-    } finally {
-      setIsCreatingAgent(false);
-    }
-  };
 
   const handleStepComplete = () => {
     // All steps just advance to next - agent creation happens in Success step
@@ -326,7 +273,7 @@ export const OnboardingWizard = () => {
           ) : (
             <button
               onClick={handleFABClick}
-              disabled={!canProceed || isCreatingAgent}
+              disabled={!canProceed}
               aria-label="Continue to next step"
               className={`
                 w-12 h-12 sm:w-14 sm:h-14
@@ -334,29 +281,25 @@ export const OnboardingWizard = () => {
                 flex items-center justify-center
                 transition-all duration-200
                 ${
-                  !canProceed || isCreatingAgent
+                  !canProceed
                     ? 'bg-neutral-300 cursor-not-allowed'
                     : 'bg-black text-white hover:bg-neutral-800'
                 }
               `}
             >
-              {isCreatingAgent ? (
-                <div className="w-5 h-5 border-2 border-neutral-500 border-t-neutral-800 rounded-full animate-spin" />
-              ) : (
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              )}
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
             </button>
           )}
         </div>

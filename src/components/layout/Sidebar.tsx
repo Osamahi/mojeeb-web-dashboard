@@ -19,6 +19,7 @@ import {
   Settings,
   Sliders,
   Link2,
+  LogOut,
 } from 'lucide-react';
 import { Role } from '@/features/auth/types/auth.types';
 import { useUIStore } from '@/stores/uiStore';
@@ -83,6 +84,15 @@ export const Sidebar = () => {
 
   // Dynamic width: 80px collapsed, 256px expanded (desktop), 256px (mobile)
   const sidebarWidth = isMobile ? 256 : (isSidebarCollapsed ? 80 : 256);
+
+  // Logout handler
+  const handleLogout = () => {
+    // Clear local state immediately
+    useAuthStore.getState().logout();
+
+    // Redirect to login
+    window.location.href = '/login';
+  };
 
   return (
     <>
@@ -201,6 +211,15 @@ export const Sidebar = () => {
                     </p>
                   </div>
                 </div>
+
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="mt-3 w-full flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
               </div>
             )}
           </motion.aside>
