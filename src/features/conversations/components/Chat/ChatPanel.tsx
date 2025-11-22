@@ -7,7 +7,6 @@
 import { useEffect, useRef, UIEvent, useCallback } from 'react';
 import { ArrowLeft, Bot, User } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import type { Conversation } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
 import { useConversationStore } from '../../stores/conversationStore';
@@ -21,6 +20,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { chatToasts } from '../../utils/chatToasts';
 
 interface ChatPanelProps {
   conversation: Conversation;
@@ -63,14 +63,14 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
       if (globalSelectedAgent?.id) {
         queryClient.invalidateQueries({ queryKey: queryKeys.conversations(globalSelectedAgent.id) });
       }
-      toast.success(`Switched to ${newIsAI ? 'AI' : 'Human'} mode`);
+      chatToasts.modeSwitch(newIsAI);
     },
     onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousConversation) {
         selectConversation(context.previousConversation);
       }
-      toast.error('Failed to switch mode');
+      chatToasts.modeSwitchError();
       logger.error('Failed to toggle AI/Human mode', error, {
         conversationId: conversation.id,
         currentMode: conversation.is_ai,
@@ -132,7 +132,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
             conversationId: conversation.id,
             component: 'ChatPanel',
           });
-          toast.error('Failed to load older messages');
+          chatToasts.loadOlderMessagesError();
         });
     }
   };
@@ -246,17 +246,19 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
       </div>
 
       {/* Message Composer */}
-      <MessageComposer
-        onSendMessage={handleSendMessage}
-        isSending={isSending}
-        isAIMode={conversation.is_ai}
-        onModeToggle={handleModeToggle}
-        placeholder={
-          conversation.is_ai
-            ? 'Type a message... (AI will respond)'
-            : 'Type a message... (You are responding)'
-        }
-      />
+      <div className="px-6 pb-6">
+        <MessageComposer
+          onSendMessage={handleSendMessage}
+          isSending={isSending}
+          isAIMode={conversation.is_ai}
+          onModeToggle={handleModeToggle}
+          placeholder={
+            conversation.is_ai
+              ? 'Type a message... (AI will respond)'
+              : 'Type a message... (You are responding)'
+          }
+        />
+      </div>
     </div>
   );
 }

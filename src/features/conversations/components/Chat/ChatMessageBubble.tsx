@@ -13,7 +13,8 @@ import { isCustomerMessage, parseAttachments, isMessageDeleted } from '../../typ
 import { formatMessageTime } from '../../utils/timeFormatters';
 import { parseFormattedText, isArabicText } from '../../utils/textFormatters';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { chatToasts } from '../../utils/chatToasts';
+import { CHAT_BUBBLE_COLORS } from '../../constants/chatBubbleColors';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -30,23 +31,13 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message }: ChatMessa
   const isRTL = isArabicText(messageText);
 
   // Bubble colors
-  const bubbleStyle = isUser
-    ? {
-        backgroundColor: '#FFFFFF',
-        color: '#000000',
-        borderColor: '#D4D4D4',
-      }
-    : {
-        backgroundColor: '#000000',
-        color: '#FFFFFF',
-        borderColor: '#000000',
-      };
+  const bubbleStyle = isUser ? CHAT_BUBBLE_COLORS.user : CHAT_BUBBLE_COLORS.assistant;
 
   // Handle copy to clipboard
   const handleCopy = () => {
     if (messageText) {
       navigator.clipboard.writeText(messageText);
-      toast.success('Message copied to clipboard');
+      chatToasts.copied();
     }
   };
 

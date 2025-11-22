@@ -5,16 +5,35 @@
  * Line 2: Attachment, Emoji, Mode Toggle ... Send
  */
 
-import { useState, KeyboardEvent, useRef, useEffect } from 'react';
+import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
 import { ArrowUp, Loader2, Smile, Paperclip, Bot, User } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { chatToasts } from '../../utils/chatToasts';
 
 // Constants
 const MAX_TEXTAREA_HEIGHT_PX = 120;
 const EMOJI_PICKER_WIDTH = 350;
 const EMOJI_PICKER_HEIGHT = 400;
+const MAX_MESSAGE_LENGTH = 5000; // Backend limit
+
+/**
+ * Sanitizes message input by removing potentially dangerous characters
+ * and normalizing whitespace
+ */
+const sanitizeMessage = (msg: string): string => {
+  // Trim and normalize whitespace (multiple spaces, tabs, etc.)
+  let sanitized = msg.trim().replace(/\s+/g, ' ');
+
+  // Remove zero-width characters that could be used maliciously
+  sanitized = sanitized.replace(/[\u200B-\u200D\uFEFF]/g, '');
+
+  // Remove control characters except newlines and tabs
+  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+  return sanitized;
+};
 
 interface MessageComposerProps {
   onSendMessage: (message: string) => Promise<void>;
@@ -24,7 +43,7 @@ interface MessageComposerProps {
   placeholder?: string;
 }
 
-export default function MessageComposer({
+export default memo(function MessageComposer({
   onSendMessage,
   isSending,
   isAIMode = true,
@@ -33,21 +52,55 @@ export default function MessageComposer({
 }: MessageComposerProps) {
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isLocalSending, setIsLocalSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-resize textarea
-  useEffect(() => {
+  // Auto-resize textarea (optimized with useCallback)
+  const adjustTextareaHeight = useCallback(() => {
     const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_TEXTAREA_HEIGHT_PX)}px`;
-    }
-  }, [message]);
+    if (!textarea) return;
+
+    // Force reflow before reading scrollHeight (iOS Safari fix)
+    textarea.style.height = 'auto';
+    void textarea.offsetHeight; // Force reflow
+
+    const newHeight = Math.min(textarea.scrollHeight, MAX_TEXTAREA_HEIGHT_PX);
+    textarea.style.height = `${newHeight}px`;
+
+    // iOS Safari needs explicit overflow handling
+    textarea.style.overflowY = newHeight >= MAX_TEXTAREA_HEIGHT_PX ? 'auto' : 'hidden';
+  }, []);
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [message, adjustTextareaHeight]);
 
   // Auto-focus on mount
   useEffect(() => {
     textareaRef.current?.focus();
+  }, []);
+
+  // Mobile keyboard viewport handling
+  useEffect(() => {
+    const handleFocus = () => {
+      // Scroll textarea into view on mobile
+      if (window.innerWidth < 768) { // mobile breakpoint
+        setTimeout(() => {
+          textareaRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        }, 300); // Wait for keyboard animation
+      }
+    };
+
+    const textarea = textareaRef.current;
+    textarea?.addEventListener('focus', handleFocus);
+
+    return () => {
+      textarea?.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Close emoji picker on click outside
@@ -73,11 +126,24 @@ export default function MessageComposer({
   }, [showEmojiPicker]);
 
   const handleSend = async () => {
-    const trimmedMessage = message.trim();
-    if (!trimmedMessage || isSending) return;
+    // Sanitize and validate message
+    const sanitizedMessage = sanitizeMessage(message);
+
+    // Check if empty or already sending
+    if (!sanitizedMessage || isSending || isLocalSending) return;
+
+    // Check length limit
+    if (sanitizedMessage.length > MAX_MESSAGE_LENGTH) {
+      chatToasts.messageTooLong(MAX_MESSAGE_LENGTH);
+      return;
+    }
+
+    setIsLocalSending(true);
 
     try {
-      await onSendMessage(trimmedMessage);
+      await onSendMessage(sanitizedMessage);
+
+      // Only clear message on success
       setMessage('');
 
       // Reset textarea height
@@ -86,10 +152,14 @@ export default function MessageComposer({
       }
     } catch (error) {
       logger.error('Failed to send message', error, {
-        messageLength: trimmedMessage.length,
+        messageLength: sanitizedMessage.length,
         component: 'MessageComposer',
         isAIMode,
       });
+      chatToasts.sendError();
+      // Don't clear message on error - let user retry
+    } finally {
+      setIsLocalSending(false);
     }
   };
 
@@ -104,6 +174,43 @@ export default function MessageComposer({
     setMessage((prev) => prev + emojiData.emoji);
     setShowEmojiPicker(false);
     textareaRef.current?.focus();
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+
+    let pastedText = e.clipboardData.getData('text/plain');
+
+    // Sanitize pasted text
+    pastedText = sanitizeMessage(pastedText);
+
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const cursorPosition = textarea.selectionStart;
+    const textBefore = message.substring(0, cursorPosition);
+    const textAfter = message.substring(textarea.selectionEnd);
+
+    const newMessage = textBefore + pastedText + textAfter;
+
+    // Check if exceeds limit
+    if (newMessage.length > MAX_MESSAGE_LENGTH) {
+      chatToasts.pasteTruncated(MAX_MESSAGE_LENGTH);
+      const truncated = newMessage.substring(0, MAX_MESSAGE_LENGTH);
+      setMessage(truncated);
+    } else {
+      setMessage(newMessage);
+    }
+
+    // Restore cursor position
+    setTimeout(() => {
+      const newPosition = Math.min(
+        cursorPosition + pastedText.length,
+        MAX_MESSAGE_LENGTH
+      );
+      textarea.setSelectionRange(newPosition, newPosition);
+      textarea.focus();
+    }, 0);
   };
 
   return (
@@ -125,9 +232,13 @@ export default function MessageComposer({
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
         placeholder={placeholder}
-        disabled={isSending}
+        disabled={isSending || isLocalSending}
+        maxLength={MAX_MESSAGE_LENGTH}
         rows={1}
+        inputMode="text"
+        enterKeyHint="send"
         className={cn(
           'w-full',
           'bg-transparent',
@@ -137,16 +248,29 @@ export default function MessageComposer({
           'text-sm',
           'text-neutral-950',
           'placeholder:text-neutral-400',
-          'mb-3',
+          'mb-2',
           'disabled:opacity-50 disabled:cursor-not-allowed'
         )}
         style={{
           minHeight: '32px',
           maxHeight: `${MAX_TEXTAREA_HEIGHT_PX}px`,
+          fontSize: '16px', // Prevent iOS zoom on focus
         }}
-        aria-label="Message input"
+        aria-label="Message input. Press Enter to send, Shift+Enter for new line"
         aria-multiline="true"
+        aria-describedby="char-count"
       />
+
+      {/* Character count (show when approaching limit) */}
+      {message.length > MAX_MESSAGE_LENGTH * 0.8 && (
+        <div
+          id="char-count"
+          className="text-xs text-neutral-500 mb-2 text-right"
+          aria-live="polite"
+        >
+          {message.length} / {MAX_MESSAGE_LENGTH}
+        </div>
+      )}
 
       {/* Line 2: Actions Bar */}
       <div className="flex items-center justify-between">
@@ -250,20 +374,20 @@ export default function MessageComposer({
         {/* Right: Send Button */}
         <button
           onClick={handleSend}
-          disabled={!message.trim() || isSending}
+          disabled={!message.trim() || isSending || isLocalSending}
           className={cn(
             'rounded-full w-10 h-10',
             'flex items-center justify-center',
             'flex-shrink-0',
             'transition-all duration-200',
-            message.trim() && !isSending
+            message.trim() && !isSending && !isLocalSending
               ? 'bg-neutral-950 text-white hover:bg-neutral-800 hover:scale-105'
               : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
           )}
           title="Send message (Enter)"
           aria-label="Send message"
         >
-          {isSending ? (
+          {isSending || isLocalSending ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <ArrowUp className="w-5 h-5" />
@@ -272,4 +396,4 @@ export default function MessageComposer({
       </div>
     </div>
   );
-}
+});
