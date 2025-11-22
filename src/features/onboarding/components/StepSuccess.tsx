@@ -6,6 +6,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { useOnboardingAgentMutation } from '../hooks/useOnboardingAgentMutation';
+import { ANIMATION_TIMINGS } from '../constants/timings';
 import Confetti from 'react-confetti';
 import type { AgentPurpose } from '../types/onboarding.types';
 
@@ -24,9 +25,45 @@ interface PhaseStatus {
   knowledge: 'pending' | 'loading' | 'success' | 'error' | 'skipped';
 }
 
+// Type-safe error message extractor
+const getErrorMessage = (error: unknown): string => {
+  if (!error) return 'Failed to create agent';
+
+  // Check for axios-style error response
+  if (typeof error === 'object' && error !== null) {
+    const err = error as Record<string, unknown>;
+
+    // Try to get response.data.message
+    if ('response' in err &&
+        typeof err.response === 'object' &&
+        err.response !== null) {
+      const response = err.response as Record<string, unknown>;
+
+      if ('data' in response &&
+          typeof response.data === 'object' &&
+          response.data !== null) {
+        const data = response.data as Record<string, unknown>;
+
+        if ('message' in data && typeof data.message === 'string') {
+          return data.message;
+        }
+      }
+    }
+
+    // Try to get error.message
+    if ('message' in err && typeof err.message === 'string') {
+      return err.message;
+    }
+  }
+
+  return 'Failed to create agent';
+};
+
 export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurposes, knowledgeContent }: StepSuccessProps) => {
   const { setCreatedAgentId } = useOnboardingStore();
   const hasTriggeredCreation = useRef(false);
+  const isMountedRef = useRef(true); // Track component lifecycle
+  const timeoutIdsRef = useRef<NodeJS.Timeout[]>([]); // Track all timeouts for cleanup
 
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
@@ -44,90 +81,59 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
   const [showNextStep6, setShowNextStep6] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
+  // Safe setTimeout that only executes if component is still mounted
+  const safeSetTimeout = (callback: () => void, delay: number) => {
+    const timeoutId = setTimeout(() => {
+      if (isMountedRef.current) {
+        callback();
+      }
+    }, delay);
+    timeoutIdsRef.current.push(timeoutId);
+    return timeoutId;
+  };
+
   // Create mutation with success/error callbacks
   const mutation = useOnboardingAgentMutation({
     onSuccess: (data) => {
-      console.log('✅ SUCCESS CALLBACK - Updating UI state', data);
-
       const hasKnowledge = knowledgeContent.trim().length > 0;
       const kbStatus = data.knowledgeBase
         ? 'success'
         : hasKnowledge ? 'error' : 'skipped';
 
-      // Step 1: Show agent success first
-      console.log('📊 STATE UPDATE - Agent success');
-      setStatus({ agent: 'success', knowledge: 'pending' });
+      // ✅ FIX: Update all status states IMMEDIATELY and SYNCHRONOUSLY
+      // This prevents race conditions if component unmounts before timeout fires
+      setStatus({ agent: 'success', knowledge: kbStatus });
       setCreatedAgentId(data.agent.id);
+      setPhase('ready');
+      onReadyChange(true);
 
-      // Sequence phase transitions properly with timing
-      if (hasKnowledge) {
-        // Step 2: Show KB loading phase
-        setTimeout(() => {
-          console.log('📚 HAS KNOWLEDGE - Setting adding-knowledge phase with loading');
-          setPhase('adding-knowledge');
-          setStatus({ agent: 'success', knowledge: 'loading' });
-        }, 600); // Wait 600ms to show agent success
+      // Visual effects only (can safely be canceled on unmount)
+      setShowConfetti(true);
+      safeSetTimeout(() => setShowConfetti(false), ANIMATION_TIMINGS.CONFETTI_DURATION);
 
-        // Step 3: Show KB success
-        setTimeout(() => {
-          console.log('✅ KB SUCCESS - Setting knowledge status to success');
-          setStatus({ agent: 'success', knowledge: kbStatus });
-        }, 1200); // Wait another 600ms to show KB loading
-
-        // Step 4: Transition to ready
-        setTimeout(() => {
-          console.log('🎉 TRANSITIONING TO READY PHASE (with KB)');
-          setPhase('ready');
-          onReadyChange(true);
-
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 1500);
-
-          setTimeout(() => {
-            console.log('🔢 Showing Next Step 4');
-            setShowNextStep4(true);
-          }, 500);
-          setTimeout(() => {
-            console.log('🔢 Showing Next Step 5');
-            setShowNextStep5(true);
-          }, 1000);
-          setTimeout(() => {
-            console.log('🔢 Showing Next Step 6');
-            setShowNextStep6(true);
-          }, 1500);
-        }, 1800); // Wait another 600ms to show KB success
-      } else {
-        // No knowledge - wait a bit then go to ready
-        setTimeout(() => {
-          console.log('⚡ NO KNOWLEDGE - Going to ready phase');
-          setStatus({ agent: 'success', knowledge: 'skipped' });
-          setPhase('ready');
-          onReadyChange(true);
-
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 1500);
-
-          setTimeout(() => {
-            console.log('🔢 Showing Next Step 4');
-            setShowNextStep4(true);
-          }, 500);
-          setTimeout(() => {
-            console.log('🔢 Showing Next Step 5');
-            setShowNextStep5(true);
-          }, 1000);
-          setTimeout(() => {
-            console.log('🔢 Showing Next Step 6');
-            setShowNextStep6(true);
-          }, 1500);
-        }, 600); // Wait 600ms to show agent success
-      }
+      // ✅ Trigger Next Steps animations with stagger timing
+      // Using very small delays that will complete before any unmount
+      // requestAnimationFrame ensures animations trigger on next frame
+      requestAnimationFrame(() => {
+        setTimeout(() => setShowNextStep4(true), ANIMATION_TIMINGS.NEXT_STEP_OFFSET_1);
+        setTimeout(() => setShowNextStep5(true), ANIMATION_TIMINGS.NEXT_STEP_OFFSET_2);
+        setTimeout(() => setShowNextStep6(true), ANIMATION_TIMINGS.NEXT_STEP_OFFSET_3);
+      });
     },
     onError: (error) => {
-      console.log('❌ ERROR CALLBACK - Setting error state', error);
       setStatus({ agent: 'error', knowledge: 'pending' });
       setPhase('error');
     },
   });
+
+  // Cleanup on unmount - clear all timeouts and mark as unmounted
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      timeoutIdsRef.current.forEach(clearTimeout);
+      timeoutIdsRef.current = [];
+    };
+  }, []);
 
   // Update window size on resize
   useEffect(() => {
@@ -144,20 +150,11 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
 
   // Trigger agent creation on mount (only once)
   useEffect(() => {
-    console.log('🚀 TRIGGER EFFECT RUNNING', {
-      hasTriggered: hasTriggeredCreation.current,
-      agentName,
-      purposesCount: selectedPurposes.length,
-      hasKnowledge: knowledgeContent.trim().length > 0,
-    });
-
     if (hasTriggeredCreation.current) {
-      console.log('⏭️ SKIPPING - Already triggered');
       return;
     }
 
     hasTriggeredCreation.current = true;
-    console.log('▶️ TRIGGERING MUTATION - Setting loading state');
 
     // Set loading state immediately
     setPhase('creating-agent');
@@ -270,9 +267,28 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
 
             {/* Step 3: Ready */}
             <div className="flex items-center gap-3">
-              <StatusIcon state={phase === 'ready' ? 'success' : 'pending'} stepNumber={3} />
-              <span className={`text-sm transition-colors duration-300 ${phase === 'ready' ? 'text-green-700' : 'text-neutral-500'}`}>
-                {phase === 'ready' ? '🎉 Your agent is now fully ready' : 'Finishing up'}
+              <StatusIcon
+                state={
+                  status.agent === 'success' &&
+                  status.knowledge !== 'pending' &&
+                  status.knowledge !== 'loading'
+                    ? 'success'
+                    : 'pending'
+                }
+                stepNumber={3}
+              />
+              <span className={`text-sm transition-colors duration-300 ${
+                status.agent === 'success' &&
+                status.knowledge !== 'pending' &&
+                status.knowledge !== 'loading'
+                  ? 'text-green-700'
+                  : 'text-neutral-500'
+              }`}>
+                {status.agent === 'success' &&
+                 status.knowledge !== 'pending' &&
+                 status.knowledge !== 'loading'
+                  ? '🎉 Your agent is now fully ready'
+                  : 'Finishing up'}
               </span>
             </div>
           </div>
@@ -280,7 +296,7 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
           {/* Next Steps - animate in sequentially when ready */}
           {phase === 'ready' && (
             <div className="mt-6">
-              <h3 className={`text-sm font-semibold text-neutral-900 mb-4 transition-all duration-500 ${showNextStep4 ? 'opacity-100' : 'opacity-0'}`}>Next Steps:</h3>
+              <h3 className="text-sm font-semibold text-neutral-900 mb-4">Next Steps:</h3>
               <ul className="space-y-3">
                 {/* Step 4 */}
                 <li className={`flex items-center gap-3 text-sm text-neutral-600 transition-all duration-[600ms] ${showNextStep4 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 -translate-y-3 scale-95'}`} style={{ transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' }}>
@@ -306,7 +322,7 @@ export const StepSuccess = ({ onComplete, onReadyChange, agentName, selectedPurp
         {mutation.isError && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-red-700">
-              {(mutation.error as any)?.response?.data?.message || mutation.error?.message || 'Failed to create agent'}
+              {getErrorMessage(mutation.error)}
             </p>
             <button
               onClick={handleRetry}

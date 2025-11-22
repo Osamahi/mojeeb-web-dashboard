@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
+import { ModalActions } from '@/components/ui/ModalActions';
 import { ChevronDown } from 'lucide-react';
 import { submitDemoCallRequest } from '../services/demoCallService';
 import { detectCountryFromTimezone } from '../utils/countryDetector';
@@ -167,20 +168,18 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess, initialPhone }: Demo
             We'll call you at {formatPhoneForDisplay(submittedPhone)}
           </p>
 
-          <div className="space-y-2">
-            <button
-              onClick={handleClose}
-              className="w-full px-4 py-3 bg-black text-white text-sm font-medium rounded-xl hover:bg-neutral-800 transition-colors"
-            >
-              Done
-            </button>
-            <button
-              onClick={handleEditNumber}
-              className="w-full px-4 py-3 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
-            >
-              Edit number
-            </button>
-          </div>
+          <ModalActions
+            primary={{
+              label: 'Done',
+              onClick: handleClose,
+            }}
+            secondary={{
+              label: 'Edit number',
+              onClick: handleEditNumber,
+              variant: 'secondary',
+            }}
+            layout="vertical"
+          />
         </div>
       ) : (
         // Form State

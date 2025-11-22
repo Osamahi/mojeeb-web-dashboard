@@ -4,6 +4,7 @@
  */
 
 import { getBrowserMetadata } from '../utils/countryDetector';
+import { ANIMATION_TIMINGS } from '../constants/timings';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mojeebapi.azurewebsites.net';
 
@@ -25,7 +26,7 @@ export interface DemoCallResponse {
 }
 
 /**
- * Submit demo call request to API
+ * Submit demo call request to API with 10-second timeout
  */
 export async function submitDemoCallRequest(
   phone: string,
@@ -40,6 +41,10 @@ export async function submitDemoCallRequest(
     ...metadata,
   };
 
+  // Create AbortController for timeout handling
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), ANIMATION_TIMINGS.API_TIMEOUT);
+
   try {
     const response = await fetch(`${API_BASE_URL}/api/lead/landing-page-onboarding`, {
       method: 'POST',
@@ -47,7 +52,11 @@ export async function submitDemoCallRequest(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+      signal: controller.signal, // Add abort signal
     });
+
+    // Clear timeout on successful response
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -60,6 +69,18 @@ export async function submitDemoCallRequest(
       message: 'Your request has been submitted successfully',
     };
   } catch (error) {
+    // Clear timeout on error
+    clearTimeout(timeoutId);
+
+    // Handle timeout specifically
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('Request timed out');
+      return {
+        success: false,
+        message: 'Request timed out. Please check your connection and try again.',
+      };
+    }
+
     console.error('Error submitting demo call request:', error);
     return {
       success: false,

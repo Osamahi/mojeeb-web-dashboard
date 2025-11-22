@@ -27,13 +27,14 @@ export const OnboardingWizard = () => {
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [demoCallRequested, setDemoCallRequested] = useState(false);
-  const [submittedPhone, setSubmittedPhone] = useState('');
 
   // Handle browser back button and exit intent
   useEffect(() => {
     const handlePopState = (e: PopStateEvent) => {
       e.preventDefault();
       if (currentStep > OnboardingStep.Name && currentStep < OnboardingStep.Success) {
+        // Push state back to prevent navigation
+        window.history.pushState(null, '', window.location.pathname);
         setShowExitModal(true);
       } else if (currentStep === OnboardingStep.Name) {
         // Allow leaving from first step
@@ -49,6 +50,9 @@ export const OnboardingWizard = () => {
       }
     };
 
+    // Push initial state to enable popstate detection
+    window.history.pushState(null, '', window.location.pathname);
+
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
@@ -56,7 +60,7 @@ export const OnboardingWizard = () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [currentStep, previousStep]);
+  }, [currentStep]); // Removed previousStep - not used in effect
 
   const handleStepComplete = () => {
     // All steps just advance to next - agent creation happens in Success step
@@ -326,11 +330,9 @@ export const OnboardingWizard = () => {
       <DemoCallModal
         isOpen={showDemoModal}
         onClose={() => setShowDemoModal(false)}
-        onSuccess={(phone) => {
+        onSuccess={() => {
           setDemoCallRequested(true);
-          setSubmittedPhone(phone);
         }}
-        initialPhone={submittedPhone}
       />
     </div>
   );

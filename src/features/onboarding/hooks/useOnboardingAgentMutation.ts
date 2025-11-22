@@ -79,7 +79,6 @@ export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationO
       return { agent, knowledgeBase };
     },
     onSuccess: (data) => {
-      console.log('🎉 MUTATION onSuccess CALLBACK FIRED', data);
       // Invalidate queries so dashboard has fresh data
       queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
       toast.success('Agent created successfully!');
@@ -88,9 +87,14 @@ export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationO
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      console.log('❌ MUTATION onError CALLBACK FIRED', error);
       logger.error('❌ Agent creation failed', error);
-      const errorMsg = (error as any)?.response?.data?.message || error.message || 'Unknown error';
+
+      // Extract error message safely
+      let errorMsg = 'Unknown error';
+      if (error && typeof error === 'object' && 'message' in error) {
+        errorMsg = String(error.message);
+      }
+
       toast.error(`Failed to create agent: ${errorMsg}`);
 
       // Call optional error callback

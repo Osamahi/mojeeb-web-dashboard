@@ -4,7 +4,6 @@
  */
 
 import { useEffect } from 'react';
-import { Button } from '@/components/ui/Button';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { AGENT_PURPOSES } from '../constants/agentPurposes';
 import type { AgentPurpose } from '../types/onboarding.types';

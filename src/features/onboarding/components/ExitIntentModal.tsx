@@ -3,8 +3,8 @@
  * Displays when user tries to leave onboarding to prevent abandonment
  */
 
-import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { ModalActions } from '@/components/ui/ModalActions';
 
 interface ExitIntentModalProps {
   isOpen: boolean;
@@ -70,20 +70,20 @@ export const ExitIntentModal = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 pt-4">
-          <Button
-            onClick={onContinue}
-            className="flex-1 h-11"
-          >
-            Continue Setup
-          </Button>
-          <Button
-            onClick={onExit}
-            variant="outline"
-            className="flex-1 h-11"
-          >
-            Leave Anyway
-          </Button>
+        <div className="pt-4">
+          <ModalActions
+            primary={{
+              label: 'Continue Setup',
+              onClick: onContinue,
+            }}
+            secondary={{
+              label: 'Leave Anyway',
+              onClick: onExit,
+              variant: 'outline',
+            }}
+            layout="horizontal"
+            useButtonComponent={true}
+          />
         </div>
       </div>
     </Modal>

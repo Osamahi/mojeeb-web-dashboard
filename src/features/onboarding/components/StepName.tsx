@@ -4,8 +4,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
 import { useOnboardingStore } from '../stores/onboardingStore';
 
 interface StepNameProps {

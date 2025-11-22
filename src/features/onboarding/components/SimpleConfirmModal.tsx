@@ -4,6 +4,7 @@
  */
 
 import { Modal } from '@/components/ui/Modal';
+import { ModalActions } from '@/components/ui/ModalActions';
 
 interface SimpleConfirmModalProps {
   isOpen: boolean;
@@ -29,23 +30,18 @@ export const SimpleConfirmModal = ({
         </h2>
 
         {/* Buttons - stacked vertically */}
-        <div className="space-y-3">
-          {/* Back button - primary/focused (black) */}
-          <button
-            onClick={onClose}
-            className="w-full px-4 py-3.5 bg-black text-white text-base font-medium rounded-xl hover:bg-neutral-800 transition-colors"
-          >
-            Back
-          </button>
-
-          {/* Skip button - secondary (text only) */}
-          <button
-            onClick={onConfirm}
-            className="w-full px-4 py-3.5 text-base font-medium text-neutral-900 hover:bg-neutral-50 rounded-xl transition-colors"
-          >
-            {confirmText}
-          </button>
-        </div>
+        <ModalActions
+          primary={{
+            label: 'Back',
+            onClick: onClose,
+          }}
+          secondary={{
+            label: confirmText,
+            onClick: onConfirm,
+            variant: 'secondary',
+          }}
+          layout="vertical"
+        />
       </div>
     </Modal>
   );

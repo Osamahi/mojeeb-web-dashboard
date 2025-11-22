@@ -4,8 +4,6 @@
  */
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Textarea } from '@/components/ui/Textarea';
 import { useOnboardingStore } from '../stores/onboardingStore';
 
 interface StepKnowledgeProps {

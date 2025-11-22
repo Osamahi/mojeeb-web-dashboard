@@ -56,13 +56,3 @@ export const AGENT_PURPOSES: AgentPurpose[] = [
     prompt: 'You are a versatile general assistant. You help with a wide range of tasks including answering questions, providing information, and assisting with various requests. You adapt your communication style to the user\'s needs.',
   },
 ];
-
-// Helper to get purpose by ID
-export const getPurposeById = (id: string): AgentPurpose | undefined => {
-  return AGENT_PURPOSES.find(purpose => purpose.id === id);
-};
-
-// Helper to get popular purposes
-export const getPopularPurposes = (): AgentPurpose[] => {
-  return AGENT_PURPOSES.filter(purpose => purpose.isPopular);
-};

@@ -3,6 +3,11 @@
  * Handles formatting and validation of international phone numbers
  */
 
+import { VALIDATION_RULES } from '../constants/validationRules';
+
+// Regex to extract only digits from a string
+const DIGITS_REGEX = /\D/g;
+
 export interface Country {
   code: string;
   name: string;
@@ -12,12 +17,19 @@ export interface Country {
 }
 
 /**
+ * Extract digits only from a string
+ * Removes all non-digit characters
+ */
+function extractDigits(value: string): string {
+  return value.replace(DIGITS_REGEX, '');
+}
+
+/**
  * Format phone number according to country format
  * Example: "1234567890" with format "XX XXX XXXX" -> "12 345 6789"
  */
 export function formatPhoneNumber(value: string, format: string): string {
-  const digits = value.replace(/\D/g, '');
-  const formatChars = format.replace(/X/g, '');
+  const digits = extractDigits(value);
   let formatted = '';
   let digitIndex = 0;
 
@@ -57,11 +69,11 @@ export function formatPhoneForDisplay(fullPhone: string): string {
 }
 
 /**
- * Validate phone number (minimum 5 digits)
+ * Validate phone number (minimum digits based on validation rules)
  */
 export function validatePhoneNumber(value: string): boolean {
-  const digits = value.replace(/\D/g, '');
-  return digits.length >= 5;
+  const digits = extractDigits(value);
+  return digits.length >= VALIDATION_RULES.PHONE_MIN_DIGITS;
 }
 
 /**
@@ -69,13 +81,14 @@ export function validatePhoneNumber(value: string): boolean {
  * Example: dialCode="+966", number="501234567" -> "+966501234567"
  */
 export function getFullPhoneNumber(dialCode: string, number: string): string {
-  const digits = number.replace(/\D/g, '');
+  const digits = extractDigits(number);
   return `${dialCode}${digits}`;
 }
 
 /**
  * Extract digits only from formatted phone number
+ * (Public alias for extractDigits function)
  */
 export function getDigitsOnly(value: string): string {
-  return value.replace(/\D/g, '');
+  return extractDigits(value);
 }
