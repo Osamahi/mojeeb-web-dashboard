@@ -308,18 +308,21 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
               <h3 className="text-sm font-semibold text-neutral-900 mb-4">Next Steps:</h3>
               <ul className="space-y-3">
                 <NextStepItem
+                  key={4}
                   stepNumber={4}
                   icon="💬"
                   text="Try your agent now"
                   isVisible={showNextStep4}
                 />
                 <NextStepItem
+                  key={5}
                   stepNumber={5}
                   icon="🎓"
                   text="Add more knowledge anytime"
                   isVisible={showNextStep5}
                 />
                 <NextStepItem
+                  key={6}
                   stepNumber={6}
                   icon="🔗"
                   text="Connect it to Facebook, Instagram, your website & more"
