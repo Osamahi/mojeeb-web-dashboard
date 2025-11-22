@@ -48,14 +48,11 @@ export const StepName = ({ onNext }: StepNameProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
-    const validation = validateAgentName(name);
-    if (!validation.isValid) {
-      setError(validation.error);
-      return;
-    }
+    // Validation already handled by useEffect (line 40)
+    // Store already updated by useEffect (line 43)
+    // Only proceed if valid
+    if (!isValid) return;
 
-    setAgentName(name);
     onNext();
   };
 
