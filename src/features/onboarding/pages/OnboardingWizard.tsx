@@ -24,7 +24,7 @@ import { PrimaryButton } from '../components/shared/PrimaryButton';
 export const OnboardingWizard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { currentStep, nextStep, data, completeOnboarding } = useOnboardingStore();
+  const { currentStep, nextStep, data, completeOnboarding, resetOnboardingState } = useOnboardingStore();
   const [isSuccessReady, setIsSuccessReady] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
@@ -71,7 +71,7 @@ export const OnboardingWizard = () => {
   };
 
   const handleOnboardingComplete = () => {
-    completeOnboarding();
+    completeOnboarding(); // Only marks as completed, doesn't reset step/data
 
     // CRITICAL: Invalidate React Query cache to force refetch on next mount
     // This ensures DashboardLayout gets fresh agents list including newly created agent
@@ -79,6 +79,12 @@ export const OnboardingWizard = () => {
 
     // Agent is already pre-selected globally, no need for URL param
     navigate('/conversations');
+
+    // Reset store state after navigation completes
+    // This prevents flicker back to Step 1 during navigation
+    setTimeout(() => {
+      resetOnboardingState();
+    }, 500);
   };
 
   const handleExitModalContinue = () => {

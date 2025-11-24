@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import type { User } from '../types/auth.types';
 import { setTokens as setApiTokens, clearTokens as clearApiTokens } from '@/lib/tokenManager';
 import { setSentryUser, clearSentryUser } from '@/lib/sentry';
+import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { useConversationStore } from '@/features/conversations/stores/conversationStore';
 
 interface AuthState {
   user: User | null;
@@ -61,11 +63,13 @@ export const useAuthStore = create<AuthState>()(
         console.log(`   Current user: ${get().user?.email || 'null'}`);
         console.log(`   Current isAuthenticated: ${get().isAuthenticated}`);
 
+        // Clear tokens from tokenManager
         clearApiTokens();
 
         // Clear Sentry user context on logout
         clearSentryUser();
 
+        // Clear auth state
         set({
           user: null,
           accessToken: null,
@@ -73,7 +77,14 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
         });
 
-        console.log(`   ✅ User logged out, all state cleared`);
+        // Clear other Zustand stores to prevent stale data
+        console.log(`   🧹 Clearing AgentStore...`);
+        useAgentStore.getState().reset();
+
+        console.log(`   🧹 Clearing ConversationStore...`);
+        useConversationStore.getState().clearSelection();
+
+        console.log(`   ✅ User logged out, all stores cleared`);
       },
 
       setLoading: (isLoading) => set({ isLoading }),

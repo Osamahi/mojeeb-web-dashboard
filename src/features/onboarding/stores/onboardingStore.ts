@@ -23,6 +23,7 @@ interface OnboardingState {
   setKnowledgeContent: (content: string) => void;
   setCreatedAgentId: (id: string) => void;
   completeOnboarding: () => void;
+  resetOnboardingState: () => void;
   resetOnboarding: () => void;
 }
 
@@ -87,11 +88,16 @@ export const useOnboardingStore = create<OnboardingState>()(
       // Completion
       completeOnboarding: () => set({
         hasCompletedOnboarding: true,
-        currentStep: OnboardingStep.Name,
-        data: initialData, // Clear form data after completion
+        // Don't reset step/data here - will be reset after navigation completes
       }),
 
-      // Reset
+      // Reset state after navigation (called by cleanup)
+      resetOnboardingState: () => set({
+        currentStep: OnboardingStep.Name,
+        data: initialData,
+      }),
+
+      // Full reset (including completion flag)
       resetOnboarding: () =>
         set({
           currentStep: OnboardingStep.Name,

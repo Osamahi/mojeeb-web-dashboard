@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 import { router } from './router';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { setGlobalQueryClient } from './lib/api';
 
 // Create a query client
 const queryClient = new QueryClient({
@@ -15,6 +16,9 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Register QueryClient globally for API interceptor to clear cache on logout
+setGlobalQueryClient(queryClient);
 
 function App() {
   return (

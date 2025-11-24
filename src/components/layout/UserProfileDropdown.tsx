@@ -7,6 +7,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Settings, LogOut, ChevronDown } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { authService } from '@/features/auth/services/authService';
@@ -16,6 +17,7 @@ export const UserProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((state) => state.user);
+  const queryClient = useQueryClient();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -32,13 +34,21 @@ export const UserProfileDropdown = () => {
   }, [isOpen]);
 
   const handleLogout = () => {
-    // 1. Clear local state immediately (tokens, user data)
+    // 1. Clear React Query cache to prevent stale data
+    queryClient.clear();
+
+    // 2. Clear persisted localStorage (agent and other stores)
+    localStorage.removeItem('mojeeb-agent-storage');
+    localStorage.removeItem('mojeeb-ui-storage');
+    localStorage.removeItem('mojeeb-onboarding-storage');
+
+    // 3. Clear auth state and other Zustand stores
     useAuthStore.getState().logout();
 
-    // 2. Redirect immediately - don't wait for API
+    // 4. Redirect immediately - don't wait for API
     window.location.href = '/login';
 
-    // 3. Fire-and-forget: invalidate refresh token on server (optional, non-blocking)
+    // 5. Fire-and-forget: invalidate refresh token on server (optional, non-blocking)
     authService.logout().catch(() => {});
   };
 

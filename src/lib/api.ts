@@ -1,4 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { QueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import {
   setTokens,
@@ -16,6 +17,14 @@ export { setTokens, getAccessToken, getRefreshToken, clearTokens };
 // Export API_URL for use in other modules (e.g., AuthInitializer)
 export const API_URL = env.VITE_API_URL;
 const API_TIMEOUT = env.VITE_API_TIMEOUT;
+
+// Global QueryClient instance for cache clearing on logout
+let globalQueryClient: QueryClient | null = null;
+
+export const setGlobalQueryClient = (client: QueryClient) => {
+  globalQueryClient = client;
+  logger.info('Global QueryClient registered in API interceptor');
+};
 
 // Create axios instance
 const api = axios.create({
@@ -85,8 +94,16 @@ const shouldRedirectToLogin = (): boolean => {
 const redirectToLogin = () => {
   if (shouldRedirectToLogin()) {
     lastRedirectTime = Date.now();
+
+    // Clear React Query cache to prevent stale data
+    if (globalQueryClient) {
+      logger.info('Clearing React Query cache on redirect to login');
+      globalQueryClient.clear();
+    }
+
     clearTokens();
     // Sync Zustand auth state - Critical fix for flickering loop
+    // This also clears AgentStore and ConversationStore
     useAuthStore.getState().logout();
     window.location.href = '/login';
   }

@@ -35,11 +35,24 @@ class AuthService {
    */
   private async initializeAgentData(): Promise<void> {
     try {
-      await agentService.getAgents();
+      const agents = await agentService.getAgents();
+
+      if (!agents || agents.length === 0) {
+        logger.warn('User has no agents - needs onboarding or agent creation');
+        // User authenticated successfully but has no agents
+        // This is a valid state - they may need to create their first agent
+        return;
+      }
+
       useAgentStore.getState().initializeAgentSelection();
+      logger.info('Agent selection initialized successfully', {
+        selectedAgentId: agents[0]?.id,
+        totalAgents: agents.length,
+      });
     } catch (error) {
       logger.error('Failed to initialize agent selection', error instanceof Error ? error : new Error(String(error)));
       // Don't fail the authentication if agent initialization fails
+      // The user can still access the app and retry manually or create an agent
     }
   }
 
