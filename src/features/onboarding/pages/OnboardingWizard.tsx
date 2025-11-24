@@ -77,8 +77,8 @@ export const OnboardingWizard = () => {
     // This ensures DashboardLayout gets fresh agents list including newly created agent
     queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
 
-    // Agent is already pre-selected globally, no need for URL param
-    navigate('/conversations');
+    // Navigate to Studio page where user can test their new agent
+    navigate('/studio');
 
     // Reset store state after navigation completes
     // This prevents flicker back to Step 1 during navigation
@@ -102,7 +102,7 @@ export const OnboardingWizard = () => {
 
   const handleSkipConfirm = () => {
     setShowSkipModal(false);
-    navigate('/conversations');
+    navigate('/studio');
   };
 
   const handleSkipCancel = () => {
