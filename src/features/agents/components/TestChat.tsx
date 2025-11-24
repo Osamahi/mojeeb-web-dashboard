@@ -156,7 +156,7 @@ export default function TestChat({ agentId }: TestChatProps) {
     };
 
     const channel = supabase
-      .channel(`test_chat_${conversationId}`)
+      .channel(`chat:${conversationId}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
