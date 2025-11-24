@@ -50,6 +50,12 @@ interface ChatStore {
   changeConversation: (conversationId: string) => void;
   clearMessages: () => void;
 
+  // Storage adapter actions (for ChatStorageAdapter compatibility)
+  setMessages: (messages: ChatMessage[]) => void;
+  addMessage: (message: ChatMessage) => void;
+  updateMessage: (id: string, updates: Partial<ChatMessage>) => void;
+  removeMessage: (id: string) => void;
+
   // Real-time handlers
   handleRealtimeEvent: (payload: ChatMessage[], eventType: RealtimeEventType) => void;
 }
@@ -257,5 +263,30 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         break;
       }
     }
+  },
+
+  // Storage Adapter Actions (for ChatStorageAdapter compatibility)
+  setMessages: (messages: ChatMessage[]) => {
+    set({ messages });
+  },
+
+  addMessage: (message: ChatMessage) => {
+    const { messages } = get();
+    // Prevent duplicates
+    if (messages.some((m) => m.id === message.id)) return;
+    set({ messages: [...messages, message] });
+  },
+
+  updateMessage: (id: string, updates: Partial<ChatMessage>) => {
+    const { messages } = get();
+    const newMessages = messages.map((msg) =>
+      msg.id === id ? { ...msg, ...updates } : msg
+    );
+    set({ messages: newMessages });
+  },
+
+  removeMessage: (id: string) => {
+    const { messages } = get();
+    set({ messages: messages.filter((msg) => msg.id !== id) });
   },
 }));

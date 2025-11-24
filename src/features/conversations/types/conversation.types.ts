@@ -75,6 +75,16 @@ export enum MessageStatus {
   Active = 1,
 }
 
+/**
+ * UI-level message send status for optimistic updates
+ * This is separate from MessageStatus which is backend status
+ */
+export enum MessageSendStatus {
+  Sending = 'sending',
+  Sent = 'sent',
+  Error = 'error',
+}
+
 export interface MessageAttachment {
   url: string;
   type: string;
@@ -99,6 +109,10 @@ export interface ChatMessage {
   updated_at: string;
   platform_message_id: string | null;
   action_metadata: Record<string, any> | null;
+
+  // UI-only fields for optimistic updates
+  sendStatus?: MessageSendStatus; // 'sending' | 'sent' | 'error'
+  isOptimistic?: boolean; // true for messages not yet confirmed by backend
 }
 
 // === Helper Types ===
