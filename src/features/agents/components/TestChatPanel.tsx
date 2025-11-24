@@ -84,7 +84,7 @@ export default function TestChatPanel({ agentId, isOpen, onClose }: TestChatPane
         </div>
 
         {/* Chat Content - Full height minus header */}
-        <div className="h-[calc(100%-57px)]">
+        <div className="h-[calc(100%-57px)] pb-4">
           <TestChat agentId={agentId} />
         </div>
       </div>

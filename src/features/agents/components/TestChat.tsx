@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
+import MessageComposer from '@/features/conversations/components/Chat/MessageComposer';
 import {
   testChatService,
   type StudioConversation,
@@ -60,14 +61,12 @@ const addMessageIfNew = (messages: TestMessage[], newMessage: TestMessage): Test
 
 export default function TestChat({ agentId }: TestChatProps) {
   const [messages, setMessages] = useState<TestMessage[]>([]);
-  const [inputMessage, setInputMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [conversation, setConversation] = useState<StudioConversation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
@@ -231,15 +230,6 @@ export default function TestChat({ agentId }: TestChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior });
   }, [messages]);
 
-  // Auto-resize textarea
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`;
-    }
-  }, [inputMessage]);
-
   // Handle new conversation - resets everything
   const handleNewConversation = useCallback(() => {
     clearAITimeout();
@@ -247,12 +237,12 @@ export default function TestChat({ agentId }: TestChatProps) {
     initializeConversation();
   }, [clearAITimeout, unsubscribeChannel, initializeConversation]);
 
-  // Send message handler
-  const handleSend = useCallback(async () => {
+  // Send message handler - Modified for MessageComposer integration
+  const handleSend = useCallback(async (message: string) => {
     // Prevent duplicate sends with synchronous ref check
     if (isSendingRef.current) return;
 
-    const trimmedMessage = inputMessage.trim();
+    const trimmedMessage = message.trim();
 
     // Early validation
     if (isSending || !conversation) return;
@@ -264,7 +254,6 @@ export default function TestChat({ agentId }: TestChatProps) {
 
     // Set synchronous flag before any state updates
     isSendingRef.current = true;
-    setInputMessage('');
     setIsSending(true);
     clearAITimeout();
 
@@ -297,14 +286,8 @@ export default function TestChat({ agentId }: TestChatProps) {
       setIsSending(false);
       isSendingRef.current = false;
     }
-  }, [inputMessage, isSending, conversation, agentId, clearAITimeout]);
+  }, [isSending, conversation, agentId, clearAITimeout]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  }, [handleSend]);
 
   // Show loading state during initialization
   if (isInitializing) {
@@ -443,64 +426,13 @@ export default function TestChat({ agentId }: TestChatProps) {
         )}
       </div>
 
-      {/* Message Composer */}
-      <div className="border-t border-neutral-200 p-3 sm:p-4 bg-white">
-        <div className="flex items-end gap-2 sm:gap-3">
-          {/* Text Input */}
-          <div className="flex-1">
-            <textarea
-              ref={textareaRef}
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a message to test your agent..."
-              disabled={isSending}
-              rows={1}
-              className={cn(
-                'w-full px-3 sm:px-4 py-3 rounded-lg resize-none',
-                'bg-neutral-50 border border-neutral-200',
-                'focus:outline-none focus:ring-2 focus:ring-brand-cyan focus:border-transparent',
-                'placeholder:text-neutral-400',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-                'text-sm leading-relaxed'
-              )}
-              style={{
-                maxHeight: '150px',
-                minHeight: '48px',
-              }}
-              aria-label="Message input"
-              aria-describedby="message-helper-text"
-            />
-          </div>
-
-          {/* Send Button */}
-          <button
-            onClick={handleSend}
-            disabled={!inputMessage.trim() || isSending}
-            className={cn(
-              'flex-shrink-0 w-12 h-12 rounded-lg',
-              'flex items-center justify-center',
-              'transition-all duration-200',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              inputMessage.trim() && !isSending
-                ? 'bg-black text-white hover:bg-neutral-800'
-                : 'bg-neutral-200 text-neutral-400'
-            )}
-            aria-label="Send message"
-          >
-            {isSending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
-          </button>
-        </div>
-
-        {/* Helper text - Hidden on mobile */}
-        <p id="message-helper-text" className="hidden sm:block text-xs text-neutral-500 mt-2">
-          Press <kbd className="px-1.5 py-0.5 rounded bg-neutral-100 border border-neutral-200 font-mono">Enter</kbd> to send
-          or <kbd className="px-1.5 py-0.5 rounded bg-neutral-100 border border-neutral-200 font-mono">Shift+Enter</kbd> for new line
-        </p>
+      {/* Message Composer - Using shared modern component */}
+      <div className="px-3 sm:px-4 py-3 sm:py-4">
+        <MessageComposer
+          onSendMessage={handleSend}
+          isSending={isSending}
+          placeholder="Type a message to test your agent..."
+        />
       </div>
     </div>
   );
