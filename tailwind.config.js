@@ -77,6 +77,9 @@ export default {
         'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         'scale-in': 'scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
         'shimmer': 'shimmer 2s infinite',
+        // Enhanced loading animations
+        'pulse-ring': 'pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'rotate-slow': 'rotateSlow 3s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -94,6 +97,15 @@ export default {
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
+        },
+        // Enhanced loading keyframes
+        pulseRing: {
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.05)', opacity: '0.8' },
+        },
+        rotateSlow: {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
         },
       },
     },

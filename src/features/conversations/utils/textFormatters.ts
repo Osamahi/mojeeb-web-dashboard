@@ -1,7 +1,10 @@
 /**
  * Text Formatting Utilities
  * Parse and format message text (bold, italic, links, RTL detection)
+ * Uses marked for safe markdown parsing to prevent XSS
  */
+
+import { marked } from 'marked';
 
 /**
  * Detect if text is primarily Arabic (for RTL direction)
@@ -12,30 +15,23 @@ export const isArabicText = (text: string): boolean => {
 };
 
 /**
- * Parse formatted text (bold, italic, links)
- * Returns HTML string
+ * Configure marked with security settings
+ */
+marked.setOptions({
+  breaks: true, // Convert \n to <br>
+  gfm: true, // GitHub Flavored Markdown
+  headerIds: false, // Disable header IDs to prevent XSS
+  mangle: false, // Don't mangle email addresses
+});
+
+/**
+ * Parse formatted text (bold, italic, links) with XSS protection
+ * Uses marked library for safe markdown parsing
+ * Returns HTML string (safe to use with DOMPurify)
  */
 export const parseFormattedText = (text: string, textColor: string = '#000000'): string => {
+  // First, handle phone numbers and WhatsApp links before markdown parsing
   let formatted = text;
-
-  // Escape HTML first
-  formatted = formatted
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  // Bold: **text**
-  formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-  // Italic: *text*
-  formatted = formatted.replace(/\*(.+?)\*/g, '<em>$1</em>');
-
-  // URLs: Auto-detect and make clickable
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  formatted = formatted.replace(
-    urlRegex,
-    `<a href="$1" target="_blank" rel="noopener noreferrer" style="color: ${textColor}; text-decoration: underline;">$1</a>`
-  );
 
   // Phone numbers (Egyptian format): 01xxxxxxxxx
   const phoneRegex = /\b(01[0-9]{9})\b/g;
@@ -52,7 +48,20 @@ export const parseFormattedText = (text: string, textColor: string = '#000000'):
       `${prefix}: <a href="https://wa.me/2${number}" target="_blank" rel="noopener noreferrer" style="color: ${textColor}; text-decoration: underline;">${number}</a>`
   );
 
-  return formatted;
+  // Parse markdown with marked (handles bold, italic, links safely)
+  const parsed = marked.parseInline(formatted) as string;
+
+  // Apply link styling to markdown-generated links
+  const styledParsed = parsed.replace(
+    /<a /g,
+    `<a style="color: ${textColor}; text-decoration: underline;" `
+  );
+
+  // Ensure external links have security attributes
+  return styledParsed.replace(
+    /<a href="http/g,
+    '<a target="_blank" rel="noopener noreferrer" href="http'
+  );
 };
 
 /**

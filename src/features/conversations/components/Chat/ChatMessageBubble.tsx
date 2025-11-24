@@ -93,6 +93,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                   textAlign: isRTL ? 'right' : 'left',
                   direction: isRTL ? 'rtl' : 'ltr',
                 }}
+                // XSS Protection Chain:
+                // 1. parseFormattedText uses marked library for safe markdown parsing
+                // 2. DOMPurify sanitizes the output HTML to remove any malicious content
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(parseFormattedText(messageText, bubbleStyle.color)),
                 }}

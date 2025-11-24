@@ -25,11 +25,20 @@ interface TestChatProps {
   agentId: string;
 }
 
+// Helpful tips to display while initializing
+const LOADING_TIPS = [
+  'Test your agent\'s responses in real-time',
+  'Messages are not saved in test mode',
+  'Try different questions to refine your agent',
+  'Responses are generated using your current prompt',
+];
+
 export default function TestChat({ agentId }: TestChatProps) {
   // State
   const [conversation, setConversation] = useState<StudioConversation | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
   // Use local storage (ephemeral - resets on unmount)
   const storage = useLocalChatStorage();
@@ -69,6 +78,17 @@ export default function TestChat({ agentId }: TestChatProps) {
       };
     },
   });
+
+  // Rotate tips while initializing
+  useEffect(() => {
+    if (!isInitializing) return;
+
+    const interval = setInterval(() => {
+      setCurrentTipIndex((prev) => (prev + 1) % LOADING_TIPS.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isInitializing]);
 
   // Initialize conversation on mount
   useEffect(() => {
@@ -118,16 +138,40 @@ export default function TestChat({ agentId }: TestChatProps) {
     }
   };
 
-  // Loading state
+  // Enhanced loading state
   if (isInitializing) {
     return (
       <div
-        className="h-full flex flex-col items-center justify-center bg-white p-6"
+        className="h-full flex flex-col items-center justify-center bg-white p-8 animate-fade-in"
         role="status"
         aria-live="polite"
       >
-        <Loader2 className="w-12 h-12 animate-spin text-neutral-400 mb-4" aria-hidden="true" />
-        <p className="text-sm text-neutral-600">Initializing test environment...</p>
+        {/* Enhanced spinner with dual rings */}
+        <div className="relative mb-6 animate-scale-in">
+          {/* Outer pulsing ring */}
+          <div className="absolute inset-0 w-20 h-20 rounded-full border-4 border-brand-cyan/20 animate-pulse-ring" />
+
+          {/* Inner rotating ring */}
+          <div className="relative w-20 h-20 rounded-full border-4 border-transparent border-t-brand-cyan animate-rotate-slow" />
+
+          {/* Center dot */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-brand-green" />
+        </div>
+
+        {/* Main heading */}
+        <h3 className="text-lg font-semibold text-neutral-900 mb-2 animate-slide-up">
+          Initializing test environment
+        </h3>
+
+        {/* Rotating tips */}
+        <div className="h-6 overflow-hidden">
+          <p
+            key={currentTipIndex}
+            className="text-sm text-neutral-500 text-center max-w-md px-4 animate-fade-in"
+          >
+            {LOADING_TIPS[currentTipIndex]}
+          </p>
+        </div>
       </div>
     );
   }
