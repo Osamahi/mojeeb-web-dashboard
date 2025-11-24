@@ -123,7 +123,7 @@ export default function KnowledgeBaseItem({
       <div className="bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">
         {/* Accordion Header - GitHub Style */}
         <div
-          className="flex items-center gap-3 p-4 cursor-pointer"
+          className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 cursor-pointer"
           onClick={() => {
             if (!isEditing) {
               setIsExpanded(!isExpanded);
@@ -156,10 +156,11 @@ export default function KnowledgeBaseItem({
                     if (!isExpanded) setIsExpanded(true);
                     setIsEditing(true);
                   }}
-                  className="p-1.5 hover:bg-neutral-100 rounded transition-colors text-neutral-600 hover:text-neutral-950"
+                  className="p-2 sm:p-1.5 hover:bg-neutral-100 rounded transition-colors text-neutral-600 hover:text-neutral-950 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
                   title="Edit"
+                  aria-label="Edit knowledge base"
                 >
-                  <Edit2 className="w-4 h-4" />
+                  <Edit2 className="w-5 h-5 sm:w-4 sm:h-4" />
                 </button>
                 <button
                   onClick={(e) => {
@@ -167,10 +168,11 @@ export default function KnowledgeBaseItem({
                     handleDelete();
                   }}
                   disabled={deleteMutation.isPending}
-                  className="p-1.5 hover:bg-red-50 rounded transition-colors text-neutral-600 hover:text-red-600 disabled:opacity-50"
+                  className="p-2 sm:p-1.5 hover:bg-red-50 rounded transition-colors text-neutral-600 hover:text-red-600 disabled:opacity-50 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
                   title="Delete"
+                  aria-label="Delete knowledge base"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
                 </button>
               </>
             )}
@@ -179,7 +181,7 @@ export default function KnowledgeBaseItem({
 
         {/* Accordion Content - Smooth Transition */}
         {isExpanded && (
-          <div className="px-4 pb-4 space-y-3 border-t border-neutral-100">
+          <div className="px-3 sm:px-4 pb-3 sm:pb-4 space-y-3 border-t border-neutral-100">
             {isEditing ? (
               <>
                 {/* Edit Mode - Inline */}

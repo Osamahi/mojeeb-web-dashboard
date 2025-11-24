@@ -78,19 +78,22 @@ export const RichTextEditor = ({
 
   return (
     <div className={cn('w-full', className)}>
-      {/* Minimal Toolbar */}
-      <div className="flex items-center gap-1 p-2 border border-neutral-300 border-b-0 rounded-t-md bg-neutral-50">
+      {/* Minimal Toolbar - Responsive touch targets */}
+      <div className="flex items-center gap-1 sm:gap-1 p-2 border border-neutral-300 border-b-0 rounded-t-md bg-neutral-50">
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={disabled}
           className={cn(
-            'p-1.5 rounded transition-colors',
+            'p-2.5 sm:p-1.5 rounded transition-colors',
             'hover:bg-neutral-200',
             'disabled:opacity-50 disabled:cursor-not-allowed',
+            'min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0',
+            'flex items-center justify-center',
             editor.isActive('bold') ? 'bg-neutral-300' : 'bg-transparent'
           )}
           title="Bold"
+          aria-label="Toggle bold"
         >
           <Bold className="w-4 h-4 text-neutral-700" />
         </button>
@@ -99,12 +102,15 @@ export const RichTextEditor = ({
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={disabled}
           className={cn(
-            'p-1.5 rounded transition-colors',
+            'p-2.5 sm:p-1.5 rounded transition-colors',
             'hover:bg-neutral-200',
             'disabled:opacity-50 disabled:cursor-not-allowed',
+            'min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0',
+            'flex items-center justify-center',
             editor.isActive('italic') ? 'bg-neutral-300' : 'bg-transparent'
           )}
           title="Italic"
+          aria-label="Toggle italic"
         >
           <Italic className="w-4 h-4 text-neutral-700" />
         </button>
@@ -114,12 +120,15 @@ export const RichTextEditor = ({
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           disabled={disabled}
           className={cn(
-            'p-1.5 rounded transition-colors',
+            'p-2.5 sm:p-1.5 rounded transition-colors',
             'hover:bg-neutral-200',
             'disabled:opacity-50 disabled:cursor-not-allowed',
+            'min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0',
+            'flex items-center justify-center',
             editor.isActive('bulletList') ? 'bg-neutral-300' : 'bg-transparent'
           )}
           title="Bullet List"
+          aria-label="Toggle bullet list"
         >
           <List className="w-4 h-4 text-neutral-700" />
         </button>
@@ -128,12 +137,15 @@ export const RichTextEditor = ({
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           disabled={disabled}
           className={cn(
-            'p-1.5 rounded transition-colors',
+            'p-2.5 sm:p-1.5 rounded transition-colors',
             'hover:bg-neutral-200',
             'disabled:opacity-50 disabled:cursor-not-allowed',
+            'min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0',
+            'flex items-center justify-center',
             editor.isActive('orderedList') ? 'bg-neutral-300' : 'bg-transparent'
           )}
           title="Numbered List"
+          aria-label="Toggle numbered list"
         >
           <ListOrdered className="w-4 h-4 text-neutral-700" />
         </button>

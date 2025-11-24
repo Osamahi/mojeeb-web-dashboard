@@ -61,7 +61,7 @@ export default function MainInstructionCard() {
     <div className="bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">
       {/* Accordion Header - GitHub Style */}
       <div
-        className="flex items-center gap-3 p-4 cursor-pointer"
+        className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {/* Chevron indicator */}
@@ -88,25 +88,27 @@ export default function MainInstructionCard() {
               setIsExpanded(true);
               setIsEditing(true);
             }}
-            className="p-1.5 hover:bg-neutral-100 rounded transition-colors text-neutral-600 hover:text-neutral-950"
+            className="p-2 sm:p-1.5 hover:bg-neutral-100 rounded transition-colors text-neutral-600 hover:text-neutral-950 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
             title="Edit"
+            aria-label="Edit main instructions"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
           <button
             disabled
-            className="p-1.5 rounded text-neutral-400 cursor-not-allowed"
+            className="p-2 sm:p-1.5 rounded text-neutral-400 cursor-not-allowed min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
             title="Main Instructions cannot be deleted"
+            aria-label="Delete disabled"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>
 
       {/* Accordion Content */}
       {isExpanded && (
-        <div className="px-4 pb-4 border-t border-neutral-100">
-          <div className="pt-4">
+        <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-neutral-100">
+          <div className="pt-3 sm:pt-4">
             {isEditing ? (
               <PromptEditor
                 agent={agent}

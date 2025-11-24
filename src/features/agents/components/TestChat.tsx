@@ -340,21 +340,21 @@ export default function TestChat({ agentId }: TestChatProps) {
     <div className="h-full flex flex-col bg-white relative">
       {/* New Conversation Button - Floats at top when messages exist */}
       {messages.length > 0 && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+        <div className="absolute top-2 sm:top-4 left-1/2 -translate-x-1/2 z-10">
           <button
             onClick={handleNewConversation}
             className="flex items-center gap-2 px-3 py-1.5 bg-white border border-neutral-200 rounded-md shadow-sm hover:bg-neutral-50 hover:shadow-md transition-all duration-200"
             aria-label="Start a new conversation"
           >
             <RefreshCw className="w-4 h-4 text-neutral-600" aria-hidden="true" />
-            <span className="text-sm text-neutral-600 font-medium">New conversation</span>
+            <span className="hidden sm:inline text-sm text-neutral-600 font-medium">New conversation</span>
           </button>
         </div>
       )}
 
       {/* Messages Area */}
       <div
-        className="flex-1 overflow-y-auto p-4 space-y-4"
+        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4"
         role="log"
         aria-live="polite"
         aria-label="Chat messages"
@@ -365,7 +365,7 @@ export default function TestChat({ agentId }: TestChatProps) {
               <Send className="w-8 h-8 text-neutral-400" />
             </div>
             <p className="text-neutral-950 font-medium mb-1">Start Testing</p>
-            <p className="text-sm text-neutral-600 max-w-sm">
+            <p className="text-sm text-neutral-600 max-w-full sm:max-w-sm">
               Send a message below to test your agent's responses based on the current prompt and knowledge bases.
             </p>
           </div>
@@ -387,7 +387,7 @@ export default function TestChat({ agentId }: TestChatProps) {
                 >
                   <div
                     className={cn(
-                      'max-w-[70%] rounded-2xl p-4 border',
+                      'max-w-[90%] sm:max-w-[85%] lg:max-w-[70%] rounded-2xl p-3 sm:p-4 border',
                       'transition-shadow duration-200 hover:shadow-sm',
                       message.role === 'user'
                         ? 'bg-white text-black border-neutral-200'
@@ -444,8 +444,8 @@ export default function TestChat({ agentId }: TestChatProps) {
       </div>
 
       {/* Message Composer */}
-      <div className="border-t border-neutral-200 p-4 bg-white">
-        <div className="flex items-end gap-3">
+      <div className="border-t border-neutral-200 p-3 sm:p-4 bg-white">
+        <div className="flex items-end gap-2 sm:gap-3">
           {/* Text Input */}
           <div className="flex-1">
             <textarea
@@ -457,7 +457,7 @@ export default function TestChat({ agentId }: TestChatProps) {
               disabled={isSending}
               rows={1}
               className={cn(
-                'w-full px-4 py-3 rounded-lg resize-none',
+                'w-full px-3 sm:px-4 py-3 rounded-lg resize-none',
                 'bg-neutral-50 border border-neutral-200',
                 'focus:outline-none focus:ring-2 focus:ring-brand-cyan focus:border-transparent',
                 'placeholder:text-neutral-400',
@@ -496,8 +496,8 @@ export default function TestChat({ agentId }: TestChatProps) {
           </button>
         </div>
 
-        {/* Helper text */}
-        <p id="message-helper-text" className="text-xs text-neutral-500 mt-2">
+        {/* Helper text - Hidden on mobile */}
+        <p id="message-helper-text" className="hidden sm:block text-xs text-neutral-500 mt-2">
           Press <kbd className="px-1.5 py-0.5 rounded bg-neutral-100 border border-neutral-200 font-mono">Enter</kbd> to send
           or <kbd className="px-1.5 py-0.5 rounded bg-neutral-100 border border-neutral-200 font-mono">Shift+Enter</kbd> for new line
         </p>
