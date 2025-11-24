@@ -44,7 +44,6 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   const chatEngine = useChatEngine({
     conversationId: conversation.id,
     agentId: globalSelectedAgent?.id,
-    mode: 'production',
     storage,
     enablePagination: true,
     onError: (err) => {

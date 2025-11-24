@@ -22,9 +22,6 @@ export interface ChatEngineConfig {
   /** Agent ID for AI responses (required for test mode) */
   agentId?: string;
 
-  /** Chat mode */
-  mode: 'test' | 'production';
-
   /** Storage adapter */
   storage: ChatStorageAdapter;
 
@@ -81,13 +78,31 @@ const AI_RESPONSE_TIMEOUT = 30000; // 30 seconds
  * Generate temporary UUID for optimistic messages
  */
 const generateTempId = (): string => {
-  return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `temp_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 };
+
+/**
+ * Backend message shape from Supabase
+ */
+interface BackendMessage {
+  id: string;
+  conversation_id: string;
+  message: string;
+  message_type?: string;
+  attachments?: any;
+  sender_id?: string | null;
+  sender_role: string;
+  status?: string;
+  created_at: string;
+  updated_at: string;
+  platform_message_id?: string | null;
+  action_metadata?: any;
+}
 
 /**
  * Transform backend message to ChatMessage
  */
-const transformMessage = (backendMsg: any): ChatMessage => {
+const transformMessage = (backendMsg: BackendMessage): ChatMessage => {
   return {
     id: backendMsg.id,
     conversation_id: backendMsg.conversation_id,
@@ -121,7 +136,6 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
   const {
     conversationId,
     agentId,
-    mode,
     storage,
     enablePagination = false,
     onError,
@@ -130,7 +144,6 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
 
   // State
   const [isSending, setIsSending] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isAITyping, setIsAITyping] = useState(false);
 
   // Refs
@@ -155,17 +168,6 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       optimisticMessagesRef.current.delete(tempId);
     },
     []
-  );
-
-  const updateOptimisticMessage = useCallback(
-    (tempId: string, updates: Partial<ChatMessage>) => {
-      const optimisticMsg = optimisticMessagesRef.current.get(tempId);
-      if (optimisticMsg) {
-        storage.updateMessage(tempId, updates);
-        removeOptimisticMessage(tempId);
-      }
-    },
-    [storage, removeOptimisticMessage]
   );
 
   // === Timeout Management ===
@@ -267,6 +269,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
             clearTimeout(typingTimeoutRef.current);
           }
           typingTimeoutRef.current = setTimeout(() => {
+            if (!isMountedRef.current) return; // Prevent setState on unmounted component
             setIsAITyping(false);
           }, 3000);
         } else {
@@ -435,6 +438,11 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
         channelRef.current = null;
       }
       clearAITimeout();
+      // Clear typing timeout to prevent memory leak
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+      }
     };
   }, [subscribeToMessages, clearAITimeout]);
 
@@ -442,7 +450,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
   return {
     messages: storage.messages,
     isSending,
-    isLoading,
+    isLoading: false, // Always false - initial fetch handled by caller (e.g., ChatPanel)
     isAITyping,
     hasMore: enablePagination ? false : undefined, // TODO: Implement pagination
     sendMessage,

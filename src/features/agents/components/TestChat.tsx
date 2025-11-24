@@ -38,7 +38,6 @@ export default function TestChat({ agentId }: TestChatProps) {
   const chatEngine = useChatEngine({
     conversationId: conversation?.id || '',
     agentId,
-    mode: 'test',
     storage,
     enablePagination: false,
     onError: (err) => {
