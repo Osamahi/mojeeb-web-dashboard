@@ -111,6 +111,7 @@ export interface ChatMessage {
   action_metadata: Record<string, any> | null;
 
   // UI-only fields for optimistic updates
+  correlation_id?: string; // Unique ID for matching optimistic messages with backend responses
   sendStatus?: MessageSendStatus; // 'sending' | 'sent' | 'error'
   isOptimistic?: boolean; // true for messages not yet confirmed by backend
 }

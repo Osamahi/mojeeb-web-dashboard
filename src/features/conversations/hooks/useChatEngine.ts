@@ -7,11 +7,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
-import { toast } from 'sonner';
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import type { ChatStorageAdapter } from './useChatStorage';
 import type { ChatMessage, MessageSendStatus } from '../types/conversation.types';
 import { MessageStatus, SenderRole, MessageType } from '../types/conversation.types';
+import {
+  handleMessageSendError,
+  handleSubscriptionError,
+  handleAITimeoutError,
+} from '../utils/chatErrorHandler';
 
 // === Types ===
 
@@ -77,8 +81,15 @@ const AI_RESPONSE_TIMEOUT = 30000; // 30 seconds
 /**
  * Generate temporary UUID for optimistic messages
  */
-const generateTempId = (): string => {
-  return `temp_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+const generateTempId = (correlationId: string): string => {
+  return `temp-${correlationId}`;
+};
+
+/**
+ * Generate unique correlation ID for tracking optimistic messages
+ */
+const generateCorrelationId = (): string => {
+  return crypto.randomUUID();
 };
 
 /**
@@ -121,8 +132,15 @@ const transformMessage = (backendMsg: BackendMessage): ChatMessage => {
 
 /**
  * Check if two messages are the same (for reconciliation)
+ * Prioritizes correlation_id matching (reliable), falls back to time-window matching (legacy)
  */
 const messagesMatch = (msg1: ChatMessage, msg2: ChatMessage): boolean => {
+  // Reliable: Match by correlation ID if both messages have one
+  if (msg1.correlation_id && msg2.correlation_id) {
+    return msg1.correlation_id === msg2.correlation_id;
+  }
+
+  // Fallback: Legacy time-window + content matching (for backward compatibility)
   return (
     msg1.message === msg2.message &&
     msg1.sender_role === msg2.sender_role &&
@@ -183,10 +201,14 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
     clearAITimeout();
     timeoutRef.current = setTimeout(() => {
       if (!isMountedRef.current) return;
-      logger.warn('AI response timeout after 30 seconds');
+      handleAITimeoutError({
+        component: 'useChatEngine',
+        conversationId,
+        agentId,
+      });
       setIsSending(false);
     }, AI_RESPONSE_TIMEOUT);
-  }, [clearAITimeout]);
+  }, [clearAITimeout, conversationId, agentId]);
 
   // === Real-time Subscription ===
 
@@ -213,10 +235,13 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
             logger.info('Reconciling optimistic message', {
               tempId,
               realId: newMessage.id,
+              correlationId: optimisticMsg.correlation_id,
+              matchedBy: optimisticMsg.correlation_id ? 'correlation_id' : 'time-window',
             });
 
             storage.updateMessage(tempId, {
               id: newMessage.id,
+              correlation_id: optimisticMsg.correlation_id, // Preserve correlation ID
               sendStatus: 'sent' as MessageSendStatus,
               isOptimistic: false,
               created_at: newMessage.created_at,
@@ -305,8 +330,11 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       .on('broadcast', { event: 'typing' }, handleTyping)
       .subscribe((status, err) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          logger.error(`Subscription ${status.toLowerCase()}`, err);
-          toast.error('Failed to connect to real-time updates');
+          handleSubscriptionError(err || new Error(`Subscription ${status}`), {
+            component: 'useChatEngine',
+            conversationId,
+            subscriptionStatus: status,
+          });
         } else if (status === 'SUBSCRIBED') {
           logger.info('Successfully subscribed to conversation', {
             conversationId,
@@ -325,7 +353,9 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
     async (content: string) => {
       if (!content.trim() || !conversationId) return;
 
-      const tempId = generateTempId();
+      // Generate correlation ID for reliable message matching
+      const correlationId = generateCorrelationId();
+      const tempId = generateTempId(correlationId);
 
       // 1. Create optimistic message
       const optimisticMessage: ChatMessage = {
@@ -342,6 +372,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
         platform_message_id: null,
         action_metadata: null,
         // UI-only fields
+        correlation_id: correlationId,
         sendStatus: 'sending' as MessageSendStatus,
         isOptimistic: true,
       };
@@ -371,8 +402,6 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       } catch (error) {
         if (!isMountedRef.current) return;
 
-        logger.error('Failed to send message', error);
-
         // Mark optimistic message as error
         storage.updateMessage(tempId, {
           sendStatus: 'error' as MessageSendStatus,
@@ -381,10 +410,16 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
         setIsSending(false);
         clearAITimeout();
 
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to send message';
-        onError?.(error instanceof Error ? error : new Error(errorMessage));
-        toast.error(errorMessage);
+        // Centralized error handling
+        handleMessageSendError(error, {
+          component: 'useChatEngine',
+          conversationId,
+          agentId,
+          messageId: tempId,
+        });
+
+        // Call custom error callback if provided
+        onError?.(error instanceof Error ? error : new Error('Failed to send message'));
       }
     },
     [
