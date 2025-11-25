@@ -16,6 +16,11 @@ import {
   handleSubscriptionError,
   handleAITimeoutError,
 } from '../utils/chatErrorHandler';
+import {
+  CHAT_TIMEOUTS,
+  CHAT_IDENTIFIERS,
+  CHANNEL_NAMES,
+} from '../constants/chatConstants';
 
 // === Types ===
 
@@ -72,17 +77,13 @@ export interface ChatEngineReturn {
   clearMessages: () => void;
 }
 
-// === Constants ===
-
-const AI_RESPONSE_TIMEOUT = 30000; // 30 seconds
-
 // === Helpers ===
 
 /**
  * Generate temporary UUID for optimistic messages
  */
 const generateTempId = (correlationId: string): string => {
-  return `temp-${correlationId}`;
+  return `${CHAT_IDENTIFIERS.TEMP_ID_PREFIX}${correlationId}`;
 };
 
 /**
@@ -100,14 +101,14 @@ interface BackendMessage {
   conversation_id: string;
   message: string;
   message_type?: string;
-  attachments?: any;
+  attachments?: string | null;
   sender_id?: string | null;
   sender_role: string;
   status?: string;
   created_at: string;
   updated_at: string;
   platform_message_id?: string | null;
-  action_metadata?: any;
+  action_metadata?: Record<string, unknown> | null;
 }
 
 /**
@@ -144,12 +145,55 @@ const messagesMatch = (msg1: ChatMessage, msg2: ChatMessage): boolean => {
   return (
     msg1.message === msg2.message &&
     msg1.sender_role === msg2.sender_role &&
-    Math.abs(new Date(msg1.created_at).getTime() - new Date(msg2.created_at).getTime()) < 5000 // Within 5 seconds
+    Math.abs(new Date(msg1.created_at).getTime() - new Date(msg2.created_at).getTime()) < CHAT_TIMEOUTS.MESSAGE_RECONCILIATION_WINDOW
   );
 };
 
 // === Main Hook ===
 
+/**
+ * Unified chat engine with real-time updates and optimistic message handling
+ *
+ * @description
+ * Core chat logic providing:
+ * - Real-time message subscriptions via Supabase
+ * - Optimistic message updates with correlation ID matching
+ * - AI response timeout detection and recovery
+ * - Typing indicator broadcasts
+ * - Storage-agnostic architecture via adapter pattern
+ *
+ * @example
+ * ```ts
+ * // For production chat (persistent storage)
+ * const storage = useZustandChatStorage();
+ * const { messages, isSending, sendMessage } = useChatEngine({
+ *   conversationId: "conv-123",
+ *   agentId: "agent-456",
+ *   storage,
+ *   sendMessageFn: async (params) =>
+ *     await chatApiService.sendMessageWithAI(params),
+ * });
+ *
+ * // For test chat (ephemeral storage)
+ * const storage = useLocalChatStorage();
+ * const { messages, sendMessage } = useChatEngine({
+ *   conversationId: testConversation.id,
+ *   storage,
+ *   sendMessageFn: async (params) =>
+ *     await testChatService.sendTestMessage(params),
+ * });
+ * ```
+ *
+ * @param config - Configuration object for chat engine
+ * @param config.conversationId - Unique conversation identifier
+ * @param config.agentId - Optional agent ID for AI responses
+ * @param config.storage - Storage adapter for message persistence
+ * @param config.enablePagination - Enable pagination (currently unused)
+ * @param config.onError - Custom error callback
+ * @param config.sendMessageFn - Function to send messages to backend
+ *
+ * @returns Chat engine interface with messages, loading states, and actions
+ */
 export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
   const {
     conversationId,
@@ -207,7 +251,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
         agentId,
       });
       setIsSending(false);
-    }, AI_RESPONSE_TIMEOUT);
+    }, CHAT_TIMEOUTS.AI_RESPONSE);
   }, [clearAITimeout, conversationId, agentId]);
 
   // === Real-time Subscription ===
@@ -221,7 +265,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       channelRef.current = null;
     }
 
-    const handleInsert = (payload: RealtimePostgresChangesPayload<any>) => {
+    const handleInsert = (payload: RealtimePostgresChangesPayload<BackendMessage>) => {
       if (!payload.new || !isMountedRef.current) return;
 
       try {
@@ -229,7 +273,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
 
         // Check if this is a backend confirmation of our optimistic message
         let reconciledOptimistic = false;
-        optimisticMessagesRef.current.forEach((optimisticMsg, tempId) => {
+        for (const [tempId, optimisticMsg] of optimisticMessagesRef.current.entries()) {
           if (messagesMatch(optimisticMsg, newMessage)) {
             // Replace optimistic message with real backend message
             logger.info('Reconciling optimistic message', {
@@ -250,8 +294,9 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
 
             removeOptimisticMessage(tempId);
             reconciledOptimistic = true;
+            break; // Exit early - only one match per message
           }
-        });
+        }
 
         // If not an optimistic reconciliation, add as new message
         if (!reconciledOptimistic) {
@@ -268,7 +313,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       }
     };
 
-    const handleUpdate = (payload: RealtimePostgresChangesPayload<any>) => {
+    const handleUpdate = (payload: RealtimePostgresChangesPayload<BackendMessage>) => {
       if (!payload.new || !isMountedRef.current) return;
 
       try {
@@ -285,7 +330,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       const { user_id, is_typing } = payload.payload;
 
       // Only show typing indicator if it's not from the studio user (us)
-      if (user_id !== 'studio_user') {
+      if (user_id !== CHAT_IDENTIFIERS.STUDIO_USER_ID) {
         setIsAITyping(is_typing);
 
         // Auto-hide typing indicator after 3 seconds of no updates
@@ -296,17 +341,19 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
           typingTimeoutRef.current = setTimeout(() => {
             if (!isMountedRef.current) return; // Prevent setState on unmounted component
             setIsAITyping(false);
-          }, 3000);
+            typingTimeoutRef.current = null; // Clear ref to prevent memory leak
+          }, CHAT_TIMEOUTS.TYPING_INDICATOR);
         } else {
           if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = null; // Clear ref to prevent memory leak
           }
         }
       }
     };
 
     const channel = supabase
-      .channel(`chat:${conversationId}`)
+      .channel(CHANNEL_NAMES.CHAT(conversationId))
       .on(
         'postgres_changes',
         {

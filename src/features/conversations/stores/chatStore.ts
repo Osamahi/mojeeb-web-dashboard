@@ -9,8 +9,7 @@ import type { ChatMessage } from '../types';
 import { fetchMessages } from '../services/conversationService';
 import type { CatchError } from '@/lib/errors';
 import { handleMessageFetchError } from '../utils/chatErrorHandler';
-
-const CHAT_PAGE_SIZE = 50;
+import { CHAT_PAGINATION } from '../constants/chatConstants';
 
 interface ChatStore {
   // State
@@ -63,14 +62,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     try {
       const offset = refresh ? 0 : messages.length;
-      const data = await fetchMessages({ conversationId, offset, limit: CHAT_PAGE_SIZE });
+      const data = await fetchMessages({ conversationId, offset, limit: CHAT_PAGINATION.PAGE_SIZE });
 
       // If refreshing, replace all. Otherwise, prepend older messages
       const newMessages = refresh ? data : [...data, ...messages];
 
       set({
         messages: newMessages,
-        hasMore: data.length === CHAT_PAGE_SIZE,
+        hasMore: data.length === CHAT_PAGINATION.PAGE_SIZE,
         isLoading: false,
         currentConversationId: conversationId,
       });

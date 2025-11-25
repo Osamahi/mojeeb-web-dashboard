@@ -54,11 +54,16 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
       chatToasts.sendError();
     },
     sendMessageFn: async (params) => {
+      // Validate agent ID is present
+      if (!params.agentId) {
+        throw new Error('Agent ID is required to send messages');
+      }
+
       // Send message with AI response
       const response = await chatApiService.sendMessageWithAI({
         conversationId: params.conversationId,
         message: params.message,
-        agentId: params.agentId!,
+        agentId: params.agentId,
       });
 
       // Return as ChatMessage format (backend returns user message)
