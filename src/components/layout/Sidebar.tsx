@@ -145,10 +145,7 @@ export const Sidebar = () => {
             )}
 
             {/* Navigation Icons */}
-            <nav className={cn(
-              'flex-1 overflow-y-auto',
-              isMobile || !isSidebarCollapsed ? 'p-4 space-y-1' : 'py-4 flex flex-col items-center space-y-2'
-            )}>
+            <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-2">
               {navigation
                 .filter((item) => {
                   // Hide SuperAdmin-only items if user is not SuperAdmin
@@ -167,10 +164,7 @@ export const Sidebar = () => {
                     to={item.href}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center transition-colors duration-200',
-                        isMobile || !isSidebarCollapsed
-                          ? 'gap-3 px-4 py-3 rounded-md w-full'  // Expanded: full width with text
-                          : 'justify-center w-12 h-12 rounded-md',  // Collapsed: icon-only, square
+                        'flex items-center rounded-md transition-colors duration-200 overflow-hidden',
                         isActive
                           ? 'text-brand-cyan font-medium'
                           : 'text-neutral-700 hover:text-brand-cyan'
@@ -180,14 +174,25 @@ export const Sidebar = () => {
                   >
                     {({ isActive }) => (
                       <>
-                        <item.icon
-                          className={cn(
-                            'w-6 h-6 flex-shrink-0',
-                            isActive ? 'text-brand-cyan' : 'text-neutral-600'
-                          )}
-                        />
+                        {/* Fixed-width icon container - always 48px, keeps icon position consistent */}
+                        <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                          <item.icon
+                            className={cn(
+                              'w-6 h-6',
+                              isActive ? 'text-brand-cyan' : 'text-neutral-600'
+                            )}
+                          />
+                        </div>
+                        {/* Text label - fades in/out smoothly */}
                         {(isMobile || !isSidebarCollapsed) && (
-                          <span className="text-sm">{item.name}</span>
+                          <span
+                            className="text-sm pr-4 transition-opacity duration-200"
+                            style={{
+                              opacity: (isMobile || !isSidebarCollapsed) ? 1 : 0
+                            }}
+                          >
+                            {item.name}
+                          </span>
                         )}
                       </>
                     )}
