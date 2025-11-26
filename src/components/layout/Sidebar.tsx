@@ -43,7 +43,7 @@ const navigation: NavigationItem[] = [
   { name: 'Team', href: '/team', icon: UserCog },
   { name: 'Connections', href: '/connections', icon: Link2 },
   { name: 'Users', href: '/users', icon: Users, requireSuperAdmin: true },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  // { name: 'Settings', href: '/settings', icon: Settings }, // Hidden until full implementation
 ];
 
 export const Sidebar = () => {
