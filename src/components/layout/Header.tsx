@@ -1,23 +1,18 @@
 /**
- * Mobile Header Component
- * Fixed header for mobile devices with hamburger menu toggle
- * Only visible on screens < 768px
+ * Unified Header Component
+ * Fixed header for all devices with hamburger menu toggle, logo, and agent selector
+ * Visible on all screen sizes (mobile, tablet, desktop)
  */
 
 import { Menu, X } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
-import { useIsMobile } from '@/hooks/useMediaQuery';
 import GlobalAgentSelector from '@/features/agents/components/GlobalAgentSelector';
 
-export const MobileHeader = () => {
-  const isMobile = useIsMobile();
+export const Header = () => {
   const { isSidebarOpen, toggleSidebar } = useUIStore();
 
-  // Only render on mobile
-  if (!isMobile) return null;
-
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-4 z-30 md:hidden">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-4 z-30">
       {/* Hamburger / Close Button */}
       <button
         onClick={toggleSidebar}
@@ -41,7 +36,7 @@ export const MobileHeader = () => {
         />
       </div>
 
-      {/* Agent Selector */}
+      {/* Agent Selector - Top Right */}
       <div className="ml-auto">
         <GlobalAgentSelector />
       </div>
