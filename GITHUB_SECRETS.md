@@ -1,5 +1,13 @@
 # GitHub Secrets Configuration
 
+## ⚠️ IMPORTANT: Why GitHub Secrets (Not Azure Portal)
+
+**Azure Portal Configuration** is for Azure Functions (API runtime), NOT for static site builds.
+
+For **React/Vite apps**, environment variables must be available at **BUILD TIME** (when `npm run build` runs). This means they MUST come from **GitHub Secrets** passed through the workflow.
+
+---
+
 ## 🔐 Add These Secrets to GitHub
 
 Go to: **https://github.com/Osamahi/mojeeb-web-dashboard/settings/secrets/actions**
