@@ -56,7 +56,9 @@ export const DashboardLayout = () => {
         <Sidebar />
 
         {/* Main Content Area */}
-        <main className="h-full overflow-y-auto pt-16">
+        <main className="h-full overflow-y-auto pt-16 md:pl-20">
+          {/* md:pl-20 = 80px left padding on desktop for collapsed sidebar */}
+
           {/* Onboarding Prompt Banner - Shows when no agents exist */}
           <OnboardingPromptBanner />
 
