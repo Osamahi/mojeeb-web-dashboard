@@ -26,7 +26,24 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
     onSuccess: async (tokenResponse) => {
       setIsGoogleLoading(true);
       try {
-        await authService.loginWithGoogle(tokenResponse.access_token);
+        // Fetch user info from Google to match Flutter's implementation
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+
+        if (!userInfoResponse.ok) {
+          throw new Error('Failed to fetch user info from Google');
+        }
+
+        const userInfo = await userInfoResponse.json();
+
+        // Send complete data to backend (matches Flutter's OAuthResult)
+        await authService.loginWithGoogle(
+          tokenResponse.access_token,
+          userInfo.email || '',
+          userInfo.name || '',
+          userInfo.picture || ''
+        );
         toast.success('Welcome to Mojeeb!');
         navigate('/conversations');
       } catch (error) {

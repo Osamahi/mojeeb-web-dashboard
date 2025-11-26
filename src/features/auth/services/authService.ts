@@ -81,14 +81,19 @@ class AuthService {
   /**
    * Login with Google OAuth
    */
-  async loginWithGoogle(accessToken: string): Promise<AuthResponse> {
+  async loginWithGoogle(
+    accessToken: string,
+    email: string,
+    name: string,
+    avatarUrl: string
+  ): Promise<AuthResponse> {
     const { data } = await api.post<ApiAuthResponse>('/api/auth/oauth', {
       provider: 'google',
       access_token: accessToken,
       id_token: '',
-      email: null,
-      name: null,
-      avatar_url: null,
+      email: email,
+      name: name,
+      avatar_url: avatarUrl,
     });
 
     // Backend returns snake_case, convert to camelCase
