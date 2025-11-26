@@ -94,7 +94,6 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
             size="large"
-            width="100%"
             text="continue_with"
             shape="rectangular"
             logo_alignment="left"
