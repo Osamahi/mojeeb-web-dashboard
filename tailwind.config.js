@@ -11,6 +11,7 @@ export default {
         brand: {
           cyan: '#00DBB7',    // Primary accent
           green: '#7DFF51',   // Success & highlights
+          mojeeb: '#00D084',  // Primary Mojeeb brand color
           dark: '#0A0A17',    // Brand dark
         },
         // Neutral Scale (Monochrome foundation - 90% of UI)

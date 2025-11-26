@@ -5,44 +5,24 @@
  * - Mobile: Hidden drawer that slides in with overlay
  * - Maintains icon position during expansion (no shifting)
  * - Full accessibility support
+ * - Refactored with extracted components for maintainability
  */
 
 import { useEffect, useRef } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Bot,
-  Users,
-  UserCog,
-  MessageSquare,
-  Sliders,
-  Link2,
-  LogOut,
-} from 'lucide-react';
-import { Role } from '@/features/auth/types/auth.types';
 import { useUIStore } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
-import { cn } from '@/lib/utils';
-import type { LucideIcon } from 'lucide-react';
-
-interface NavigationItem {
-  name: string;
-  href: string;
-  icon: LucideIcon;
-  requireSuperAdmin?: boolean;
-}
-
-const navigation: NavigationItem[] = [
-  { name: 'Conversations', href: '/conversations', icon: MessageSquare },
-  { name: 'Agents', href: '/agents', icon: Bot },
-  { name: 'Studio', href: '/studio', icon: Sliders },
-  { name: 'Team', href: '/team', icon: UserCog },
-  { name: 'Connections', href: '/connections', icon: Link2 },
-  { name: 'Users', href: '/users', icon: Users, requireSuperAdmin: true },
-  // { name: 'Settings', href: '/settings', icon: Settings }, // Hidden until full implementation
-];
+import { NavigationList } from './sidebar/NavigationList';
+import { UserProfileSection } from './sidebar/UserProfileSection';
+import { navigation } from './sidebar/navigation.config';
+import {
+  SIDEBAR_DIMENSIONS,
+  SIDEBAR_ANIMATIONS,
+  SIDEBAR_Z_INDEX,
+} from './sidebar/constants';
 
 export const Sidebar = () => {
   const location = useLocation();
@@ -89,8 +69,15 @@ export const Sidebar = () => {
       // Move focus to sidebar
       sidebarRef.current?.focus();
     } else if (isMobile && !isSidebarOpen && previousFocusRef.current) {
-      // Restore focus when closed
-      previousFocusRef.current.focus();
+      // Restore focus when closed - with null check
+      try {
+        if (document.contains(previousFocusRef.current)) {
+          previousFocusRef.current.focus();
+        }
+      } catch (error) {
+        // Fallback: focus body if previous element is unmounted
+        document.body.focus();
+      }
     }
   }, [isMobile, isSidebarOpen]);
 
@@ -107,15 +94,6 @@ export const Sidebar = () => {
     }
   };
 
-  // Logout handler
-  const handleLogout = () => {
-    logout();
-    window.location.href = '/login';
-  };
-
-  // Dynamic width for desktop
-  const sidebarWidth = isSidebarCollapsed ? 80 : 256;
-
   return (
     <>
       {/* Mobile Overlay Backdrop - Only shows on mobile when drawer is open */}
@@ -127,8 +105,9 @@ export const Sidebar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 cursor-default"
+              transition={{ duration: SIDEBAR_ANIMATIONS.OVERLAY_TRANSITION }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm cursor-default"
+              style={{ zIndex: SIDEBAR_Z_INDEX.OVERLAY }}
               onClick={() => setSidebarOpen(false)}
               aria-label="Close sidebar"
               tabIndex={0}
@@ -142,114 +121,34 @@ export const Sidebar = () => {
         <motion.aside
           ref={sidebarRef}
           tabIndex={-1}
-          animate={{ width: sidebarWidth }}
+          animate={{
+            width: isSidebarCollapsed
+              ? SIDEBAR_DIMENSIONS.COLLAPSED_WIDTH
+              : SIDEBAR_DIMENSIONS.EXPANDED_WIDTH,
+          }}
           transition={{
             type: 'tween',
-            duration: 0.25,
-            ease: [0.16, 1, 0.3, 1],
+            duration: SIDEBAR_ANIMATIONS.DESKTOP_TRANSITION,
+            ease: SIDEBAR_ANIMATIONS.EASE_CURVE,
           }}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          className="fixed top-16 left-0 h-[calc(100vh-64px)] bg-neutral-50 border-r border-neutral-200 flex flex-col z-30 overflow-hidden"
+          className="fixed left-0 h-[calc(100vh-64px)] bg-neutral-50 border-r border-neutral-200 flex flex-col overflow-hidden"
+          style={{
+            top: `${SIDEBAR_DIMENSIONS.HEADER_HEIGHT}px`,
+            zIndex: SIDEBAR_Z_INDEX.DESKTOP,
+          }}
         >
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-4 space-y-2">
-            {navigation
-              .filter((item) => {
-                // Hide SuperAdmin-only items if user is not SuperAdmin
-                if (item.requireSuperAdmin && user?.role !== Role.SuperAdmin) {
-                  return false;
-                }
-                return true;
-              })
-              .map((item) => {
-                const isDisabled = item.name === 'Studio' && !currentAgent;
-
-                if (isDisabled) {
-                  return (
-                    <div
-                      key={item.name}
-                      className="flex items-center rounded-md text-neutral-400 cursor-not-allowed opacity-50"
-                      title="Select an agent to access Studio"
-                    >
-                      <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
-                        <item.icon className="w-6 h-6" />
-                      </div>
-                      {/* Text label - only render when expanded */}
-                      {!isSidebarCollapsed && (
-                        <span className="text-sm pr-4 whitespace-nowrap">
-                          {item.name}
-                        </span>
-                      )}
-                    </div>
-                  );
-                }
-
-                return (
-                  <NavLink
-                    key={item.name}
-                    to={item.href}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center rounded-md transition-colors duration-200',
-                        isActive
-                          ? 'text-[#00D084] font-semibold'
-                          : 'text-neutral-600 hover:text-neutral-950'
-                      )
-                    }
-                    title={isSidebarCollapsed ? item.name : undefined}
-                  >
-                    {({ isActive }) => (
-                      <>
-                        {/* Fixed-width icon container - prevents shifting */}
-                        <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
-                          <item.icon
-                            className={cn(
-                              'w-6 h-6',
-                              isActive ? 'text-[#00D084]' : 'text-neutral-600'
-                            )}
-                          />
-                        </div>
-                        {/* Text label - only render when expanded */}
-                        {!isSidebarCollapsed && (
-                          <span className="text-sm pr-4 whitespace-nowrap">
-                            {item.name}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </NavLink>
-                );
-              })}
-          </nav>
+          <NavigationList
+            items={navigation}
+            isCollapsed={isSidebarCollapsed}
+            user={user}
+            currentAgent={currentAgent}
+          />
 
           {/* User Profile Section - Desktop - Only show when expanded */}
-          {!isSidebarCollapsed && (
-            <div className="p-4 border-t border-neutral-200 bg-white">
-              <div className="flex items-center gap-3 px-2 py-2">
-                <div className="w-10 h-10 rounded-full bg-neutral-900 text-white flex items-center justify-center font-semibold flex-shrink-0">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-neutral-950 truncate">
-                    {user?.name || 'User'}
-                  </p>
-                  <p className="text-xs text-neutral-600 truncate">
-                    {user?.email || ''}
-                  </p>
-                </div>
-              </div>
-
-              {/* Logout Button - Desktop */}
-              <button
-                onClick={handleLogout}
-                className="mt-3 w-full flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </button>
-            </div>
-          )}
+          {!isSidebarCollapsed && <UserProfileSection user={user} onLogout={logout} />}
         </motion.aside>
       )}
 
@@ -260,111 +159,35 @@ export const Sidebar = () => {
             <motion.aside
               ref={sidebarRef}
               tabIndex={-1}
-              initial={{ x: -256 }}
+              initial={{ x: -SIDEBAR_DIMENSIONS.MOBILE_WIDTH }}
               animate={{ x: 0 }}
-              exit={{ x: -256 }}
+              exit={{ x: -SIDEBAR_DIMENSIONS.MOBILE_WIDTH }}
               transition={{
                 type: 'tween',
-                duration: 0.2,
-                ease: [0.16, 1, 0.3, 1],
+                duration: SIDEBAR_ANIMATIONS.MOBILE_TRANSITION,
+                ease: SIDEBAR_ANIMATIONS.EASE_CURVE,
               }}
-              className="fixed top-0 left-0 w-64 h-screen bg-neutral-50 border-r border-neutral-200 flex flex-col z-50"
+              className="fixed top-0 left-0 h-screen bg-neutral-50 border-r border-neutral-200 flex flex-col"
+              style={{
+                width: `${SIDEBAR_DIMENSIONS.MOBILE_WIDTH}px`,
+                zIndex: SIDEBAR_Z_INDEX.MOBILE,
+              }}
             >
               {/* Logo Section - Mobile Only */}
               <div className="p-6 bg-white border-b border-neutral-200">
-                <img
-                  src="/mojeeb-logo.png"
-                  alt="Mojeeb"
-                  className="h-6"
-                />
+                <img src="/mojeeb-logo.png" alt="Mojeeb" className="h-6" />
               </div>
 
               {/* Navigation - Mobile */}
-              <nav className="flex-1 overflow-y-auto py-4 px-4 space-y-2">
-                {navigation
-                  .filter((item) => {
-                    // Hide SuperAdmin-only items if user is not SuperAdmin
-                    if (item.requireSuperAdmin && user?.role !== Role.SuperAdmin) {
-                      return false;
-                    }
-                    return true;
-                  })
-                  .map((item) => {
-                    const isDisabled = item.name === 'Studio' && !currentAgent;
-
-                    if (isDisabled) {
-                      return (
-                        <div
-                          key={item.name}
-                          className="flex items-center rounded-md text-neutral-400 cursor-not-allowed opacity-50"
-                          title="Select an agent to access Studio"
-                        >
-                          <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
-                            <item.icon className="w-6 h-6" />
-                          </div>
-                          <span className="text-sm pr-4">{item.name}</span>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <NavLink
-                        key={item.name}
-                        to={item.href}
-                        className={({ isActive }) =>
-                          cn(
-                            'flex items-center rounded-md transition-colors duration-200',
-                            isActive
-                              ? 'text-[#00D084] font-semibold'
-                              : 'text-neutral-600 hover:text-neutral-950'
-                          )
-                        }
-                      >
-                        {({ isActive }) => (
-                          <>
-                            {/* Fixed-width icon container */}
-                            <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
-                              <item.icon
-                                className={cn(
-                                  'w-6 h-6',
-                                  isActive ? 'text-[#00D084]' : 'text-neutral-600'
-                                )}
-                              />
-                            </div>
-                            {/* Text label - always visible on mobile */}
-                            <span className="text-sm pr-4">{item.name}</span>
-                          </>
-                        )}
-                      </NavLink>
-                    );
-                  })}
-              </nav>
+              <NavigationList
+                items={navigation}
+                isCollapsed={false}
+                user={user}
+                currentAgent={currentAgent}
+              />
 
               {/* User Profile Section - Mobile */}
-              <div className="p-4 border-t border-neutral-200 bg-white">
-                <div className="flex items-center gap-3 px-2 py-2">
-                  <div className="w-10 h-10 rounded-full bg-neutral-900 text-white flex items-center justify-center font-semibold">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-neutral-950 truncate">
-                      {user?.name || 'User'}
-                    </p>
-                    <p className="text-xs text-neutral-600 truncate">
-                      {user?.email || ''}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Logout Button - Mobile */}
-                <button
-                  onClick={handleLogout}
-                  className="mt-3 w-full flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Logout</span>
-                </button>
-              </div>
+              <UserProfileSection user={user} onLogout={logout} />
             </motion.aside>
           )}
         </AnimatePresence>
