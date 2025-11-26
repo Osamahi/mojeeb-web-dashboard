@@ -28,11 +28,17 @@ const envSchema = z.object({
   VITE_APPLE_REDIRECT_URI: z.string().url().optional(),
 
   // Error Logging (Optional)
-  VITE_SENTRY_DSN: z.string().url().optional(),
+  VITE_SENTRY_DSN: z
+    .string()
+    .transform((val) => (val === '' ? undefined : val))
+    .pipe(z.string().url().optional()),
   VITE_SENTRY_ENVIRONMENT: z.string().optional(),
 
   // Security (Optional)
-  VITE_TOKEN_ENCRYPTION_KEY: z.string().min(16).optional(),
+  VITE_TOKEN_ENCRYPTION_KEY: z
+    .string()
+    .transform((val) => (val === '' ? undefined : val))
+    .pipe(z.string().min(16).optional()),
 });
 
 // Parse and validate environment variables
