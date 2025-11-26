@@ -193,7 +193,7 @@ export const Sidebar = () => {
                       cn(
                         'flex items-center rounded-md transition-colors duration-200',
                         isActive
-                          ? 'text-neutral-950 font-semibold'
+                          ? 'text-[#00D084] font-semibold'
                           : 'text-neutral-600 hover:text-neutral-950'
                       )
                     }
@@ -206,7 +206,7 @@ export const Sidebar = () => {
                           <item.icon
                             className={cn(
                               'w-6 h-6',
-                              isActive ? 'text-neutral-950' : 'text-neutral-600'
+                              isActive ? 'text-[#00D084]' : 'text-neutral-600'
                             )}
                           />
                         </div>
@@ -315,7 +315,7 @@ export const Sidebar = () => {
                           cn(
                             'flex items-center rounded-md transition-colors duration-200',
                             isActive
-                              ? 'text-neutral-950 font-semibold'
+                              ? 'text-[#00D084] font-semibold'
                               : 'text-neutral-600 hover:text-neutral-950'
                           )
                         }
@@ -327,7 +327,7 @@ export const Sidebar = () => {
                               <item.icon
                                 className={cn(
                                   'w-6 h-6',
-                                  isActive ? 'text-neutral-950' : 'text-neutral-600'
+                                  isActive ? 'text-[#00D084]' : 'text-neutral-600'
                                 )}
                               />
                             </div>
