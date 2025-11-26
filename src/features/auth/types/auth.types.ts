@@ -1,19 +1,26 @@
 // User roles from backend
-export enum Role {
-  SuperAdmin = 0,
-  Admin = 1,
-  Customer = 2,
-  AiAgent = 3,
-  HumanAgent = 4,
-  System = 5,
-}
+// Union type for type checking
+export type RoleValue = 0 | 1 | 2 | 3 | 4 | 5;
+
+// Runtime constants object (replaces enum for erasableSyntaxOnly compatibility)
+export const Role = {
+  SuperAdmin: 0,
+  Admin: 1,
+  Customer: 2,
+  AiAgent: 3,
+  HumanAgent: 4,
+  System: 5,
+} as const;
+
+// Type helper for role names
+export type RoleName = keyof typeof Role;
 
 // User model
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: Role;
+  role: RoleValue;
   avatarUrl?: string;
   createdAt: string;
   updatedAt: string;
