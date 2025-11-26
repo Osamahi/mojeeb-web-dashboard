@@ -25,8 +25,17 @@ export const NavigationItemComponent = memo(({
       <div
         role="button"
         aria-disabled="true"
-        className="flex items-center rounded-md text-neutral-400 cursor-not-allowed opacity-50"
+        aria-label={`${item.name} - ${item.requiresAgent ? 'Select an agent to access this feature' : 'Disabled'}`}
+        tabIndex={0}
+        className="flex items-center rounded-md text-neutral-400 cursor-not-allowed opacity-50 focus:outline-none focus:ring-2 focus:ring-neutral-300"
         title={item.requiresAgent ? 'Select an agent to access this feature' : undefined}
+        onKeyDown={(e) => {
+          // Prevent activation via keyboard
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            // Item is disabled, no action taken
+          }
+        }}
       >
         <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
           <item.icon className="w-6 h-6" aria-hidden="true" />
@@ -77,6 +86,13 @@ export const NavigationItemComponent = memo(({
         </>
       )}
     </NavLink>
+  );
+}, (prevProps, nextProps) => {
+  // Custom equality check to prevent unnecessary re-renders
+  return (
+    prevProps.item === nextProps.item &&
+    prevProps.isCollapsed === nextProps.isCollapsed &&
+    prevProps.isDisabled === nextProps.isDisabled
   );
 });
 

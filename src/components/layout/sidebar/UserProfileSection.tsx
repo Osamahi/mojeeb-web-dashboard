@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { User } from '@/features/auth/types/auth.types';
 
 interface UserProfileSectionProps {
   user: User | null;
-  onLogout: () => void;
+  onLogout: () => void | Promise<void>;
 }
 
 /**
@@ -14,10 +16,19 @@ interface UserProfileSectionProps {
  */
 export const UserProfileSection = ({ user, onLogout }: UserProfileSectionProps) => {
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    onLogout(); // Clear auth state
-    navigate('/login', { replace: true }); // Navigate using React Router
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await onLogout(); // Clear auth state
+      navigate('/login', { replace: true }); // Navigate using React Router
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Error is logged, user can try again
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   // Smart avatar fallback: name first letter -> email first letter -> 'U'
@@ -51,11 +62,20 @@ export const UserProfileSection = ({ user, onLogout }: UserProfileSectionProps) 
       {/* Logout Button */}
       <button
         onClick={handleLogout}
-        className="mt-3 w-full flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
-        aria-label="Logout"
+        disabled={isLoggingOut}
+        className={cn(
+          'mt-3 w-full flex items-center gap-2 px-4 py-2.5 text-sm rounded-md transition-colors duration-200',
+          isLoggingOut
+            ? 'text-neutral-400 cursor-not-allowed bg-neutral-100'
+            : 'text-neutral-700 hover:text-red-600 hover:bg-red-50'
+        )}
+        aria-label={isLoggingOut ? 'Logging out...' : 'Logout'}
       >
-        <LogOut className="w-4 h-4" aria-hidden="true" />
-        <span>Logout</span>
+        <LogOut
+          className={cn('w-4 h-4', isLoggingOut && 'animate-spin')}
+          aria-hidden="true"
+        />
+        <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
       </button>
     </div>
   );

@@ -25,7 +25,10 @@ export const NavigationList = memo(({
   currentAgent,
 }: NavigationListProps) => {
   return (
-    <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-4 space-y-2">
+    <nav
+      className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-4 space-y-2"
+      aria-label="Main navigation"
+    >
       {items
         .filter((item) => {
           // Hide SuperAdmin-only items if user is not SuperAdmin
@@ -48,6 +51,15 @@ export const NavigationList = memo(({
           );
         })}
     </nav>
+  );
+}, (prevProps, nextProps) => {
+  // Custom equality check to prevent re-renders from Zustand reference changes
+  return (
+    prevProps.isCollapsed === nextProps.isCollapsed &&
+    prevProps.items === nextProps.items &&
+    prevProps.user?.id === nextProps.user?.id &&
+    prevProps.user?.role === nextProps.user?.role &&
+    prevProps.currentAgent?.id === nextProps.currentAgent?.id
   );
 });
 

@@ -11,6 +11,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import FocusTrap from 'focus-trap-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuthStore } from '@/features/auth/stores/authStore';
@@ -18,13 +19,14 @@ import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { NavigationList } from './sidebar/NavigationList';
 import { UserProfileSection } from './sidebar/UserProfileSection';
 import { navigation } from './sidebar/navigation.config';
+import { SidebarErrorBoundary } from './sidebar/SidebarErrorBoundary';
 import {
   SIDEBAR_DIMENSIONS,
   SIDEBAR_ANIMATIONS,
   SIDEBAR_Z_INDEX,
 } from './sidebar/constants';
 
-export const Sidebar = () => {
+const SidebarContent = () => {
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -69,14 +71,22 @@ export const Sidebar = () => {
       // Move focus to sidebar
       sidebarRef.current?.focus();
     } else if (isMobile && !isSidebarOpen && previousFocusRef.current) {
-      // Restore focus when closed - with null check
+      // Restore focus when closed - with proper fallback
       try {
-        if (document.contains(previousFocusRef.current)) {
+        if (previousFocusRef.current && document.contains(previousFocusRef.current)) {
           previousFocusRef.current.focus();
+        } else {
+          // Focus the first interactive element in main content
+          const mainContent = document.querySelector('main');
+          const firstFocusable = mainContent?.querySelector<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          if (firstFocusable) {
+            firstFocusable.focus();
+          }
         }
       } catch (error) {
-        // Fallback: focus body if previous element is unmounted
-        document.body.focus();
+        console.warn('Failed to restore focus:', error);
       }
     }
   }, [isMobile, isSidebarOpen]);
@@ -100,17 +110,16 @@ export const Sidebar = () => {
       {isMobile && (
         <AnimatePresence>
           {isSidebarOpen && (
-            <motion.button
-              type="button"
+            <motion.div
+              role="presentation"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: SIDEBAR_ANIMATIONS.OVERLAY_TRANSITION }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm cursor-default"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
               style={{ zIndex: SIDEBAR_Z_INDEX.OVERLAY }}
               onClick={() => setSidebarOpen(false)}
-              aria-label="Close sidebar"
-              tabIndex={0}
+              aria-hidden="true"
             />
           )}
         </AnimatePresence>
@@ -156,42 +165,58 @@ export const Sidebar = () => {
       {isMobile && (
         <AnimatePresence>
           {isSidebarOpen && (
-            <motion.aside
-              ref={sidebarRef}
-              tabIndex={-1}
-              initial={{ x: -SIDEBAR_DIMENSIONS.MOBILE_WIDTH }}
-              animate={{ x: 0 }}
-              exit={{ x: -SIDEBAR_DIMENSIONS.MOBILE_WIDTH }}
-              transition={{
-                type: 'tween',
-                duration: SIDEBAR_ANIMATIONS.MOBILE_TRANSITION,
-                ease: SIDEBAR_ANIMATIONS.EASE_CURVE,
-              }}
-              className="fixed top-0 left-0 h-screen bg-neutral-50 border-r border-neutral-200 flex flex-col"
-              style={{
-                width: `${SIDEBAR_DIMENSIONS.MOBILE_WIDTH}px`,
-                zIndex: SIDEBAR_Z_INDEX.MOBILE,
+            <FocusTrap
+              focusTrapOptions={{
+                initialFocus: false,
+                allowOutsideClick: true,
+                escapeDeactivates: true,
               }}
             >
-              {/* Logo Section - Mobile Only */}
-              <div className="p-6 bg-white border-b border-neutral-200">
-                <img src="/mojeeb-logo.png" alt="Mojeeb" className="h-6" />
-              </div>
+              <motion.aside
+                ref={sidebarRef}
+                tabIndex={-1}
+                initial={{ x: -SIDEBAR_DIMENSIONS.MOBILE_WIDTH }}
+                animate={{ x: 0 }}
+                exit={{ x: -SIDEBAR_DIMENSIONS.MOBILE_WIDTH }}
+                transition={{
+                  type: 'tween',
+                  duration: SIDEBAR_ANIMATIONS.MOBILE_TRANSITION,
+                  ease: SIDEBAR_ANIMATIONS.EASE_CURVE,
+                }}
+                className="fixed top-0 left-0 h-screen bg-neutral-50 border-r border-neutral-200 flex flex-col"
+                style={{
+                  width: `${SIDEBAR_DIMENSIONS.MOBILE_WIDTH}px`,
+                  zIndex: SIDEBAR_Z_INDEX.MOBILE,
+                }}
+              >
+                {/* Logo Section - Mobile Only */}
+                <div className="p-6 bg-white border-b border-neutral-200">
+                  <img src="/mojeeb-logo.png" alt="Mojeeb" className="h-6" />
+                </div>
 
-              {/* Navigation - Mobile */}
-              <NavigationList
-                items={navigation}
-                isCollapsed={false}
-                user={user}
-                currentAgent={currentAgent}
-              />
+                {/* Navigation - Mobile */}
+                <NavigationList
+                  items={navigation}
+                  isCollapsed={false}
+                  user={user}
+                  currentAgent={currentAgent}
+                />
 
-              {/* User Profile Section - Mobile */}
-              <UserProfileSection user={user} onLogout={logout} />
-            </motion.aside>
+                {/* User Profile Section - Mobile */}
+                <UserProfileSection user={user} onLogout={logout} />
+              </motion.aside>
+            </FocusTrap>
           )}
         </AnimatePresence>
       )}
     </>
+  );
+};
+
+export const Sidebar = () => {
+  return (
+    <SidebarErrorBoundary>
+      <SidebarContent />
+    </SidebarErrorBoundary>
   );
 };

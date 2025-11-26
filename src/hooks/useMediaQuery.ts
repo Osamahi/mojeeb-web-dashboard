@@ -12,23 +12,15 @@ export function useMediaQuery(query: string): boolean {
     const media = window.matchMedia(query);
 
     // Set initial value
-    if (media.matches !== matches) {
-      setMatches(media.matches);
-    }
+    setMatches(media.matches);
 
     // Create listener for changes
-    const listener = () => setMatches(media.matches);
+    const listener = (e: MediaQueryListEvent) => setMatches(e.matches);
 
     // Modern browsers
-    if (media.addEventListener) {
-      media.addEventListener('change', listener);
-      return () => media.removeEventListener('change', listener);
-    }
-
-    // Fallback for older browsers
-    media.addListener(listener);
-    return () => media.removeListener(listener);
-  }, [matches, query]);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [query]); // Removed 'matches' from dependencies to prevent stale closure
 
   return matches;
 }
