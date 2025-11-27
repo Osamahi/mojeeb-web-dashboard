@@ -4,6 +4,7 @@
     "exclude": [
       "/api/*",
       "/assets/*",
+      "/.well-known/*",
       "/*.{css,js,png,jpg,jpeg,gif,svg,ico,txt,woff,woff2,map,json,wasm}"
     ]
   },

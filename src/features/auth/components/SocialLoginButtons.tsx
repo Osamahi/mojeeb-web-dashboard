@@ -1,16 +1,17 @@
 /**
  * Social Login Buttons Component
- * Minimal social authentication buttons for Google, Facebook, and Apple
+ * Minimal social authentication buttons (Currently: Google only)
+ * Facebook and Apple temporarily disabled
  */
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
-import AppleSignin from 'react-apple-signin-auth';
+// import AppleSignin from 'react-apple-signin-auth'; // Temporarily disabled
 import { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { authService } from '../services/authService';
-import { env } from '@/config/env';
+// import { env } from '@/config/env'; // Temporarily disabled for Apple
 import { logger } from '@/lib/logger';
 
 interface SocialLoginButtonsProps {
@@ -20,7 +21,7 @@ interface SocialLoginButtonsProps {
 export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps) => {
   const navigate = useNavigate();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isAppleLoading, setIsAppleLoading] = useState(false);
+  // const [isAppleLoading, setIsAppleLoading] = useState(false); // Temporarily disabled
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -66,26 +67,28 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
     },
   });
 
-  const handleAppleSignIn = async (response: { authorization: { id_token: string } }) => {
-    setIsAppleLoading(true);
-    try {
-      const idToken = response.authorization.id_token;
-      await authService.loginWithApple(idToken);
-      toast.success('Welcome to Mojeeb!');
-      navigate('/conversations');
-    } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      logger.error('Apple sign-in error', error);
-      toast.error(axiosError?.response?.data?.message || 'Apple sign-in failed. Please try again.');
-    } finally {
-      setIsAppleLoading(false);
-    }
-  };
+  // Temporarily disabled Apple Sign-In handler
+  // const handleAppleSignIn = async (response: { authorization: { id_token: string } }) => {
+  //   setIsAppleLoading(true);
+  //   try {
+  //     const idToken = response.authorization.id_token;
+  //     await authService.loginWithApple(idToken);
+  //     toast.success('Welcome to Mojeeb!');
+  //     navigate('/conversations');
+  //   } catch (error) {
+  //     const axiosError = error as AxiosError<{ message?: string }>;
+  //     logger.error('Apple sign-in error', error);
+  //     toast.error(axiosError?.response?.data?.message || 'Apple sign-in failed. Please try again.');
+  //   } finally {
+  //     setIsAppleLoading(false);
+  //   }
+  // };
 
-  const handleSocialLogin = (provider: string) => {
-    // Placeholder for Facebook OAuth flow
-    toast.info(`${provider} login coming soon!`);
-  };
+  // Temporarily disabled Facebook login handler
+  // const handleSocialLogin = (provider: string) => {
+  //   // Placeholder for Facebook OAuth flow
+  //   toast.info(`${provider} login coming soon!`);
+  // };
 
   return (
     <div className="space-y-3">
@@ -119,8 +122,8 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
         </span>
       </button>
 
-      {/* Facebook Sign In */}
-      <button
+      {/* Facebook Sign In - Temporarily Hidden */}
+      {/* <button
         type="button"
         onClick={() => handleSocialLogin('Facebook')}
         disabled={disabled}
@@ -130,10 +133,10 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
           <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
         </svg>
         <span className="text-sm font-medium text-neutral-950">Continue with Facebook</span>
-      </button>
+      </button> */}
 
-      {/* Apple Sign In */}
-      <AppleSignin
+      {/* Apple Sign In - Temporarily Hidden */}
+      {/* <AppleSignin
         authOptions={{
           clientId: env.VITE_APPLE_CLIENT_ID || '',
           scope: 'email name',
@@ -159,7 +162,7 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
             </span>
           </button>
         )}
-      />
+      /> */}
     </div>
   );
 };
