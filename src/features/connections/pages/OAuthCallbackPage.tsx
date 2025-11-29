@@ -60,7 +60,7 @@ export default function OAuthCallbackPage() {
                 type: 'OAUTH_CALLBACK',
                 error: error === 'access_denied' ? OAuthErrorTypes.ACCESS_DENIED : error,
               },
-              window.opener.location.origin
+              '*'
             );
           }
           return;
@@ -78,7 +78,7 @@ export default function OAuthCallbackPage() {
                 type: 'OAUTH_CALLBACK',
                 error: OAuthErrorTypes.STATE_MISMATCH,
               },
-              window.opener.location.origin
+              '*'
             );
           }
           return;
@@ -96,7 +96,7 @@ export default function OAuthCallbackPage() {
                 type: 'OAUTH_CALLBACK',
                 error: OAuthErrorTypes.UNKNOWN_ERROR,
               },
-              window.opener.location.origin
+              '*'
             );
           }
           return;
@@ -113,7 +113,7 @@ export default function OAuthCallbackPage() {
               type: 'OAUTH_CALLBACK',
               tempConnectionId,
             },
-            window.opener.location.origin
+            '*'
           );
 
           // Auto-close popup after brief delay
