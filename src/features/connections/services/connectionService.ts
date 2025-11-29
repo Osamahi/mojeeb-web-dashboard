@@ -312,12 +312,13 @@ class ConnectionService {
         },
       });
 
+      // Backend expects PascalCase property names (C# model binding)
       const payload = {
-        tempConnectionId: request.tempConnectionId,
-        pageId: request.pageId,
+        TempConnectionId: request.tempConnectionId,
+        PageId: request.pageId,
         ...(request.instagramAccountId && {
-          instagramAccountId: request.instagramAccountId,
-          instagramUsername: request.instagramUsername,
+          InstagramAccountId: request.instagramAccountId,
+          InstagramUsername: request.instagramUsername,
         }),
       };
 
