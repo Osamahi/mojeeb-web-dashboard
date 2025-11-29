@@ -41,27 +41,27 @@ export default function ConnectionsPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900">Connections</h1>
-          <p className="text-neutral-600 mt-1">
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Connections</h1>
+          <p className="text-sm text-neutral-600 mt-1">
             Platform connections for {globalSelectedAgent.name}
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Health Check Toggle */}
-          <Button
+        {/* Add Connection Button - Desktop only */}
+        <div className="hidden sm:flex items-center gap-3 sm:flex-shrink-0">
+          {/* Health Check Toggle - Commented out for now */}
+          {/* <Button
             variant={showHealthStatus ? 'primary' : 'secondary'}
             size="sm"
             onClick={() => setShowHealthStatus(!showHealthStatus)}
             className="flex items-center gap-2"
           >
             {showHealthStatus ? 'Hide Health Status' : 'Show Health Status'}
-          </Button>
+          </Button> */}
 
-          {/* Add Connection Button */}
           <Button
             variant="primary"
             size="sm"
@@ -111,6 +111,24 @@ export default function ConnectionsPage() {
             showHealthStatus={showHealthStatus}
           />
         )}
+      </motion.div>
+
+      {/* Add Connection Button - Mobile only (appears below connections) */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="sm:hidden"
+      >
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 w-full justify-center"
+        >
+          <Plus className="w-4 h-4" />
+          Add Connection
+        </Button>
       </motion.div>
 
       {/* Add Connection Modal */}

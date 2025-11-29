@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Users as UsersIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { userService } from '../services/userService';
-import UserStatsCards from '../components/UserStatsCards';
 import UsersTable from '../components/UsersTable';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -31,15 +30,6 @@ export default function UsersPage() {
             Manage and view all system users
           </p>
         </div>
-      </motion.div>
-
-      {/* Statistics Cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <UserStatsCards />
       </motion.div>
 
       {/* Users Table */}

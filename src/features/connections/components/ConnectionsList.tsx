@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import { Link2Off } from 'lucide-react';
+import { Plug } from 'lucide-react';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PlatformConnectionCard } from './PlatformConnectionCard';
@@ -53,11 +53,11 @@ export function ConnectionsList({
   if (sortedConnections.length === 0) {
     return (
       <EmptyState
-        icon={<Link2Off className="w-12 h-12 text-neutral-400" />}
-        title="No connections found"
+        icon={<Plug className="w-12 h-12 text-neutral-400" />}
+        title="No connections yet"
         description={
           filterPlatform === 'all'
-            ? 'This agent is not connected to any platforms yet. Connect a platform to start receiving messages.'
+            ? 'Let your agent respond to customers on Facebook, Instagram, WhatsApp, and your website. Connect a platform to get started.'
             : `No ${filterPlatform} connections found for this agent.`
         }
       />

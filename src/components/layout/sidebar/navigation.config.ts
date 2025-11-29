@@ -8,8 +8,8 @@ import {
   Users,
   UserCog,
   MessageSquare,
-  Sliders,
-  Link2,
+  Wrench,
+  Plug,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -19,20 +19,20 @@ import type { NavigationItem } from './types';
  */
 export const navigation: NavigationItem[] = [
   {
-    name: 'Conversations',
+    name: 'Chats',
     href: '/conversations',
     icon: MessageSquare,
   },
   {
-    name: 'Agents',
-    href: '/agents',
-    icon: Bot,
+    name: 'Setup',
+    href: '/studio',
+    icon: Wrench,
+    requiresAgent: true,
   },
   {
-    name: 'Studio',
-    href: '/studio',
-    icon: Sliders,
-    requiresAgent: true,
+    name: 'Connect',
+    href: '/connections',
+    icon: Plug,
   },
   {
     name: 'Team',
@@ -40,9 +40,9 @@ export const navigation: NavigationItem[] = [
     icon: UserCog,
   },
   {
-    name: 'Connections',
-    href: '/connections',
-    icon: Link2,
+    name: 'Agents',
+    href: '/agents',
+    icon: Bot,
   },
   {
     name: 'Users',
