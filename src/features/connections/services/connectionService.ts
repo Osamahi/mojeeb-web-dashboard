@@ -303,6 +303,15 @@ class ConnectionService {
    */
   async connectSelectedPage(request: ConnectPageRequest): Promise<ConnectPageResponse> {
     try {
+      logger.info('🔗 [connectSelectedPage] Starting page connection', {
+        request: {
+          tempConnectionId: request.tempConnectionId,
+          pageId: request.pageId,
+          instagramAccountId: request.instagramAccountId,
+          instagramUsername: request.instagramUsername,
+        },
+      });
+
       const payload = {
         tempConnectionId: request.tempConnectionId,
         pageId: request.pageId,
@@ -312,11 +321,20 @@ class ConnectionService {
         }),
       };
 
+      logger.info('📤 [connectSelectedPage] Sending API request', {
+        endpoint: API_PATHS.OAUTH_CONNECT_PAGE,
+        payload,
+        payloadKeys: Object.keys(payload),
+        payloadStringified: JSON.stringify(payload),
+      });
+
       const { data } = await api.post<ApiConnectPageResponse>(API_PATHS.OAUTH_CONNECT_PAGE, payload);
 
-      logger.info('Page connected successfully', {
+      logger.info('✅ [connectSelectedPage] Page connected successfully', {
+        response: data,
         connectionId: data.connection_id,
         platform: data.platform,
+        message: data.message,
       });
 
       return {
@@ -325,8 +343,19 @@ class ConnectionService {
         platform: data.platform,
         message: data.message,
       };
-    } catch (error) {
-      logger.error('Error connecting page', { request, error });
+    } catch (error: any) {
+      logger.error('❌ [connectSelectedPage] Error connecting page', {
+        request,
+        error,
+        errorMessage: error?.message,
+        errorResponse: error?.response?.data,
+        errorStatus: error?.response?.status,
+        errorConfig: {
+          url: error?.config?.url,
+          method: error?.config?.method,
+          data: error?.config?.data,
+        },
+      });
       handleApiError(error, 'Connection', request.pageId);
     }
   }
