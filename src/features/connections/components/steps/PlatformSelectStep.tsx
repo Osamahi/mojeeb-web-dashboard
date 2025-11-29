@@ -46,7 +46,7 @@ export function PlatformSelectStep({ onSelect, existingConnections }: PlatformSe
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-neutral-900">Choose a Platform</h3>
+        <h3 className="text-lg sm:text-xl font-semibold text-neutral-900">Choose a Platform</h3>
         <p className="mt-1 text-sm text-neutral-600">
           Select the platform you want to connect to your agent
         </p>
@@ -69,7 +69,7 @@ export function PlatformSelectStep({ onSelect, existingConnections }: PlatformSe
               }}
               disabled={isDisabled}
               className={cn(
-                'group relative flex items-start gap-4 rounded-lg border p-4 text-left transition-all',
+                'group relative flex items-start gap-4 rounded-lg border p-4 min-h-[44px] text-left transition-all',
                 isComingSoon
                   ? 'cursor-not-allowed border-neutral-200 bg-neutral-50 opacity-50'
                   : 'border-neutral-200 bg-white hover:border-neutral-400 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2'

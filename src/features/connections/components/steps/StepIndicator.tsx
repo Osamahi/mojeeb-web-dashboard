@@ -24,7 +24,7 @@ export const StepIndicator = memo(function StepIndicator({ currentStep }: StepIn
   const currentIndex = useMemo(() => STEPS.findIndex(s => s.key === currentStep), [currentStep]);
 
   return (
-    <nav className="flex items-center justify-center space-x-2" aria-label="Connection wizard progress">
+    <nav className="flex items-center justify-center space-x-1 sm:space-x-2" aria-label="Connection wizard progress">
       {STEPS.map((step, index) => {
         const isCompleted = index < currentIndex;
         const isCurrent = index === currentIndex;
@@ -51,7 +51,7 @@ export const StepIndicator = memo(function StepIndicator({ currentStep }: StepIn
               </div>
               <span
                 className={cn(
-                  'mt-1 text-xs',
+                  'mt-1 text-xs hidden sm:block',
                   isCurrent && 'font-medium text-neutral-900',
                   !isCurrent && 'text-neutral-500'
                 )}
@@ -64,7 +64,7 @@ export const StepIndicator = memo(function StepIndicator({ currentStep }: StepIn
             {index < STEPS.length - 1 && (
               <div
                 className={cn(
-                  'mx-2 h-0.5 w-8',
+                  'mx-2 h-0.5 w-4 sm:w-8',
                   index < currentIndex ? 'bg-neutral-900' : 'bg-neutral-200'
                 )}
               />
