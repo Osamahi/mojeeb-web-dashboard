@@ -312,13 +312,13 @@ class ConnectionService {
         },
       });
 
-      // Backend expects PascalCase property names (C# model binding)
+      // Backend uses snake_case for JSON serialization (Newtonsoft.Json with SnakeCaseNamingStrategy)
       const payload = {
-        TempConnectionId: request.tempConnectionId,
-        PageId: request.pageId,
+        temp_connection_id: request.tempConnectionId,
+        page_id: request.pageId,
         ...(request.instagramAccountId && {
-          InstagramAccountId: request.instagramAccountId,
-          InstagramUsername: request.instagramUsername,
+          instagram_account_id: request.instagramAccountId,
+          instagram_username: request.instagramUsername,
         }),
       };
 
