@@ -6,18 +6,17 @@
 
 import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit2, Trash2, Crown, Sliders } from 'lucide-react';
+import { Trash2, Crown, Wrench } from 'lucide-react';
 import { format } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { isAxiosError } from 'axios';
-import type { Agent, AgentStatus } from '../types';
+import type { Agent } from '../types';
 import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
 import { useConfirm } from '@/hooks/useConfirm';
 import AgentFormModal from './AgentFormModal';
 import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@/components/ui/Badge';
 
 interface AgentCardProps {
   agent: Agent;
@@ -43,12 +42,6 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
       }
     },
   });
-
-  const statusVariants: Record<AgentStatus, 'default' | 'primary' | 'success' | 'warning' | 'danger'> = {
-    draft: 'warning',
-    active: 'success',
-    deleted: 'danger',
-  };
 
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) {
@@ -112,62 +105,62 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
       />
       <div
         onClick={() => setIsEditModalOpen(true)}
-        className="bg-white rounded-lg border border-neutral-200 p-4 transition-colors duration-200 hover:border-neutral-300 cursor-pointer"
+        className="bg-white rounded-lg border border-neutral-200 p-3 sm:p-4 transition-colors duration-200 hover:border-neutral-300 cursor-pointer"
       >
-          {/* Header */}
-          <div className="flex items-center gap-3">
-            <Avatar
-              src={agent.avatarUrl ?? undefined}
-              name={agent.name}
-              size="md"
-            />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-neutral-950 text-base truncate">
-                  {agent.name}
-                </h3>
-                {agent.isOwner && (
-                  <Crown className="w-4 h-4 text-warning flex-shrink-0" title="Owner" />
-                )}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-neutral-500">
-                <Badge variant={statusVariants[agent.status]} className="text-xs">
-                  {agent.status}
-                </Badge>
-                <span>Created: {formatDate(agent.createdAt)}</span>
-                <span>•</span>
-                <span>Updated: {formatDate(agent.updatedAt)}</span>
-              </div>
+          {/* Header - Responsive Layout */}
+          <div className="flex gap-3">
+            {/* Avatar - Hidden on very small screens, shown on sm+ */}
+            <div className="hidden sm:block flex-shrink-0">
+              <Avatar
+                src={agent.avatarUrl ?? undefined}
+                name={agent.name}
+                size="md"
+              />
             </div>
 
-            {/* Inline Action Buttons */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handleStudioClick}
-                className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
-                title="Open Studio"
-              >
-                <Sliders className="w-4 h-4 text-neutral-600" />
-              </button>
-              {agent.canEdit && (
-                <button
-                  onClick={handleEditClick}
-                  className="p-2 hover:bg-neutral-100 rounded-md transition-colors"
-                  title="Edit agent"
-                >
-                  <Edit2 className="w-4 h-4 text-neutral-600" />
-                </button>
-              )}
-              {agent.canDelete && (
-                <button
-                  onClick={handleDelete}
-                  className="p-2 hover:bg-error/10 rounded-md transition-colors disabled:opacity-50"
-                  title="Delete agent"
-                  disabled={deleteMutation.isPending}
-                >
-                  <Trash2 className={`w-4 h-4 text-error ${deleteMutation.isPending ? 'animate-pulse' : ''}`} />
-                </button>
-              )}
+            {/* Content Area - Full width on mobile */}
+            <div className="flex-1 min-w-0">
+              {/* Title Row */}
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <h3 className="font-semibold text-neutral-950 text-sm sm:text-base truncate">
+                    {agent.name}
+                  </h3>
+                  {agent.isOwner && (
+                    <span title="Owner">
+                      <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-warning flex-shrink-0" />
+                    </span>
+                  )}
+                </div>
+
+                {/* Action Buttons - Wrench and Delete only */}
+                <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                  <button
+                    onClick={handleStudioClick}
+                    className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-md transition-colors"
+                    title="Open Studio"
+                  >
+                    <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-600" />
+                  </button>
+                  {agent.canDelete && (
+                    <button
+                      onClick={handleDelete}
+                      className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-md transition-colors disabled:opacity-50"
+                      title="Delete agent"
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Trash2 className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-600 ${deleteMutation.isPending ? 'animate-pulse' : ''}`} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Metadata - Stacked on mobile, inline on desktop */}
+              <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-neutral-500 flex-wrap">
+                <span className="whitespace-nowrap">Created: {formatDate(agent.createdAt)}</span>
+                <span className="hidden sm:inline">•</span>
+                <span className="whitespace-nowrap">Updated: {formatDate(agent.updatedAt)}</span>
+              </div>
             </div>
           </div>
       </div>

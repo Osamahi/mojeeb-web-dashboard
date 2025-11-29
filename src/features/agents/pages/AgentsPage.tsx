@@ -31,18 +31,23 @@ export default function AgentsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header - Clean & Minimal */}
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+      {/* Header - Clean & Minimal - Responsive */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-950">AI Agents</h1>
-          <p className="text-neutral-600 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-950">AI Agents</h1>
+          <p className="text-sm sm:text-base text-neutral-600 mt-1">
             Manage your intelligent AI assistants
           </p>
         </div>
-        <Button variant="primary" size="lg" onClick={() => setIsCreateModalOpen(true)}>
-          <Plus className="w-5 h-5 mr-2" />
-          Create Agent
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={() => setIsCreateModalOpen(true)}
+          className="h-10 w-10 p-0 sm:h-auto sm:w-auto sm:px-4 sm:py-2"
+        >
+          <Plus className="w-5 h-5 sm:mr-2" />
+          <span className="hidden sm:inline">Create Agent</span>
         </Button>
       </div>
 
