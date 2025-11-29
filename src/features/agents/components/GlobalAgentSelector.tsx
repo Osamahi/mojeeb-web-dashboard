@@ -78,13 +78,14 @@ export default function GlobalAgentSelector() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors',
+          'flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors max-w-[180px]',
           isOpen ? 'bg-neutral-100' : 'hover:bg-neutral-50'
         )}
+        title={globalSelectedAgent?.name}
       >
         {globalSelectedAgent ? (
           <>
-            <span className="text-sm font-medium text-neutral-950">
+            <span className="text-sm font-medium text-neutral-950 truncate">
               {globalSelectedAgent.name}
             </span>
             <ChevronDown
