@@ -150,9 +150,13 @@ export function openOAuthPopup(authUrl: string): Promise<{ tempConnectionId: str
 
     // Handle postMessage from callback page
     const handleMessage = (event: MessageEvent) => {
-      // Verify origin for security
-      if (event.origin !== window.location.origin) {
-        logger.warn('Received message from unknown origin', { origin: event.origin });
+      // Verify origin for security - allow both authorized domains
+      const allowedOrigins = ['https://dashboard.mojeeb.app', 'https://app.mojeeb.app'];
+      if (!allowedOrigins.includes(event.origin)) {
+        logger.warn('Received message from unauthorized origin', {
+          origin: event.origin,
+          allowedOrigins
+        });
         return;
       }
 
