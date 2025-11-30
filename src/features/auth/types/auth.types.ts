@@ -21,6 +21,7 @@ export interface User {
   email: string;
   name: string;
   role: RoleValue;
+  phone?: string;
   avatarUrl?: string;
   createdAt: string;
   updatedAt: string;

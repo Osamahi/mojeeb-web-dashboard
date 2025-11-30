@@ -60,6 +60,14 @@ export default function UsersTable({ users }: UsersTableProps) {
       ),
     },
     {
+      key: 'phone',
+      label: 'Phone Number',
+      sortable: false,
+      render: (phone) => (
+        <div className="text-sm text-neutral-900">{phone || '-'}</div>
+      ),
+    },
+    {
       key: 'role',
       label: 'Role',
       sortable: true,
@@ -73,13 +81,20 @@ export default function UsersTable({ users }: UsersTableProps) {
       key: 'created_at',
       label: 'Created',
       sortable: true,
-      render: (created_at) => (
-        <div className="text-sm text-neutral-600">
-          {created_at
-            ? format(new Date(created_at as string), 'MMM dd, yyyy')
-            : '-'}
-        </div>
-      ),
+      render: (created_at) => {
+        if (!created_at) return <div className="text-sm text-neutral-600">-</div>;
+
+        // Backend returns UTC time without 'Z', so we append it to ensure proper parsing
+        const dateString = (created_at as string).endsWith('Z')
+          ? created_at as string
+          : `${created_at}Z`;
+
+        return (
+          <div className="text-sm text-neutral-600">
+            {format(new Date(dateString), 'MMM dd, yyyy h:mm a')}
+          </div>
+        );
+      },
     },
   ], []);
 

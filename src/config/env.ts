@@ -34,6 +34,9 @@ const envSchema = z.object({
     .pipe(z.string().url().optional()),
   VITE_SENTRY_ENVIRONMENT: z.string().optional(),
 
+  // Analytics (Optional)
+  VITE_CLARITY_PROJECT_ID: z.string().optional(),
+
   // Security (Optional)
   VITE_TOKEN_ENCRYPTION_KEY: z
     .string()
@@ -53,6 +56,7 @@ const parseEnv = () => {
     VITE_APPLE_REDIRECT_URI: import.meta.env.VITE_APPLE_REDIRECT_URI,
     VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
     VITE_SENTRY_ENVIRONMENT: import.meta.env.VITE_SENTRY_ENVIRONMENT,
+    VITE_CLARITY_PROJECT_ID: import.meta.env.VITE_CLARITY_PROJECT_ID,
     VITE_TOKEN_ENCRYPTION_KEY: import.meta.env.VITE_TOKEN_ENCRYPTION_KEY,
   });
 

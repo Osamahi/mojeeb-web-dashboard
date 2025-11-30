@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import type { User } from '../types/auth.types';
 import { setTokens as setApiTokens, clearTokens as clearApiTokens } from '@/lib/tokenManager';
 import { setSentryUser, clearSentryUser } from '@/lib/sentry';
+import { identifyClarityUser, clearClarityUser } from '@/lib/clarity';
+import { sessionHelper } from '@/lib/sessionHelper';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useConversationStore } from '@/features/conversations/stores/conversationStore';
 
@@ -17,6 +19,7 @@ interface AuthState {
   setUser: (user: User) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
+  updateUserPhone: (phone: string) => void;
   logout: () => void;
   setLoading: (isLoading: boolean) => void;
 }
@@ -50,12 +53,22 @@ export const useAuthStore = create<AuthState>()(
         // Set Sentry user context for error tracking
         setSentryUser(user.id, user.email, user.name);
 
+        // Set Clarity user identification for session tracking (privacy: use ID only, not email)
+        identifyClarityUser(user.id);
+
         set({
           user,
           accessToken,
           refreshToken,
           isAuthenticated: true,
         });
+      },
+
+      updateUserPhone: (phone) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          set({ user: { ...currentUser, phone } });
+        }
       },
 
       logout: () => {
@@ -68,6 +81,12 @@ export const useAuthStore = create<AuthState>()(
 
         // Clear Sentry user context on logout
         clearSentryUser();
+
+        // Clear Clarity user identification on logout
+        clearClarityUser();
+
+        // Clear phone collection tracking
+        sessionHelper.resetSession();
 
         // Clear auth state
         set({

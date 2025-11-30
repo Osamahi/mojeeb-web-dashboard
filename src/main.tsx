@@ -6,9 +6,11 @@ import './styles/globals.css'
 import App from './App.tsx'
 import { env } from './config/env'
 import { initializeSentry } from './lib/sentry'
+import { initializeClarity } from './lib/clarity'
 
-// Initialize Sentry for error tracking (only in production if DSN provided)
-initializeSentry();
+// Initialize error tracking and analytics
+initializeSentry(); // Error tracking (only in production if DSN provided)
+initializeClarity(); // Session recording and UX analytics (only in production if Project ID provided)
 
 const googleClientId = env.VITE_GOOGLE_CLIENT_ID || ''
 

@@ -1,17 +1,49 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { OnboardingPromptBanner } from './OnboardingPromptBanner';
+import { PhoneCollectionModal } from '@/features/auth/components/PhoneCollectionModal';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { useAuthStore } from '@/features/auth/stores/authStore';
+import { sessionHelper } from '@/lib/sessionHelper';
 import { queryKeys } from '@/lib/queryKeys';
 
 export const DashboardLayout = () => {
   const { setAgents, initializeAgentSelection } = useAgentStore();
+  const { user } = useAuthStore();
   const hasInitialized = useRef(false);
+  const hasProcessedPhoneCheck = useRef<string | null>(null); // Track which user we've processed
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+
+  // Auto-show phone modal if user has no phone and hasn't seen it this session
+  useEffect(() => {
+    // If no user, reset processing and return
+    if (!user) {
+      hasProcessedPhoneCheck.current = null;
+      return;
+    }
+
+    // If we've already processed this user, skip
+    if (hasProcessedPhoneCheck.current === user.id) {
+      return;
+    }
+
+    const hasPhone = Boolean(user?.phone && user.phone.trim() !== '');
+    const hasShownThisSession = sessionHelper.hasShownPhoneModalThisSession();
+    const shouldShowModal = !hasPhone && !hasShownThisSession;
+
+    if (shouldShowModal) {
+      setShowPhoneModal(true);
+      sessionHelper.markPhoneModalShown();
+    }
+
+    // Mark this user as processed
+    hasProcessedPhoneCheck.current = user.id;
+  }, [user]);
 
   // Fetch agents on mount - critical for GlobalAgentSelector to work on refresh
   const { data: agents, isLoading } = useQuery({
@@ -65,6 +97,14 @@ export const DashboardLayout = () => {
           <Outlet />
         </main>
       </div>
+
+      {/* Phone Collection Modal - Auto-shows once per session if no phone */}
+      <PhoneCollectionModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSuccess={() => setShowPhoneModal(false)}
+        onSkip={() => setShowPhoneModal(false)}
+      />
     </>
   );
 };
