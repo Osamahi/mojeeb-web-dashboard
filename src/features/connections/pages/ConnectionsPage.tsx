@@ -4,23 +4,71 @@
  */
 
 import { useState } from 'react';
-import { Link2, RefreshCw, Plus } from 'lucide-react';
+import { Link2, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useConnections } from '../hooks/useConnections';
-import { ConnectionsList } from '../components/ConnectionsList';
+import { useConnections, useDisconnectPlatform, useConnectionHealth } from '../hooks/useConnections';
+import { ConnectedPlatformsSection } from '../components/sections/ConnectedPlatformsSection';
+import { AvailablePlatformsSection } from '../components/sections/AvailablePlatformsSection';
 import { AddConnectionModal } from '../components/AddConnectionModal';
+import { DisconnectConfirmationDialog } from '../components/dialogs/DisconnectConfirmationDialog';
+import { HealthCheckDialog } from '../components/dialogs/HealthCheckDialog';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import NoAgentEmptyState from '@/features/agents/components/NoAgentEmptyState';
+import type { PlatformType, PlatformConnection } from '../types';
 
 export default function ConnectionsPage() {
-  const [showHealthStatus, setShowHealthStatus] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | null>(null);
+  const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false);
+  const [healthCheckDialogOpen, setHealthCheckDialogOpen] = useState(false);
+  const [selectedConnection, setSelectedConnection] = useState<PlatformConnection | null>(null);
+
   const { agent: globalSelectedAgent } = useAgentContext();
 
   const { data: connections, isLoading, error, refetch, isFetching } = useConnections();
+  const disconnectMutation = useDisconnectPlatform();
+  const { data: healthStatus, isLoading: isLoadingHealth, error: healthError } = useConnectionHealth(
+    healthCheckDialogOpen ? selectedConnection?.id : undefined
+  );
+
+  // Handle platform connection
+  const handleConnect = (platformId: PlatformType) => {
+    setSelectedPlatform(platformId);
+    setIsAddModalOpen(true);
+  };
+
+  // Handle connection management
+  const handleManageConnection = (connection: PlatformConnection) => {
+    // TODO: Open connection management view
+    console.log('Manage connection:', connection);
+  };
+
+  // Handle disconnection - Open confirmation dialog
+  const handleDisconnect = (connection: PlatformConnection) => {
+    setSelectedConnection(connection);
+    setDisconnectDialogOpen(true);
+  };
+
+  // Confirm disconnection
+  const confirmDisconnect = () => {
+    if (selectedConnection) {
+      disconnectMutation.mutate(selectedConnection.id, {
+        onSuccess: () => {
+          setDisconnectDialogOpen(false);
+          setSelectedConnection(null);
+        },
+      });
+    }
+  };
+
+  // Handle view health status - Open health check dialog
+  const handleViewHealth = (connection: PlatformConnection) => {
+    setSelectedConnection(connection);
+    setHealthCheckDialogOpen(true);
+  };
 
   // Show empty state if no agent is selected
   if (!globalSelectedAgent) {
@@ -36,12 +84,12 @@ export default function ConnectionsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
       >
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Connections</h1>
@@ -49,38 +97,14 @@ export default function ConnectionsPage() {
             Platform connections for {globalSelectedAgent.name}
           </p>
         </div>
-
-        {/* Add Connection Button - Desktop only */}
-        <div className="hidden sm:flex items-center gap-3 sm:flex-shrink-0">
-          {/* Health Check Toggle - Commented out for now */}
-          {/* <Button
-            variant={showHealthStatus ? 'primary' : 'secondary'}
-            size="sm"
-            onClick={() => setShowHealthStatus(!showHealthStatus)}
-            className="flex items-center gap-2"
-          >
-            {showHealthStatus ? 'Hide Health Status' : 'Show Health Status'}
-          </Button> */}
-
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Connection
-          </Button>
-        </div>
       </motion.div>
 
-      {/* Connections List */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-      >
-        {error ? (
+      {/* Error State */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <Card>
             <EmptyState
               icon={<Link2 className="w-12 h-12 text-neutral-400" />}
@@ -104,35 +128,80 @@ export default function ConnectionsPage() {
               }
             />
           </Card>
-        ) : (
-          <ConnectionsList
-            connections={connections || []}
-            isLoading={isLoading}
-            showHealthStatus={showHealthStatus}
-          />
-        )}
-      </motion.div>
+        </motion.div>
+      )}
 
-      {/* Add Connection Button - Mobile only (appears below connections) */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="sm:hidden"
-      >
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 w-full justify-center"
+      {/* Connected Platforms Section - Only show if there are connections */}
+      {!error && !isLoading && connections && connections.length > 0 && (
+        <>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <ConnectedPlatformsSection
+              connections={connections}
+              isLoading={false}
+              onManage={handleManageConnection}
+              onDisconnect={handleDisconnect}
+              onViewHealth={handleViewHealth}
+            />
+          </motion.div>
+
+          {/* Divider - Only show when connected section is visible */}
+          <div className="border-t border-neutral-200" />
+        </>
+      )}
+
+      {/* Available Integrations Section */}
+      {!error && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
         >
-          <Plus className="w-4 h-4" />
-          Add Connection
-        </Button>
-      </motion.div>
+          <AvailablePlatformsSection
+            connections={connections || []}
+            onConnect={handleConnect}
+            isLoading={isLoading}
+          />
+        </motion.div>
+      )}
 
       {/* Add Connection Modal */}
-      <AddConnectionModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
+      <AddConnectionModal
+        isOpen={isAddModalOpen}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setSelectedPlatform(null);
+        }}
+        initialPlatform={selectedPlatform}
+      />
+
+      {/* Disconnect Confirmation Dialog */}
+      <DisconnectConfirmationDialog
+        isOpen={disconnectDialogOpen}
+        onClose={() => {
+          setDisconnectDialogOpen(false);
+          setSelectedConnection(null);
+        }}
+        onConfirm={confirmDisconnect}
+        connection={selectedConnection}
+        isDisconnecting={disconnectMutation.isPending}
+      />
+
+      {/* Health Check Dialog */}
+      <HealthCheckDialog
+        isOpen={healthCheckDialogOpen}
+        onClose={() => {
+          setHealthCheckDialogOpen(false);
+          setSelectedConnection(null);
+        }}
+        connection={selectedConnection}
+        healthStatus={healthStatus || null}
+        isLoading={isLoadingHealth}
+        error={healthError || null}
+      />
     </div>
   );
 }

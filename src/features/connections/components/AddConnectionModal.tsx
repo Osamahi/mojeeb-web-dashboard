@@ -3,13 +3,15 @@
  * Main orchestrator for the connection wizard flow
  */
 
-import { useReducer, useEffect, useRef } from 'react';
+import { useReducer, useEffect, useRef, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { useConnections } from '../hooks/useConnections';
 import { useConnectPage } from '../hooks/useAddConnection';
 import { cleanupOAuthStorage } from '../utils/oauthManager';
-import type { OAuthIntegrationType, InstagramAccount } from '../types';
+import { platformShowsWidget } from '../constants/platforms';
+import type { OAuthIntegrationType, InstagramAccount, PlatformType } from '../types';
+import { WidgetSnippetDialog } from './dialogs/WidgetSnippetDialog';
 
 import {
   StepIndicator,
@@ -22,6 +24,7 @@ import {
 type AddConnectionModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  initialPlatform?: PlatformType | null;
 };
 
 // Wizard state management
@@ -78,19 +81,31 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
   }
 }
 
-export function AddConnectionModal({ isOpen, onClose }: AddConnectionModalProps) {
+export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConnectionModalProps) {
   const [state, dispatch] = useReducer(wizardReducer, initialState);
   const { data: connections = [] } = useConnections();
   const { mutate: connectPage, isPending: isConnecting } = useConnectPage();
   const contentRef = useRef<HTMLDivElement>(null);
+  const [showWidgetDialog, setShowWidgetDialog] = useState(false);
 
-  // Reset state when modal closes
+  // Handle widget platform
+  useEffect(() => {
+    if (isOpen && initialPlatform && platformShowsWidget(initialPlatform)) {
+      setShowWidgetDialog(true);
+    }
+  }, [isOpen, initialPlatform]);
+
+  // Reset state when modal closes or when initialPlatform changes
   useEffect(() => {
     if (!isOpen) {
       dispatch({ type: 'RESET' });
       cleanupOAuthStorage();
+      setShowWidgetDialog(false);
+    } else if (isOpen && initialPlatform && !platformShowsWidget(initialPlatform)) {
+      // When modal opens with a new platform, reset and go to authorize
+      dispatch({ type: 'SELECT_PLATFORM', platform: initialPlatform as OAuthIntegrationType });
     }
-  }, [isOpen]);
+  }, [isOpen, initialPlatform]);
 
   // Auto-close after success
   useEffect(() => {
@@ -114,7 +129,18 @@ export function AddConnectionModal({ isOpen, onClose }: AddConnectionModalProps)
   }, [state.step, isOpen]);
 
   const handlePlatformSelect = (platform: OAuthIntegrationType) => {
-    dispatch({ type: 'SELECT_PLATFORM', platform });
+    // Check if this is a widget platform
+    if (platformShowsWidget(platform as PlatformType)) {
+      setShowWidgetDialog(true);
+      // Don't close the main modal yet - let user complete widget setup
+    } else {
+      dispatch({ type: 'SELECT_PLATFORM', platform });
+    }
+  };
+
+  const handleWidgetDialogClose = () => {
+    setShowWidgetDialog(false);
+    onClose(); // Close the main modal too
   };
 
   const handleOAuthSuccess = (tempConnectionId: string) => {
@@ -140,7 +166,13 @@ export function AddConnectionModal({ isOpen, onClose }: AddConnectionModalProps)
   };
 
   const handleBack = () => {
-    dispatch({ type: 'GO_BACK' });
+    // Only allow going back if we started from platform selection
+    // If we have initialPlatform, we skip platform selection, so back should close
+    if (initialPlatform && state.step === 'authorize') {
+      handleClose();
+    } else {
+      dispatch({ type: 'GO_BACK' });
+    }
   };
 
   const handleClose = () => {
@@ -149,52 +181,70 @@ export function AddConnectionModal({ isOpen, onClose }: AddConnectionModalProps)
     onClose();
   };
 
+  // Get modal title based on platform
+  const getModalTitle = () => {
+    if (state.platform) {
+      return `Connect ${state.platform === 'facebook' ? 'Facebook' : 'Instagram'}`;
+    }
+    return 'Add Connection';
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add Connection" size="lg">
-      <div className="space-y-6">
-        {/* Step indicator */}
-        {state.step !== 'complete' && (
-          <div className="border-b border-neutral-200 pb-4">
-            <StepIndicator currentStep={state.step} />
-          </div>
-        )}
-
-        {/* Step content */}
-        <div ref={contentRef} className="min-h-[300px]" tabIndex={-1} aria-live="polite">
-          {state.step === 'platform' && (
-            <PlatformSelectStep onSelect={handlePlatformSelect} existingConnections={connections} />
-          )}
-
-          {state.step === 'authorize' && state.platform && (
-            <OAuthAuthorizeStep
-              platform={state.platform}
-              onSuccess={handleOAuthSuccess}
-              onBack={handleBack}
-            />
-          )}
-
-          {state.step === 'select' && state.platform && state.tempConnectionId && (
-            <AccountSelectStep
-              tempConnectionId={state.tempConnectionId}
-              platform={state.platform}
-              onSelect={handleAccountSelect}
-              onBack={handleBack}
-              isConnecting={isConnecting}
-            />
-          )}
-
-          {state.step === 'complete' && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <CheckCircle2 className="h-16 w-16 text-green-500" />
-              <h3 className="mt-4 text-xl font-semibold text-neutral-900">Connection Successful!</h3>
-              <p className="mt-2 text-sm text-neutral-600">
-                Your {state.platform === 'instagram' ? 'Instagram' : 'Facebook'} account has been connected.
-              </p>
-              <p className="mt-1 text-xs text-neutral-500">This dialog will close automatically...</p>
+    <>
+      {/* OAuth Connection Modal */}
+      <Modal isOpen={isOpen && !showWidgetDialog} onClose={handleClose} title={getModalTitle()} size="lg">
+        <div className="space-y-6">
+          {/* Step indicator - only show if we're in the multi-step flow */}
+          {state.step !== 'complete' && !initialPlatform && (
+            <div className="border-b border-neutral-200 pb-4">
+              <StepIndicator currentStep={state.step} />
             </div>
           )}
+
+          {/* Step content */}
+          <div ref={contentRef} className="min-h-[300px]" tabIndex={-1} aria-live="polite">
+            {/* Only show platform selection if no initial platform */}
+            {state.step === 'platform' && !initialPlatform && (
+              <PlatformSelectStep onSelect={handlePlatformSelect} existingConnections={connections} />
+            )}
+
+            {state.step === 'authorize' && state.platform && (
+              <OAuthAuthorizeStep
+                platform={state.platform}
+                onSuccess={handleOAuthSuccess}
+                onBack={handleBack}
+              />
+            )}
+
+            {state.step === 'select' && state.platform && state.tempConnectionId && (
+              <AccountSelectStep
+                tempConnectionId={state.tempConnectionId}
+                platform={state.platform}
+                onSelect={handleAccountSelect}
+                onBack={handleBack}
+                isConnecting={isConnecting}
+              />
+            )}
+
+            {state.step === 'complete' && (
+              <div className="flex flex-col items-center justify-center py-12">
+                <CheckCircle2 className="h-16 w-16 text-green-500" />
+                <h3 className="mt-4 text-xl font-semibold text-neutral-900">Connection Successful!</h3>
+                <p className="mt-2 text-sm text-neutral-600">
+                  Your {state.platform === 'instagram' ? 'Instagram' : 'Facebook'} account has been connected.
+                </p>
+                <p className="mt-1 text-xs text-neutral-500">This dialog will close automatically...</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+
+      {/* Widget Snippet Dialog */}
+      <WidgetSnippetDialog
+        isOpen={showWidgetDialog}
+        onClose={handleWidgetDialogClose}
+      />
+    </>
   );
 }

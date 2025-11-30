@@ -4,13 +4,14 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Loader2, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Loader2, AlertTriangle, ExternalLink, Facebook, Instagram } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { logger } from '@/lib/logger';
 import type { OAuthIntegrationType } from '../../types';
 import { useOAuthConnectionFlow } from '../../hooks/useAddConnection';
 import { useAgentContext } from '@/hooks/useAgentContext';
+import { getPlatformById } from '../../constants/platforms';
 import {
   generateOAuthState,
   storeOAuthState,
@@ -46,6 +47,8 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
   }, []);
 
   const platformName = platform === 'facebook' ? 'Facebook' : 'Instagram';
+  const platformMetadata = getPlatformById(platform);
+  const PlatformIcon = platform === 'facebook' ? Facebook : Instagram;
 
   // Start the OAuth flow
   const startOAuthFlow = useCallback(async () => {
@@ -202,90 +205,93 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
   }, [authState, isInitiating, resetAll]);
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-neutral-900">Authorize {platformName}</h3>
-        <p className="mt-1 text-sm text-neutral-600">
-          Grant access to your {platformName} account to continue
-        </p>
-      </div>
+    <div className="flex items-center justify-center py-12">
+      {/* Content Container */}
+      <div className="w-full max-w-md">
+        <div className="px-8">
+          <div className="flex flex-col items-center text-center space-y-4">
+            {/* Platform Icon with Spinner */}
+            <div className="relative">
+              {/* Spinning loader ring around icon */}
+              {(authState === 'idle' || authState === 'initiating' || isInitiating || (authState === 'authorizing' && !popupBlocked)) && (
+                <Loader2 className="absolute inset-0 w-20 h-20 -m-2 animate-spin text-neutral-300" />
+              )}
 
-      <div className="flex flex-col items-center justify-center py-8">
-        {/* Initiating state */}
-        {(authState === 'idle' || authState === 'initiating' || isInitiating) && (
-          <div className="text-center">
-            <Loader2 className="mx-auto h-12 w-12 animate-spin text-neutral-400" />
-            <p className="mt-4 text-sm text-neutral-600">Preparing authorization...</p>
+              {/* Platform Icon */}
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center relative z-10"
+                style={{ backgroundColor: platformMetadata?.brandBgColor }}
+              >
+                <PlatformIcon
+                  className="w-8 h-8"
+                  style={{ color: platformMetadata?.brandColor }}
+                />
+              </div>
+            </div>
+
+            {/* Initiating state */}
+            {(authState === 'idle' || authState === 'initiating' || isInitiating) && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-neutral-900">Preparing authorization</p>
+                <p className="text-xs text-neutral-600">
+                  You'll be redirected to {platformName} to authorize your account
+                </p>
+              </div>
+            )}
+
+            {/* Authorizing state - waiting for user */}
+            {authState === 'authorizing' && !popupBlocked && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-neutral-900">Waiting for authorization</p>
+                <p className="text-xs text-neutral-600">
+                  Complete the authorization in the popup window
+                  <br />
+                  This will update automatically
+                </p>
+              </div>
+            )}
+
+            {/* Popup blocked state */}
+            {authState === 'authorizing' && popupBlocked && (
+              <>
+                <div>
+                  <AlertTriangle className="h-12 w-12 text-yellow-500" />
+                </div>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-neutral-900">Popup Blocked</p>
+                    <p className="text-xs text-neutral-600">
+                      Your browser blocked the authorization popup
+                      <br />
+                      Click below to open it manually
+                    </p>
+                  </div>
+                  <Button
+                    onClick={openInNewTab}
+                    className="flex items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Open {platformName} Authorization
+                  </Button>
+                  <p className="text-xs text-neutral-500">
+                    After authorizing, return to this page
+                  </p>
+                </div>
+              </>
+            )}
+
+            {/* Error state */}
+            {authState === 'error' && (
+              <>
+                <ErrorState
+                  title="Authorization Failed"
+                  description={errorMessage}
+                  onRetry={handleRetry}
+                />
+              </>
+            )}
           </div>
-        )}
-
-        {/* Authorizing state - waiting for user */}
-        {authState === 'authorizing' && !popupBlocked && (
-          <div className="text-center">
-            <Loader2 className="mx-auto h-12 w-12 animate-spin text-neutral-400" />
-            <p className="mt-4 font-medium text-neutral-900">Waiting for authorization...</p>
-            <p className="mt-2 text-sm text-neutral-600">
-              Complete the authorization in the popup window.
-              <br />
-              This window will update automatically.
-            </p>
-          </div>
-        )}
-
-        {/* Popup blocked state */}
-        {authState === 'authorizing' && popupBlocked && (
-          <div className="text-center">
-            <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500" />
-            <p className="mt-4 font-medium text-neutral-900">Popup Blocked</p>
-            <p className="mt-2 text-sm text-neutral-600">
-              Your browser blocked the authorization popup.
-              <br />
-              Click below to open it manually.
-            </p>
-            <Button
-              onClick={openInNewTab}
-              className="mt-4 flex items-center gap-2"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Open {platformName} Authorization
-            </Button>
-            <p className="mt-3 text-xs text-neutral-500">
-              After authorizing, return to this page. The modal will detect your authorization.
-            </p>
-          </div>
-        )}
-
-        {/* Error state */}
-        {authState === 'error' && (
-          <ErrorState
-            title="Authorization Failed"
-            description={errorMessage}
-            onRetry={handleRetry}
-          />
-        )}
-      </div>
-
-      {/* Back button */}
-      <div className="flex justify-start">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            cleanupOAuthStorage();
-            resetAll();
-            onBack();
-          }}
-          disabled={isInitiating}
-        >
-          Back to Platform Selection
-        </Button>
-      </div>
-
-      {/* Info box */}
-      <div className="rounded-lg bg-blue-50 p-3">
-        <p className="text-xs text-blue-700">
-          <strong>Privacy:</strong> We only request access to manage messages for your selected pages.
-          We will never post anything without your permission.
-        </p>
+        </div>
       </div>
     </div>
   );

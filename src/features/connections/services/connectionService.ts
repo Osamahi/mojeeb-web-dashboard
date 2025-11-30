@@ -260,7 +260,7 @@ class ConnectionService {
 
       logger.info('OAuth flow initiated', { agentId, integrationType });
 
-      // Transform from snake_case to camelCase
+      // Backend returns snake_case, transform to camelCase
       return {
         authorizationUrl: data.authorization_url,
         integrationType: data.integration_type,
