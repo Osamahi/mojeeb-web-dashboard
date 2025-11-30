@@ -190,14 +190,14 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
         // Form State
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Country Selector + Phone Input */}
-          <div className="relative">
-            <div className="flex gap-2">
+          <div className="relative w-full">
+            <div className="flex gap-2 w-full">
               {/* Country Dropdown */}
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative flex-shrink-0" ref={dropdownRef}>
                 <button
                   type="button"
                   onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                  className="flex items-center gap-2 px-3 py-3 border border-neutral-300 rounded-xl hover:border-neutral-400 transition-colors bg-white"
+                  className="flex items-center gap-2 px-3 py-3 border border-neutral-300 rounded-xl hover:border-neutral-400 transition-colors bg-white whitespace-nowrap"
                 >
                   <span className="text-lg">{selectedCountry.flag}</span>
                   <span className="text-sm font-medium text-neutral-700">
@@ -242,7 +242,7 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
                 onChange={handlePhoneChange}
                 placeholder={selectedCountry.format.replace(/X/g, '0')}
                 autoFocus
-                className={`flex-1 px-4 py-3 text-base border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
+                className={`flex-1 min-w-0 px-4 py-3 text-base border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
                   isValid
                     ? 'border-green-500 focus:ring-green-500 focus:border-green-500'
                     : hasError
