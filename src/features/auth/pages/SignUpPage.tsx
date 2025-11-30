@@ -64,10 +64,6 @@ export const SignUpPage = () => {
       });
       console.timeEnd('⏱️ SIGNUP-API');
 
-      console.time('⏱️ SIGNUP-TOAST');
-      toast.success('Account created successfully!');
-      console.timeEnd('⏱️ SIGNUP-TOAST');
-
       // Clear any stale onboarding state before starting fresh
       // Ensures new signups always begin onboarding from step 0 with clean form data
       useOnboardingStore.getState().resetOnboarding();
