@@ -6,6 +6,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { cn } from '@/lib/utils';
@@ -189,9 +190,9 @@ export function AccountSelectStep({
               {/* Instagram indicator */}
               {page.instagramAccounts.length > 0 && (
                 <div className="flex-shrink-0">
-                  <span className="inline-flex items-center rounded-full bg-pink-100 px-2 py-0.5 text-xs font-medium text-pink-700">
+                  <Badge variant="default" className="text-xs font-semibold px-3 py-1">
                     {page.instagramAccounts.length} IG
-                  </span>
+                  </Badge>
                 </div>
               )}
             </button>
