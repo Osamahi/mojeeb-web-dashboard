@@ -5,7 +5,7 @@
 
 import { CheckCircle, AlertCircle, XCircle, Clock, Shield } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import type { PlatformConnection, ConnectionHealthStatus } from '../../types';
 import { getPlatformById } from '../../constants/platforms';
 

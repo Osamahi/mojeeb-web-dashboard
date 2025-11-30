@@ -5,7 +5,7 @@
 
 import { AlertTriangle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import type { PlatformConnection } from '../../types';
 import { getPlatformById } from '../../constants/platforms';
 

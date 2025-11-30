@@ -6,7 +6,7 @@
 
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { PlatformIcon } from '../PlatformIcon';
 import type { PlatformMetadata } from '../../constants/platforms';
 import type { PlatformType } from '../../types';

@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 
 /**
  * Format follower count with K/M suffix (brief)
