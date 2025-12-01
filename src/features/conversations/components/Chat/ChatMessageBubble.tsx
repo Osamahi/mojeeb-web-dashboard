@@ -137,7 +137,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
 
         {/* Footer: Status + Timestamp + Copy Button (Outside bubble) - Hidden for deleted messages */}
         {!isDeleted && (
-          <div className={cn('flex items-center gap-2 mt-1 px-1', horizontalAlign)}>
+          <div className={cn('flex items-center gap-2 mt-0.5 px-1', horizontalAlign)}>
           {/* Status indicator (optimistic/error) */}
           {isOptimistic && (
             <div className="flex items-center gap-1">
@@ -166,9 +166,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
             </div>
           )}
 
-          {/* Timestamp (hide when sending) */}
+          {/* Timestamp (hide when sending) - Extra subtle */}
           {!isOptimistic && !hasError && (
-            <span className="text-xs text-neutral-500">
+            <span className="text-[11px] text-neutral-500 opacity-50">
               {formatMessageTime(message.created_at)}
             </span>
           )}

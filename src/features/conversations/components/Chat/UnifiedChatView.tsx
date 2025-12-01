@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import type { ChatMessage } from '../../types/conversation.types';
 import ChatMessageBubble from './ChatMessageBubble';
 import MessageComposer from './MessageComposer';
+import DateSeparator from './DateSeparator';
 
 export interface UnifiedChatViewProps {
   // From ChatEngine
@@ -69,6 +70,20 @@ function LoadingState() {
       <Loader2 className="w-12 h-12 animate-spin text-neutral-400 mb-4" aria-hidden="true" />
       <p className="text-sm text-neutral-600">Loading messages...</p>
     </div>
+  );
+}
+
+/**
+ * Helper function to check if two dates are on the same day
+ */
+function isSameDay(date1: Date | string, date2: Date | string): boolean {
+  const d1 = typeof date1 === 'string' ? new Date(date1) : date1;
+  const d2 = typeof date2 === 'string' ? new Date(date2) : date2;
+
+  return (
+    d1.getDate() === d2.getDate() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getFullYear() === d2.getFullYear()
   );
 }
 
@@ -156,18 +171,29 @@ export default function UnifiedChatView({
           emptyStateCustom || <DefaultEmptyState />
         ) : (
           <>
-            {/* Message list */}
-            {messages.map((message) => (
-              <ChatMessageBubble
-                key={message.id}
-                message={message}
-                onRetry={
-                  message.sendStatus === 'error' && onRetryMessage
-                    ? () => onRetryMessage(message.id)
-                    : undefined
-                }
-              />
-            ))}
+            {/* Message list with date separators */}
+            {messages.map((message, index) => {
+              const showDateSeparator =
+                index === 0 ||
+                !isSameDay(message.created_at, messages[index - 1].created_at);
+
+              return (
+                <div key={message.id}>
+                  {/* Date separator */}
+                  {showDateSeparator && <DateSeparator date={message.created_at} />}
+
+                  {/* Message */}
+                  <ChatMessageBubble
+                    message={message}
+                    onRetry={
+                      message.sendStatus === 'error' && onRetryMessage
+                        ? () => onRetryMessage(message.id)
+                        : undefined
+                    }
+                  />
+                </div>
+              );
+            })}
 
             {/* Typing indicator - AI is generating response */}
             {isAITyping && (
@@ -207,7 +233,7 @@ export default function UnifiedChatView({
 
       {/* Message Composer */}
       <div
-        className="px-3 sm:px-4 border-t border-neutral-200"
+        className="px-3 sm:px-4"
         style={{
           paddingTop: '12px',
           paddingBottom: 'max(12px, env(safe-area-inset-bottom))'

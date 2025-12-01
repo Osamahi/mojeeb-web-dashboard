@@ -142,37 +142,14 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
     fetchMessages(conversation.id, true); // true = refresh
   }, [conversation.id, fetchMessages]);
 
-  // Visual Viewport API listener for iOS keyboard handling
-  // Ensures header stays visible when keyboard opens
-  useEffect(() => {
-    if (!window.visualViewport) return;
-
-    const handleViewportResize = () => {
-      // On iOS, when keyboard opens, visualViewport shrinks
-      // But our fixed header at top: 0 automatically stays visible!
-      // This listener is here for future enhancements (e.g., adjusting composer)
-      const keyboardHeight = window.innerHeight - window.visualViewport.height;
-
-      if (keyboardHeight > 100) {
-        // Keyboard is open - header remains fixed at top: 0
-        // No adjustment needed with position: fixed!
-      }
-    };
-
-    window.visualViewport.addEventListener('resize', handleViewportResize);
-    return () => {
-      window.visualViewport.removeEventListener('resize', handleViewportResize);
-    };
-  }, []);
-
   // Extract profile picture
   const profilePictureUrl = conversation.customer_metadata?.profile_picture;
 
   // Custom header for WhatsApp-style UI
-  // Using position: fixed for iOS keyboard reliability
+  // Using position: sticky to work correctly in both mobile and desktop layouts
   const customHeader = useMemo(
     () => (
-      <div className="fixed top-0 left-0 right-0 z-20 bg-white border-b border-neutral-200 p-4 flex items-center gap-3 h-16">
+      <div className="sticky top-0 left-0 right-0 z-20 bg-white border-b border-neutral-200 p-4 flex items-center gap-3 h-16">
         {/* Back button (mobile) */}
         {onBack && (
           <button
@@ -242,9 +219,9 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
 
   return (
     <>
-      {/* Container for fixed header + scrollable content */}
+      {/* Container for sticky header + scrollable content */}
       <div className="h-full flex flex-col relative">
-        {/* FIXED HEADER - Always visible, outside scroll container */}
+        {/* STICKY HEADER - Stays at top while scrolling */}
         {customHeader}
 
         {/* SCROLLABLE CONTENT - UnifiedChatView without header */}
@@ -265,7 +242,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
               ? 'Type a message... (AI will respond)'
               : 'Type a message... (You are responding)'
           }
-          className="bg-neutral-50 flex-1 pt-16"
+          className="bg-white flex-1"
         />
       </div>
       {ConfirmDialogComponent}

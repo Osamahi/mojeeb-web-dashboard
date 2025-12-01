@@ -226,13 +226,14 @@ export default memo(function MessageComposer({
   return (
     <div
       className={cn(
-        'bg-neutral-50',
-        'border border-neutral-200',
+        'bg-white',
+        'border border-neutral-300',
         'rounded-3xl',
         'p-4',
-        'hover:border-neutral-300',
-        'focus-within:border-neutral-400',
-        'transition-colors duration-200',
+        'hover:border-neutral-400',
+        'focus-within:border-neutral-500',
+        'focus-within:shadow-sm',
+        'transition-all duration-200',
         'relative'
       )}
     >
