@@ -65,16 +65,22 @@ async function getAgentWidget(agentId: string): Promise<WidgetConfiguration> {
 
 /**
  * Initialize studio test conversation
+ * @param widgetId - Widget ID to use for conversation
+ * @param customerName - Optional customer name (falls back to STUDIO_CUSTOMER_NAME)
  */
-async function initStudioConversation(widgetId: string): Promise<StudioConversation> {
+async function initStudioConversation(
+  widgetId: string,
+  customerName?: string
+): Promise<StudioConversation> {
   const { data } = await api.post<StudioConversation>(
     '/api/conversations/initiate-widget-conversation',
     {
       widget_id: widgetId,
-      customer_name: STUDIO_CUSTOMER_NAME,
+      customer_name: customerName || STUDIO_CUSTOMER_NAME,
       customer_metadata: null,
       initial_message: null,
       customer_id: null,
+      source: 'test',
     }
   );
 

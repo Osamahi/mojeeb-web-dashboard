@@ -16,6 +16,7 @@ import { logger } from '@/lib/logger';
 import { useChatEngine } from '@/features/conversations/hooks/useChatEngine';
 import { useLocalChatStorage } from '@/features/conversations/hooks/useChatStorage';
 import UnifiedChatView from '@/features/conversations/components/Chat/UnifiedChatView';
+import { useAuthStore } from '@/features/auth/stores/authStore';
 import {
   testChatService,
   type StudioConversation,
@@ -34,6 +35,10 @@ const LOADING_TIPS = [
 ];
 
 export default function TestChat({ agentId }: TestChatProps) {
+  // Get authenticated user for customer name
+  const user = useAuthStore((state) => state.user);
+  const customerName = user?.name || user?.email || 'studio_preview_user';
+
   // State
   const [conversation, setConversation] = useState<StudioConversation | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -98,7 +103,7 @@ export default function TestChat({ agentId }: TestChatProps) {
         setError(null);
 
         const widget = await testChatService.getAgentWidget(agentId);
-        const conv = await testChatService.initStudioConversation(widget.id);
+        const conv = await testChatService.initStudioConversation(widget.id, customerName);
 
         setConversation(conv);
         logger.info('Test chat initialized', { conversationId: conv.id });
@@ -124,7 +129,7 @@ export default function TestChat({ agentId }: TestChatProps) {
 
     try {
       const widget = await testChatService.getAgentWidget(agentId);
-      const conv = await testChatService.initStudioConversation(widget.id);
+      const conv = await testChatService.initStudioConversation(widget.id, customerName);
       setConversation(conv);
       logger.info('New test conversation started', { conversationId: conv.id });
     } catch (err) {

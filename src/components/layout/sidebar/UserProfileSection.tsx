@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/features/auth/types/auth.types';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface UserProfileSectionProps {
   user: User | null;
@@ -31,26 +32,15 @@ export const UserProfileSection = ({ user, onLogout }: UserProfileSectionProps) 
     }
   };
 
-  // Smart avatar fallback: name first letter -> email first letter -> 'U'
-  const getAvatarText = (): string => {
-    const nameInitial = user?.name?.trim().charAt(0).toUpperCase();
-    if (nameInitial) return nameInitial;
-
-    const emailInitial = user?.email?.trim().charAt(0).toUpperCase();
-    if (emailInitial) return emailInitial;
-
-    return 'U';
-  };
-
   return (
     <div className="p-4 border-t border-neutral-200 bg-white">
       <div className="flex items-center gap-3 px-2 py-2">
-        <div
-          className="w-10 h-10 rounded-full bg-neutral-900 text-white flex items-center justify-center font-semibold flex-shrink-0"
-          aria-hidden="true"
-        >
-          {getAvatarText()}
-        </div>
+        <Avatar
+          src={user?.avatarUrl}
+          name={user?.name}
+          size="md"
+          className="flex-shrink-0"
+        />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-neutral-950 truncate">
             {user?.name || 'User'}

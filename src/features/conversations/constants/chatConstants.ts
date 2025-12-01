@@ -74,7 +74,7 @@ export const CHAT_IDENTIFIERS = {
   /** Studio user ID for test/preview sessions */
   STUDIO_USER_ID: 'studio_user',
 
-  /** Studio customer name for test conversations */
+  /** Studio customer name fallback for test conversations (prefers user's name or email) */
   STUDIO_CUSTOMER_NAME: 'studio_preview_user',
 
   /** Temp ID prefix for optimistic messages */
