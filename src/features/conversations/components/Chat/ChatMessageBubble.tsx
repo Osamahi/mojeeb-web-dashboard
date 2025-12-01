@@ -6,8 +6,8 @@
  * Supports optimistic updates with status indicators
  */
 
-import { memo } from 'react';
-import { Copy, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { memo, useState, useEffect, useRef } from 'react';
+import { Copy, Check, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import type { ChatMessage } from '../../types';
 import { isCustomerMessage, parseAttachments, isMessageDeleted } from '../../types';
@@ -33,37 +33,67 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
   const isOptimistic = message.isOptimistic || message.sendStatus === 'sending';
   const hasError = message.sendStatus === 'error';
 
+  // Copy feedback state
+  const [isCopied, setIsCopied] = useState(false);
+  const copyTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Alignment constants to avoid duplication
+  const horizontalAlign = isUser ? 'justify-end' : 'justify-start';
+  const verticalAlign = isUser ? 'items-end' : 'items-start';
+
   // Detect RTL for Arabic text
   const isRTL = isArabicText(messageText);
 
   // Bubble colors
   const bubbleStyle = isUser ? CHAT_BUBBLE_COLORS.user : CHAT_BUBBLE_COLORS.assistant;
 
-  // Handle copy to clipboard
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle copy to clipboard with visual feedback and cleanup
   const handleCopy = () => {
     if (messageText) {
       navigator.clipboard.writeText(messageText);
       chatToasts.copied();
+
+      // Clear existing timeout if any
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+
+      // Show checkmark for 2 seconds
+      setIsCopied(true);
+      copyTimeoutRef.current = setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
     }
   };
 
   return (
-    <div
-      className={cn(
-        'flex mb-4',
-        isUser ? 'justify-end' : 'justify-start'
-      )}
-    >
-      <div
-        className={cn(
-          'max-w-[70%] rounded-2xl p-4 border',
-          'transition-all duration-200',
-          'hover:shadow-sm',
-          isOptimistic && 'opacity-70', // Subtle feedback for sending messages
-          hasError && 'border-red-300 border-2' // Error state
-        )}
-        style={bubbleStyle}
-      >
+    <div className={cn('flex mb-4', horizontalAlign)}>
+      {/* Wrapper for bubble + footer */}
+      <div className={cn('flex flex-col max-w-[70%]', verticalAlign)}>
+        {/* Message Bubble */}
+        <div
+          className={cn(
+            'p-4 border',
+            'transition-all duration-200',
+            'hover:shadow-sm',
+            // WhatsApp-style directional corners (slightly less pointed)
+            isUser
+              ? 'rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md' // Slightly rounded bottom-right
+              : 'rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-md', // Slightly rounded bottom-left
+            isOptimistic && 'opacity-70',
+            hasError && 'border-red-300 border-2'
+          )}
+          style={bubbleStyle}
+        >
         {isDeleted ? (
           <div className="italic opacity-60 text-sm">
             This message was deleted
@@ -101,74 +131,66 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                 }}
               />
             )}
+          </>
+        )}
+        </div>
 
-            {/* Footer: Status + Timestamp + Copy Button */}
-            <div className={cn(
-              'flex items-center gap-2 mt-2 pt-1',
-              isUser ? 'justify-end' : 'justify-between'
-            )}>
-              {/* Status indicator (optimistic/error) */}
-              {isOptimistic && (
-                <div className="flex items-center gap-1">
-                  <Loader2
-                    className="w-3 h-3 animate-spin"
-                    style={{ color: bubbleStyle.color, opacity: 0.6 }}
-                  />
-                  <span
-                    className="text-xs opacity-60"
-                    style={{ color: bubbleStyle.color }}
-                  >
-                    Sending...
-                  </span>
-                </div>
-              )}
+        {/* Footer: Status + Timestamp + Copy Button (Outside bubble) - Hidden for deleted messages */}
+        {!isDeleted && (
+          <div className={cn('flex items-center gap-2 mt-1 px-1', horizontalAlign)}>
+          {/* Status indicator (optimistic/error) */}
+          {isOptimistic && (
+            <div className="flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin text-neutral-500" />
+              <span className="text-xs text-neutral-500">
+                Sending...
+              </span>
+            </div>
+          )}
 
-              {/* Error state */}
-              {hasError && (
-                <div className="flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3 text-red-500" />
-                  <span className="text-xs text-red-500">Failed to send</span>
-                  {onRetry && (
-                    <button
-                      onClick={onRetry}
-                      className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium underline"
-                      title="Retry sending message"
-                    >
-                      <RefreshCw className="w-3 h-3" />
-                      Retry
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Timestamp (hide when sending) */}
-              {!isOptimistic && !hasError && (
-                <span
-                  className="text-xs opacity-60"
-                  style={{ color: bubbleStyle.color }}
-                >
-                  {formatMessageTime(message.created_at)}
-                </span>
-              )}
-
-              {/* Copy button */}
-              {!hasError && (
+          {/* Error state */}
+          {hasError && (
+            <div className="flex items-center gap-1">
+              <AlertCircle className="w-3 h-3 text-red-500" />
+              <span className="text-xs text-red-500">Failed to send</span>
+              {onRetry && (
                 <button
-                  onClick={handleCopy}
-                  className={cn(
-                    'p-1 rounded hover:bg-opacity-10 transition-colors',
-                    isUser ? 'hover:bg-black' : 'hover:bg-white'
-                  )}
-                  title="Copy message"
+                  onClick={onRetry}
+                  className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium underline"
+                  title="Retry sending message"
                 >
-                  <Copy
-                    className="w-3 h-3 opacity-60"
-                    style={{ color: bubbleStyle.color }}
-                  />
+                  <RefreshCw className="w-3 h-3" />
+                  Retry
                 </button>
               )}
             </div>
-          </>
+          )}
+
+          {/* Timestamp (hide when sending) */}
+          {!isOptimistic && !hasError && (
+            <span className="text-xs text-neutral-500">
+              {formatMessageTime(message.created_at)}
+            </span>
+          )}
+
+          {/* Copy button with visual feedback */}
+          {!hasError && (
+            <button
+              onClick={handleCopy}
+              className={cn(
+                "p-1 rounded transition-all",
+                isCopied ? "bg-green-100" : "hover:bg-neutral-100"
+              )}
+              title={isCopied ? "Copied!" : "Copy message"}
+            >
+              {isCopied ? (
+                <Check className="w-3 h-3 text-green-600" />
+              ) : (
+                <Copy className="w-3 h-3 text-neutral-500" />
+              )}
+            </button>
+          )}
+          </div>
         )}
       </div>
     </div>
