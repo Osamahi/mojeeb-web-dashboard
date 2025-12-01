@@ -131,14 +131,10 @@ export default function UnifiedChatView({
       {/* Optional header slot (e.g., conversation metadata, new conversation button) */}
       {header}
 
-      {/* Messages Area */}
+      {/* Messages Area - Padding adjusts based on header presence */}
       <div
         ref={messagesContainerRef}
-        className={cn(
-          'flex-1 overflow-y-auto space-y-4',
-          'p-3 sm:p-4',
-          header && 'pt-14 sm:pt-16'
-        )}
+        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4"
         role="log"
         aria-live="polite"
         aria-label="Chat messages"
