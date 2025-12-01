@@ -134,7 +134,11 @@ export default function UnifiedChatView({
       {/* Messages Area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4"
+        className={cn(
+          'flex-1 overflow-y-auto space-y-4',
+          'p-3 sm:p-4',
+          header && 'pt-14 sm:pt-16'
+        )}
         role="log"
         aria-live="polite"
         aria-label="Chat messages"
