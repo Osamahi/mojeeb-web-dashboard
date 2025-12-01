@@ -35,6 +35,7 @@ export default function UsersTable({ users }: UsersTableProps) {
       render: (_, user) => (
         <div className="flex items-center gap-3">
           <Avatar
+            src={user.avatar_url || undefined}
             name={user.name || 'Anonymous User'}
             size="md"
           />

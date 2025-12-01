@@ -31,6 +31,7 @@ export default function TeamTable({ members }: TeamTableProps) {
       render: (_, member) => (
         <div className="flex items-center gap-3">
           <Avatar
+            src={member.avatar_url || undefined}
             name={member.name || 'Team Member'}
             size="md"
           />

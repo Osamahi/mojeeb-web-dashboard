@@ -16,6 +16,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { Avatar } from '@/components/ui/Avatar';
 import { NavigationList } from './sidebar/NavigationList';
 import { UserProfileSection } from './sidebar/UserProfileSection';
 import { navigation } from './sidebar/navigation.config';
@@ -158,6 +159,18 @@ const SidebarContent = () => {
 
           {/* User Profile Section - Desktop - Only show when expanded */}
           {!isSidebarCollapsed && <UserProfileSection user={user} onLogout={logout} />}
+
+          {/* Small Profile Avatar - Desktop Collapsed State */}
+          {isSidebarCollapsed && (
+            <div className="mt-auto p-4 flex justify-center">
+              <Avatar
+                src={user?.avatarUrl}
+                name={user?.name || 'User'}
+                size="sm"
+                className="cursor-pointer hover:ring-2 hover:ring-neutral-300 transition-all"
+              />
+            </div>
+          )}
         </motion.aside>
       )}
 
