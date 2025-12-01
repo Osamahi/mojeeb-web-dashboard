@@ -68,7 +68,7 @@ const ConversationListItem = memo(function ConversationListItem({
 
           {/* Human mode indicator */}
           {showHumanMode && (
-            <User className="w-4 h-4 text-orange-500 flex-shrink-0" title="Human agent mode" />
+            <User className="w-3.5 h-3.5 text-[#00D084] flex-shrink-0" />
           )}
 
           {/* Unhappy sentiment indicator */}
@@ -89,20 +89,14 @@ const ConversationListItem = memo(function ConversationListItem({
           )}
         </div>
 
-        {/* Last message preview */}
-        <div className="flex items-center gap-2">
-          {/* Topic/message */}
-          <p className="text-neutral-600 text-xs truncate flex-1">
-            {truncateText(displayText, 60)}
+        {/* Source and topic - matching chat header format */}
+        {(conversation.topic || conversation.source !== 'web') && (
+          <p className="text-xs text-neutral-600 truncate">
+            {conversation.source !== 'web' && conversation.source}
+            {conversation.source !== 'web' && conversation.topic && ' • '}
+            {conversation.topic}
           </p>
-
-          {/* Source badge */}
-          {conversation.source !== 'web' && (
-            <Badge variant="default" className="text-xs flex-shrink-0">
-              {conversation.source}
-            </Badge>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Timestamp */}

@@ -5,7 +5,7 @@
  */
 
 import { useMemo, useEffect, useState } from 'react';
-import { ArrowLeft, MoreVertical, Trash2 } from 'lucide-react';
+import { ArrowLeft, User, MoreVertical, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
@@ -189,9 +189,15 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
 
         {/* Customer Info */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-neutral-950 truncate">
-            {conversation.customer_name}
-          </h3>
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-semibold text-neutral-950 truncate">
+              {conversation.customer_name}
+            </h3>
+            {/* Human mode indicator */}
+            {!conversation.is_ai && (
+              <User className="w-3.5 h-3.5 text-[#00D084] flex-shrink-0" />
+            )}
+          </div>
 
           {/* Source and topic - subtle secondary text */}
           {(conversation.topic || conversation.source !== 'web') && (
