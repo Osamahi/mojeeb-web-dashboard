@@ -83,7 +83,7 @@ export const DashboardLayout = () => {
       <Header />
 
       {/* Main Layout Container */}
-      <div className="h-screen overflow-hidden bg-neutral-50">
+      <div className="h-dvh overflow-hidden bg-neutral-50">
         {/* Sidebar - Drawer pattern for all screen sizes */}
         <Sidebar />
 

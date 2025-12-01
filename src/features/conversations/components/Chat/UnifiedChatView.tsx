@@ -206,7 +206,13 @@ export default function UnifiedChatView({
       </div>
 
       {/* Message Composer */}
-      <div className="px-3 sm:px-4 py-3 sm:py-4 border-t border-neutral-200">
+      <div
+        className="px-3 sm:px-4 border-t border-neutral-200"
+        style={{
+          paddingTop: '12px',
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom))'
+        }}
+      >
         <MessageComposer
           onSendMessage={onSendMessage}
           isSending={false} // NEVER block input - optimistic updates handle this

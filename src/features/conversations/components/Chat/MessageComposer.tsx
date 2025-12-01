@@ -81,25 +81,35 @@ export default memo(function MessageComposer({
     textareaRef.current?.focus();
   }, []);
 
-  // Mobile keyboard viewport handling
+  // Mobile keyboard viewport handling using Visual Viewport API
+  // More reliable than setTimeout - responds to actual keyboard appearance
   useEffect(() => {
-    const handleFocus = () => {
-      // Scroll textarea into view on mobile
-      if (window.innerWidth < 768) { // mobile breakpoint
-        setTimeout(() => {
+    // Only apply on mobile devices
+    if (!window.visualViewport || window.innerWidth >= 768) return;
+
+    const handleViewportResize = () => {
+      // Calculate keyboard height by comparing window height to visual viewport
+      const keyboardHeight = window.innerHeight - (window.visualViewport?.height || window.innerHeight);
+
+      // Keyboard is likely open if viewport shrunk by >100px
+      if (keyboardHeight > 100) {
+        // Use requestAnimationFrame for smooth, jank-free scrolling
+        // Better than setTimeout as it syncs with browser paint cycle
+        requestAnimationFrame(() => {
           textareaRef.current?.scrollIntoView({
             behavior: 'smooth',
-            block: 'center',
+            block: 'end', // Position at bottom (above keyboard), not center
+            inline: 'nearest'
           });
-        }, 300); // Wait for keyboard animation
+        });
       }
     };
 
-    const textarea = textareaRef.current;
-    textarea?.addEventListener('focus', handleFocus);
+    // Listen to Visual Viewport resize events (keyboard open/close)
+    window.visualViewport.addEventListener('resize', handleViewportResize);
 
     return () => {
-      textarea?.removeEventListener('focus', handleFocus);
+      window.visualViewport?.removeEventListener('resize', handleViewportResize);
     };
   }, []);
 
