@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
+import { useOnAppResume } from '@/contexts/AppLifecycleContext';
 import { queryKeys } from '@/lib/queryKeys';
 import {
   subscribeToConversations,
@@ -69,6 +70,7 @@ export function useConversationSubscription() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const handleRealtimeEventRef = useRef<((payload: Conversation[], eventType: RealtimeEventType) => void) | null>(null);
 
   useEffect(() => {
     if (!agentId) return;
@@ -187,6 +189,9 @@ export function useConversationSubscription() {
       }
     };
 
+    // Store handler in ref for app lifecycle reconnection
+    handleRealtimeEventRef.current = handleRealtimeEvent;
+
     // Subscribe to conversations for this agent
     const channel = subscribeToConversations(agentId, handleRealtimeEvent);
     channelRef.current = channel;
@@ -199,4 +204,38 @@ export function useConversationSubscription() {
       }
     };
   }, [agentId, queryClient]);
+
+  // Handle app resume - reconnect Supabase real-time channels
+  // Uses global AppLifecycleProvider instead of per-component listeners
+  useOnAppResume(() => {
+    if (!agentId || !handleRealtimeEventRef.current) {
+      if (import.meta.env.DEV) {
+        console.log('[useConversationSubscription] Skipping reconnection - no agentId or handler');
+      }
+      return;
+    }
+
+    if (import.meta.env.DEV) {
+      console.log(`[useConversationSubscription] App resumed - reconnecting channels for agent ${agentId}`);
+    }
+
+    // Unsubscribe from old channel
+    if (channelRef.current) {
+      if (import.meta.env.DEV) {
+        console.log('[useConversationSubscription] Unsubscribing from old channel');
+      }
+      unsubscribeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    // Resubscribe with fresh connection
+    if (import.meta.env.DEV) {
+      console.log('[useConversationSubscription] Resubscribing to conversations');
+    }
+    const newChannel = subscribeToConversations(agentId, handleRealtimeEventRef.current);
+    channelRef.current = newChannel;
+    if (import.meta.env.DEV) {
+      console.log('[useConversationSubscription] Channel reconnection complete');
+    }
+  });
 }

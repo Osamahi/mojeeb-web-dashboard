@@ -14,6 +14,8 @@ import { useAuthStore } from '../stores/authStore';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { logger } from '@/lib/logger';
+import { setTokens } from '@/lib/tokenManager';
+import { updateSupabaseAuth } from '@/lib/supabase';
 
 // API Response Types (snake_case from backend)
 interface ApiUserResponse {
@@ -41,6 +43,9 @@ interface ApiRefreshResponse {
 }
 
 class AuthService {
+  // Prevent concurrent token refreshes - store the in-flight refresh promise
+  private refreshPromise: Promise<{ accessToken: string; refreshToken: string }> | null = null;
+
   /**
    * Initialize agent data after successful authentication
    * Fetches agents and initializes agent selection
@@ -177,9 +182,13 @@ class AuthService {
    * Register new user
    */
   async register(registerData: RegisterData): Promise<AuthResponse> {
-    console.time('⏱️ AUTH-SERVICE: api.post');
+    if (import.meta.env.DEV) {
+      console.time('⏱️ AUTH-SERVICE: api.post');
+    }
     const { data } = await api.post<ApiAuthResponse>('/api/auth/register', registerData);
-    console.timeEnd('⏱️ AUTH-SERVICE: api.post');
+    if (import.meta.env.DEV) {
+      console.timeEnd('⏱️ AUTH-SERVICE: api.post');
+    }
 
     // Backend returns snake_case, convert to camelCase
     const authResponse: AuthResponse = {
@@ -189,9 +198,13 @@ class AuthService {
     };
 
     // Update auth store
-    console.time('⏱️ AUTH-SERVICE: setAuth');
+    if (import.meta.env.DEV) {
+      console.time('⏱️ AUTH-SERVICE: setAuth');
+    }
     useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
-    console.timeEnd('⏱️ AUTH-SERVICE: setAuth');
+    if (import.meta.env.DEV) {
+      console.timeEnd('⏱️ AUTH-SERVICE: setAuth');
+    }
 
     // Note: Agent checking is handled in SignUpPage component for new users
     // Existing users logging in will have agents fetched via initializeAgentData() in login()
@@ -264,39 +277,112 @@ class AuthService {
    *
    * Note: Uses raw axios instead of api instance to avoid triggering interceptors
    * and causing recursion when called from the response interceptor
+   *
+   * Includes race condition protection - if multiple calls happen simultaneously,
+   * they will share the same refresh promise
    */
   async refreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
-    const timestamp = new Date().toISOString();
-    console.log(`\n🔄 [AuthService] refreshToken() called at ${timestamp}`);
-    console.log(`   📤 Sending refresh token: ${refreshToken.substring(0, 10)}...${refreshToken.substring(refreshToken.length - 10)}`);
+    // If a refresh is already in progress, return that promise
+    if (this.refreshPromise) {
+      if (import.meta.env.DEV) {
+        console.log('[AuthService] Token refresh already in progress, reusing promise');
+      }
+      return this.refreshPromise;
+    }
+
+    if (import.meta.env.DEV) {
+      const timestamp = new Date().toISOString();
+      console.log(`\n🔄 [AuthService] refreshToken() called at ${timestamp}`);
+      console.log(`   📤 Sending refresh token (length: ${refreshToken.length} chars)`);
+    }
+
+    // Create the refresh promise
+    const promise = (async () => {
+      try {
+        const { data } = await axios.post<ApiRefreshResponse>(`${API_URL}/api/auth/refresh`, {
+          refreshToken: refreshToken,
+        });
+
+        if (import.meta.env.DEV) {
+          console.log(`   📥 Backend response received:`, data);
+          console.log(`   🔍 Raw response keys:`, Object.keys(data));
+          console.log(`   🔍 access_token (snake_case): ${data.access_token ? 'EXISTS' : 'MISSING'} (${data.access_token?.length || 0} chars)`);
+          console.log(`   🔍 refresh_token (snake_case): ${data.refresh_token ? 'EXISTS' : 'MISSING'} (${data.refresh_token?.length || 0} chars)`);
+        }
+
+        // Backend returns snake_case, convert to camelCase
+        const result = {
+          accessToken: data.access_token,
+          refreshToken: data.refresh_token,
+        };
+
+        if (import.meta.env.DEV) {
+          console.log(`   ✅ Transformation to camelCase complete:`);
+          console.log(`      accessToken: ${result.accessToken ? 'EXISTS' : 'UNDEFINED'} (${result.accessToken?.length || 0} chars)`);
+          console.log(`      refreshToken: ${result.refreshToken ? 'EXISTS' : 'UNDEFINED'} (${result.refreshToken?.length || 0} chars)`);
+        }
+
+        return result;
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error(`   ❌ [AuthService] refreshToken() FAILED:`, error);
+          if (axios.isAxiosError(error)) {
+            console.error(`      Status: ${error.response?.status}`);
+            console.error(`      Response data:`, error.response?.data);
+          }
+        }
+        throw error;
+      }
+    })();
+
+    // Store the promise for concurrent callers to share
+    this.refreshPromise = promise;
 
     try {
-      const { data } = await axios.post<ApiRefreshResponse>(`${API_URL}/api/auth/refresh`, {
-        refreshToken: refreshToken,
+      return await promise;
+    } finally {
+      // Only clear if this is still the active promise (prevents race condition)
+      if (this.refreshPromise === promise) {
+        this.refreshPromise = null;
+      }
+    }
+  }
+
+  /**
+   * Refresh token and update all auth-related systems
+   * Consolidates: token refresh + storage + Supabase auth update
+   *
+   * This method should be used whenever tokens need to be refreshed to ensure
+   * consistent behavior across the app (AuthInitializer, API interceptor, etc.)
+   *
+   * @param refreshToken - The current refresh token
+   * @returns The new tokens
+   * @throws Error if refresh fails
+   */
+  async refreshAndUpdateSession(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+    logger.info('Refreshing session and updating auth systems', { component: 'AuthService' });
+
+    try {
+      // 1. Refresh tokens from backend
+      const tokens = await this.refreshToken(refreshToken);
+
+      // 2. Store tokens in secure storage (dual storage: SecureLS + localStorage)
+      setTokens(tokens.accessToken, tokens.refreshToken);
+
+      // 3. Update Supabase auth session for real-time channels
+      await updateSupabaseAuth(tokens.accessToken, tokens.refreshToken);
+
+      logger.info('Session refresh complete', {
+        component: 'AuthService',
+        accessTokenLength: tokens.accessToken.length,
+        refreshTokenLength: tokens.refreshToken.length,
       });
 
-      console.log(`   📥 Backend response received:`, data);
-      console.log(`   🔍 Raw response keys:`, Object.keys(data));
-      console.log(`   🔍 access_token (snake_case): ${data.access_token ? 'EXISTS' : 'MISSING'} (${data.access_token?.length || 0} chars)`);
-      console.log(`   🔍 refresh_token (snake_case): ${data.refresh_token ? 'EXISTS' : 'MISSING'} (${data.refresh_token?.length || 0} chars)`);
-
-      // Backend returns snake_case, convert to camelCase
-      const result = {
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token,
-      };
-
-      console.log(`   ✅ Transformation to camelCase complete:`);
-      console.log(`      accessToken: ${result.accessToken ? result.accessToken.substring(0, 10) + '...' : 'UNDEFINED'} (${result.accessToken?.length || 0} chars)`);
-      console.log(`      refreshToken: ${result.refreshToken ? result.refreshToken.substring(0, 10) + '...' : 'UNDEFINED'} (${result.refreshToken?.length || 0} chars)`);
-
-      return result;
+      return tokens;
     } catch (error) {
-      console.error(`   ❌ [AuthService] refreshToken() FAILED:`, error);
-      if (axios.isAxiosError(error)) {
-        console.error(`      Status: ${error.response?.status}`);
-        console.error(`      Response data:`, error.response?.data);
-      }
+      logger.error('Session refresh failed', error instanceof Error ? error : new Error(String(error)), {
+        component: 'AuthService',
+      });
       throw error;
     }
   }

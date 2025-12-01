@@ -21,6 +21,7 @@ import {
   CHAT_IDENTIFIERS,
   CHANNEL_NAMES,
 } from '../constants/chatConstants';
+import { useOnAppResume } from '@/contexts/AppLifecycleContext';
 
 // === Types ===
 
@@ -377,11 +378,24 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       .on('broadcast', { event: 'typing' }, handleTyping)
       .subscribe((status, err) => {
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          handleSubscriptionError(err || new Error(`Subscription ${status}`), {
-            component: 'useChatEngine',
-            conversationId,
-            subscriptionStatus: status,
-          });
+          // Check if tab is hidden - if so, this is expected behavior
+          const isExpectedDisconnection = document.visibilityState === 'hidden';
+
+          if (isExpectedDisconnection) {
+            // Tab is hidden - connection drop is expected, just log as debug
+            logger.debug('Chat subscription disconnected (tab hidden)', {
+              component: 'useChatEngine',
+              conversationId,
+              subscriptionStatus: status,
+            });
+          } else {
+            // Unexpected disconnection - log as error for debugging
+            handleSubscriptionError(err || new Error(`Subscription ${status}`), {
+              component: 'useChatEngine',
+              conversationId,
+              subscriptionStatus: status,
+            });
+          }
         } else if (status === 'SUBSCRIBED') {
           logger.info('Successfully subscribed to conversation', {
             conversationId,
@@ -527,6 +541,42 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       }
     };
   }, [subscribeToMessages, clearAITimeout]);
+
+  // Handle app resume - reconnect Supabase real-time channels when tab becomes visible
+  // Uses global AppLifecycleProvider instead of per-component listeners
+  useOnAppResume(() => {
+    if (!conversationId) {
+      logger.debug('Skipping chat reconnection - no conversationId', { component: 'useChatEngine' });
+      return;
+    }
+
+    logger.info('App resumed - reconnecting chat subscription', {
+      component: 'useChatEngine',
+      conversationId,
+    });
+
+    // Unsubscribe from old channel
+    if (channelRef.current) {
+      logger.debug('Unsubscribing from old chat channel', {
+        component: 'useChatEngine',
+        conversationId,
+      });
+      channelRef.current.unsubscribe();
+      channelRef.current = null;
+    }
+
+    // Resubscribe with fresh connection
+    // The subscribeToMessages callback already handles channel setup
+    logger.debug('Resubscribing to chat messages', {
+      component: 'useChatEngine',
+      conversationId,
+    });
+    subscribeToMessages();
+    logger.info('Chat channel reconnection complete', {
+      component: 'useChatEngine',
+      conversationId,
+    });
+  });
 
   // Return interface
   return {

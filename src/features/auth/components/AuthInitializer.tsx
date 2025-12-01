@@ -1,9 +1,10 @@
 import { useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { getAccessToken, getRefreshToken, setTokens } from '@/lib/tokenManager';
+import { getAccessToken, getRefreshToken } from '@/lib/tokenManager';
 import { authService } from '../services/authService';
 import { logger } from '@/lib/logger';
+import { useOnAppResume } from '@/contexts/AppLifecycleContext';
 
 interface AuthInitializerProps {
   children: ReactNode;
@@ -18,6 +19,12 @@ interface AuthInitializerProps {
  * 3. Shows loading state during validation
  * 4. Only renders children after auth state is stable
  *
+ * On app resume (mobile browser):
+ * 1. Detects when app comes back from background
+ * 2. Shows "Reconnecting..." state
+ * 3. Validates and refreshes tokens if needed
+ * 4. Reconnects to services seamlessly
+ *
  * This prevents the flickering loop caused by:
  * - isAuthenticated=true (from Zustand rehydration)
  * - accessToken=null (not persisted for security)
@@ -26,6 +33,7 @@ interface AuthInitializerProps {
  */
 export const AuthInitializer = ({ children }: AuthInitializerProps) => {
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const { isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
 
@@ -65,12 +73,8 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
           logger.info('AuthInitializer: Access token missing, attempting refresh...');
 
           try {
-            // Use centralized authService.refreshToken to avoid code duplication
-            const tokens = await authService.refreshToken(refreshToken);
-
-            console.log(`   💾 Storing refreshed tokens...`);
-            // Store new tokens
-            setTokens(tokens.accessToken, tokens.refreshToken);
+            // Use centralized refresh method that handles token storage and Supabase auth
+            await authService.refreshAndUpdateSession(refreshToken);
 
             console.log(`   ✅ Proactive refresh successful!`);
             logger.info('AuthInitializer: Token refresh successful');
@@ -113,6 +117,82 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
     initializeAuth();
   }, [isAuthenticated, logout, navigate]);
 
+  // Handle app resume from background (mobile browser lifecycle)
+  // Uses global AppLifecycleProvider instead of per-component listeners
+  useOnAppResume(async () => {
+    if (import.meta.env.DEV) {
+      console.log(`\n🔄 [AuthInitializer] App resumed from background at ${new Date().toISOString()}`);
+    }
+
+    // Only handle reconnection if user is authenticated
+    if (!isAuthenticated) {
+      if (import.meta.env.DEV) {
+        console.log(`   ℹ️ Not authenticated, skipping reconnection`);
+      }
+      return;
+    }
+
+    if (import.meta.env.DEV) {
+      console.log(`   🔄 User is authenticated, checking token validity...`);
+    }
+    setIsReconnecting(true);
+
+    try {
+      const accessToken = getAccessToken();
+      const refreshToken = getRefreshToken();
+
+      if (import.meta.env.DEV) {
+        console.log(`   📊 Token status on resume:`);
+        console.log(`      Access Token: ${accessToken ? 'EXISTS' : 'MISSING'}`);
+        console.log(`      Refresh Token: ${refreshToken ? 'EXISTS' : 'MISSING'}`);
+      }
+
+      // If access token is missing but refresh token exists, refresh proactively
+      if (!accessToken && refreshToken) {
+        if (import.meta.env.DEV) {
+          console.log(`   🔄 Access token missing on resume, refreshing...`);
+        }
+        logger.info('AuthInitializer: Token refresh on app resume');
+
+        try {
+          // Use centralized refresh method that handles token storage and Supabase auth
+          await authService.refreshAndUpdateSession(refreshToken);
+
+          if (import.meta.env.DEV) {
+            console.log(`   ✅ Token refresh on resume successful`);
+          }
+          logger.info('AuthInitializer: Token refresh on app resume successful');
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.error(`   ❌ Token refresh on resume failed:`, error);
+          }
+          logger.error('AuthInitializer: Token refresh on app resume failed', error);
+          // Don't logout immediately - let the user try to interact
+          // The API interceptor will handle 401s if tokens are truly invalid
+        }
+      } else if (accessToken && refreshToken) {
+        if (import.meta.env.DEV) {
+          console.log(`   ✅ Tokens valid on resume, no refresh needed`);
+        }
+      } else if (!refreshToken) {
+        if (import.meta.env.DEV) {
+          console.warn(`   ⚠️ No refresh token on resume - will likely need to login`);
+        }
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error(`   ❌ Error during app resume handling:`, error);
+      }
+      logger.error('AuthInitializer: Error during app resume', error);
+    } finally {
+      // Clear reconnecting state immediately (no artificial delay needed)
+      setIsReconnecting(false);
+      if (import.meta.env.DEV) {
+        console.log(`   ✅ Reconnection complete`);
+      }
+    }
+  });
+
   // Show loading spinner during initialization
   if (isInitializing) {
     return (
@@ -130,6 +210,30 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
           </p>
         </div>
       </div>
+    );
+  }
+
+  // Show reconnecting banner overlay when app resumes (non-blocking)
+  if (isReconnecting) {
+    return (
+      <>
+        {children}
+        {/* Reconnecting Overlay - appears briefly on top */}
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg px-6 py-4 flex items-center gap-3">
+            {/* Loading Spinner */}
+            <div className="relative w-6 h-6">
+              <div className="absolute inset-0 border-2 border-neutral-200 rounded-full"></div>
+              <div className="absolute inset-0 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+            </div>
+
+            {/* Reconnecting Text */}
+            <p className="text-sm text-neutral-900 font-medium">
+              Reconnecting...
+            </p>
+          </div>
+        </div>
+      </>
     );
   }
 

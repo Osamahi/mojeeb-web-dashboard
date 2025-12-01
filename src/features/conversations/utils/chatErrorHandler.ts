@@ -123,13 +123,38 @@ export function handleMessageFetchError(
 
 /**
  * Handle real-time subscription errors
+ * Shows reconnecting message instead of error to avoid alarming users
  */
 export function handleSubscriptionError(
+  error: CatchError,
+  context: ChatErrorContext,
+  options?: { showAsReconnecting?: boolean }
+): void {
+  const showAsReconnecting = options?.showAsReconnecting ?? true;
+
+  handleChatError(error, context, {
+    // If showing as reconnecting, don't display an error toast
+    // The AuthInitializer will show the reconnecting overlay
+    showToast: !showAsReconnecting,
+    toastMessage: showAsReconnecting
+      ? undefined // Don't show toast when reconnecting
+      : 'Failed to connect to real-time updates. Retrying...',
+    logError: true, // Still log for debugging
+  });
+}
+
+/**
+ * Handle connection errors on app resume (mobile browsers)
+ * Silently logs error and lets reconnection logic handle it
+ */
+export function handleConnectionResumeError(
   error: CatchError,
   context: ChatErrorContext
 ): void {
   handleChatError(error, context, {
-    toastMessage: 'Failed to connect to real-time updates.',
+    showToast: false, // Don't show error toast - reconnecting UI will appear
+    logError: true,
+    toastMessage: undefined,
   });
 }
 
