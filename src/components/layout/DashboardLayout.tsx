@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { Sidebar } from './Sidebar';
@@ -9,15 +9,24 @@ import { PhoneCollectionModal } from '@/features/auth/components/PhoneCollection
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { useConversationStore } from '@/features/conversations/stores/conversationStore';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { sessionHelper } from '@/lib/sessionHelper';
 import { queryKeys } from '@/lib/queryKeys';
 
 export const DashboardLayout = () => {
+  const location = useLocation();
+  const isMobile = useIsMobile();
+  const selectedConversation = useConversationStore((state) => state.selectedConversation);
   const { setAgents, initializeAgentSelection } = useAgentStore();
   const { user } = useAuthStore();
   const hasInitialized = useRef(false);
   const hasProcessedPhoneCheck = useRef<string | null>(null); // Track which user we've processed
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+
+  // Determine if header should be hidden
+  // Hide on mobile when on conversations page AND a conversation is selected
+  const shouldHideHeader = isMobile && location.pathname === '/conversations' && selectedConversation !== null;
 
   // Auto-show phone modal if user has no phone and hasn't seen it this session
   useEffect(() => {
@@ -79,17 +88,18 @@ export const DashboardLayout = () => {
 
   return (
     <>
-      {/* Unified Header - Visible on all screen sizes */}
-      <Header />
+      {/* Unified Header - Hidden on mobile when viewing a conversation */}
+      {!shouldHideHeader && <Header />}
 
       {/* Main Layout Container */}
       <div className="h-dvh overflow-hidden bg-neutral-50">
         {/* Sidebar - Drawer pattern for all screen sizes */}
         <Sidebar />
 
-        {/* Main Content Area */}
-        <main className="h-full overflow-y-auto pt-16 md:pl-20">
+        {/* Main Content Area - Dynamic padding based on header visibility */}
+        <main className={`h-full overflow-y-auto md:pl-20 ${shouldHideHeader ? 'pt-0' : 'pt-16'}`}>
           {/* md:pl-20 = 80px left padding on desktop for collapsed sidebar */}
+          {/* pt-16 = 64px top padding for fixed header (removed when header hidden) */}
 
           {/* Onboarding Prompt Banner - Shows when no agents exist */}
           <OnboardingPromptBanner />

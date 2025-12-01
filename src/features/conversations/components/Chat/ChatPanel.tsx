@@ -149,7 +149,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   // Custom header for WhatsApp-style UI
   const customHeader = useMemo(
     () => (
-      <div className="bg-white border-b border-neutral-200 p-4 flex items-center gap-3 flex-shrink-0">
+      <div className="sticky top-0 z-10 bg-white border-b border-neutral-200 p-4 flex items-center gap-3 flex-shrink-0">
         {/* Back button (mobile) */}
         {onBack && (
           <button
