@@ -4,8 +4,8 @@
  * Now with optimistic updates, typing indicators, and non-blocking input
  */
 
-import { useMemo, useEffect } from 'react';
-import { ArrowLeft, Bot, User } from 'lucide-react';
+import { useMemo, useEffect, useState } from 'react';
+import { ArrowLeft, Bot, User, MoreVertical, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
@@ -21,6 +21,14 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { logger } from '@/lib/logger';
 import { chatToasts } from '../../utils/chatToasts';
+import { useConfirm } from '@/hooks/useConfirm';
+import { useDeleteConversation } from '../../hooks/useDeleteConversation';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface ChatPanelProps {
   conversation: Conversation;
@@ -31,6 +39,8 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   const queryClient = useQueryClient();
   const globalSelectedAgent = useAgentStore((state) => state.globalSelectedAgent);
   const selectConversation = useConversationStore((state) => state.selectConversation);
+  const { confirm, ConfirmDialogComponent } = useConfirm();
+  const deleteMutation = useDeleteConversation();
 
   // Fetch initial messages using Zustand store
   const fetchMessages = useChatStore((state) => state.fetchMessages);
@@ -108,6 +118,25 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
     toggleModeMutation.mutate(!conversation.is_ai);
   };
 
+  // Handle conversation deletion with confirmation
+  const handleDelete = async () => {
+    const confirmed = await confirm({
+      title: 'Delete Conversation',
+      message: `Are you sure you want to delete the conversation with "${conversation.customer_name}"? This action cannot be undone.`,
+      confirmText: 'Delete',
+      variant: 'danger',
+    });
+
+    if (confirmed) {
+      deleteMutation.mutate(conversation.id);
+
+      // Navigate back after successful deletion if onBack is provided
+      if (onBack) {
+        onBack();
+      }
+    }
+  };
+
   // Fetch messages on conversation change
   useEffect(() => {
     if (!conversation.id) return;
@@ -168,9 +197,31 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
             {conversation.source}
           </Badge>
         )}
+
+        {/* Three-dot menu with delete option */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+              aria-label="More options"
+            >
+              <MoreVertical className="w-5 h-5 text-neutral-600" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="text-red-600 focus:text-red-600 cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     ),
-    [conversation, onBack, profilePictureUrl]
+    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending]
   );
 
   // Handle load more with Zustand store
@@ -179,25 +230,28 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   };
 
   return (
-    <UnifiedChatView
-      messages={chatEngine.messages}
-      isLoading={chatEngine.isLoading}
-      isAITyping={chatEngine.isAITyping}
-      onSendMessage={chatEngine.sendMessage}
-      onRetryMessage={chatEngine.retryMessage}
-      header={customHeader}
-      enablePagination={true}
-      onLoadMore={handleLoadMore}
-      hasMore={hasMore}
-      enableAIToggle={true}
-      isAIMode={conversation.is_ai}
-      onModeToggle={handleModeToggle}
-      placeholder={
-        conversation.is_ai
-          ? 'Type a message... (AI will respond)'
-          : 'Type a message... (You are responding)'
-      }
-      className="bg-neutral-50"
-    />
+    <>
+      <UnifiedChatView
+        messages={chatEngine.messages}
+        isLoading={chatEngine.isLoading}
+        isAITyping={chatEngine.isAITyping}
+        onSendMessage={chatEngine.sendMessage}
+        onRetryMessage={chatEngine.retryMessage}
+        header={customHeader}
+        enablePagination={true}
+        onLoadMore={handleLoadMore}
+        hasMore={hasMore}
+        enableAIToggle={true}
+        isAIMode={conversation.is_ai}
+        onModeToggle={handleModeToggle}
+        placeholder={
+          conversation.is_ai
+            ? 'Type a message... (AI will respond)'
+            : 'Type a message... (You are responding)'
+        }
+        className="bg-neutral-50"
+      />
+      {ConfirmDialogComponent}
+    </>
   );
 }

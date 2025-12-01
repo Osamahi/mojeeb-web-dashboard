@@ -16,10 +16,23 @@ import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { logger } from '@/lib/logger';
 
 // API Response Types (snake_case from backend)
+interface ApiUserResponse {
+  id: string;
+  email: string;
+  name: string;
+  role: number;
+  phone?: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+  o_auth_provider?: string;
+  o_auth_provider_user_id?: string;
+}
+
 interface ApiAuthResponse {
   access_token: string;
   refresh_token: string;
-  user: User;
+  user: ApiUserResponse;
 }
 
 interface ApiRefreshResponse {
@@ -57,6 +70,25 @@ class AuthService {
   }
 
   /**
+   * Transform API user response (snake_case) to User type (camelCase)
+   * @private
+   */
+  private transformUser(apiUser: ApiUserResponse): User {
+    return {
+      id: apiUser.id,
+      email: apiUser.email,
+      name: apiUser.name,
+      role: apiUser.role,
+      phone: apiUser.phone,
+      avatarUrl: apiUser.avatar_url,
+      createdAt: apiUser.created_at,
+      updatedAt: apiUser.updated_at,
+      oauthProvider: apiUser.o_auth_provider,
+      oauthProviderUserId: apiUser.o_auth_provider_user_id,
+    };
+  }
+
+  /**
    * Login with email and password
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -66,7 +98,7 @@ class AuthService {
     const authResponse: AuthResponse = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
-      user: data.user,
+      user: this.transformUser(data.user),
     };
 
     // Update auth store
@@ -100,7 +132,7 @@ class AuthService {
     const authResponse: AuthResponse = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
-      user: data.user,
+      user: this.transformUser(data.user),
     };
 
     // Update auth store
@@ -129,7 +161,7 @@ class AuthService {
     const authResponse: AuthResponse = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
-      user: data.user,
+      user: this.transformUser(data.user),
     };
 
     // Update auth store
@@ -153,7 +185,7 @@ class AuthService {
     const authResponse: AuthResponse = {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
-      user: data.user,
+      user: this.transformUser(data.user),
     };
 
     // Update auth store
@@ -206,9 +238,10 @@ class AuthService {
    * Get current user info
    */
   async getCurrentUser(): Promise<User> {
-    const { data } = await api.get<User>('/api/auth/me');
-    useAuthStore.getState().setUser(data);
-    return data;
+    const { data } = await api.get<ApiUserResponse>('/api/auth/me');
+    const user = this.transformUser(data);
+    useAuthStore.getState().setUser(user);
+    return user;
   }
 
   /**

@@ -119,6 +119,20 @@ class ChatApiService {
       throw error;
     }
   }
+
+  /**
+   * Delete a conversation
+   * Backend handles authorization (SuperAdmin or agent owner)
+   */
+  async deleteConversation(conversationId: string): Promise<void> {
+    try {
+      await api.delete(`/api/conversations/${conversationId}`);
+      logger.info('Conversation deleted successfully', { conversationId });
+    } catch (error) {
+      logger.error('Error deleting conversation', error instanceof Error ? error : new Error(String(error)));
+      throw error;
+    }
+  }
 }
 
 export const chatApiService = new ChatApiService();
