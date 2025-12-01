@@ -213,16 +213,16 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
     );
   }
 
-  // Show reconnecting banner overlay when app resumes (non-blocking)
+  // Show reconnecting notification in top-right corner when app resumes (non-blocking)
   if (isReconnecting) {
     return (
       <>
         {children}
-        {/* Reconnecting Overlay - appears briefly on top */}
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg px-6 py-4 flex items-center gap-3">
+        {/* Reconnecting Notification - top-right corner */}
+        <div className="fixed top-4 right-4 z-50">
+          <div className="bg-white rounded-lg shadow-lg border border-neutral-200 px-4 py-3 flex items-center gap-3 animate-in slide-in-from-top-2 fade-in duration-300">
             {/* Loading Spinner */}
-            <div className="relative w-6 h-6">
+            <div className="relative w-5 h-5">
               <div className="absolute inset-0 border-2 border-neutral-200 rounded-full"></div>
               <div className="absolute inset-0 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
             </div>

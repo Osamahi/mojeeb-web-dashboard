@@ -5,7 +5,7 @@
  */
 
 import { useMemo, useEffect, useState } from 'react';
-import { ArrowLeft, Bot, User, MoreVertical, Trash2 } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
@@ -18,7 +18,6 @@ import { useZustandChatStorage } from '../../hooks/useChatStorage';
 import UnifiedChatView from './UnifiedChatView';
 import { chatApiService } from '../../services/chatApiService';
 import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@/components/ui/Badge';
 import { logger } from '@/lib/logger';
 import { chatToasts } from '../../utils/chatToasts';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -190,37 +189,19 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
 
         {/* Customer Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-neutral-950 truncate">
-              {conversation.customer_name}
-            </h3>
+          <h3 className="font-semibold text-neutral-950 truncate">
+            {conversation.customer_name}
+          </h3>
 
-            {/* AI/Human Mode Indicator */}
-            {conversation.is_ai ? (
-              <Badge variant="primary" className="text-xs gap-1">
-                <Bot className="w-3 h-3" />
-                AI Mode
-              </Badge>
-            ) : (
-              <Badge variant="warning" className="text-xs gap-1">
-                <User className="w-3 h-3" />
-                Human Mode
-              </Badge>
-            )}
-          </div>
-
-          {/* Topic or source */}
-          {conversation.topic && (
-            <p className="text-xs text-neutral-600 truncate">Topic: {conversation.topic}</p>
+          {/* Source and topic - subtle secondary text */}
+          {(conversation.topic || conversation.source !== 'web') && (
+            <p className="text-xs text-neutral-600 truncate">
+              {conversation.source !== 'web' && conversation.source}
+              {conversation.source !== 'web' && conversation.topic && ' • '}
+              {conversation.topic}
+            </p>
           )}
         </div>
-
-        {/* Source badge */}
-        {conversation.source !== 'web' && (
-          <Badge variant="default" className="text-xs">
-            {conversation.source}
-          </Badge>
-        )}
 
         {/* Three-dot menu with delete option */}
         <DropdownMenu>
