@@ -171,7 +171,11 @@ describe('agentService', () => {
     it('should fetch single agent by ID', async () => {
       server.use(
         http.get('http://localhost:5267/api/agents/agent-123', () => {
-          return HttpResponse.json(mockApiAgent);
+          return HttpResponse.json({
+            success: true,
+            message: null,
+            data: mockApiAgent,
+          });
         })
       );
 
@@ -211,19 +215,26 @@ describe('agentService', () => {
       };
 
       server.use(
-        http.post('http://localhost:5267/api/agents', async ({ request }) => {
-          const body = (await request.json()) as any;
-
+        // POST returns minimal response with just id
+        http.post('http://localhost:5267/api/agents', async () => {
           return HttpResponse.json(
-            {
-              ...mockApiAgent,
-              id: 'new-agent-id',
-              name: body.name,
-              description: body.description,
-              persona_prompt: body.personaPrompt,
-            },
+            { id: 'new-agent-id' },
             { status: 201 }
           );
+        }),
+        // Then GET is called to fetch full agent details
+        http.get('http://localhost:5267/api/agents/new-agent-id', () => {
+          return HttpResponse.json({
+            success: true,
+            message: null,
+            data: {
+              ...mockApiAgent,
+              id: 'new-agent-id',
+              name: 'New Agent',
+              description: 'New agent description',
+              persona_prompt: 'You are helpful',
+            },
+          });
         })
       );
 
@@ -390,10 +401,14 @@ describe('agentService', () => {
 
           return HttpResponse.json(
             {
-              ...mockKnowledgeBase,
-              id: 'new-kb-id',
-              name: body.name,
-              content: body.content,
+              success: true,
+              message: null,
+              data: {
+                ...mockKnowledgeBase,
+                id: 'new-kb-id',
+                name: body.name,
+                content: body.content,
+              },
             },
             { status: 201 }
           );
@@ -539,7 +554,11 @@ describe('agentService', () => {
     it('should correctly transform all agent properties', async () => {
       server.use(
         http.get('http://localhost:5267/api/agents/agent-123', () => {
-          return HttpResponse.json(mockApiAgent);
+          return HttpResponse.json({
+            success: true,
+            message: null,
+            data: mockApiAgent,
+          });
         })
       );
 
@@ -589,7 +608,11 @@ describe('agentService', () => {
 
       server.use(
         http.get('http://localhost:5267/api/agents/agent-123', () => {
-          return HttpResponse.json(agentWithNulls);
+          return HttpResponse.json({
+            success: true,
+            message: null,
+            data: agentWithNulls,
+          });
         })
       );
 

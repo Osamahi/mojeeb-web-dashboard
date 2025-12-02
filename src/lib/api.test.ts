@@ -12,10 +12,11 @@ const mocks = vi.hoisted(() => ({
   mockShouldRetry: vi.fn(),
   mockCalculateExponentialDelay: vi.fn(),
   mockSleep: vi.fn(),
+  mockLoggerDebug: vi.fn(),
   mockLoggerWarn: vi.fn(),
   mockLoggerInfo: vi.fn(),
   mockLoggerError: vi.fn(),
-  mockAuthServiceRefreshToken: vi.fn(),
+  mockAuthServiceRefreshAndUpdateSession: vi.fn(),
   mockLogout: vi.fn(),
 }));
 
@@ -34,6 +35,7 @@ vi.mock('./retryConfig', () => ({
 
 vi.mock('./logger', () => ({
   logger: {
+    debug: mocks.mockLoggerDebug,
     warn: mocks.mockLoggerWarn,
     info: mocks.mockLoggerInfo,
     error: mocks.mockLoggerError,
@@ -44,7 +46,7 @@ vi.mock('./logger', () => ({
 vi.mock('@/features/auth/services/authService', async () => {
   return {
     authService: {
-      refreshToken: mocks.mockAuthServiceRefreshToken,
+      refreshAndUpdateSession: mocks.mockAuthServiceRefreshAndUpdateSession,
     },
   };
 });
@@ -88,7 +90,7 @@ describe('api', () => {
     mocks.mockShouldRetry.mockReturnValue(false);
     mocks.mockCalculateExponentialDelay.mockReturnValue(1000);
     mocks.mockSleep.mockResolvedValue(undefined);
-    mocks.mockAuthServiceRefreshToken.mockResolvedValue({
+    mocks.mockAuthServiceRefreshAndUpdateSession.mockResolvedValue({
       accessToken: 'new-access-token',
       refreshToken: 'new-refresh-token',
     });
@@ -149,7 +151,7 @@ describe('api', () => {
     it('should attempt token refresh on 401 error', async () => {
       mocks.mockGetAccessToken.mockReturnValue('expired-token');
       mocks.mockGetRefreshToken.mockReturnValue('valid-refresh-token');
-      mocks.mockAuthServiceRefreshToken.mockResolvedValue({
+      mocks.mockAuthServiceRefreshAndUpdateSession.mockResolvedValue({
         accessToken: 'new-access-token',
         refreshToken: 'new-refresh-token',
       });
@@ -163,8 +165,8 @@ describe('api', () => {
 
       const response = await api.get('/protected');
 
-      expect(mocks.mockAuthServiceRefreshToken).toHaveBeenCalledWith('valid-refresh-token');
-      expect(mocks.mockSetTokens).toHaveBeenCalledWith('new-access-token', 'new-refresh-token');
+      expect(mocks.mockAuthServiceRefreshAndUpdateSession).toHaveBeenCalledWith('valid-refresh-token');
+      // Note: setTokens is called internally by refreshAndUpdateSession, not by the interceptor
       expect(response.data).toEqual({ data: 'success' });
     });
 
@@ -185,7 +187,7 @@ describe('api', () => {
     it.skip('should redirect to login if token refresh fails', async () => {
       mocks.mockGetAccessToken.mockReturnValue('expired-token');
       mocks.mockGetRefreshToken.mockReturnValue('invalid-refresh-token');
-      mocks.mockAuthServiceRefreshToken.mockRejectedValue(new Error('Refresh failed'));
+      mocks.mockAuthServiceRefreshAndUpdateSession.mockRejectedValue(new Error('Refresh failed'));
 
       mockAxios.onGet('/protected').reply(401);
 
@@ -235,7 +237,7 @@ describe('api', () => {
     it.skip('should not retry 401 request twice (check _retry flag)', async () => {
       mocks.mockGetAccessToken.mockReturnValue('token');
       mocks.mockGetRefreshToken.mockReturnValue('refresh-token');
-      mocks.mockAuthServiceRefreshToken.mockResolvedValue({
+      mocks.mockAuthServiceRefreshAndUpdateSession.mockResolvedValue({
         accessToken: 'new-token',
         refreshToken: 'new-refresh',
       });
@@ -246,7 +248,7 @@ describe('api', () => {
       await expect(api.get('/protected')).rejects.toThrow();
 
       // Should only call refresh once
-      expect(mocks.mockAuthServiceRefreshToken).toHaveBeenCalledTimes(1);
+      expect(mocks.mockAuthServiceRefreshAndUpdateSession).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -256,7 +258,7 @@ describe('api', () => {
       mocks.mockGetRefreshToken.mockReturnValue('refresh-token');
 
       // Simulate slow refresh
-      mocks.mockAuthServiceRefreshToken.mockImplementation(
+      mocks.mockAuthServiceRefreshAndUpdateSession.mockImplementation(
         () =>
           new Promise((resolve) =>
             setTimeout(
@@ -290,7 +292,7 @@ describe('api', () => {
       expect(response2.data).toEqual({ data: '2' });
 
       // Refresh should only be called once
-      expect(mocks.mockAuthServiceRefreshToken).toHaveBeenCalledTimes(1);
+      expect(mocks.mockAuthServiceRefreshAndUpdateSession).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -444,7 +446,7 @@ describe('api', () => {
     it.skip('should handle 401 followed by successful retry', async () => {
       mocks.mockGetAccessToken.mockReturnValue('expired-token');
       mocks.mockGetRefreshToken.mockReturnValue('refresh-token');
-      mocks.mockAuthServiceRefreshToken.mockResolvedValue({
+      mocks.mockAuthServiceRefreshAndUpdateSession.mockResolvedValue({
         accessToken: 'new-token',
         refreshToken: 'new-refresh',
       });
@@ -464,7 +466,7 @@ describe('api', () => {
     it.skip('should not retry 401 after successful token refresh', async () => {
       mocks.mockGetAccessToken.mockReturnValue('token');
       mocks.mockGetRefreshToken.mockReturnValue('refresh');
-      mocks.mockAuthServiceRefreshToken.mockResolvedValue({
+      mocks.mockAuthServiceRefreshAndUpdateSession.mockResolvedValue({
         accessToken: 'new',
         refreshToken: 'new-refresh',
       });
@@ -475,7 +477,7 @@ describe('api', () => {
       await expect(api.get('/test')).rejects.toThrow();
 
       // Should only refresh once (not retry the second 401)
-      expect(mocks.mockAuthServiceRefreshToken).toHaveBeenCalledTimes(1);
+      expect(mocks.mockAuthServiceRefreshAndUpdateSession).toHaveBeenCalledTimes(1);
     });
 
     it('should pass through successful requests unchanged', async () => {
@@ -489,7 +491,7 @@ describe('api', () => {
       expect(response.status).toBe(200);
 
       // Should not attempt any retries or refreshes
-      expect(mocks.mockAuthServiceRefreshToken).not.toHaveBeenCalled();
+      expect(mocks.mockAuthServiceRefreshAndUpdateSession).not.toHaveBeenCalled();
       expect(mocks.mockShouldRetry).not.toHaveBeenCalled();
     });
   });

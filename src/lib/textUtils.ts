@@ -2,6 +2,8 @@
  * Text utilities for handling plain text and rich text content
  */
 
+import DOMPurify from 'dompurify';
+
 /**
  * Converts plain text with line breaks to HTML paragraphs
  * Handles both \n and \r\n line breaks
@@ -18,7 +20,7 @@ export function plainTextToHtml(text: string): string {
     (trimmed.endsWith('</p>') || trimmed.endsWith('</ul>') ||
      trimmed.endsWith('</ol>') || trimmed.match(/<\/h\d>$/))
   ) {
-    return text;
+    return DOMPurify.sanitize(text);
   }
 
   // Split by line breaks, preserving structure
@@ -47,7 +49,8 @@ export function plainTextToHtml(text: string): string {
     paragraphs.push(`<p>${currentParagraph.join(' ')}</p>`);
   }
 
-  return paragraphs.length > 0 ? paragraphs.join('') : '<p></p>';
+  const html = paragraphs.length > 0 ? paragraphs.join('') : '<p></p>';
+  return DOMPurify.sanitize(html);
 }
 
 /**

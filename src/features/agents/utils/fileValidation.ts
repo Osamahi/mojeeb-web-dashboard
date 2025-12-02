@@ -34,8 +34,8 @@ export const validateDocumentFile = (file: File): FileValidationResult => {
 
   // Validate file type by MIME type and extension
   const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-  const isValidType = ALLOWED_FILE_TYPES.includes(file.type as any);
-  const isValidExtension = ALLOWED_FILE_EXTENSIONS.includes(fileExtension as any);
+  const isValidType = (ALLOWED_FILE_TYPES as readonly string[]).includes(file.type);
+  const isValidExtension = (ALLOWED_FILE_EXTENSIONS as readonly string[]).includes(fileExtension);
 
   if (!isValidType && !isValidExtension) {
     return {

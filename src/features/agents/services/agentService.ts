@@ -69,7 +69,7 @@ interface ApiDocumentJobResponse {
   result: {
     success: boolean;
     error_message: string | null;
-    extracted_entries: any[] | null;
+    extracted_entries: KnowledgeBase[] | null;
   } | null;
   error_message: string | null;
 }
@@ -269,7 +269,7 @@ class AgentService {
       jobId: apiJob.job_id,
       status: apiJob.status as DocumentJobStatus,
       progress: apiJob.progress,
-      currentStep: apiJob.current_step as any,
+      currentStep: apiJob.current_step as DocumentProcessingJob['currentStep'],
       fileName: apiJob.file_name,
       fileSize: apiJob.file_size,
       createdAt: apiJob.created_at,
@@ -319,7 +319,7 @@ class AgentService {
    * List all document processing jobs for an agent
    */
   async listDocumentJobs(agentId: string, status?: DocumentJobStatus): Promise<DocumentProcessingJob[]> {
-    const params: any = { agentId };
+    const params: { agentId: string; status?: DocumentJobStatus } = { agentId };
     if (status) {
       params.status = status;
     }
