@@ -26,7 +26,7 @@ export const NavigationList = memo(({
 }: NavigationListProps) => {
   return (
     <nav
-      className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-4 space-y-2"
+      className="flex-1 overflow-x-hidden py-4 px-4 space-y-2"
       aria-label="Main navigation"
     >
       {items

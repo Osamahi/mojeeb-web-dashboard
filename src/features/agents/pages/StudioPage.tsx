@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
+import { useDocumentJobs } from '../hooks/useDocumentJobs';
 import { queryKeys } from '@/lib/queryKeys';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
@@ -23,15 +24,29 @@ import NoAgentEmptyState from '../components/NoAgentEmptyState';
 import MainInstructionCard from '../components/MainInstructionCard';
 import KnowledgeBaseItem from '../components/KnowledgeBaseItem';
 import AddKnowledgeBaseModal from '../components/AddKnowledgeBaseModal';
+import DocumentUploadProgressCard from '../components/DocumentUploadProgressCard';
 import TestChat from '../components/TestChat';
 import TestChatPanel from '../components/TestChatPanel';
 import { logger } from '@/lib/logger';
+
+/**
+ * Merge optimistic job IDs with backend jobs, removing duplicates
+ * @param optimisticIds - Job IDs added optimistically before backend confirmation
+ * @param backendJobs - Jobs returned from backend API
+ * @returns Array of unique job IDs (optimistic + backend)
+ */
+function mergeJobIds(optimisticIds: string[], backendJobs: Array<{ jobId: string }>) {
+  const backendJobIds = new Set(backendJobs.map(job => job.jobId));
+  const uniqueOptimisticIds = optimisticIds.filter(jobId => !backendJobIds.has(jobId));
+  return [...uniqueOptimisticIds, ...backendJobs.map(job => job.jobId)];
+}
 
 export default function StudioPage() {
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const isDesktop = useIsDesktop();
   const [isAddKBModalOpen, setIsAddKBModalOpen] = useState(false);
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
+  const [activeUploadJobs, setActiveUploadJobs] = useState<string[]>([]);
 
   // Fetch agent data
   const {
@@ -54,6 +69,15 @@ export default function StudioPage() {
     queryFn: () => agentService.getKnowledgeBases(agentId!),
     enabled: !!agentId,
   });
+
+  // Fetch all active (pending/processing) document jobs
+  const { data: allJobs } = useDocumentJobs(agentId);
+  const backendActiveJobs = allJobs?.filter(
+    (job) => job.status === 'pending' || job.status === 'processing'
+  ) || [];
+
+  // Merge optimistic uploads with backend jobs (remove duplicates)
+  const allActiveJobIds = mergeJobIds(activeUploadJobs, backendActiveJobs);
 
   // Log errors
   useEffect(() => {
@@ -159,6 +183,23 @@ export default function StudioPage() {
                 </div>
               )}
 
+              {/* Active Document Processing Jobs (persists across reloads + optimistic) */}
+              {allActiveJobIds.map((jobId) => (
+                <DocumentUploadProgressCard
+                  key={jobId}
+                  jobId={jobId}
+                  onComplete={() => {
+                    refetchKBs();
+                    // Remove from optimistic state when complete
+                    setActiveUploadJobs(prev => prev.filter(id => id !== jobId));
+                  }}
+                  onError={() => {
+                    // Remove from optimistic state on error too
+                    setActiveUploadJobs(prev => prev.filter(id => id !== jobId));
+                  }}
+                />
+              ))}
+
               {/* Add Knowledge Button - Desktop only */}
               <div className="hidden lg:flex justify-center pt-2">
                 <Button
@@ -214,6 +255,10 @@ export default function StudioPage() {
         onSuccess={() => {
           refetchKBs();
           setIsAddKBModalOpen(false);
+        }}
+        onUploadStart={(jobId) => {
+          // Add to optimistic state for instant display
+          setActiveUploadJobs(prev => [...prev, jobId]);
         }}
       />
     </>

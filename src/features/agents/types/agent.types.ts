@@ -89,3 +89,35 @@ export type AgentFilters = {
   page?: number;
   pageSize?: number;
 };
+
+// Document Processing Job Types
+export type DocumentJobStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+export type DocumentJobStep = 'validating' | 'parsing' | 'ai_processing' | 'completed';
+
+export type DocumentProcessingJob = {
+  jobId: string;
+  status: DocumentJobStatus;
+  progress: number;
+  currentStep: DocumentJobStep | null;
+  fileName: string;
+  fileSize: number;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  result: DocumentProcessingResult | null;
+  errorMessage: string | null;
+};
+
+export type DocumentProcessingResult = {
+  success: boolean;
+  errorMessage: string | null;
+  extractedEntries: KnowledgeBase[];
+};
+
+export type DocumentJobCreated = {
+  jobId: string;
+  status: DocumentJobStatus;
+  createdAt: string;
+  statusUrl: string;
+  pollInterval: number;
+};

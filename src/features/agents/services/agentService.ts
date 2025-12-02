@@ -9,6 +9,9 @@ import type {
   KnowledgeBase,
   CreateKnowledgeBaseRequest,
   UpdateKnowledgeBaseRequest,
+  DocumentProcessingJob,
+  DocumentJobCreated,
+  DocumentJobStatus,
 } from '../types/agent.types';
 
 // API Response Types (snake_case from backend)
@@ -42,6 +45,33 @@ interface ApiResponse<T> {
   success: boolean;
   message: string | null;
   data: T;
+}
+
+// Document Job API Response Types (snake_case from backend)
+interface ApiDocumentJobCreatedResponse {
+  job_id: string;
+  status: string;
+  created_at: string;
+  status_url: string;
+  poll_interval: number;
+}
+
+interface ApiDocumentJobResponse {
+  job_id: string;
+  status: string;
+  progress: number;
+  current_step: string | null;
+  file_name: string;
+  file_size: number;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+  result: {
+    success: boolean;
+    error_message: string | null;
+    extracted_entries: any[] | null;
+  } | null;
+  error_message: string | null;
 }
 
 class AgentService {
@@ -110,7 +140,6 @@ class AgentService {
 
     // Backend returns minimal response { id, name, status } or { Id, Name, Status }
     const response = await api.post('/api/agents', snakeCaseRequest);
-    console.log('Agent creation response:', response.data);
 
     // Try both lowercase and uppercase property names
     const agentId = response.data?.id || response.data?.Id;
@@ -217,6 +246,95 @@ class AgentService {
     });
 
     return data.url;
+  }
+
+  /**
+   * Transform document job created response from snake_case to camelCase
+   */
+  private transformJobCreated(apiJob: ApiDocumentJobCreatedResponse): DocumentJobCreated {
+    return {
+      jobId: apiJob.job_id,
+      status: apiJob.status as DocumentJobStatus,
+      createdAt: apiJob.created_at,
+      statusUrl: apiJob.status_url,
+      pollInterval: apiJob.poll_interval,
+    };
+  }
+
+  /**
+   * Transform document job response from snake_case to camelCase
+   */
+  private transformJob(apiJob: ApiDocumentJobResponse): DocumentProcessingJob {
+    return {
+      jobId: apiJob.job_id,
+      status: apiJob.status as DocumentJobStatus,
+      progress: apiJob.progress,
+      currentStep: apiJob.current_step as any,
+      fileName: apiJob.file_name,
+      fileSize: apiJob.file_size,
+      createdAt: apiJob.created_at,
+      updatedAt: apiJob.updated_at,
+      completedAt: apiJob.completed_at,
+      result: apiJob.result ? {
+        success: apiJob.result.success,
+        errorMessage: apiJob.result.error_message,
+        extractedEntries: apiJob.result.extracted_entries || [],
+      } : null,
+      errorMessage: apiJob.error_message,
+    };
+  }
+
+  /**
+   * Upload document asynchronously and get job ID for polling
+   */
+  async uploadDocumentAsync(agentId: string, file: File): Promise<DocumentJobCreated> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('agentId', agentId);
+
+    const { data } = await api.post<ApiResponse<ApiDocumentJobCreatedResponse>>(
+      '/api/knowledgebases/process-document-async',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    return this.transformJobCreated(data.data);
+  }
+
+  /**
+   * Get document processing job status
+   */
+  async getDocumentJob(jobId: string): Promise<DocumentProcessingJob> {
+    const { data } = await api.get<ApiResponse<ApiDocumentJobResponse>>(
+      `/api/knowledgebases/document-jobs/${jobId}`
+    );
+    return this.transformJob(data.data);
+  }
+
+  /**
+   * List all document processing jobs for an agent
+   */
+  async listDocumentJobs(agentId: string, status?: DocumentJobStatus): Promise<DocumentProcessingJob[]> {
+    const params: any = { agentId };
+    if (status) {
+      params.status = status;
+    }
+    const { data } = await api.get<ApiResponse<ApiDocumentJobResponse[]>>(
+      `/api/knowledgebases/document-jobs`,
+      { params }
+    );
+    return data.data.map(job => this.transformJob(job));
+  }
+
+  /**
+   * Cancel a document processing job
+   */
+  async cancelDocumentJob(jobId: string): Promise<void> {
+    await api.delete(`/api/knowledgebases/document-jobs/${jobId}`);
   }
 }
 
