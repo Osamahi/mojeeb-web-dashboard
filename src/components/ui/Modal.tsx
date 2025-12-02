@@ -1,4 +1,5 @@
 import { type HTMLAttributes, type ReactNode, forwardRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,7 +47,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
       return () => document.removeEventListener('keydown', handleEscape);
     }, [isOpen, onClose]);
 
-    return (
+    return createPortal(
       <AnimatePresence>
         {isOpen && (
           <>
@@ -56,12 +57,12 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999]"
               onClick={onClose}
             />
 
             {/* Modal */}
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
               <motion.div
                 ref={ref}
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -111,7 +112,8 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
             </div>
           </>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
     );
   }
 );
