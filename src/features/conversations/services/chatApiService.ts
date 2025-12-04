@@ -129,6 +129,53 @@ class ChatApiService {
   }
 
   /**
+   * Upload single image with progress tracking (ChatGPT-style)
+   * For upload-on-select pattern
+   */
+  async uploadImageWithProgress(params: {
+    file: File;
+    conversationId: string;
+    messageId: string;
+    onProgress?: (progress: number) => void;
+  }): Promise<MediaAttachment> {
+    try {
+      // Start with 1% to show upload has begun
+      if (params.onProgress) {
+        params.onProgress(1);
+      }
+
+      const formData = new FormData();
+      formData.append('File', params.file);
+      formData.append('ConversationId', params.conversationId);
+      formData.append('MessageId', params.messageId);
+
+      const { data } = await api.post<{
+        success: boolean;
+        attachment: MediaAttachment;
+      }>('/api/chat/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total && params.onProgress) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            params.onProgress(percentCompleted);
+          }
+        },
+      });
+
+      if (!data.success) {
+        throw new Error('Image upload failed');
+      }
+
+      return data.attachment;
+    } catch (error) {
+      logger.error('Error uploading image with progress', error instanceof Error ? error : new Error(String(error)));
+      throw error;
+    }
+  }
+
+  /**
    * Upload multiple images and return attachments JSON string
    * Format: { "Images": [MediaAttachment[], ...] }
    */

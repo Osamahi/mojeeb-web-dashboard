@@ -6,18 +6,20 @@
  */
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { chatToasts } from '../../utils/chatToasts';
+import { chatApiService } from '../../services/chatApiService';
+import type { MediaAttachment } from '../../types';
 
 // Constants
 const MAX_TEXTAREA_HEIGHT_PX = 120;
 const EMOJI_PICKER_WIDTH = 350;
 const EMOJI_PICKER_HEIGHT = 400;
 const MAX_MESSAGE_LENGTH = 5000; // Backend limit
-const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const MAX_IMAGES = 10;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
@@ -50,6 +52,19 @@ interface MessageComposerProps {
   agentId?: string;
 }
 
+/**
+ * Upload state for individual images (ChatGPT-style upload-on-select)
+ */
+interface UploadedImage {
+  id: string;                    // Unique identifier for tracking
+  file: File;                    // Original file
+  previewUrl: string;            // Local preview URL (createObjectURL)
+  attachment?: MediaAttachment;  // Backend response (URL, Type, Filename)
+  progress: number;              // Upload progress (0-100)
+  error?: string;                // Error message if upload failed
+  isUploading: boolean;          // Whether currently uploading
+}
+
 export default memo(function MessageComposer({
   onSendMessage,
   isSending,
@@ -62,9 +77,10 @@ export default memo(function MessageComposer({
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isLocalSending, setIsLocalSending] = useState(false);
-  const [isUploadingImages, setIsUploadingImages] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
+
+  // ChatGPT-style upload-on-select: Track uploaded images with progress
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -89,17 +105,14 @@ export default memo(function MessageComposer({
     adjustTextareaHeight();
   }, [message, adjustTextareaHeight]);
 
-  // Cleanup object URLs when component unmounts or images change
+  // Cleanup object URLs when component unmounts
   useEffect(() => {
-    // Create new URLs for selected images
-    const urls = selectedImages.map(file => URL.createObjectURL(file));
-    setImagePreviewUrls(urls);
-
-    // Cleanup function: revoke all URLs
     return () => {
-      urls.forEach(url => URL.revokeObjectURL(url));
+      uploadedImages.forEach(img => {
+        URL.revokeObjectURL(img.previewUrl);
+      });
     };
-  }, [selectedImages]);
+  }, [uploadedImages]);
 
   // Auto-focus on mount
   useEffect(() => {
@@ -164,8 +177,22 @@ export default memo(function MessageComposer({
     // Sanitize and validate message
     const sanitizedMessage = sanitizeMessage(message);
 
-    // Check if empty or already sending/uploading
-    if (!sanitizedMessage || isSending || isLocalSending || isUploadingImages) return;
+    // Check if empty or already sending
+    if (!sanitizedMessage || isSending || isLocalSending) return;
+
+    // Check if any images are still uploading
+    const hasUploadingImages = uploadedImages.some(img => img.isUploading);
+    if (hasUploadingImages) {
+      chatToasts.error('Please wait for images to finish uploading');
+      return;
+    }
+
+    // Check if any images failed to upload
+    const hasFailedImages = uploadedImages.some(img => img.error);
+    if (hasFailedImages) {
+      chatToasts.error('Some images failed to upload. Please remove them and try again.');
+      return;
+    }
 
     // Check length limit
     if (sanitizedMessage.length > MAX_MESSAGE_LENGTH) {
@@ -176,50 +203,28 @@ export default memo(function MessageComposer({
     try {
       let attachmentsJson: string | undefined = undefined;
 
-      // Upload images if any are selected
-      if (selectedImages.length > 0) {
-        setIsUploadingImages(true);
+      // Use pre-uploaded image URLs (ChatGPT-style)
+      if (uploadedImages.length > 0) {
+        const successfulUploads = uploadedImages
+          .filter(img => img.attachment && !img.error)
+          .map(img => img.attachment!);
 
-        try {
-          // Import chatApiService dynamically to avoid circular dependencies
-          const { chatApiService } = await import('@/features/conversations/services/chatApiService');
-
-          // Generate a temporary message ID for uploads
-          const tempMessageId = crypto.randomUUID();
-
-          logger.info('Starting image upload', { count: selectedImages.length });
-
-          // Upload all images and build attachments JSON
-          attachmentsJson = await chatApiService.uploadImagesAndBuildJSON({
-            files: selectedImages,
-            conversationId,
-            messageId: tempMessageId,
-          });
-
-          logger.info('Images uploaded successfully', { count: selectedImages.length });
-        } catch (uploadError) {
-          logger.error('Failed to upload images', uploadError, {
-            component: 'MessageComposer',
-            imageCount: selectedImages.length,
-          });
-          chatToasts.sendError();
-          setIsUploadingImages(false);
-          return;
-        } finally {
-          setIsUploadingImages(false);
+        if (successfulUploads.length > 0) {
+          attachmentsJson = JSON.stringify({ Images: successfulUploads });
+          logger.info('Using pre-uploaded images', { count: successfulUploads.length });
         }
       }
 
-      // Clear composer state immediately after successful upload (optimistic update)
+      // Clear composer state immediately (optimistic update)
       setMessage('');
-      setSelectedImages([]);
+      setUploadedImages([]);
 
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
 
-      // Now send the message with attachments (non-blocking for UI)
+      // Send the message with attachments (non-blocking for UI)
       setIsLocalSending(true);
       onSendMessage(sanitizedMessage, attachmentsJson).finally(() => {
         setIsLocalSending(false);
@@ -285,12 +290,16 @@ export default memo(function MessageComposer({
     }, 0);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /**
+   * ChatGPT-style upload-on-select:
+   * Upload images immediately when user selects them (background upload)
+   */
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
 
     // Validate file count
-    if (selectedImages.length + files.length > MAX_IMAGES) {
-      logger.warn(`Maximum ${MAX_IMAGES} images allowed`);
+    if (uploadedImages.length + files.length > MAX_IMAGES) {
+      chatToasts.error(`Maximum ${MAX_IMAGES} images allowed`);
       return;
     }
 
@@ -299,24 +308,111 @@ export default memo(function MessageComposer({
     for (const file of files) {
       // Check file type
       if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        logger.warn(`Invalid file type: ${file.name}. Only JPEG and PNG are supported.`);
+        chatToasts.error(`Invalid file type: ${file.name}. Only JPEG and PNG are supported.`);
         continue;
       }
 
       // Check file size
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        logger.warn(`File too large: ${file.name}. Maximum ${MAX_FILE_SIZE_MB}MB allowed.`);
+        chatToasts.error(`File too large: ${file.name}. Maximum ${MAX_FILE_SIZE_MB}MB allowed.`);
         continue;
       }
 
       validFiles.push(file);
     }
 
-    // Add valid files to selection
-    if (validFiles.length > 0) {
-      setSelectedImages(prev => [...prev, ...validFiles]);
-      logger.info(`Added ${validFiles.length} image(s)`, { count: validFiles.length });
+    if (validFiles.length === 0) {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
     }
+
+    // Generate a temporary message ID for all uploads in this batch
+    const tempMessageId = crypto.randomUUID();
+
+    // Create initial upload entries with preview URLs and unique IDs
+    const newUploads: UploadedImage[] = validFiles.map(file => ({
+      id: crypto.randomUUID(), // Unique ID for tracking
+      file,
+      previewUrl: URL.createObjectURL(file),
+      progress: 0,
+      isUploading: true,
+    }));
+
+    // Add to state immediately (show preview with progress)
+    setUploadedImages(prev => [...prev, ...newUploads]);
+
+    logger.info(`Starting upload-on-select for ${validFiles.length} image(s)`);
+
+    // Upload each file in background (using index to match with newUploads)
+    newUploads.forEach(async (uploadedImage) => {
+      try {
+        logger.info(`Starting upload for ${uploadedImage.file.name}`, { id: uploadedImage.id });
+
+        // Simulated smooth progress animation (ChatGPT-style)
+        // Fast animation provides visual feedback even for instant uploads
+        let simulatedProgress = 0;
+        let realProgressReceived = false;
+        const progressInterval = setInterval(() => {
+          if (!realProgressReceived && simulatedProgress < 95) {
+            // Exponential slowdown: fast at start, slower near end
+            const increment = (95 - simulatedProgress) * 0.1; // 10% of remaining
+            simulatedProgress = Math.min(simulatedProgress + increment, 95);
+
+            setUploadedImages(prev =>
+              prev.map(img =>
+                img.id === uploadedImage.id ? { ...img, progress: Math.round(simulatedProgress) } : img
+              )
+            );
+          }
+        }, 50); // Update every 50ms (smooth 20fps animation)
+
+        const attachment = await chatApiService.uploadImageWithProgress({
+          file: uploadedImage.file,
+          conversationId,
+          messageId: tempMessageId,
+          onProgress: (progress) => {
+            // Real progress from server - use it immediately
+            realProgressReceived = true;
+            clearInterval(progressInterval); // Stop simulated progress
+
+            logger.info(`Progress update: ${progress}%`, { id: uploadedImage.id, fileName: uploadedImage.file.name });
+            setUploadedImages(prev =>
+              prev.map(img =>
+                img.id === uploadedImage.id ? { ...img, progress } : img
+              )
+            );
+          },
+        });
+
+        // Clear interval in case upload completed without progress events
+        clearInterval(progressInterval);
+
+        // Upload successful - update with attachment data
+        logger.info(`Upload complete: ${uploadedImage.file.name}`, { id: uploadedImage.id });
+        setUploadedImages(prev =>
+          prev.map(img =>
+            img.id === uploadedImage.id
+              ? { ...img, attachment, progress: 100, isUploading: false }
+              : img
+          )
+        );
+      } catch (error) {
+        // Upload failed - mark with error
+        logger.error(`Upload failed: ${uploadedImage.file.name}`, error, { id: uploadedImage.id });
+        setUploadedImages(prev =>
+          prev.map(img =>
+            img.id === uploadedImage.id
+              ? { ...img, error: 'Upload failed', isUploading: false, progress: 0 }
+              : img
+          )
+        );
+
+        chatToasts.error(`Failed to upload ${uploadedImage.file.name}`);
+      }
+    });
 
     // Reset file input to allow selecting the same file again
     if (fileInputRef.current) {
@@ -325,7 +421,12 @@ export default memo(function MessageComposer({
   };
 
   const handleRemoveImage = (index: number) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    const imageToRemove = uploadedImages[index];
+    if (imageToRemove) {
+      // Revoke the object URL to free memory
+      URL.revokeObjectURL(imageToRemove.previewUrl);
+    }
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
     logger.info('Removed image', { index });
   };
 
@@ -358,52 +459,63 @@ export default memo(function MessageComposer({
         aria-label="Upload images"
       />
 
-      {/* Image Previews - ChatGPT Style */}
-      {selectedImages.length > 0 && imagePreviewUrls.length > 0 && (
+      {/* Image Previews - ChatGPT Style with Upload Progress */}
+      {uploadedImages.length > 0 && (
         <div className="flex gap-2 mb-3 overflow-x-auto">
-          {selectedImages.map((file, index) => (
+          {uploadedImages.map((uploadedImage, index) => (
             <div
-              key={`${file.name}-${index}`}
+              key={`${uploadedImage.file.name}-${index}`}
               className="relative flex-shrink-0 group"
               style={{ width: `${THUMBNAIL_SIZE_PX}px`, height: `${THUMBNAIL_SIZE_PX}px` }}
             >
               {/* Image Thumbnail */}
               <img
-                src={imagePreviewUrls[index]}
+                src={uploadedImage.previewUrl}
                 alt={`Selected image ${index + 1}`}
                 className={cn(
-                  "w-full h-full object-cover rounded-lg border border-neutral-200",
-                  isUploadingImages && "opacity-50"
+                  "w-full h-full object-cover rounded-lg border",
+                  uploadedImage.error ? "border-red-300" : "border-neutral-200",
+                  uploadedImage.isUploading && "opacity-70"
                 )}
               />
 
-              {/* Uploading Overlay */}
-              {isUploadingImages && (
-                <div className="absolute inset-0 flex items-center justify-center bg-neutral-950/30 rounded-lg">
-                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+              {/* Uploading Overlay with Progress */}
+              {uploadedImage.isUploading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-neutral-950/50 rounded-lg">
+                  <Loader2 className="w-6 h-6 text-white animate-spin mb-1" />
+                  <span className="text-white text-xs font-medium">
+                    {uploadedImage.progress}%
+                  </span>
                 </div>
               )}
 
-              {/* Remove Button - Hidden during upload */}
-              {!isUploadingImages && (
-                <button
-                  onClick={() => handleRemoveImage(index)}
-                  className={cn(
-                    'absolute top-1 right-1',
-                    'w-5 h-5',
-                    'bg-neutral-800/70',
-                    'text-white',
-                    'rounded-full',
-                    'flex items-center justify-center',
-                    'hover:bg-neutral-950/90',
-                    'transition-colors'
-                  )}
-                  aria-label={`Remove image ${index + 1}`}
-                  title="Remove image"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+              {/* Error Overlay */}
+              {uploadedImage.error && (
+                <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 rounded-lg">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
               )}
+
+              {/* Remove Button */}
+              <button
+                onClick={() => handleRemoveImage(index)}
+                disabled={uploadedImage.isUploading}
+                className={cn(
+                  'absolute top-1 right-1',
+                  'w-5 h-5',
+                  'bg-neutral-800/70',
+                  'text-white',
+                  'rounded-full',
+                  'flex items-center justify-center',
+                  'hover:bg-neutral-950/90',
+                  'transition-colors',
+                  uploadedImage.isUploading && 'opacity-50 cursor-not-allowed'
+                )}
+                aria-label={`Remove image ${index + 1}`}
+                title={uploadedImage.error ? 'Remove failed image' : 'Remove image'}
+              >
+                <X className="w-3 h-3" />
+              </button>
             </div>
           ))}
         </div>
@@ -416,8 +528,12 @@ export default memo(function MessageComposer({
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
-        placeholder={isUploadingImages ? `Uploading ${selectedImages.length} image(s)...` : placeholder}
-        disabled={isSending || isLocalSending || isUploadingImages}
+        placeholder={
+          uploadedImages.some(img => img.isUploading)
+            ? `Uploading ${uploadedImages.filter(img => img.isUploading).length} image(s)...`
+            : placeholder
+        }
+        disabled={isSending || isLocalSending}
         maxLength={MAX_MESSAGE_LENGTH}
         rows={1}
         inputMode="text"
@@ -468,11 +584,11 @@ export default memo(function MessageComposer({
               'hover:bg-neutral-100',
               'hover:text-neutral-700',
               'transition-all duration-150',
-              (isSending || isLocalSending || isUploadingImages) && 'opacity-50 cursor-not-allowed'
+              (isSending || isLocalSending) && 'opacity-50 cursor-not-allowed'
             )}
             aria-label="Attach images"
             title="Attach images (JPEG, PNG)"
-            disabled={isSending || isLocalSending || isUploadingImages}
+            disabled={isSending || isLocalSending}
           >
             <Paperclip className="w-5 h-5" />
           </button>
@@ -559,26 +675,26 @@ export default memo(function MessageComposer({
         {/* Right: Send Button */}
         <button
           onClick={handleSend}
-          disabled={!message.trim() || isSending || isLocalSending || isUploadingImages}
+          disabled={!message.trim() || isSending || isLocalSending}
           className={cn(
             'rounded-full w-10 h-10',
             'flex items-center justify-center',
             'flex-shrink-0',
             'transition-all duration-200',
-            message.trim() && !isSending && !isLocalSending && !isUploadingImages
+            message.trim() && !isSending && !isLocalSending
               ? 'bg-neutral-950 text-white hover:bg-neutral-800 hover:scale-105'
               : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
           )}
           title={
-            isUploadingImages
-              ? `Uploading ${selectedImages.length} image(s)...`
-              : isSending || isLocalSending
+            isSending || isLocalSending
               ? 'Sending...'
+              : uploadedImages.some(img => img.isUploading)
+              ? 'Wait for uploads to complete'
               : 'Send message (Enter)'
           }
           aria-label="Send message"
         >
-          {isSending || isLocalSending || isUploadingImages ? (
+          {isSending || isLocalSending ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <ArrowUp className="w-5 h-5" />
