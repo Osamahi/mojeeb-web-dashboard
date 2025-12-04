@@ -6,7 +6,7 @@
  */
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, User } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -17,6 +17,11 @@ const MAX_TEXTAREA_HEIGHT_PX = 120;
 const EMOJI_PICKER_WIDTH = 350;
 const EMOJI_PICKER_HEIGHT = 400;
 const MAX_MESSAGE_LENGTH = 5000; // Backend limit
+const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const MAX_IMAGES = 10;
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+const THUMBNAIL_SIZE_PX = 80;
 
 /**
  * Sanitizes message input by removing potentially dangerous characters
@@ -36,11 +41,13 @@ const sanitizeMessage = (msg: string): string => {
 };
 
 interface MessageComposerProps {
-  onSendMessage: (message: string) => Promise<void>;
+  onSendMessage: (message: string, attachments?: string) => Promise<void>;
   isSending: boolean;
   isAIMode?: boolean;
   onModeToggle?: () => void;
   placeholder?: string;
+  conversationId: string;
+  agentId?: string;
 }
 
 export default memo(function MessageComposer({
@@ -49,12 +56,18 @@ export default memo(function MessageComposer({
   isAIMode = true,
   onModeToggle,
   placeholder = 'Type your message...',
+  conversationId,
+  agentId,
 }: MessageComposerProps) {
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isLocalSending, setIsLocalSending] = useState(false);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-resize textarea (optimized with useCallback)
   const adjustTextareaHeight = useCallback(() => {
@@ -75,6 +88,18 @@ export default memo(function MessageComposer({
   useEffect(() => {
     adjustTextareaHeight();
   }, [message, adjustTextareaHeight]);
+
+  // Cleanup object URLs when component unmounts or images change
+  useEffect(() => {
+    // Create new URLs for selected images
+    const urls = selectedImages.map(file => URL.createObjectURL(file));
+    setImagePreviewUrls(urls);
+
+    // Cleanup function: revoke all URLs
+    return () => {
+      urls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [selectedImages]);
 
   // Auto-focus on mount
   useEffect(() => {
@@ -139,8 +164,8 @@ export default memo(function MessageComposer({
     // Sanitize and validate message
     const sanitizedMessage = sanitizeMessage(message);
 
-    // Check if empty or already sending
-    if (!sanitizedMessage || isSending || isLocalSending) return;
+    // Check if empty or already sending/uploading
+    if (!sanitizedMessage || isSending || isLocalSending || isUploadingImages) return;
 
     // Check length limit
     if (sanitizedMessage.length > MAX_MESSAGE_LENGTH) {
@@ -148,18 +173,57 @@ export default memo(function MessageComposer({
       return;
     }
 
-    setIsLocalSending(true);
-
     try {
-      await onSendMessage(sanitizedMessage);
+      let attachmentsJson: string | undefined = undefined;
 
-      // Only clear message on success
+      // Upload images if any are selected
+      if (selectedImages.length > 0) {
+        setIsUploadingImages(true);
+
+        try {
+          // Import chatApiService dynamically to avoid circular dependencies
+          const { chatApiService } = await import('@/features/conversations/services/chatApiService');
+
+          // Generate a temporary message ID for uploads
+          const tempMessageId = crypto.randomUUID();
+
+          logger.info('Starting image upload', { count: selectedImages.length });
+
+          // Upload all images and build attachments JSON
+          attachmentsJson = await chatApiService.uploadImagesAndBuildJSON({
+            files: selectedImages,
+            conversationId,
+            messageId: tempMessageId,
+          });
+
+          logger.info('Images uploaded successfully', { count: selectedImages.length });
+        } catch (uploadError) {
+          logger.error('Failed to upload images', uploadError, {
+            component: 'MessageComposer',
+            imageCount: selectedImages.length,
+          });
+          chatToasts.sendError();
+          setIsUploadingImages(false);
+          return;
+        } finally {
+          setIsUploadingImages(false);
+        }
+      }
+
+      // Clear composer state immediately after successful upload (optimistic update)
       setMessage('');
+      setSelectedImages([]);
 
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
+
+      // Now send the message with attachments (non-blocking for UI)
+      setIsLocalSending(true);
+      onSendMessage(sanitizedMessage, attachmentsJson).finally(() => {
+        setIsLocalSending(false);
+      });
     } catch (error) {
       logger.error('Failed to send message', error, {
         messageLength: sanitizedMessage.length,
@@ -168,8 +232,6 @@ export default memo(function MessageComposer({
       });
       chatToasts.sendError();
       // Don't clear message on error - let user retry
-    } finally {
-      setIsLocalSending(false);
     }
   };
 
@@ -223,6 +285,54 @@ export default memo(function MessageComposer({
     }, 0);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    // Validate file count
+    if (selectedImages.length + files.length > MAX_IMAGES) {
+      logger.warn(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
+
+    // Validate each file
+    const validFiles: File[] = [];
+    for (const file of files) {
+      // Check file type
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        logger.warn(`Invalid file type: ${file.name}. Only JPEG and PNG are supported.`);
+        continue;
+      }
+
+      // Check file size
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        logger.warn(`File too large: ${file.name}. Maximum ${MAX_FILE_SIZE_MB}MB allowed.`);
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    // Add valid files to selection
+    if (validFiles.length > 0) {
+      setSelectedImages(prev => [...prev, ...validFiles]);
+      logger.info(`Added ${validFiles.length} image(s)`, { count: validFiles.length });
+    }
+
+    // Reset file input to allow selecting the same file again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    logger.info('Removed image', { index });
+  };
+
+  const handleAttachmentClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div
       className={cn(
@@ -237,6 +347,68 @@ export default memo(function MessageComposer({
         'relative'
       )}
     >
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png"
+        multiple
+        onChange={handleFileSelect}
+        className="hidden"
+        aria-label="Upload images"
+      />
+
+      {/* Image Previews - ChatGPT Style */}
+      {selectedImages.length > 0 && imagePreviewUrls.length > 0 && (
+        <div className="flex gap-2 mb-3 overflow-x-auto">
+          {selectedImages.map((file, index) => (
+            <div
+              key={`${file.name}-${index}`}
+              className="relative flex-shrink-0 group"
+              style={{ width: `${THUMBNAIL_SIZE_PX}px`, height: `${THUMBNAIL_SIZE_PX}px` }}
+            >
+              {/* Image Thumbnail */}
+              <img
+                src={imagePreviewUrls[index]}
+                alt={`Selected image ${index + 1}`}
+                className={cn(
+                  "w-full h-full object-cover rounded-lg border border-neutral-200",
+                  isUploadingImages && "opacity-50"
+                )}
+              />
+
+              {/* Uploading Overlay */}
+              {isUploadingImages && (
+                <div className="absolute inset-0 flex items-center justify-center bg-neutral-950/30 rounded-lg">
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                </div>
+              )}
+
+              {/* Remove Button - Hidden during upload */}
+              {!isUploadingImages && (
+                <button
+                  onClick={() => handleRemoveImage(index)}
+                  className={cn(
+                    'absolute top-1 right-1',
+                    'w-5 h-5',
+                    'bg-neutral-800/70',
+                    'text-white',
+                    'rounded-full',
+                    'flex items-center justify-center',
+                    'hover:bg-neutral-950/90',
+                    'transition-colors'
+                  )}
+                  aria-label={`Remove image ${index + 1}`}
+                  title="Remove image"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Line 1: Input Field */}
       <textarea
         ref={textareaRef}
@@ -244,8 +416,8 @@ export default memo(function MessageComposer({
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
-        placeholder={placeholder}
-        disabled={isSending || isLocalSending}
+        placeholder={isUploadingImages ? `Uploading ${selectedImages.length} image(s)...` : placeholder}
+        disabled={isSending || isLocalSending || isUploadingImages}
         maxLength={MAX_MESSAGE_LENGTH}
         rows={1}
         inputMode="text"
@@ -287,18 +459,20 @@ export default memo(function MessageComposer({
       <div className="flex items-center justify-between">
         {/* Left: Action Icons */}
         <div className="flex items-center gap-2 relative">
-          {/* Attachment Button (Coming Soon) */}
+          {/* Attachment Button */}
           <button
+            onClick={handleAttachmentClick}
             className={cn(
               'p-2 rounded-lg',
-              'text-neutral-300',
-              'cursor-not-allowed',
-              'opacity-60'
+              'text-neutral-500',
+              'hover:bg-neutral-100',
+              'hover:text-neutral-700',
+              'transition-all duration-150',
+              (isSending || isLocalSending || isUploadingImages) && 'opacity-50 cursor-not-allowed'
             )}
-            disabled
-            aria-disabled="true"
-            aria-label="Attach file"
-            title="File attachments coming soon"
+            aria-label="Attach images"
+            title="Attach images (JPEG, PNG)"
+            disabled={isSending || isLocalSending || isUploadingImages}
           >
             <Paperclip className="w-5 h-5" />
           </button>
@@ -385,20 +559,26 @@ export default memo(function MessageComposer({
         {/* Right: Send Button */}
         <button
           onClick={handleSend}
-          disabled={!message.trim() || isSending || isLocalSending}
+          disabled={!message.trim() || isSending || isLocalSending || isUploadingImages}
           className={cn(
             'rounded-full w-10 h-10',
             'flex items-center justify-center',
             'flex-shrink-0',
             'transition-all duration-200',
-            message.trim() && !isSending && !isLocalSending
+            message.trim() && !isSending && !isLocalSending && !isUploadingImages
               ? 'bg-neutral-950 text-white hover:bg-neutral-800 hover:scale-105'
               : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
           )}
-          title="Send message (Enter)"
+          title={
+            isUploadingImages
+              ? `Uploading ${selectedImages.length} image(s)...`
+              : isSending || isLocalSending
+              ? 'Sending...'
+              : 'Send message (Enter)'
+          }
           aria-label="Send message"
         >
-          {isSending || isLocalSending ? (
+          {isSending || isLocalSending || isUploadingImages ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <ArrowUp className="w-5 h-5" />

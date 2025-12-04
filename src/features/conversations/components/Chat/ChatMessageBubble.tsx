@@ -9,13 +9,14 @@
 import { memo, useState, useEffect, useRef } from 'react';
 import { Copy, Check, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import DOMPurify from 'dompurify';
-import type { ChatMessage } from '../../types';
+import type { ChatMessage, MessageAttachment } from '../../types';
 import { isCustomerMessage, parseAttachments, isMessageDeleted } from '../../types';
 import { formatMessageTime } from '../../utils/timeFormatters';
 import { parseFormattedText, isArabicText } from '../../utils/textFormatters';
 import { cn } from '@/lib/utils';
 import { chatToasts } from '../../utils/chatToasts';
 import { CHAT_BUBBLE_COLORS } from '../../constants/chatBubbleColors';
+import { ImageModal } from './ImageModal';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -36,6 +37,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
   // Copy feedback state
   const [isCopied, setIsCopied] = useState(false);
   const copyTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Image modal state
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   // Alignment constants to avoid duplication
   const horizontalAlign = isUser ? 'justify-end' : 'justify-start';
@@ -79,6 +83,25 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
     <div className={cn('flex mb-4', horizontalAlign)}>
       {/* Wrapper for bubble + footer */}
       <div className={cn('flex flex-col max-w-[70%]', verticalAlign)}>
+        {/* Images - Rendered OUTSIDE bubble, above it */}
+        {!isDeleted && images.length > 0 && (
+          <div className={cn('mb-2 flex flex-wrap gap-2', horizontalAlign)}>
+            {images.map((img, idx) => (
+              <img
+                key={idx}
+                src={img.url}
+                alt={img.filename || 'Attachment'}
+                className="rounded-lg w-[15%] cursor-pointer hover:opacity-90 transition-opacity object-cover aspect-square"
+                onClick={() => setSelectedImageIndex(idx)}
+                onError={(e) => {
+                  // Fallback for broken images
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ))}
+          </div>
+        )}
+
         {/* Message Bubble */}
         <div
           className={cn(
@@ -100,21 +123,6 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
           </div>
         ) : (
           <>
-            {/* Images */}
-            {images.length > 0 && (
-              <div className={cn('mb-3', images.length === 1 ? '' : 'grid grid-cols-2 gap-2')}>
-                {images.map((img, idx) => (
-                  <img
-                    key={idx}
-                    src={img.url}
-                    alt={img.filename || 'Attachment'}
-                    className="rounded-lg max-w-full cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => window.open(img.url, '_blank')}
-                  />
-                ))}
-              </div>
-            )}
-
             {/* Message Text */}
             {messageText && (
               <div
@@ -193,6 +201,15 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
           </div>
         )}
       </div>
+
+      {/* Image Modal */}
+      {selectedImageIndex !== null && (
+        <ImageModal
+          images={images}
+          initialIndex={selectedImageIndex}
+          onClose={() => setSelectedImageIndex(null)}
+        />
+      )}
     </div>
   );
 });

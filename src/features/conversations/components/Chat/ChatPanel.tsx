@@ -73,6 +73,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         conversationId: params.conversationId,
         message: params.message,
         agentId: params.agentId,
+        attachments: params.attachments,
       });
 
       // Return as ChatMessage format (backend returns user message)
@@ -241,6 +242,9 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
             conversation.is_ai
               ? 'Type a message... (AI will respond)'
               : 'Type a message... (You are responding)'
+          }
+          conversationId={conversation.id}
+          agentId={conversation.agent_id
           }
           className="bg-white flex-1"
         />

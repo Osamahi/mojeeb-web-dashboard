@@ -64,6 +64,7 @@ export default function TestChat({ agentId }: TestChatProps) {
         conversationId: params.conversationId,
         message: params.message,
         agentId: params.agentId!,
+        attachments: params.attachments,
       });
 
       // Transform to ChatMessage format
@@ -213,6 +214,8 @@ export default function TestChat({ agentId }: TestChatProps) {
       isAITyping={chatEngine.isAITyping}
       onSendMessage={chatEngine.sendMessage}
       onRetryMessage={chatEngine.retryMessage}
+      conversationId={conversation?.id || ''}
+      agentId={agentId}
       header={
         // New Conversation Button - Floats at top when messages exist
         chatEngine.messages.length > 0 && (

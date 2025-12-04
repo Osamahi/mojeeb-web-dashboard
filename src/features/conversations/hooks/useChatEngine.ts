@@ -46,6 +46,7 @@ export interface ChatEngineConfig {
     conversationId: string;
     message: string;
     agentId?: string;
+    attachments?: string; // JSON string of attachments
   }) => Promise<ChatMessage>;
 }
 
@@ -66,7 +67,7 @@ export interface ChatEngineReturn {
   hasMore?: boolean;
 
   /** Send message with optimistic update */
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, attachments?: string) => Promise<void>;
 
   /** Load more messages (pagination) */
   loadMore?: () => Promise<void>;
@@ -411,8 +412,17 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
   // === Send Message (Optimistic) ===
 
   const sendMessage = useCallback(
-    async (content: string) => {
-      if (!content.trim() || !conversationId) return;
+    async (content: string, attachments?: string) => {
+      console.log('[useChatEngine.sendMessage] Called with:', {
+        content,
+        attachments,
+        conversationId,
+      });
+
+      if (!content.trim() || !conversationId) {
+        console.log('[useChatEngine.sendMessage] Aborted - empty content or no conversation');
+        return;
+      }
 
       // Generate correlation ID for reliable message matching
       const correlationId = generateCorrelationId();
@@ -423,8 +433,8 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
         id: tempId,
         conversation_id: conversationId,
         message: content,
-        message_type: MessageType.Text,
-        attachments: null,
+        message_type: attachments ? MessageType.Image : MessageType.Text,
+        attachments: attachments || null,
         sender_id: null,
         sender_role: SenderRole.Customer,
         status: MessageStatus.Active,
@@ -438,18 +448,25 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
         isOptimistic: true,
       };
 
+      console.log('[useChatEngine.sendMessage] Created optimistic message:', optimisticMessage);
+
       // 2. Add to UI immediately (optimistic update)
       addOptimisticMessage(tempId, optimisticMessage);
       setIsSending(true);
       startAITimeout();
 
       try {
+        console.log('[useChatEngine.sendMessage] Sending to backend with attachments:', attachments);
+
         // 3. Send to backend (non-blocking for UI)
         const backendMessage = await sendMessageFn({
           conversationId,
           message: content,
           agentId,
+          attachments,
         });
+
+        console.log('[useChatEngine.sendMessage] Backend response:', backendMessage);
 
         if (!isMountedRef.current) return;
 

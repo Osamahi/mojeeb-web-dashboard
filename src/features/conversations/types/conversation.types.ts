@@ -96,6 +96,42 @@ export interface MessageAttachments {
   files?: MessageAttachment[];
 }
 
+/**
+ * MediaAttachment type matching backend MediaModels.cs
+ * Used for uploading images to Azure Storage
+ */
+export interface MediaAttachment {
+  type: string; // "image", "audio", "document"
+  url: string;
+  blob_name: string;
+  size: number;
+  content_type: string;
+  uploaded_at: string;
+  original_file_name?: string;
+
+  // Image specific
+  width?: number;
+  height?: number;
+  thumbnail_url?: string;
+
+  // Audio specific
+  duration?: number; // in seconds
+  transcript?: string;
+
+  // Document specific
+  page_count?: number;
+}
+
+/**
+ * AttachmentsWrapper matching backend MediaModels.cs
+ * Used when sending messages with attachments to backend
+ */
+export interface AttachmentsWrapper {
+  Images?: MediaAttachment[];
+  Audio?: MediaAttachment[];
+  Documents?: MediaAttachment[];
+}
+
 export interface ChatMessage {
   id: string;
   conversation_id: string;
@@ -157,10 +193,32 @@ export interface CreateConversationRequest {
 // === Utility Functions ===
 
 export const parseAttachments = (attachmentsJson: string | null): MessageAttachments | null => {
-  if (!attachmentsJson) return null;
+  console.log('[parseAttachments] Input:', attachmentsJson);
+
+  if (!attachmentsJson) {
+    console.log('[parseAttachments] No attachments JSON provided');
+    return null;
+  }
+
   try {
-    return JSON.parse(attachmentsJson) as MessageAttachments;
-  } catch {
+    const parsed = JSON.parse(attachmentsJson);
+    console.log('[parseAttachments] Parsed JSON:', parsed);
+    console.log('[parseAttachments] Keys in parsed object:', Object.keys(parsed));
+    console.log('[parseAttachments] Type of parsed:', typeof parsed);
+
+    const result = {
+      images: parsed.images || parsed.Images || [],
+      files: parsed.files || parsed.Files || [],
+    };
+
+    console.log('[parseAttachments] Result:', result);
+    console.log('[parseAttachments] Images array:', result.images);
+    console.log('[parseAttachments] Images array length:', result.images?.length || 0);
+
+    return result;
+  } catch (error) {
+    console.error('[parseAttachments] Parse error:', error);
+    console.error('[parseAttachments] Failed to parse:', attachmentsJson);
     return null;
   }
 };

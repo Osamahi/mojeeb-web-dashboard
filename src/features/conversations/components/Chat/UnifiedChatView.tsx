@@ -17,7 +17,7 @@ export interface UnifiedChatViewProps {
   messages: ChatMessage[];
   isLoading: boolean;
   isAITyping?: boolean;
-  onSendMessage: (message: string) => Promise<void>;
+  onSendMessage: (message: string, attachments?: string) => Promise<void>;
   onRetryMessage?: (messageId: string) => Promise<void>;
 
   // Customization slots
@@ -35,6 +35,8 @@ export interface UnifiedChatViewProps {
   isAIMode?: boolean;
   onModeToggle?: () => void;
   placeholder?: string;
+  conversationId: string;
+  agentId?: string;
 
   // Styling
   className?: string;
@@ -106,6 +108,8 @@ export default function UnifiedChatView({
   isAIMode = true,
   onModeToggle,
   placeholder = 'Type your message...',
+  conversationId,
+  agentId,
   className,
 }: UnifiedChatViewProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -245,6 +249,8 @@ export default function UnifiedChatView({
           isAIMode={isAIMode}
           onModeToggle={enableAIToggle ? onModeToggle : undefined}
           placeholder={placeholder}
+          conversationId={conversationId}
+          agentId={agentId}
         />
       </div>
 
