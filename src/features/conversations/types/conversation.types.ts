@@ -137,7 +137,7 @@ export interface ChatMessage {
   conversation_id: string;
   message: string | null;
   message_type: MessageType;
-  attachments: string | null; // JSON string of MessageAttachments
+  attachments: string | object | null; // String (optimistic) or Object (Supabase auto-parsed)
   sender_id: string | null;
   sender_role: SenderRole;
   status: MessageStatus;
@@ -192,8 +192,9 @@ export interface CreateConversationRequest {
 
 // === Utility Functions ===
 
-export const parseAttachments = (attachmentsJson: string | null): MessageAttachments | null => {
+export const parseAttachments = (attachmentsJson: string | object | null): MessageAttachments | null => {
   console.log('[parseAttachments] Input:', attachmentsJson);
+  console.log('[parseAttachments] Type:', typeof attachmentsJson);
 
   if (!attachmentsJson) {
     console.log('[parseAttachments] No attachments JSON provided');
@@ -201,24 +202,26 @@ export const parseAttachments = (attachmentsJson: string | null): MessageAttachm
   }
 
   try {
-    const parsed = JSON.parse(attachmentsJson);
-    console.log('[parseAttachments] Parsed JSON:', parsed);
-    console.log('[parseAttachments] Keys in parsed object:', Object.keys(parsed));
-    console.log('[parseAttachments] Type of parsed:', typeof parsed);
+    // Handle both:
+    // - STRING: Optimistic messages (before DB save)
+    // - OBJECT: Messages from Supabase (auto-parsed JSONB)
+    const parsed = typeof attachmentsJson === 'string'
+      ? JSON.parse(attachmentsJson)
+      : attachmentsJson;
+
+    console.log('[parseAttachments] Parsed:', parsed);
 
     const result = {
-      images: parsed.images || parsed.Images || [],
-      files: parsed.files || parsed.Files || [],
+      images: parsed.images || [],
+      files: parsed.files || [],
     };
 
     console.log('[parseAttachments] Result:', result);
-    console.log('[parseAttachments] Images array:', result.images);
-    console.log('[parseAttachments] Images array length:', result.images?.length || 0);
+    console.log('[parseAttachments] Images count:', result.images?.length || 0);
 
     return result;
   } catch (error) {
     console.error('[parseAttachments] Parse error:', error);
-    console.error('[parseAttachments] Failed to parse:', attachmentsJson);
     return null;
   }
 };

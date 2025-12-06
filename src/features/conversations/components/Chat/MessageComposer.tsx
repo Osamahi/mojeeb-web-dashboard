@@ -210,7 +210,11 @@ export default memo(function MessageComposer({
           .map(img => img.attachment!);
 
         if (successfulUploads.length > 0) {
-          attachmentsJson = JSON.stringify({ Images: successfulUploads });
+          attachmentsJson = JSON.stringify({
+            images: successfulUploads,
+            audio: [],
+            documents: []
+          });
           logger.info('Using pre-uploaded images', { count: successfulUploads.length });
         }
       }

@@ -26,8 +26,27 @@ interface ChatMessageBubbleProps {
 const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: ChatMessageBubbleProps) {
   const isUser = isCustomerMessage(message);
   const isDeleted = isMessageDeleted(message);
+
+  // DEBUG: Log raw message data
+  console.log('[ChatMessageBubble] ======================');
+  console.log('[ChatMessageBubble] Message ID:', message.id);
+  console.log('[ChatMessageBubble] Message text:', message.message);
+  console.log('[ChatMessageBubble] Raw attachments:', message.attachments);
+  console.log('[ChatMessageBubble] Attachments type:', typeof message.attachments);
+
   const attachments = parseAttachments(message.attachments);
+
+  console.log('[ChatMessageBubble] Parsed attachments:', attachments);
+  console.log('[ChatMessageBubble] Images count:', attachments?.images?.length || 0);
+
   const images = attachments?.images || [];
+
+  if (images.length > 0) {
+    console.log('[ChatMessageBubble] Image URLs:', images.map(img => img.url));
+  } else {
+    console.log('[ChatMessageBubble] No images found');
+  }
+
   const messageText = message.message || '';
 
   // Optimistic update states
@@ -36,7 +55,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
 
   // Copy feedback state
   const [isCopied, setIsCopied] = useState(false);
-  const copyTimeoutRef = useRef<NodeJS.Timeout>();
+  const copyTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Image modal state
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
