@@ -165,46 +165,48 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
           </div>
         )}
 
-        {/* Message Bubble */}
-        <div
-          className={cn(
-            'p-4 border',
-            'transition-all duration-200',
-            'hover:shadow-sm',
-            // WhatsApp-style directional corners (slightly less pointed)
-            isUser
-              ? 'rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md' // Slightly rounded bottom-right
-              : 'rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-md', // Slightly rounded bottom-left
-            isOptimistic && 'opacity-70',
-            hasError && 'border-red-300 border-2'
-          )}
-          style={bubbleStyle}
-        >
-        {isDeleted ? (
-          <div className="italic opacity-60 text-sm">
-            This message was deleted
-          </div>
-        ) : (
-          <>
-            {/* Message Text */}
-            {messageText && (
-              <div
-                className="text-sm leading-relaxed break-words"
-                style={{
-                  textAlign: isRTL ? 'right' : 'left',
-                  direction: isRTL ? 'rtl' : 'ltr',
-                }}
-                // XSS Protection Chain:
-                // 1. parseFormattedText uses marked library for safe markdown parsing
-                // 2. DOMPurify sanitizes the output HTML to remove any malicious content
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(parseFormattedText(messageText, bubbleStyle.color)),
-                }}
-              />
+        {/* Message Bubble - Only show if there's text or message is deleted */}
+        {(messageText || isDeleted) && (
+          <div
+            className={cn(
+              'p-4 border',
+              'transition-all duration-200',
+              'hover:shadow-sm',
+              // WhatsApp-style directional corners (slightly less pointed)
+              isUser
+                ? 'rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md' // Slightly rounded bottom-right
+                : 'rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-md', // Slightly rounded bottom-left
+              isOptimistic && 'opacity-70',
+              hasError && 'border-red-300 border-2'
             )}
-          </>
+            style={bubbleStyle}
+          >
+          {isDeleted ? (
+            <div className="italic opacity-60 text-sm">
+              This message was deleted
+            </div>
+          ) : (
+            <>
+              {/* Message Text */}
+              {messageText && (
+                <div
+                  className="text-sm leading-relaxed break-words"
+                  style={{
+                    textAlign: isRTL ? 'right' : 'left',
+                    direction: isRTL ? 'rtl' : 'ltr',
+                  }}
+                  // XSS Protection Chain:
+                  // 1. parseFormattedText uses marked library for safe markdown parsing
+                  // 2. DOMPurify sanitizes the output HTML to remove any malicious content
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(parseFormattedText(messageText, bubbleStyle.color)),
+                  }}
+                />
+              )}
+            </>
+          )}
+          </div>
         )}
-        </div>
 
         {/* Footer: Status + Timestamp + Copy Button (Outside bubble) - Hidden for deleted messages */}
         {!isDeleted && (
