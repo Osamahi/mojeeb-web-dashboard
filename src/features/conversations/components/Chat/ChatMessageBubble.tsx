@@ -41,6 +41,10 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
   // Image modal state
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
+  // Image loading states (for smooth UX with skeleton placeholders)
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [errorImages, setErrorImages] = useState<Set<number>>(new Set());
+
   // Alignment constants to avoid duplication
   const horizontalAlign = isUser ? 'justify-end' : 'justify-start';
   const verticalAlign = isUser ? 'items-end' : 'items-start';
@@ -79,6 +83,16 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
     }
   };
 
+  // Handle image load success (smooth fade-in UX)
+  const handleImageLoad = (index: number) => {
+    setLoadedImages(prev => new Set(prev).add(index));
+  };
+
+  // Handle image load error (show error icon)
+  const handleImageError = (index: number) => {
+    setErrorImages(prev => new Set(prev).add(index));
+  };
+
   return (
     <div className={cn('flex mb-4', horizontalAlign)}>
       {/* Wrapper for bubble + footer */}
@@ -86,19 +100,49 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
         {/* Images - Rendered OUTSIDE bubble, above it */}
         {!isDeleted && images.length > 0 && (
           <div className={cn('mb-2 flex flex-wrap gap-2', horizontalAlign)}>
-            {images.map((img, idx) => (
-              <img
-                key={idx}
-                src={img.url}
-                alt={img.filename || 'Attachment'}
-                className="rounded-lg w-[15%] cursor-pointer hover:opacity-90 transition-opacity object-cover aspect-square"
-                onClick={() => setSelectedImageIndex(idx)}
-                onError={(e) => {
-                  // Fallback for broken images
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            ))}
+            {images.map((img, idx) => {
+              const isLoaded = loadedImages.has(idx);
+              const hasError = errorImages.has(idx);
+
+              return (
+                <div
+                  key={idx}
+                  className="relative w-[15%] aspect-square rounded-lg overflow-hidden"
+                >
+                  {/* Skeleton Placeholder (shows while loading) */}
+                  {!isLoaded && !hasError && (
+                    <div className="absolute inset-0 bg-neutral-200 animate-pulse">
+                      {/* Shimmer effect overlay */}
+                      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+                    </div>
+                  )}
+
+                  {/* Error State (failed to load) */}
+                  {hasError && (
+                    <div className="absolute inset-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                      <AlertCircle className="w-6 h-6 text-neutral-400" />
+                    </div>
+                  )}
+
+                  {/* Actual Image (with smooth fade-in) */}
+                  {!hasError && (
+                    <img
+                      src={img.url}
+                      alt={img.filename || 'Attachment'}
+                      className={cn(
+                        'w-full h-full object-cover cursor-pointer hover:opacity-90',
+                        'transition-all duration-300',
+                        isLoaded ? 'opacity-100' : 'opacity-0'
+                      )}
+                      onClick={() => isLoaded && setSelectedImageIndex(idx)}
+                      onLoad={() => handleImageLoad(idx)}
+                      onError={() => handleImageError(idx)}
+                      loading="lazy" // Native lazy loading for off-screen images
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 
