@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { chatToasts } from '../../utils/chatToasts';
 import { CHAT_BUBBLE_COLORS } from '../../constants/chatBubbleColors';
 import { ImageModal } from './ImageModal';
+import { AudioPlayer } from './AudioPlayer';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -27,26 +28,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
   const isUser = isCustomerMessage(message);
   const isDeleted = isMessageDeleted(message);
 
-  // DEBUG: Log raw message data
-  console.log('[ChatMessageBubble] ======================');
-  console.log('[ChatMessageBubble] Message ID:', message.id);
-  console.log('[ChatMessageBubble] Message text:', message.message);
-  console.log('[ChatMessageBubble] Raw attachments:', message.attachments);
-  console.log('[ChatMessageBubble] Attachments type:', typeof message.attachments);
-
   const attachments = parseAttachments(message.attachments);
-
-  console.log('[ChatMessageBubble] Parsed attachments:', attachments);
-  console.log('[ChatMessageBubble] Images count:', attachments?.images?.length || 0);
-
   const images = attachments?.images || [];
-
-  if (images.length > 0) {
-    console.log('[ChatMessageBubble] Image URLs:', images.map(img => img.url));
-  } else {
-    console.log('[ChatMessageBubble] No images found');
-  }
-
+  const audio = attachments?.audio || [];
   const messageText = message.message || '';
 
   // Optimistic update states
@@ -162,6 +146,21 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Audio Players - Rendered OUTSIDE bubble, above it (after images) */}
+        {!isDeleted && audio.length > 0 && (
+          <div className={cn('mb-2 flex flex-col gap-2', horizontalAlign)}>
+            {audio.map((aud, idx) => (
+              <div key={idx} className="min-w-[300px] max-w-[400px]">
+                <AudioPlayer
+                  url={aud.url}
+                  filename={aud.filename}
+                  isAssistantMessage={!isUser}
+                />
+              </div>
+            ))}
           </div>
         )}
 

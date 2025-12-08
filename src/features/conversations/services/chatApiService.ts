@@ -184,13 +184,8 @@ class ChatApiService {
     conversationId: string;
     messageId: string;
   }): Promise<string> {
-    console.log('[uploadImagesAndBuildJSON] Starting upload for', params.files.length, 'files');
-    console.log('[uploadImagesAndBuildJSON] ConversationId:', params.conversationId);
-    console.log('[uploadImagesAndBuildJSON] MessageId:', params.messageId);
-
     try {
-      const uploadPromises = params.files.map((file, idx) => {
-        console.log('[uploadImagesAndBuildJSON] Uploading file', idx, ':', file.name, 'Size:', file.size);
+      const uploadPromises = params.files.map((file) => {
         return this.uploadImage({
           file,
           conversationId: params.conversationId,
@@ -199,12 +194,9 @@ class ChatApiService {
       });
 
       const attachments = await Promise.all(uploadPromises);
-      console.log('[uploadImagesAndBuildJSON] All uploads complete. Attachments:', attachments);
 
       // Build AttachmentsWrapper JSON: { "Images": [...] }
       const json = JSON.stringify({ Images: attachments });
-      console.log('[uploadImagesAndBuildJSON] Built JSON:', json);
-      console.log('[uploadImagesAndBuildJSON] JSON keys:', Object.keys(JSON.parse(json)));
 
       return json;
     } catch (error) {
@@ -236,6 +228,148 @@ class ChatApiService {
       return JSON.stringify({ images: attachments });
     } catch (error) {
       logger.error('Error uploading images', error instanceof Error ? error : new Error(String(error)));
+      throw error;
+    }
+  }
+
+  /**
+   * Upload single audio file to backend and return MediaAttachment
+   */
+  async uploadAudio(params: {
+    file: File;
+    conversationId: string;
+    messageId: string;
+    duration?: number; // Optional audio duration in seconds
+  }): Promise<MediaAttachment> {
+    try {
+      const formData = new FormData();
+      formData.append('File', params.file); // Capital 'F' for backend
+      formData.append('ConversationId', params.conversationId);
+      formData.append('MessageId', params.messageId);
+
+      if (params.duration) {
+        formData.append('Duration', params.duration.toString());
+      }
+
+      const { data } = await api.post<{
+        success: boolean;
+        attachment: MediaAttachment;
+      }>('/api/chat/upload-audio', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (!data.success) {
+        throw new Error('Audio upload failed');
+      }
+
+      return data.attachment;
+    } catch (error) {
+      logger.error('Error uploading audio', error instanceof Error ? error : new Error(String(error)));
+      throw error;
+    }
+  }
+
+  /**
+   * Upload single audio file with progress tracking
+   * For upload-on-select pattern
+   */
+  async uploadAudioWithProgress(params: {
+    file: File;
+    conversationId: string;
+    messageId: string;
+    duration?: number;
+    onProgress?: (progress: number) => void;
+  }): Promise<MediaAttachment> {
+    try {
+      // Start with 1% to show upload has begun
+      if (params.onProgress) {
+        params.onProgress(1);
+      }
+
+      const formData = new FormData();
+      formData.append('File', params.file);
+      formData.append('ConversationId', params.conversationId);
+      formData.append('MessageId', params.messageId);
+
+      if (params.duration) {
+        formData.append('Duration', params.duration.toString());
+      }
+
+      const { data } = await api.post<{
+        success: boolean;
+        attachment: MediaAttachment;
+      }>('/api/chat/upload-audio', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total && params.onProgress) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            params.onProgress(percentCompleted);
+          }
+        },
+      });
+
+      if (!data.success) {
+        throw new Error('Audio upload failed');
+      }
+
+      return data.attachment;
+    } catch (error) {
+      logger.error('Error uploading audio with progress', error instanceof Error ? error : new Error(String(error)));
+      throw error;
+    }
+  }
+
+  /**
+   * Upload multiple audio files and images, return combined attachments JSON
+   * Format: { "Images": [...], "Audio": [...] }
+   */
+  async uploadMultimediaAndBuildJSON(params: {
+    imageFiles?: File[];
+    audioFiles?: File[];
+    conversationId: string;
+    messageId: string;
+  }): Promise<string> {
+    try {
+      const imageAttachments: MediaAttachment[] = [];
+      const audioAttachments: MediaAttachment[] = [];
+
+      // Upload images
+      if (params.imageFiles && params.imageFiles.length > 0) {
+        const imagePromises = params.imageFiles.map((file) =>
+          this.uploadImage({
+            file,
+            conversationId: params.conversationId,
+            messageId: params.messageId,
+          })
+        );
+        imageAttachments.push(...(await Promise.all(imagePromises)));
+      }
+
+      // Upload audio
+      if (params.audioFiles && params.audioFiles.length > 0) {
+        const audioPromises = params.audioFiles.map((file) =>
+          this.uploadAudio({
+            file,
+            conversationId: params.conversationId,
+            messageId: params.messageId,
+          })
+        );
+        audioAttachments.push(...(await Promise.all(audioPromises)));
+      }
+
+      // Build AttachmentsWrapper JSON
+      const wrapper: { Images?: MediaAttachment[]; Audio?: MediaAttachment[] } = {};
+      if (imageAttachments.length > 0) wrapper.Images = imageAttachments;
+      if (audioAttachments.length > 0) wrapper.Audio = audioAttachments;
+
+      const json = JSON.stringify(wrapper);
+      return json;
+    } catch (error) {
+      logger.error('Error uploading multimedia', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }

@@ -93,6 +93,7 @@ export interface MessageAttachment {
 
 export interface MessageAttachments {
   images?: MessageAttachment[];
+  audio?: MessageAttachment[];
   files?: MessageAttachment[];
 }
 
@@ -193,11 +194,7 @@ export interface CreateConversationRequest {
 // === Utility Functions ===
 
 export const parseAttachments = (attachmentsJson: string | object | null): MessageAttachments | null => {
-  console.log('[parseAttachments] Input:', attachmentsJson);
-  console.log('[parseAttachments] Type:', typeof attachmentsJson);
-
   if (!attachmentsJson) {
-    console.log('[parseAttachments] No attachments JSON provided');
     return null;
   }
 
@@ -209,15 +206,11 @@ export const parseAttachments = (attachmentsJson: string | object | null): Messa
       ? JSON.parse(attachmentsJson)
       : attachmentsJson;
 
-    console.log('[parseAttachments] Parsed:', parsed);
-
     const result = {
       images: parsed.images || [],
+      audio: parsed.audio || [],
       files: parsed.files || [],
     };
-
-    console.log('[parseAttachments] Result:', result);
-    console.log('[parseAttachments] Images count:', result.images?.length || 0);
 
     return result;
   } catch (error) {

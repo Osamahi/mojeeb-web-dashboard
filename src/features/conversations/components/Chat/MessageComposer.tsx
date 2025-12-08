@@ -6,13 +6,15 @@
  */
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { chatToasts } from '../../utils/chatToasts';
 import { chatApiService } from '../../services/chatApiService';
 import type { MediaAttachment } from '../../types';
+import { VoiceRecorder } from './VoiceRecorder';
 
 // Constants
 const MAX_TEXTAREA_HEIGHT_PX = 120;
@@ -21,8 +23,12 @@ const EMOJI_PICKER_HEIGHT = 400;
 const MAX_MESSAGE_LENGTH = 5000; // Backend limit
 const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const MAX_AUDIO_SIZE_MB = 5; // Backend audio limit
+const MAX_AUDIO_SIZE_BYTES = MAX_AUDIO_SIZE_MB * 1024 * 1024;
 const MAX_IMAGES = 10;
+const MAX_AUDIO = 5;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+const ALLOWED_AUDIO_TYPES = ['audio/mp3', 'audio/mpeg', 'audio/mp4', 'audio/m4a', 'audio/ogg', 'audio/webm', 'audio/wav', 'audio/aac', 'audio/flac'];
 const THUMBNAIL_SIZE_PX = 80;
 
 /**
@@ -65,6 +71,18 @@ interface UploadedImage {
   isUploading: boolean;          // Whether currently uploading
 }
 
+/**
+ * Upload state for individual audio files (ChatGPT-style upload-on-select)
+ */
+interface UploadedAudio {
+  id: string;                    // Unique identifier for tracking
+  file: File;                    // Original file
+  attachment?: MediaAttachment;  // Backend response (URL, Type, Filename)
+  progress: number;              // Upload progress (0-100)
+  error?: string;                // Error message if upload failed
+  isUploading: boolean;          // Whether currently uploading
+}
+
 export default memo(function MessageComposer({
   onSendMessage,
   isSending,
@@ -77,13 +95,18 @@ export default memo(function MessageComposer({
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isLocalSending, setIsLocalSending] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
 
   // ChatGPT-style upload-on-select: Track uploaded images with progress
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
 
+  // ChatGPT-style upload-on-select: Track uploaded audio with progress
+  const [uploadedAudio, setUploadedAudio] = useState<UploadedAudio[]>([]);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-resize textarea (optimized with useCallback)
   const adjustTextareaHeight = useCallback(() => {
@@ -177,25 +200,46 @@ export default memo(function MessageComposer({
     // Sanitize and validate message
     const sanitizedMessage = sanitizeMessage(message);
 
-    // Check if empty or already sending
-    if (!sanitizedMessage || isSending || isLocalSending) return;
+    // Check if already sending
+    if (isSending || isLocalSending) return;
 
     // Check if any images are still uploading
     const hasUploadingImages = uploadedImages.some(img => img.isUploading);
     if (hasUploadingImages) {
-      chatToasts.error('Please wait for images to finish uploading');
+      toast.error('Please wait for images to finish uploading');
+      return;
+    }
+
+    // Check if any audio is still uploading
+    const hasUploadingAudio = uploadedAudio.some(aud => aud.isUploading);
+    if (hasUploadingAudio) {
+      toast.error('Please wait for audio to finish uploading');
       return;
     }
 
     // Check if any images failed to upload
     const hasFailedImages = uploadedImages.some(img => img.error);
     if (hasFailedImages) {
-      chatToasts.error('Some images failed to upload. Please remove them and try again.');
+      toast.error('Some images failed to upload. Please remove them and try again.');
       return;
     }
 
-    // Check length limit
-    if (sanitizedMessage.length > MAX_MESSAGE_LENGTH) {
+    // Check if any audio failed to upload
+    const hasFailedAudio = uploadedAudio.some(aud => aud.error);
+    if (hasFailedAudio) {
+      toast.error('Some audio failed to upload. Please remove them and try again.');
+      return;
+    }
+
+    // Allow empty message if there are attachments (WhatsApp-style voice messages)
+    const hasAttachments = uploadedImages.length > 0 || uploadedAudio.length > 0;
+    if (!sanitizedMessage && !hasAttachments) {
+      // Empty message with no attachments - do nothing
+      return;
+    }
+
+    // Check length limit (only if there's a message)
+    if (sanitizedMessage && sanitizedMessage.length > MAX_MESSAGE_LENGTH) {
       chatToasts.messageTooLong(MAX_MESSAGE_LENGTH);
       return;
     }
@@ -203,25 +247,31 @@ export default memo(function MessageComposer({
     try {
       let attachmentsJson: string | undefined = undefined;
 
-      // Use pre-uploaded image URLs (ChatGPT-style)
-      if (uploadedImages.length > 0) {
-        const successfulUploads = uploadedImages
-          .filter(img => img.attachment && !img.error)
-          .map(img => img.attachment!);
+      // Build attachments JSON with both images and audio
+      const successfulImageUploads = uploadedImages
+        .filter(img => img.attachment && !img.error)
+        .map(img => img.attachment!);
 
-        if (successfulUploads.length > 0) {
-          attachmentsJson = JSON.stringify({
-            images: successfulUploads,
-            audio: [],
-            documents: []
-          });
-          logger.info('Using pre-uploaded images', { count: successfulUploads.length });
-        }
+      const successfulAudioUploads = uploadedAudio
+        .filter(aud => aud.attachment && !aud.error)
+        .map(aud => aud.attachment!);
+
+      if (successfulImageUploads.length > 0 || successfulAudioUploads.length > 0) {
+        const wrapper: { images?: MediaAttachment[]; audio?: MediaAttachment[] } = {};
+        if (successfulImageUploads.length > 0) wrapper.images = successfulImageUploads;
+        if (successfulAudioUploads.length > 0) wrapper.audio = successfulAudioUploads;
+
+        attachmentsJson = JSON.stringify(wrapper);
+        logger.info('Using pre-uploaded attachments', {
+          images: successfulImageUploads.length,
+          audio: successfulAudioUploads.length
+        });
       }
 
       // Clear composer state immediately (optimistic update)
       setMessage('');
       setUploadedImages([]);
+      setUploadedAudio([]);
 
       // Reset textarea height
       if (textareaRef.current) {
@@ -303,7 +353,7 @@ export default memo(function MessageComposer({
 
     // Validate file count
     if (uploadedImages.length + files.length > MAX_IMAGES) {
-      chatToasts.error(`Maximum ${MAX_IMAGES} images allowed`);
+      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
       return;
     }
 
@@ -312,13 +362,13 @@ export default memo(function MessageComposer({
     for (const file of files) {
       // Check file type
       if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        chatToasts.error(`Invalid file type: ${file.name}. Only JPEG and PNG are supported.`);
+        toast.error(`Invalid file type: ${file.name}. Only JPEG and PNG are supported.`);
         continue;
       }
 
       // Check file size
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        chatToasts.error(`File too large: ${file.name}. Maximum ${MAX_FILE_SIZE_MB}MB allowed.`);
+        toast.error(`File too large: ${file.name}. Maximum ${MAX_FILE_SIZE_MB}MB allowed.`);
         continue;
       }
 
@@ -414,7 +464,7 @@ export default memo(function MessageComposer({
           )
         );
 
-        chatToasts.error(`Failed to upload ${uploadedImage.file.name}`);
+        toast.error(`Failed to upload ${uploadedImage.file.name}`);
       }
     });
 
@@ -434,9 +484,191 @@ export default memo(function MessageComposer({
     logger.info('Removed image', { index });
   };
 
+  /**
+   * ChatGPT-style audio upload-on-select
+   */
+  const handleAudioSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    // Validate file count
+    if (uploadedAudio.length + files.length > MAX_AUDIO) {
+      toast.error(`Maximum ${MAX_AUDIO} audio files allowed`);
+      return;
+    }
+
+    // Validate each file
+    const validFiles: File[] = [];
+    for (const file of files) {
+      // Check file type
+      if (!ALLOWED_AUDIO_TYPES.includes(file.type)) {
+        toast.error(`Invalid file type: ${file.name}. Only MP3, M4A, OGG, WebM, WAV, AAC, FLAC are supported.`);
+        continue;
+      }
+
+      // Check file size (5MB for audio)
+      if (file.size > MAX_AUDIO_SIZE_BYTES) {
+        toast.error(`File too large: ${file.name}. Maximum ${MAX_AUDIO_SIZE_MB}MB allowed.`);
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) {
+      // Reset file input
+      if (audioInputRef.current) {
+        audioInputRef.current.value = '';
+      }
+      return;
+    }
+
+    // Generate a temporary message ID for all uploads in this batch
+    const tempMessageId = crypto.randomUUID();
+
+    // Create initial upload entries
+    const newUploads: UploadedAudio[] = validFiles.map(file => ({
+      id: crypto.randomUUID(),
+      file,
+      progress: 0,
+      isUploading: true,
+    }));
+
+    // Add to state immediately (show preview with progress)
+    setUploadedAudio(prev => [...prev, ...newUploads]);
+
+    logger.info(`Starting upload-on-select for ${validFiles.length} audio file(s)`);
+
+    // Upload each file in background
+    newUploads.forEach(async (uploadedAudioFile) => {
+      try {
+        logger.info(`Starting audio upload for ${uploadedAudioFile.file.name}`, { id: uploadedAudioFile.id });
+
+        const attachment = await chatApiService.uploadAudioWithProgress({
+          file: uploadedAudioFile.file,
+          conversationId,
+          messageId: tempMessageId,
+          onProgress: (progress) => {
+            logger.info(`Audio progress update: ${progress}%`, {
+              id: uploadedAudioFile.id,
+              fileName: uploadedAudioFile.file.name
+            });
+            setUploadedAudio(prev =>
+              prev.map(aud =>
+                aud.id === uploadedAudioFile.id ? { ...aud, progress } : aud
+              )
+            );
+          },
+        });
+
+        // Upload successful
+        logger.info(`Audio upload complete: ${uploadedAudioFile.file.name}`, { id: uploadedAudioFile.id });
+        setUploadedAudio(prev =>
+          prev.map(aud =>
+            aud.id === uploadedAudioFile.id
+              ? { ...aud, attachment, progress: 100, isUploading: false }
+              : aud
+          )
+        );
+      } catch (error) {
+        // Upload failed
+        logger.error(`Audio upload failed: ${uploadedAudioFile.file.name}`, error, { id: uploadedAudioFile.id });
+        setUploadedAudio(prev =>
+          prev.map(aud =>
+            aud.id === uploadedAudioFile.id
+              ? { ...aud, error: 'Upload failed', isUploading: false, progress: 0 }
+              : aud
+          )
+        );
+
+        toast.error(`Failed to upload ${uploadedAudioFile.file.name}`);
+      }
+    });
+
+    // Reset file input
+    if (audioInputRef.current) {
+      audioInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveAudio = (index: number) => {
+    setUploadedAudio(prev => prev.filter((_, i) => i !== index));
+    logger.info('Removed audio', { index });
+  };
+
   const handleAttachmentClick = () => {
     fileInputRef.current?.click();
   };
+
+  const handleAudioButtonClick = () => {
+    // Start voice recording instead of file upload
+    setIsRecording(true);
+  };
+
+  /**
+   * Handle recording completion - convert blob to file, upload, and AUTO-SEND
+   */
+  const handleRecordingComplete = async (audioBlob: Blob) => {
+    setIsRecording(false);
+
+    // Convert blob to File - use the blob's actual MIME type (Gemini-compatible)
+    const mimeType = audioBlob.type; // Get actual MIME type from VoiceRecorder
+    const extension = mimeType.split('/')[1] || 'mp4'; // Extract extension (mp4, ogg, aac, etc.)
+    const fileName = `voice-${Date.now()}.${extension}`;
+    const audioFile = new File([audioBlob], fileName, { type: mimeType });
+
+    // Generate temporary message ID
+    const tempMessageId = crypto.randomUUID();
+
+    logger.info('Starting voice recording upload', { fileName, size: audioFile.size });
+
+    // Upload the audio file
+    try {
+      const attachment = await chatApiService.uploadAudioWithProgress({
+        file: audioFile,
+        conversationId,
+        messageId: tempMessageId,
+        onProgress: (progress) => {
+          logger.info(`Voice upload progress: ${progress}%`);
+        },
+      });
+
+      // Upload successful - AUTO-SEND the voice message immediately
+      logger.info('Voice recording upload complete - auto-sending message', { fileName });
+
+      // Build attachments JSON with the voice recording
+      const attachmentsJson = JSON.stringify({
+        audio: [attachment]
+      });
+
+      // Send empty message with voice attachment (WhatsApp-style)
+      await onSendMessage('', attachmentsJson);
+
+      logger.info('Voice message sent successfully');
+      toast.success('Voice message sent');
+
+    } catch (error) {
+      // Upload failed
+      logger.error('Voice recording upload failed', error, { fileName });
+      toast.error('Failed to send voice recording');
+    }
+  };
+
+  /**
+   * Handle recording cancellation
+   */
+  const handleRecordingCancel = () => {
+    setIsRecording(false);
+  };
+
+  // Show voice recorder when recording
+  if (isRecording) {
+    return (
+      <VoiceRecorder
+        onRecordingComplete={handleRecordingComplete}
+        onCancel={handleRecordingCancel}
+      />
+    );
+  }
 
   return (
     <div
@@ -461,6 +693,17 @@ export default memo(function MessageComposer({
         onChange={handleFileSelect}
         className="hidden"
         aria-label="Upload images"
+      />
+
+      {/* Hidden Audio Input */}
+      <input
+        ref={audioInputRef}
+        type="file"
+        accept="audio/*"
+        multiple
+        onChange={handleAudioSelect}
+        className="hidden"
+        aria-label="Upload audio files"
       />
 
       {/* Image Previews - ChatGPT Style with Upload Progress */}
@@ -519,6 +762,69 @@ export default memo(function MessageComposer({
                 title={uploadedImage.error ? 'Remove failed image' : 'Remove image'}
               >
                 <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Audio Previews - Show uploaded audio files with progress */}
+      {uploadedAudio.length > 0 && (
+        <div className="flex flex-col gap-2 mb-3">
+          {uploadedAudio.map((uploadedAudioFile, index) => (
+            <div
+              key={uploadedAudioFile.id}
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-lg border",
+                uploadedAudioFile.error ? "border-red-300 bg-red-50" : "border-neutral-200 bg-neutral-50"
+              )}
+            >
+              {/* Audio Icon */}
+              <Music className="w-5 h-5 text-neutral-500 flex-shrink-0" />
+
+              {/* File Info */}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-neutral-900 truncate">
+                  {uploadedAudioFile.file.name}
+                </div>
+                <div className="text-xs text-neutral-500">
+                  {(uploadedAudioFile.file.size / 1024 / 1024).toFixed(2)} MB
+                </div>
+              </div>
+
+              {/* Upload Progress */}
+              {uploadedAudioFile.isUploading && (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Loader2 className="w-4 h-4 text-neutral-600 animate-spin" />
+                  <span className="text-xs font-medium text-neutral-600 min-w-[3ch]">
+                    {uploadedAudioFile.progress}%
+                  </span>
+                </div>
+              )}
+
+              {/* Error Indicator */}
+              {uploadedAudioFile.error && (
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <span className="text-xs text-red-600">Failed</span>
+                </div>
+              )}
+
+              {/* Remove Button */}
+              <button
+                onClick={() => handleRemoveAudio(index)}
+                disabled={uploadedAudioFile.isUploading}
+                className={cn(
+                  "p-1.5 rounded-md",
+                  "text-neutral-500 hover:text-neutral-700",
+                  "hover:bg-neutral-200",
+                  "transition-colors",
+                  uploadedAudioFile.isUploading && "opacity-50 cursor-not-allowed"
+                )}
+                aria-label={`Remove audio ${index + 1}`}
+                title={uploadedAudioFile.error ? 'Remove failed audio' : 'Remove audio'}
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
           ))}
@@ -676,10 +982,10 @@ export default memo(function MessageComposer({
           )}
         </div>
 
-        {/* Right: Send Button */}
+        {/* Right: Send/Microphone Button - WhatsApp-style toggle */}
         <button
-          onClick={handleSend}
-          disabled={!message.trim() || isSending || isLocalSending}
+          onClick={message.trim() ? handleSend : handleAudioButtonClick}
+          disabled={message.trim() ? (!message.trim() || isSending || isLocalSending) : false}
           className={cn(
             'rounded-full w-10 h-10',
             'flex items-center justify-center',
@@ -687,21 +993,27 @@ export default memo(function MessageComposer({
             'transition-all duration-200',
             message.trim() && !isSending && !isLocalSending
               ? 'bg-neutral-950 text-white hover:bg-neutral-800 hover:scale-105'
-              : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
+              : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
           )}
           title={
-            isSending || isLocalSending
-              ? 'Sending...'
-              : uploadedImages.some(img => img.isUploading)
-              ? 'Wait for uploads to complete'
-              : 'Send message (Enter)'
+            message.trim()
+              ? isSending || isLocalSending
+                ? 'Sending...'
+                : uploadedImages.some(img => img.isUploading) || uploadedAudio.some(aud => aud.isUploading)
+                ? 'Wait for uploads to complete'
+                : 'Send message (Enter)'
+              : 'Attach audio'
           }
-          aria-label="Send message"
+          aria-label={message.trim() ? 'Send message' : 'Attach audio'}
         >
-          {isSending || isLocalSending ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+          {message.trim() ? (
+            isSending || isLocalSending ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <ArrowUp className="w-5 h-5" />
+            )
           ) : (
-            <ArrowUp className="w-5 h-5" />
+            <Mic className="w-5 h-5" />
           )}
         </button>
       </div>

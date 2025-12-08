@@ -413,14 +413,11 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
 
   const sendMessage = useCallback(
     async (content: string, attachments?: string) => {
-      console.log('[useChatEngine.sendMessage] Called with:', {
-        content,
-        attachments,
-        conversationId,
-      });
+      // Allow empty content if attachments are present (for voice messages)
+      const hasContent = content.trim().length > 0;
+      const hasAttachments = attachments && attachments.trim().length > 0;
 
-      if (!content.trim() || !conversationId) {
-        console.log('[useChatEngine.sendMessage] Aborted - empty content or no conversation');
+      if ((!hasContent && !hasAttachments) || !conversationId) {
         return;
       }
 
@@ -448,16 +445,12 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
         isOptimistic: true,
       };
 
-      console.log('[useChatEngine.sendMessage] Created optimistic message:', optimisticMessage);
-
       // 2. Add to UI immediately (optimistic update)
       addOptimisticMessage(tempId, optimisticMessage);
       setIsSending(true);
       startAITimeout();
 
       try {
-        console.log('[useChatEngine.sendMessage] Sending to backend with attachments:', attachments);
-
         // 3. Send to backend (non-blocking for UI)
         const backendMessage = await sendMessageFn({
           conversationId,
@@ -465,8 +458,6 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
           agentId,
           attachments,
         });
-
-        console.log('[useChatEngine.sendMessage] Backend response:', backendMessage);
 
         if (!isMountedRef.current) return;
 
