@@ -39,7 +39,6 @@ export const LoginPage = () => {
 
     try {
       await authService.login(data);
-      toast.success('Welcome back!');
       // Phone modal will auto-show in DashboardLayout if needed
       navigate('/conversations');
     } catch (error) {

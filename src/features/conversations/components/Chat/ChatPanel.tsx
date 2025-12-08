@@ -73,6 +73,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         conversationId: params.conversationId,
         message: params.message,
         agentId: params.agentId,
+        messageType: params.messageType,
         attachments: params.attachments,
       });
 

@@ -46,6 +46,7 @@ export interface ChatEngineConfig {
     conversationId: string;
     message: string;
     agentId?: string;
+    messageType?: MessageType;
     attachments?: string; // JSON string of attachments
   }) => Promise<ChatMessage>;
 }
@@ -425,12 +426,26 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       const correlationId = generateCorrelationId();
       const tempId = generateTempId(correlationId);
 
+      // Detect message type from attachments
+      const detectMessageType = (attachmentsJson?: string): MessageType => {
+        if (!attachmentsJson) return MessageType.Text;
+
+        try {
+          const parsed = JSON.parse(attachmentsJson);
+          if (parsed.audio && parsed.audio.length > 0) return MessageType.Audio;
+          if (parsed.images && parsed.images.length > 0) return MessageType.Image;
+          return MessageType.Text;
+        } catch {
+          return MessageType.Text;
+        }
+      };
+
       // 1. Create optimistic message
       const optimisticMessage: ChatMessage = {
         id: tempId,
         conversation_id: conversationId,
         message: content,
-        message_type: attachments ? MessageType.Image : MessageType.Text,
+        message_type: detectMessageType(attachments),
         attachments: attachments || null,
         sender_id: null,
         sender_role: SenderRole.Customer,
@@ -456,6 +471,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
           conversationId,
           message: content,
           agentId,
+          messageType: detectMessageType(attachments),
           attachments,
         });
 

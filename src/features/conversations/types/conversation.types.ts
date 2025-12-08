@@ -58,9 +58,10 @@ export interface Conversation {
 // === Message Types ===
 
 export enum MessageType {
-  Text = 1,
+  Text = 0,
+  Audio = 1,
   Image = 2,
-  File = 3,
+  Document = 3,
 }
 
 export enum SenderRole {

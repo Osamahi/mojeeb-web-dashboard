@@ -5,6 +5,7 @@
 
 import api from '@/lib/api';
 import type { ChatMessage, SendMessageWithAIRequest, MediaAttachment } from '../types';
+import { MessageType } from '../types';
 import { logger } from '@/lib/logger';
 
 class ChatApiService {
@@ -18,7 +19,7 @@ class ChatApiService {
         conversationId: request.conversationId,
         message: request.message,
         agentId: request.agentId,
-        messageType: request.messageType || 1,
+        messageType: request.messageType || MessageType.Text,
         attachments: request.attachments,
         source: request.source,
         platformConversationId: request.platformConversationId,
@@ -49,7 +50,7 @@ class ChatApiService {
         message: params.message,
         senderRole: params.senderRole,
         senderId: params.senderId,
-        messageType: params.messageType || 1,
+        messageType: params.messageType || MessageType.Text,
         attachments: params.attachments,
       });
 

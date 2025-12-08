@@ -51,7 +51,6 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
           userInfo.picture || ''
         );
 
-        toast.success('Welcome to Mojeeb!');
         navigate('/conversations');
       } catch (error) {
         const axiosError = error as AxiosError<{ message?: string }>;
