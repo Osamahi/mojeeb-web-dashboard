@@ -4,9 +4,9 @@
  * Follows Knowledge Base/Studio page architecture
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Copy, MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useLeads, useLeadStatistics, useUpdateLead } from '../hooks/useLeads';
@@ -18,6 +18,7 @@ import { DataTable } from '@/components/ui/DataTable/DataTable';
 import LeadStatsCards from '../components/LeadStatsCards';
 import AddLeadModal from '../components/AddLeadModal';
 import LeadDetailsDrawer from '../components/LeadDetailsDrawer';
+import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import type { Lead, LeadStatus } from '../types';
 
 export default function LeadsPage() {
@@ -26,10 +27,15 @@ export default function LeadsPage() {
   // Modal/Drawer state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<LeadStatus | 'all'>('all');
+
+  // Infinite scroll state
+  const [displayCount, setDisplayCount] = useState(50);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Fetch data
   const { data: leads, isLoading, error } = useLeads();
@@ -61,6 +67,22 @@ export default function LeadsPage() {
     );
   }, [updateMutation, leads]);
 
+  // Handle phone copy
+  const handleCopyPhone = useCallback((phone: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
+    navigator.clipboard.writeText(phone).then(() => {
+      toast.success('Phone number copied to clipboard');
+    }).catch(() => {
+      toast.error('Failed to copy phone number');
+    });
+  }, []);
+
+  // Handle view conversation
+  const handleViewConversation = useCallback((conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
+    setSelectedConversationId(conversationId);
+  }, []);
+
   // Client-side filtering (memoized for performance)
   const filteredLeads = useMemo(() => {
     return leads?.filter((lead) => {
@@ -72,6 +94,42 @@ export default function LeadsPage() {
       return matchesSearch && matchesStatus;
     });
   }, [leads, searchQuery, statusFilter]);
+
+  // Displayed leads with infinite scroll
+  const displayedLeads = useMemo(() => {
+    return filteredLeads?.slice(0, displayCount);
+  }, [filteredLeads, displayCount]);
+
+  // Reset display count when filters change
+  useEffect(() => {
+    setDisplayCount(50);
+  }, [searchQuery, statusFilter]);
+
+  // Infinite scroll handler - using window scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if we're near the bottom of the page
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // Load more when scrolled to 80% of the way down
+      if (scrollTop + windowHeight >= documentHeight * 0.8) {
+        if (!isLoadingMore && filteredLeads && displayCount < filteredLeads.length) {
+          setIsLoadingMore(true);
+
+          // Simulate loading delay for smooth UX
+          setTimeout(() => {
+            setDisplayCount(prev => Math.min(prev + 50, filteredLeads.length));
+            setIsLoadingMore(false);
+          }, 300);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [displayCount, filteredLeads, isLoadingMore]);
 
   // No agent selected
   if (!isAgentSelected) {
@@ -164,11 +222,13 @@ export default function LeadsPage() {
 
       {/* Data Table or Empty State */}
       {filteredLeads && filteredLeads.length > 0 ? (
-        <div className="bg-white rounded-lg border border-neutral-200">
-          <DataTable
-            data={filteredLeads}
-            rowKey="id"
-            columns={[
+        <>
+          <div className="bg-white rounded-lg border border-neutral-200">
+            <DataTable
+              data={displayedLeads || []}
+              rowKey="id"
+              paginated={false}
+              columns={[
               {
                 key: 'name',
                 label: 'Name',
@@ -180,24 +240,30 @@ export default function LeadsPage() {
                   const displayName = lead?.name || '—';
 
                   return (
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center">
-                        <span className="text-sm font-medium text-neutral-600">
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="w-9 h-9 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-semibold text-neutral-700">
                           {initial}
                         </span>
                       </div>
-                      <span className="font-medium text-neutral-900">{displayName}</span>
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <span className="text-[15px] font-medium text-neutral-900 leading-tight">{displayName}</span>
+                        {lead.phone && (
+                          <div className="flex items-center gap-1.5 group">
+                            <span className="text-[13px] text-neutral-500 font-normal">{lead.phone}</span>
+                            <button
+                              onClick={(e) => handleCopyPhone(lead.phone!, e)}
+                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-100 rounded transition-all"
+                              title="Copy phone number"
+                            >
+                              <Copy className="w-3 h-3 text-neutral-400 hover:text-neutral-700" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 },
-              },
-              {
-                key: 'phone',
-                label: 'Phone',
-                sortable: false,
-                render: (_, lead: Lead) => (
-                  <span className="text-neutral-700">{lead.phone || '—'}</span>
-                ),
               },
               {
                 key: 'status',
@@ -225,20 +291,63 @@ export default function LeadsPage() {
                 render: (_, lead: Lead) => {
                   try {
                     const date = new Date(lead.createdAt);
+                    if (isNaN(date.getTime())) return <span className="text-neutral-700">—</span>;
+
                     return (
-                      <span className="text-neutral-700">
-                        {!isNaN(date.getTime()) ? date.toLocaleDateString() : '—'}
-                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[13px] text-neutral-900">
+                          {date.toLocaleDateString()}
+                        </span>
+                        <span className="text-[12px] text-neutral-500">
+                          {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     );
                   } catch {
                     return <span className="text-neutral-700">—</span>;
                   }
                 },
               },
+              {
+                key: 'conversation',
+                label: '',
+                sortable: false,
+                render: (_, lead: Lead) => {
+                  if (!lead.conversationId) return <div className="w-10" />;
+
+                  return (
+                    <button
+                      onClick={(e) => handleViewConversation(lead.conversationId!, e)}
+                      className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
+                      title="View conversation"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </button>
+                  );
+                },
+              },
             ]}
             onRowClick={(lead) => setSelectedLeadId(lead.id)}
           />
-        </div>
+          </div>
+
+          {/* Loading More Indicator */}
+          {isLoadingMore && (
+            <div className="flex justify-center items-center py-8 bg-white rounded-lg border border-neutral-200 mt-4">
+              <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
+              <span className="ml-2 text-sm text-neutral-600">Loading more leads...</span>
+            </div>
+          )}
+
+          {/* End of results indicator */}
+          {displayedLeads && filteredLeads && displayedLeads.length >= filteredLeads.length && filteredLeads.length > 50 && (
+            <div className="flex justify-center items-center py-6 bg-white rounded-lg border border-neutral-200 mt-4">
+              <span className="text-sm text-neutral-500">
+                All {filteredLeads.length} leads loaded
+              </span>
+            </div>
+          )}
+        </>
       ) : (
         <div className="bg-white rounded-lg border border-neutral-200 p-12">
           <EmptyState
@@ -267,6 +376,13 @@ export default function LeadsPage() {
       {selectedLeadId && (
         <LeadDetailsDrawer leadId={selectedLeadId} onClose={() => setSelectedLeadId(null)} />
       )}
+
+      {/* Conversation View Drawer */}
+      <ConversationViewDrawer
+        conversationId={selectedConversationId}
+        isOpen={!!selectedConversationId}
+        onClose={() => setSelectedConversationId(null)}
+      />
     </motion.div>
   );
 }

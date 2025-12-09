@@ -46,17 +46,15 @@ export default function UsersPage() {
             </div>
           </div>
         ) : error ? (
-          <div className="bg-white border border-neutral-200 rounded-lg p-12">
-            <EmptyState
-              icon={UsersIcon}
-              title="Error Loading Users"
-              description={
-                error instanceof Error
-                  ? error.message
-                  : 'Failed to load users. Please try again.'
-              }
-            />
-          </div>
+          <EmptyState
+            icon={UsersIcon}
+            title="Error Loading Users"
+            description={
+              error instanceof Error
+                ? error.message
+                : 'Failed to load users. Please try again.'
+            }
+          />
         ) : users ? (
           <UsersTable users={users} />
         ) : null}

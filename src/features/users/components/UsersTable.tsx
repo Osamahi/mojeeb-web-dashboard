@@ -1,10 +1,10 @@
 /**
  * Users Table Component
- * Displays system users with sorting and pagination
+ * Displays system users with sorting and infinite scroll
  */
 
-import { useMemo } from 'react';
-import { Users as UsersIcon } from 'lucide-react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { Users as UsersIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
@@ -25,6 +25,40 @@ const ROLE_COLORS: Record<Role, 'success' | 'warning' | 'danger' | any> = {
 };
 
 export default function UsersTable({ users }: UsersTableProps) {
+  // Infinite scroll state
+  const [displayCount, setDisplayCount] = useState(50);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Displayed users with infinite scroll
+  const displayedUsers = useMemo(() => {
+    return users.slice(0, displayCount);
+  }, [users, displayCount]);
+
+  // Infinite scroll handler - using window scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if we're near the bottom of the page
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // Load more when scrolled to 80% of the way down
+      if (scrollTop + windowHeight >= documentHeight * 0.8) {
+        if (!isLoadingMore && displayCount < users.length) {
+          setIsLoadingMore(true);
+
+          // Simulate loading delay for smooth UX
+          setTimeout(() => {
+            setDisplayCount(prev => Math.min(prev + 50, users.length));
+            setIsLoadingMore(false);
+          }, 300);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [displayCount, users.length, isLoadingMore]);
 
   // Define columns
   const columns = useMemo<ColumnDef<User>[]>(() => [
@@ -100,18 +134,38 @@ export default function UsersTable({ users }: UsersTableProps) {
   ], []);
 
   return (
-    <DataTable
-      data={users}
-      columns={columns}
-      rowKey="id"
-      initialSortField="created_at"
-      initialSortDirection="desc"
-      itemName="users"
-      emptyState={{
-        icon: <UsersIcon className="w-12 h-12 text-neutral-400" />,
-        title: 'No users found',
-        description: 'No users available in the system',
-      }}
-    />
+    <>
+      <DataTable
+        data={displayedUsers}
+        columns={columns}
+        rowKey="id"
+        initialSortField="created_at"
+        initialSortDirection="desc"
+        paginated={false}
+        itemName="users"
+        emptyState={{
+          icon: <UsersIcon className="w-12 h-12 text-neutral-400" />,
+          title: 'No users found',
+          description: 'No users available in the system',
+        }}
+      />
+
+      {/* Loading More Indicator */}
+      {isLoadingMore && (
+        <div className="flex justify-center items-center py-8 bg-white rounded-lg border border-neutral-200 mt-4">
+          <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
+          <span className="ml-2 text-sm text-neutral-600">Loading more users...</span>
+        </div>
+      )}
+
+      {/* End of results indicator */}
+      {displayedUsers.length >= users.length && users.length > 50 && (
+        <div className="flex justify-center items-center py-6 bg-white rounded-lg border border-neutral-200 mt-4">
+          <span className="text-sm text-neutral-500">
+            All {users.length} users loaded
+          </span>
+        </div>
+      )}
+    </>
   );
 }

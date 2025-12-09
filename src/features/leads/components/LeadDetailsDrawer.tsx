@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { useLead, useUpdateLead, useDeleteLead, useLeadFieldDefinitions } from '../hooks/useLeads';
 import LeadStatusBadge from './LeadStatusBadge';
+import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import type { LeadStatus, LeadFormErrors } from '../types';
 
 interface LeadDetailsDrawerProps {
@@ -24,6 +25,7 @@ interface LeadDetailsDrawerProps {
 export default function LeadDetailsDrawer({ leadId, onClose }: LeadDetailsDrawerProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showConversationDrawer, setShowConversationDrawer] = useState(false);
 
   // Fetch lead data
   const { data: lead, isLoading } = useLead(leadId);
@@ -152,6 +154,11 @@ export default function LeadDetailsDrawer({ leadId, onClose }: LeadDetailsDrawer
       ...prev,
       [fieldKey]: value,
     }));
+  };
+
+  const handleViewConversation = () => {
+    if (!lead?.conversationId) return;
+    setShowConversationDrawer(true);
   };
 
   if (isLoading) {
@@ -355,7 +362,7 @@ export default function LeadDetailsDrawer({ leadId, onClose }: LeadDetailsDrawer
                   <MessageSquare className="w-4 h-4 text-neutral-600" />
                   <span className="text-sm text-neutral-700">Linked to conversation</span>
                 </div>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={handleViewConversation}>
                   View
                 </Button>
               </div>
@@ -432,6 +439,13 @@ export default function LeadDetailsDrawer({ leadId, onClose }: LeadDetailsDrawer
           </div>
         </Modal>
       )}
+
+      {/* Conversation View Drawer */}
+      <ConversationViewDrawer
+        conversationId={lead?.conversationId || null}
+        isOpen={showConversationDrawer}
+        onClose={() => setShowConversationDrawer(false)}
+      />
     </>
   );
 }

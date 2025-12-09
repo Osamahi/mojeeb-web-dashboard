@@ -49,6 +49,23 @@ export const fetchConversations = async ({
   return data as Conversation[];
 };
 
+// === Fetch Single Conversation by ID ===
+
+export const fetchConversationById = async (conversationId: string): Promise<Conversation> => {
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('*')
+    .eq('id', conversationId)
+    .single();
+
+  if (error) {
+    logger.error('Error fetching conversation by ID', error);
+    throw error;
+  }
+
+  return data as Conversation;
+};
+
 // === Fetch Messages ===
 
 export interface FetchMessagesParams {
