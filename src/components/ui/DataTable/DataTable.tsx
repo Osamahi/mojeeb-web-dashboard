@@ -62,6 +62,8 @@ interface DataTableProps<T> {
   rowClassName?: string;
   /** Actions column render */
   actionsColumn?: (row: T) => ReactNode;
+  /** Row click handler */
+  onRowClick?: (row: T) => void;
 }
 
 export function DataTable<T extends Record<string, any>>({
@@ -80,6 +82,7 @@ export function DataTable<T extends Record<string, any>>({
   itemName = 'items',
   rowClassName = '',
   actionsColumn,
+  onRowClick,
 }: DataTableProps<T>) {
   // Filtering
   const {
@@ -175,7 +178,8 @@ export function DataTable<T extends Record<string, any>>({
               {displayData.map((row) => (
                 <tr
                   key={String(row[rowKey])}
-                  className={`hover:bg-neutral-50 transition-colors ${rowClassName}`}
+                  className={`hover:bg-neutral-50 transition-colors ${onRowClick ? 'cursor-pointer' : ''} ${rowClassName}`}
+                  onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((column) => (
                     <td

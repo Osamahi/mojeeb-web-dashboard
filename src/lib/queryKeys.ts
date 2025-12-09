@@ -152,6 +152,36 @@ export const queryKeys = {
    */
   widget: (agentId: string | undefined) => ['widget', agentId] as const,
 
+  // ==================== Lead Queries ====================
+
+  /**
+   * Query key for fetching leads by agent
+   * @param {string | undefined} agentId - The agent ID
+   * @returns {readonly ['leads', string | undefined]} Query key tuple
+   */
+  leads: (agentId: string | undefined) => ['leads', agentId] as const,
+
+  /**
+   * Query key for fetching a single lead by ID
+   * @param {string | undefined} leadId - The lead ID
+   * @returns {readonly ['lead', string | undefined]} Query key tuple
+   */
+  lead: (leadId: string | undefined) => ['lead', leadId] as const,
+
+  /**
+   * Query key for fetching lead statistics by agent
+   * @param {string | undefined} agentId - The agent ID
+   * @returns {readonly ['lead-stats', string | undefined]} Query key tuple
+   */
+  leadStats: (agentId: string | undefined) => ['lead-stats', agentId] as const,
+
+  /**
+   * Query key for fetching lead custom field definitions by agent
+   * @param {string | undefined} agentId - The agent ID
+   * @returns {readonly ['lead-field-defs', string | undefined]} Query key tuple
+   */
+  leadFieldDefs: (agentId: string | undefined) => ['lead-field-defs', agentId] as const,
+
   // ==================== User Queries ====================
 
   /**

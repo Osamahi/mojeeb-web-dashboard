@@ -7,6 +7,7 @@ import {
   Bot,
   Users,
   UserCog,
+  UserCheck,
   MessageSquare,
   Wrench,
   Plug,
@@ -38,6 +39,13 @@ export const navigation: NavigationItem[] = [
     name: 'Team',
     href: '/team',
     icon: UserCog,
+  },
+  {
+    name: 'Leads',
+    href: '/leads',
+    icon: UserCheck,
+    requiresAgent: true,
+    requireSuperAdmin: true,
   },
   {
     name: 'Agents',

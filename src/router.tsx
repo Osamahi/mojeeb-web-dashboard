@@ -19,6 +19,7 @@ const UsersPage = lazy(() => import('./features/users/pages/UsersPage'));
 const TeamPage = lazy(() => import('./features/team/pages/TeamPage'));
 const ConnectionsPage = lazy(() => import('./features/connections/pages/ConnectionsPage'));
 const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthCallbackPage'));
+const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -141,6 +142,10 @@ export const router = createBrowserRouter([
       {
         path: 'connections',
         element: <ConnectionsPage />,
+      },
+      {
+        path: 'leads',
+        element: <LeadsPage />,
       },
       {
         path: 'users',

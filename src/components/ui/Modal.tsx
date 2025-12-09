@@ -70,7 +70,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 transition={{ duration: 0.2, type: 'spring', stiffness: 300, damping: 30 }}
                 className={cn(
-                  'relative w-full bg-white rounded-2xl shadow-2xl',
+                  'relative w-full bg-white rounded-2xl shadow-2xl max-h-[90vh] flex flex-col',
                   sizeClasses[size],
                   className
                 )}
@@ -79,7 +79,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
               >
                 {/* Header */}
                 {(title || description) && (
-                  <div className="px-6 py-4">
+                  <div className="px-6 py-4 border-b border-neutral-200 flex-shrink-0">
                     <div className="flex items-start justify-between">
                       <div>
                         {title && (
@@ -105,7 +105,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
                 )}
 
                 {/* Content */}
-                <div className="px-6 py-4">
+                <div className="flex-1 overflow-hidden flex flex-col">
                   {children}
                 </div>
               </motion.div>
