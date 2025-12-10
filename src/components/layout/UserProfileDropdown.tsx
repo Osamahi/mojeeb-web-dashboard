@@ -1,14 +1,13 @@
 /**
  * User Profile Dropdown Component
- * Displays user avatar with dropdown menu in top bar
+ * Displays user dropdown menu in top bar
  * Features: Profile info, settings link, logout
  */
 
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Settings, LogOut, ChevronDown, User } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Avatar } from '@/components/ui/Avatar';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { authService } from '@/features/auth/services/authService';
 import { cn } from '@/lib/utils';
@@ -65,11 +64,7 @@ export const UserProfileDropdown = () => {
         aria-label="User menu"
         aria-expanded={isOpen}
       >
-        <Avatar
-          name={user?.name || 'User'}
-          src={user?.avatarUrl}
-          size="sm"
-        />
+        <User className="w-5 h-5 text-neutral-600" />
         <ChevronDown className={cn(
           'w-4 h-4 text-neutral-600 transition-transform',
           isOpen && 'transform rotate-180'
@@ -81,20 +76,13 @@ export const UserProfileDropdown = () => {
         <div className="absolute right-0 top-12 w-64 bg-white border border-neutral-200 rounded-lg shadow-lg z-50">
           {/* User Info Section */}
           <div className="p-4 border-b border-neutral-200">
-            <div className="flex items-center gap-3">
-              <Avatar
-                name={user?.name || 'User'}
-                src={user?.avatarUrl}
-                size="md"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-neutral-950 truncate">
-                  {user?.name || 'User'}
-                </p>
-                <p className="text-xs text-neutral-600 truncate">
-                  {user?.email || ''}
-                </p>
-              </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-neutral-950 truncate">
+                {user?.name || 'User'}
+              </p>
+              <p className="text-xs text-neutral-600 truncate">
+                {user?.email || ''}
+              </p>
             </div>
           </div>
 

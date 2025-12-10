@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/features/auth/types/auth.types';
-import { Avatar } from '@/components/ui/Avatar';
 
 interface UserProfileSectionProps {
   user: User | null;
@@ -35,12 +34,6 @@ export const UserProfileSection = ({ user, onLogout }: UserProfileSectionProps) 
   return (
     <div className="mt-auto p-4 bg-white">
       <div className="flex items-center gap-3 px-2 py-2">
-        <Avatar
-          src={user?.avatarUrl}
-          name={user?.name}
-          size="md"
-          className="flex-shrink-0"
-        />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-neutral-950 truncate">
             {user?.name || 'User'}

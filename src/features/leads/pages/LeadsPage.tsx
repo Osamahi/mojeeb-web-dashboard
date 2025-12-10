@@ -20,8 +20,11 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import LeadStatsCards from '../components/LeadStatsCards';
 import AddLeadModal from '../components/AddLeadModal';
 import LeadDetailsDrawer from '../components/LeadDetailsDrawer';
+import { LeadCommentsModal } from '../components/LeadCommentsModal';
+import { AddSummaryModal } from '../components/AddSummaryModal';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import { validateName, validatePhone } from '../utils/validation';
+import { extractNameFromEmail, formatCommentDate } from '../utils/formatting';
 import type { Lead, LeadStatus } from '../types';
 
 export default function LeadsPage() {
@@ -33,6 +36,8 @@ export default function LeadsPage() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<string | null>(null);
   const [openInEditMode, setOpenInEditMode] = useState(false);
+  const [commentsLead, setCommentsLead] = useState<{ id: string; name: string } | null>(null);
+  const [summaryLead, setSummaryLead] = useState<{ id: string; name: string; summary: string } | null>(null);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -379,17 +384,44 @@ export default function LeadsPage() {
                 key: 'notes',
                 label: 'Summary',
                 sortable: false,
-                render: (_, lead: Lead) => (
-                  <div className="py-1 max-w-xs">
-                    <InlineEditField
-                      value={lead.notes}
-                      fieldName="Summary"
-                      placeholder="Enter summary"
-                      onSave={(newSummary) => handleSummarySave(lead.id, newSummary)}
-                      isLoading={updateMutation.isPending}
-                    />
-                  </div>
-                ),
+                render: (_, lead: Lead) => {
+                  const maxLength = 120; // Approximate 2 lines
+                  const shouldTruncate = lead.notes && lead.notes.length > maxLength;
+                  const displayText = shouldTruncate
+                    ? lead.notes.substring(0, maxLength)
+                    : lead.notes;
+
+                  return (
+                    <div className="py-1 max-w-sm min-w-0">
+                      {lead.notes ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSummaryLead({ id: lead.id, name: lead.name || 'Unnamed Lead', summary: lead.notes || '' });
+                          }}
+                          className="text-left w-full group hover:text-neutral-900 transition-colors min-w-0"
+                        >
+                          <div className="text-sm text-neutral-700 leading-relaxed break-words whitespace-normal">
+                            {displayText}
+                            {shouldTruncate && (
+                              <span className="text-neutral-400 group-hover:text-neutral-900"> ...view more</span>
+                            )}
+                          </div>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSummaryLead({ id: lead.id, name: lead.name || 'Unnamed Lead', summary: '' });
+                          }}
+                          className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
+                        >
+                          Add summary
+                        </button>
+                      )}
+                    </div>
+                  );
+                },
               },
               {
                 key: 'status',
@@ -423,7 +455,9 @@ export default function LeadsPage() {
                 sortable: true,
                 render: (_, lead: Lead) => {
                   try {
-                    const date = new Date(lead.createdAt);
+                    // Parse as UTC if string doesn't end with 'Z'
+                    const dateStr = lead.createdAt.toString();
+                    const date = new Date(dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`);
                     if (isNaN(date.getTime())) return <span className="text-neutral-700">—</span>;
 
                     return (
@@ -439,6 +473,52 @@ export default function LeadsPage() {
                   } catch {
                     return <span className="text-neutral-700">—</span>;
                   }
+                },
+              },
+              {
+                key: 'comments',
+                label: 'Comments',
+                sortable: false,
+                render: (_, lead: Lead) => {
+                  // Get the most recent comment (sorted by createdAt descending)
+                  const latestComment = lead.comments && lead.comments.length > 0
+                    ? [...lead.comments].sort((a, b) =>
+                        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                      )[0]
+                    : null;
+
+                  return (
+                    <div className="py-1 max-w-xs">
+                      {latestComment ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCommentsLead({ id: lead.id, name: lead.name || 'Unnamed Lead' });
+                          }}
+                          className="text-left w-full hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
+                        >
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[13px] text-neutral-900 truncate">
+                              {latestComment.text}
+                            </span>
+                            <span className="text-[12px] text-neutral-500">
+                              {extractNameFromEmail(latestComment.userName)} · {formatCommentDate(latestComment.createdAt, true)}
+                            </span>
+                          </div>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCommentsLead({ id: lead.id, name: lead.name || 'Unnamed Lead' });
+                          }}
+                          className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
+                        >
+                          Add comment
+                        </button>
+                      )}
+                    </div>
+                  );
                 },
               },
               {
@@ -547,6 +627,27 @@ export default function LeadsPage() {
         isOpen={!!selectedConversationId}
         onClose={() => setSelectedConversationId(null)}
       />
+
+      {/* Comments Modal */}
+      {commentsLead && (
+        <LeadCommentsModal
+          isOpen={true}
+          onClose={() => setCommentsLead(null)}
+          leadId={commentsLead.id}
+          leadName={commentsLead.name}
+        />
+      )}
+
+      {/* Summary Modal */}
+      {summaryLead && (
+        <AddSummaryModal
+          isOpen={true}
+          onClose={() => setSummaryLead(null)}
+          leadId={summaryLead.id}
+          leadName={summaryLead.name}
+          currentSummary={summaryLead.summary}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

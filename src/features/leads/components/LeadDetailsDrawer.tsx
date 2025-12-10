@@ -91,9 +91,6 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
 
     // Validate
     const validationErrors: LeadFormErrors = {};
-    if (!name.trim()) {
-      validationErrors.name = 'Name is required';
-    }
 
     // Validate custom required fields
     const customFieldErrors: Record<string, string> = {};
@@ -177,7 +174,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
               <div className="space-y-4">
             <div>
               <Input
-                label="Name *"
+                label="Name"
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);
@@ -284,7 +281,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
 
             <div>
               <Textarea
-                label="Notes"
+                label="Summary"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
@@ -349,6 +346,38 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
               <p className="text-base text-neutral-900 capitalize">{lead.status}</p>
             </div>
 
+            {/* Created */}
+            <div>
+              <label className="block text-sm font-medium text-neutral-500 mb-1">Created</label>
+              <p className="text-xs text-neutral-400">{(() => {
+                try {
+                  const date = new Date(lead.createdAt);
+                  return !isNaN(date.getTime()) ? date.toLocaleString() : 'Invalid date';
+                } catch {
+                  return 'Invalid date';
+                }
+              })()}</p>
+            </div>
+
+            {/* Updated */}
+            {(() => {
+              try {
+                const created = new Date(lead.createdAt).getTime();
+                const updated = new Date(lead.updatedAt).getTime();
+                if (!isNaN(updated) && updated > created) {
+                  return (
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-500 mb-1">Updated</label>
+                      <p className="text-xs text-neutral-400">{new Date(lead.updatedAt).toLocaleString()}</p>
+                    </div>
+                  );
+                }
+                return null;
+              } catch {
+                return null;
+              }
+            })()}
+
             {/* Custom Fields - Collapsible */}
             {lead.customFields && Object.keys(lead.customFields).length > 0 && (
               <div className="border-t border-neutral-200 pt-4">
@@ -381,10 +410,10 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
               </div>
             )}
 
-            {/* Notes */}
+            {/* Summary */}
             {lead.notes && (
               <div>
-                <label className="block text-sm font-medium text-neutral-500 mb-1">Notes</label>
+                <label className="block text-sm font-medium text-neutral-500 mb-1">Summary</label>
                 <p className="text-base text-neutral-900 whitespace-pre-wrap">{lead.notes}</p>
               </div>
             )}
@@ -401,26 +430,6 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                 </Button>
               </div>
             )}
-
-            {/* Metadata */}
-            <div className="border-t border-neutral-200 pt-4 text-sm text-neutral-500">
-              <p>Created: {(() => {
-                try {
-                  const date = new Date(lead.createdAt);
-                  return !isNaN(date.getTime()) ? date.toLocaleString() : 'Invalid date';
-                } catch {
-                  return 'Invalid date';
-                }
-              })()}</p>
-              <p>Updated: {(() => {
-                try {
-                  const date = new Date(lead.updatedAt);
-                  return !isNaN(date.getTime()) ? date.toLocaleString() : 'Invalid date';
-                } catch {
-                  return 'Invalid date';
-                }
-              })()}</p>
-            </div>
 
             {/* Comments Section - Collapsible */}
             <div className="border-t border-neutral-200 pt-4 mt-4">

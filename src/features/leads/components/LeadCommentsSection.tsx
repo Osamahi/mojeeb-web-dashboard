@@ -13,13 +13,16 @@ import {
   useDeleteLeadComment,
 } from '../hooks/useLeads';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { extractNameFromEmail } from '../utils/formatting';
 import type { LeadComment } from '../types';
 
 interface LeadCommentsSectionProps {
   leadId: string;
+  onCommentAdded?: () => void;
 }
 
-export function LeadCommentsSection({ leadId }: LeadCommentsSectionProps) {
+export function LeadCommentsSection({ leadId, onCommentAdded }: LeadCommentsSectionProps) {
   const user = useAuthStore((state) => state.user);
   const { data: comments, isLoading } = useLeadComments(leadId);
   const createMutation = useCreateLeadComment();
@@ -29,6 +32,7 @@ export function LeadCommentsSection({ leadId }: LeadCommentsSectionProps) {
   const [newCommentText, setNewCommentText] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
 
   // Handle adding a new comment
   const handleAddComment = () => {
@@ -42,6 +46,12 @@ export function LeadCommentsSection({ leadId }: LeadCommentsSectionProps) {
       {
         onSuccess: () => {
           setNewCommentText('');
+          // Close modal after a brief delay for smooth UX
+          if (onCommentAdded) {
+            setTimeout(() => {
+              onCommentAdded();
+            }, 800);
+          }
         },
       }
     );
@@ -78,8 +88,19 @@ export function LeadCommentsSection({ leadId }: LeadCommentsSectionProps) {
 
   // Handle deleting a comment
   const handleDelete = (commentId: string) => {
-    if (confirm('Are you sure you want to delete this comment?')) {
-      deleteMutation.mutate({ leadId, commentId });
+    setCommentToDelete(commentId);
+  };
+
+  const handleConfirmDelete = () => {
+    if (commentToDelete) {
+      deleteMutation.mutate(
+        { leadId, commentId: commentToDelete },
+        {
+          onSuccess: () => {
+            setCommentToDelete(null);
+          },
+        }
+      );
     }
   };
 
@@ -94,7 +115,6 @@ export function LeadCommentsSection({ leadId }: LeadCommentsSectionProps) {
       <div className="space-y-4">
         {/* Add Comment Input */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-900">Add Comment</label>
           <textarea
             value={newCommentText}
             onChange={(e) => setNewCommentText(e.target.value)}
@@ -102,13 +122,21 @@ export function LeadCommentsSection({ leadId }: LeadCommentsSectionProps) {
             rows={3}
             className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent resize-none text-sm"
           />
-          <button
-            onClick={handleAddComment}
-            disabled={!newCommentText.trim() || createMutation.isPending}
-            className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          <div
+            className={`transition-all duration-200 ease-in-out overflow-hidden ${
+              newCommentText.trim()
+                ? 'max-h-20 opacity-100'
+                : 'max-h-0 opacity-0'
+            }`}
           >
-            {createMutation.isPending ? 'Adding...' : 'Add Comment'}
-          </button>
+            <button
+              onClick={handleAddComment}
+              disabled={createMutation.isPending}
+              className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {createMutation.isPending ? 'Adding...' : 'Add Comment'}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -118,7 +146,6 @@ export function LeadCommentsSection({ leadId }: LeadCommentsSectionProps) {
     <div className="space-y-4">
       {/* Add Comment Input */}
       <div className="space-y-2">
-        <label className="text-sm font-medium text-neutral-900">Add Comment</label>
         <textarea
           value={newCommentText}
           onChange={(e) => setNewCommentText(e.target.value)}
@@ -126,13 +153,21 @@ export function LeadCommentsSection({ leadId }: LeadCommentsSectionProps) {
           rows={3}
           className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent resize-none text-sm"
         />
-        <button
-          onClick={handleAddComment}
-          disabled={!newCommentText.trim() || createMutation.isPending}
-          className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        <div
+          className={`transition-all duration-200 ease-in-out overflow-hidden ${
+            newCommentText.trim()
+              ? 'max-h-20 opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}
         >
-          {createMutation.isPending ? 'Adding...' : 'Add Comment'}
-        </button>
+          <button
+            onClick={handleAddComment}
+            disabled={createMutation.isPending}
+            className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {createMutation.isPending ? 'Adding...' : 'Add Comment'}
+          </button>
+        </div>
       </div>
 
       {/* Comments Timeline */}
@@ -159,7 +194,7 @@ export function LeadCommentsSection({ leadId }: LeadCommentsSectionProps) {
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-neutral-900">
-                      {comment.userName}
+                      {extractNameFromEmail(comment.userName)}
                     </span>
                     {comment.commentType === 'status_change' && (
                       <span className="text-xs text-[#00D084] font-normal">
@@ -238,6 +273,18 @@ export function LeadCommentsSection({ leadId }: LeadCommentsSectionProps) {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!commentToDelete}
+        onClose={() => setCommentToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Comment"
+        message="Are you sure you want to delete this comment? This action cannot be undone."
+        confirmText="Delete"
+        confirmVariant="danger"
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 }
