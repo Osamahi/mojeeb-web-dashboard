@@ -104,6 +104,7 @@ export function useCreateLead() {
 
 /**
  * Update an existing lead
+ * Uses optimistic updates for instant UI feedback
  * Invalidates leads list, specific lead, and stats on success
  */
 export function useUpdateLead() {
@@ -113,14 +114,52 @@ export function useUpdateLead() {
   return useMutation({
     mutationFn: ({ leadId, request }: { leadId: string; request: UpdateLeadRequest }) =>
       leadService.updateLead(leadId, request),
+
+    // Optimistic update - update cache immediately before API call
+    onMutate: async ({ leadId, request }) => {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: queryKeys.leads(agentId) });
+      await queryClient.cancelQueries({ queryKey: queryKeys.lead(leadId) });
+
+      // Snapshot the previous values for rollback
+      const previousLeads = queryClient.getQueryData(queryKeys.leads(agentId));
+      const previousLead = queryClient.getQueryData(queryKeys.lead(leadId));
+
+      // Optimistically update leads list
+      queryClient.setQueryData(queryKeys.leads(agentId), (old: any) => {
+        if (!old) return old;
+        return old.map((lead: any) =>
+          lead.id === leadId ? { ...lead, ...request } : lead
+        );
+      });
+
+      // Optimistically update individual lead
+      queryClient.setQueryData(queryKeys.lead(leadId), (old: any) => {
+        if (!old) return old;
+        return { ...old, ...request };
+      });
+
+      // Return context with previous data for rollback
+      return { previousLeads, previousLead };
+    },
+
     onSuccess: (_, { leadId }) => {
-      // Invalidate multiple queries
+      // Refetch to ensure we have the latest data from server
       queryClient.invalidateQueries({ queryKey: queryKeys.leads(agentId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
       toast.success('Lead updated successfully');
     },
-    onError: (error: any) => {
+
+    onError: (error: any, _, context) => {
+      // Rollback optimistic updates on error
+      if (context?.previousLeads) {
+        queryClient.setQueryData(queryKeys.leads(agentId), context.previousLeads);
+      }
+      if (context?.previousLead) {
+        queryClient.setQueryData(queryKeys.lead(context.previousLead.id), context.previousLead);
+      }
+
       const message = error?.response?.data?.message || 'Failed to update lead';
       toast.error(message);
     },

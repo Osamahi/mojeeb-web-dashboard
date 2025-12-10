@@ -55,27 +55,16 @@ export default function LeadsPage() {
   const updateMutation = useUpdateLead();
   const deleteMutation = useDeleteLead();
 
-  // Handle status change (memoized to prevent re-renders)
+  // Handle status change with optimistic updates (instant UI feedback)
   const handleStatusChange = useCallback((leadId: string, newStatus: LeadStatus, e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation(); // Prevent row click
 
-    updateMutation.mutate(
-      {
-        leadId,
-        request: { status: newStatus },
-      },
-      {
-        onSuccess: () => {
-          toast.success('Lead status updated');
-        },
-        onError: () => {
-          toast.error('Failed to update status');
-          // On error, reset the select to previous value
-          // This will happen automatically when React Query refetches
-        },
-      }
-    );
-  }, [updateMutation, leads]);
+    // Optimistic update - UI changes instantly, rollback on error
+    updateMutation.mutate({
+      leadId,
+      request: { status: newStatus },
+    });
+  }, [updateMutation]);
 
   // Handle name save
   const handleNameSave = useCallback(async (leadId: string, newName: string) => {
