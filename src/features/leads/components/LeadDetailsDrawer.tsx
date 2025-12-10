@@ -15,6 +15,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { useLead, useUpdateLead, useLeadFieldDefinitions } from '../hooks/useLeads';
 import { LeadCommentsSection } from './LeadCommentsSection';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
+import { formatPhoneNumber } from '../utils/formatting';
 import type { LeadStatus, LeadFormErrors } from '../types';
 
 interface LeadDetailsDrawerProps {
@@ -329,7 +330,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
             <div>
               <label className="block text-sm font-medium text-neutral-500 mb-1">Phone</label>
               {lead.phone ? (
-                <p className="text-base text-neutral-900">{lead.phone}</p>
+                <p className="text-base text-neutral-900">{formatPhoneNumber(lead.phone)}</p>
               ) : (
                 <button
                   onClick={handleEdit}
