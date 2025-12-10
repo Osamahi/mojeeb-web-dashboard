@@ -62,7 +62,10 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
             />
 
             {/* Modal */}
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <div
+              className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+              onClick={onClose}
+            >
               <motion.div
                 ref={ref}
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}

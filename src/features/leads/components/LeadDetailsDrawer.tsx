@@ -6,13 +6,13 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Edit2, Trash2, MessageSquare } from 'lucide-react';
+import { Edit2, MessageSquare } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
-import { useLead, useUpdateLead, useDeleteLead, useLeadFieldDefinitions } from '../hooks/useLeads';
+import { useLead, useUpdateLead, useLeadFieldDefinitions } from '../hooks/useLeads';
 import LeadStatusBadge from './LeadStatusBadge';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import type { LeadStatus, LeadFormErrors } from '../types';
@@ -20,11 +20,11 @@ import type { LeadStatus, LeadFormErrors } from '../types';
 interface LeadDetailsDrawerProps {
   leadId: string;
   onClose: () => void;
+  initialEditMode?: boolean;
 }
 
-export default function LeadDetailsDrawer({ leadId, onClose }: LeadDetailsDrawerProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = false }: LeadDetailsDrawerProps) {
+  const [isEditing, setIsEditing] = useState(initialEditMode);
   const [showConversationDrawer, setShowConversationDrawer] = useState(false);
 
   // Fetch lead data
@@ -41,7 +41,6 @@ export default function LeadDetailsDrawer({ leadId, onClose }: LeadDetailsDrawer
 
   // Mutations
   const updateMutation = useUpdateLead();
-  const deleteMutation = useDeleteLead();
 
   // Sync form state with lead data when entering edit mode or when lead changes during edit
   useEffect(() => {
@@ -56,10 +55,9 @@ export default function LeadDetailsDrawer({ leadId, onClose }: LeadDetailsDrawer
 
   // Reset form when leadId changes (switching between leads)
   useEffect(() => {
-    setIsEditing(false);
+    setIsEditing(initialEditMode);
     setErrors({});
-    setShowDeleteConfirm(false);
-  }, [leadId]);
+  }, [leadId, initialEditMode]);
 
   // Initialize edit form
   const handleEdit = () => {
@@ -134,19 +132,6 @@ export default function LeadDetailsDrawer({ leadId, onClose }: LeadDetailsDrawer
         },
       }
     );
-  };
-
-  const handleDelete = () => {
-    deleteMutation.mutate(leadId, {
-      onSuccess: () => {
-        toast.success('Lead deleted successfully');
-        onClose();
-      },
-      onError: () => {
-        // Close confirmation modal on error so user can retry
-        setShowDeleteConfirm(false);
-      },
-    });
   };
 
   const handleCustomFieldChange = (fieldKey: string, value: string) => {
@@ -391,14 +376,7 @@ export default function LeadDetailsDrawer({ leadId, onClose }: LeadDetailsDrawer
             </div>
 
             {/* Actions Footer */}
-            <div className="flex justify-between gap-3 px-6 py-4 border-t border-neutral-200 bg-white flex-shrink-0 rounded-b-2xl">
-              <Button
-                variant="ghost"
-                onClick={() => setShowDeleteConfirm(true)}
-                icon={Trash2}
-              >
-                Delete
-              </Button>
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-neutral-200 bg-white flex-shrink-0 rounded-b-2xl">
               <Button variant="secondary" onClick={handleEdit} icon={Edit2}>
                 Edit
               </Button>
@@ -406,39 +384,6 @@ export default function LeadDetailsDrawer({ leadId, onClose }: LeadDetailsDrawer
           </>
         )}
       </Modal>
-
-      {/* Delete Confirmation */}
-      {showDeleteConfirm && (
-        <Modal
-          isOpen={true}
-          onClose={() => setShowDeleteConfirm(false)}
-          title="Delete Lead"
-          size="sm"
-        >
-          <div className="space-y-4">
-            <p className="text-neutral-700">
-              Are you sure you want to delete <strong>{lead.name}</strong>? This action cannot be
-              undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={deleteMutation.isPending}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleDelete}
-                isLoading={deleteMutation.isPending}
-              >
-                Delete Lead
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
 
       {/* Conversation View Drawer */}
       <ConversationViewDrawer

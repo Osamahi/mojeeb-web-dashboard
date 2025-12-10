@@ -4,30 +4,35 @@
  * Follows Knowledge Base/Studio page architecture
  */
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { UserPlus, Copy, MessageSquare, Loader2 } from 'lucide-react';
+import { UserPlus, Copy, MessageSquare, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAgentContext } from '@/hooks/useAgentContext';
-import { useLeads, useLeadStatistics, useUpdateLead } from '../hooks/useLeads';
+import { useLeads, useLeadStatistics, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Spinner } from '@/components/ui/Spinner';
 import { DataTable } from '@/components/ui/DataTable/DataTable';
+import { InlineEditField } from '@/components/ui/InlineEditField';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import LeadStatsCards from '../components/LeadStatsCards';
 import AddLeadModal from '../components/AddLeadModal';
 import LeadDetailsDrawer from '../components/LeadDetailsDrawer';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
+import { validateName, validatePhone } from '../utils/validation';
 import type { Lead, LeadStatus } from '../types';
 
 export default function LeadsPage() {
-  const { agentId, isAgentSelected } = useAgentContext();
+  const { isAgentSelected } = useAgentContext();
 
   // Modal/Drawer state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [leadToDelete, setLeadToDelete] = useState<string | null>(null);
+  const [openInEditMode, setOpenInEditMode] = useState(false);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,13 +46,11 @@ export default function LeadsPage() {
   const { data: leads, isLoading, error } = useLeads();
   const { data: stats } = useLeadStatistics();
   const updateMutation = useUpdateLead();
+  const deleteMutation = useDeleteLead();
 
   // Handle status change (memoized to prevent re-renders)
   const handleStatusChange = useCallback((leadId: string, newStatus: LeadStatus, e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation(); // Prevent row click
-
-    // Store current value for rollback
-    const previousStatus = leads?.find(l => l.id === leadId)?.status;
 
     updateMutation.mutate(
       {
@@ -67,6 +70,50 @@ export default function LeadsPage() {
     );
   }, [updateMutation, leads]);
 
+  // Handle name save
+  const handleNameSave = useCallback(async (leadId: string, newName: string) => {
+    return new Promise<void>((resolve, reject) => {
+      updateMutation.mutate(
+        {
+          leadId,
+          request: { name: newName },
+        },
+        {
+          onSuccess: () => {
+            toast.success('Lead name updated');
+            resolve();
+          },
+          onError: (error) => {
+            toast.error('Failed to update name');
+            reject(error);
+          },
+        }
+      );
+    });
+  }, [updateMutation]);
+
+  // Handle phone save
+  const handlePhoneSave = useCallback(async (leadId: string, newPhone: string) => {
+    return new Promise<void>((resolve, reject) => {
+      updateMutation.mutate(
+        {
+          leadId,
+          request: { phone: newPhone },
+        },
+        {
+          onSuccess: () => {
+            toast.success('Lead phone updated');
+            resolve();
+          },
+          onError: (error) => {
+            toast.error('Failed to update phone');
+            reject(error);
+          },
+        }
+      );
+    });
+  }, [updateMutation]);
+
   // Handle phone copy
   const handleCopyPhone = useCallback((phone: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent row click
@@ -76,6 +123,30 @@ export default function LeadsPage() {
       toast.error('Failed to copy phone number');
     });
   }, []);
+
+  // Handle edit click
+  const handleEditClick = useCallback((leadId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
+    setOpenInEditMode(true);
+    setSelectedLeadId(leadId);
+  }, []);
+
+  // Handle delete click
+  const handleDeleteClick = useCallback((leadId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
+    setLeadToDelete(leadId);
+  }, []);
+
+  // Handle confirm delete
+  const handleConfirmDelete = useCallback(() => {
+    if (!leadToDelete) return;
+
+    deleteMutation.mutate(leadToDelete, {
+      onSuccess: () => {
+        setLeadToDelete(null);
+      },
+    });
+  }, [leadToDelete, deleteMutation]);
 
   // Handle view conversation
   const handleViewConversation = useCallback((conversationId: string, e: React.MouseEvent) => {
@@ -237,7 +308,6 @@ export default function LeadsPage() {
                   // Extra defensive check for null/undefined
                   if (!lead) return <span>—</span>;
                   const initial = lead?.name ? String(lead.name).charAt(0).toUpperCase() : '?';
-                  const displayName = lead?.name || '—';
 
                   return (
                     <div className="flex items-center gap-3 py-1">
@@ -246,11 +316,29 @@ export default function LeadsPage() {
                           {initial}
                         </span>
                       </div>
-                      <div className="flex flex-col gap-1 min-w-0">
-                        <span className="text-[15px] font-medium text-neutral-900 leading-tight">{displayName}</span>
-                        {lead.phone && (
-                          <div className="flex items-center gap-1.5 group">
-                            <span className="text-[13px] text-neutral-500 font-normal">{lead.phone}</span>
+                      <div className="flex flex-col gap-1.5 min-w-0">
+                        {/* Inline editable name */}
+                        <InlineEditField
+                          value={lead.name}
+                          fieldName="Name"
+                          placeholder="Enter lead name"
+                          onSave={(newName) => handleNameSave(lead.id, newName)}
+                          validationFn={validateName}
+                          isLoading={updateMutation.isPending}
+                        />
+
+                        {/* Inline editable phone */}
+                        <div className="flex items-center gap-1.5 group">
+                          <InlineEditField
+                            value={lead.phone}
+                            fieldName="Phone"
+                            placeholder="Enter phone number"
+                            onSave={(newPhone) => handlePhoneSave(lead.id, newPhone)}
+                            validationFn={validatePhone}
+                            isPhone={true}
+                            isLoading={updateMutation.isPending}
+                          />
+                          {lead.phone && (
                             <button
                               onClick={(e) => handleCopyPhone(lead.phone!, e)}
                               className="opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-100 rounded transition-all"
@@ -258,8 +346,8 @@ export default function LeadsPage() {
                             >
                               <Copy className="w-3 h-3 text-neutral-400 hover:text-neutral-700" />
                             </button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -309,25 +397,49 @@ export default function LeadsPage() {
                 },
               },
               {
-                key: 'conversation',
+                key: 'actions' as keyof Lead,
                 label: '',
                 sortable: false,
-                render: (_, lead: Lead) => {
-                  if (!lead.conversationId) return <div className="w-10" />;
+                render: (_, lead: Lead) => (
+                  <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
+                    {/* Conversation Icon - only show if conversationId exists */}
+                    {lead.conversationId ? (
+                      <button
+                        onClick={(e) => handleViewConversation(lead.conversationId!, e)}
+                        className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
+                        title="View conversation"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <div className="w-8 h-8" />
+                    )}
 
-                  return (
+                    {/* Edit Icon */}
                     <button
-                      onClick={(e) => handleViewConversation(lead.conversationId!, e)}
+                      onClick={(e) => handleEditClick(lead.id, e)}
                       className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-                      title="View conversation"
+                      title="Edit lead"
                     >
-                      <MessageSquare className="w-4 h-4" />
+                      <Pencil className="w-4 h-4" />
                     </button>
-                  );
-                },
+
+                    {/* Delete Icon */}
+                    <button
+                      onClick={(e) => handleDeleteClick(lead.id, e)}
+                      className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
+                      title="Delete lead"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ),
               },
             ]}
-            onRowClick={(lead) => setSelectedLeadId(lead.id)}
+            onRowClick={(lead) => {
+              setOpenInEditMode(false);
+              setSelectedLeadId(lead.id);
+            }}
           />
           </div>
 
@@ -374,7 +486,14 @@ export default function LeadsPage() {
       <AddLeadModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
 
       {selectedLeadId && (
-        <LeadDetailsDrawer leadId={selectedLeadId} onClose={() => setSelectedLeadId(null)} />
+        <LeadDetailsDrawer
+          leadId={selectedLeadId}
+          onClose={() => {
+            setSelectedLeadId(null);
+            setOpenInEditMode(false);
+          }}
+          initialEditMode={openInEditMode}
+        />
       )}
 
       {/* Conversation View Drawer */}
@@ -382,6 +501,17 @@ export default function LeadsPage() {
         conversationId={selectedConversationId}
         isOpen={!!selectedConversationId}
         onClose={() => setSelectedConversationId(null)}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!leadToDelete}
+        title="Delete Lead"
+        message="Are you sure you want to delete this lead? This action cannot be undone."
+        confirmText="Delete"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setLeadToDelete(null)}
+        isLoading={deleteMutation.isPending}
       />
     </motion.div>
   );
