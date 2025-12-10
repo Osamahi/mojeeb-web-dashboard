@@ -37,6 +37,27 @@ export function extractNameFromEmail(emailOrName: string): string {
 }
 
 /**
+ * Get display name for comment author
+ * - If current user: "You"
+ * - If other user: First name only (e.g., "John Doe" -> "John")
+ */
+export function getCommentAuthorName(userName: string, userId: string, currentUserId?: string): string {
+  if (!userName) return 'Unknown';
+
+  // If it's the current user, show "You"
+  if (currentUserId && userId === currentUserId) {
+    return 'You';
+  }
+
+  // Extract full name first
+  const fullName = extractNameFromEmail(userName);
+
+  // Return only the first name
+  const firstName = fullName.split(' ')[0];
+  return firstName || fullName;
+}
+
+/**
  * Format phone number following international standards (E.164)
  * Examples:
  * - "+201096569391" -> "+20 10 9656 9391" (Egypt mobile)

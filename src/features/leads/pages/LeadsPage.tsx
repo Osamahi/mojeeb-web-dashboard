@@ -24,11 +24,13 @@ import { LeadCommentsModal } from '../components/LeadCommentsModal';
 import { AddSummaryModal } from '../components/AddSummaryModal';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import { validateName, validatePhone } from '../utils/validation';
-import { extractNameFromEmail, formatCommentDate } from '../utils/formatting';
+import { extractNameFromEmail, formatCommentDate, formatPhoneNumber, getCommentAuthorName } from '../utils/formatting';
+import { useAuthStore } from '@/features/auth/stores/authStore';
 import type { Lead, LeadStatus } from '../types';
 
 export default function LeadsPage() {
   const { isAgentSelected } = useAgentContext();
+  const user = useAuthStore((state) => state.user);
 
   // Modal/Drawer state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -141,13 +143,14 @@ export default function LeadsPage() {
     });
   }, [updateMutation]);
 
-  // Handle phone copy
+  // Handle phone copy (copies formatted phone number)
   const handleCopyPhone = useCallback((phone: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent row click
-    navigator.clipboard.writeText(phone).then(() => {
-      toast.success('Phone number copied to clipboard');
+    const formattedPhone = formatPhoneNumber(phone);
+    navigator.clipboard.writeText(formattedPhone).then(() => {
+      toast.success('Copied to clipboard');
     }).catch(() => {
-      toast.error('Failed to copy phone number');
+      toast.error('Failed to copy');
     });
   }, []);
 
@@ -368,10 +371,10 @@ export default function LeadsPage() {
                           {lead.phone && (
                             <button
                               onClick={(e) => handleCopyPhone(lead.phone!, e)}
-                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-100 rounded transition-all"
+                              className="p-1 hover:bg-neutral-100 rounded transition-all"
                               title="Copy phone number"
                             >
-                              <Copy className="w-3 h-3 text-neutral-400 hover:text-neutral-700" />
+                              <Copy className="w-3.5 h-3.5 text-neutral-400 hover:text-neutral-700" />
                             </button>
                           )}
                         </div>
@@ -502,7 +505,7 @@ export default function LeadsPage() {
                               {latestComment.text}
                             </span>
                             <span className="text-[12px] text-neutral-500">
-                              {extractNameFromEmail(latestComment.userName)} · {formatCommentDate(latestComment.createdAt, true)}
+                              {getCommentAuthorName(latestComment.userName, latestComment.userId, user?.id)} · {formatCommentDate(latestComment.createdAt, true)}
                             </span>
                           </div>
                         </button>

@@ -14,7 +14,7 @@ import {
 } from '../hooks/useLeads';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { extractNameFromEmail } from '../utils/formatting';
+import { extractNameFromEmail, getCommentAuthorName } from '../utils/formatting';
 import type { LeadComment } from '../types';
 
 interface LeadCommentsSectionProps {
@@ -194,7 +194,7 @@ export function LeadCommentsSection({ leadId, onCommentAdded }: LeadCommentsSect
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-neutral-900">
-                      {extractNameFromEmail(comment.userName)}
+                      {getCommentAuthorName(comment.userName, comment.userId, user?.id)}
                     </span>
                     {comment.commentType === 'status_change' && (
                       <span className="text-xs text-[#00D084] font-normal">
