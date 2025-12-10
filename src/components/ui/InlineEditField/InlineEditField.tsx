@@ -101,8 +101,10 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
 
     return (
       <div
-        onClick={handleStartEdit}
-        className="group cursor-pointer inline-flex items-center gap-2 hover:bg-neutral-50 px-2 py-1 -mx-2 -my-1 rounded transition-colors"
+        onClick={isEmpty ? handleStartEdit : undefined}
+        className={`inline-flex items-center gap-2 px-2 py-1 -mx-2 -my-1 rounded transition-colors ${
+          isEmpty ? 'group cursor-pointer hover:bg-neutral-50' : ''
+        }`}
       >
         {isEmpty ? (
           <>
@@ -115,7 +117,6 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
             <span className="text-sm text-neutral-900">
               {displayValue}
             </span>
-            <Pencil className="w-3.5 h-3.5 text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity" />
           </>
         )}
       </div>

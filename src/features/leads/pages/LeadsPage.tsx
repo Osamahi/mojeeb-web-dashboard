@@ -348,24 +348,26 @@ export default function LeadsPage() {
 
                         {/* Inline editable phone */}
                         <div className="flex items-center gap-1.5 group">
-                          <InlineEditField
-                            value={lead.phone}
-                            fieldName="Phone"
-                            placeholder="Enter phone number"
-                            onSave={(newPhone) => handlePhoneSave(lead.id, newPhone)}
-                            validationFn={validatePhone}
-                            isPhone={true}
-                            isLoading={updateMutation.isPending}
-                          />
                           {lead.phone && (
                             <button
                               onClick={(e) => handleCopyPhone(lead.phone!, e)}
-                              className="p-1 hover:bg-neutral-100 rounded transition-all"
+                              className="p-1 hover:bg-neutral-100 rounded transition-all order-1"
                               title="Copy phone number"
                             >
                               <Copy className="w-3.5 h-3.5 text-neutral-400 hover:text-neutral-700" />
                             </button>
                           )}
+                          <div className="order-0">
+                            <InlineEditField
+                              value={lead.phone}
+                              fieldName="Phone"
+                              placeholder="Enter phone number"
+                              onSave={(newPhone) => handlePhoneSave(lead.id, newPhone)}
+                              validationFn={validatePhone}
+                              isPhone={true}
+                              isLoading={updateMutation.isPending}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -424,7 +426,9 @@ export default function LeadsPage() {
                     value={lead.status}
                     onChange={(e) => handleStatusChange(lead.id, e.target.value as LeadStatus, e)}
                     onClick={(e) => e.stopPropagation()}
-                    className="px-3 py-1.5 text-sm font-medium text-neutral-950 bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none"
+                    className={`px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none ${
+                      lead.status === 'new' ? 'text-[#00D084]' : 'text-neutral-950'
+                    }`}
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
                       backgroundPosition: 'right 0.5rem center',
@@ -472,11 +476,13 @@ export default function LeadsPage() {
                 label: 'Comments',
                 sortable: false,
                 render: (_, lead: Lead) => {
-                  // Get the most recent comment (sorted by createdAt descending)
+                  // Get the most recent user comment (exclude status updates)
                   const latestComment = lead.comments && lead.comments.length > 0
-                    ? [...lead.comments].sort((a, b) =>
-                        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                      )[0]
+                    ? [...lead.comments]
+                        .filter(comment => comment.commentType === 'user_comment')
+                        .sort((a, b) =>
+                          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                        )[0]
                     : null;
 
                   return (
