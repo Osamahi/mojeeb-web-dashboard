@@ -7,17 +7,17 @@
 import api from '@/lib/api';
 import type {
   Lead,
-  LeadComment,
+  LeadNote,
   CreateLeadRequest,
   UpdateLeadRequest,
   LeadStatistics,
   LeadFieldDefinition,
   ApiLeadResponse,
-  ApiLeadCommentResponse,
+  ApiLeadNoteResponse,
   ApiLeadFieldDefinitionResponse,
   CreateFieldDefinitionRequest,
-  CreateCommentRequest,
-  UpdateCommentRequest,
+  CreateNoteRequest,
+  UpdateNoteRequest,
 } from '../types';
 
 // Backend API Response Wrapper
@@ -34,19 +34,19 @@ class LeadService {
   // ========================================
 
   /**
-   * Transform comment API response (snake_case) to frontend model (camelCase)
+   * Transform note API response (snake_case) to frontend model (camelCase)
    */
-  private transformComment(apiComment: ApiLeadCommentResponse): LeadComment {
+  private transformNote(apiNote: ApiLeadNoteResponse): LeadNote {
     return {
-      id: apiComment.id,
-      userId: apiComment.user_id,
-      userName: apiComment.user_name,
-      text: apiComment.text,
-      commentType: apiComment.comment_type,
-      isEdited: apiComment.is_edited,
-      isDeleted: apiComment.is_deleted,
-      createdAt: apiComment.created_at,
-      updatedAt: apiComment.updated_at,
+      id: apiNote.id,
+      userId: apiNote.user_id,
+      userName: apiNote.user_name,
+      text: apiNote.text,
+      noteType: apiNote.note_type,
+      isEdited: apiNote.is_edited,
+      isDeleted: apiNote.is_deleted,
+      createdAt: apiNote.created_at,
+      updatedAt: apiNote.updated_at,
     };
   }
 
@@ -61,8 +61,8 @@ class LeadService {
       phone: apiLead.phone,
       status: apiLead.status,
       customFields: apiLead.custom_fields,
-      notes: apiLead.notes,
-      comments: apiLead.comments?.map(c => this.transformComment(c)) || [],
+      summary: apiLead.summary,
+      notes: apiLead.notes?.map(c => this.transformNote(c)) || [],
       conversationId: apiLead.conversation_id,
       createdAt: apiLead.created_at,
       updatedAt: apiLead.updated_at,
@@ -117,7 +117,7 @@ class LeadService {
       phone: request.phone,
       status: request.status || 'new',
       custom_fields: request.customFields || {},
-      notes: request.notes,
+      summary: request.summary,
     };
 
     // Backend returns lead object directly (not wrapped)
@@ -136,7 +136,7 @@ class LeadService {
     if (request.phone !== undefined) payload.phone = request.phone;
     if (request.status !== undefined) payload.status = request.status;
     if (request.customFields !== undefined) payload.custom_fields = request.customFields;
-    if (request.notes !== undefined) payload.notes = request.notes;
+    if (request.summary !== undefined) payload.summary = request.summary;
 
     const { data } = await api.put<ApiResponse<ApiLeadResponse>>(`/api/lead/${leadId}`, payload);
     return this.transformLead(data.data);
@@ -159,14 +159,12 @@ class LeadService {
   async getLeadStatistics(agentId: string): Promise<LeadStatistics> {
     const { data } = await api.get<ApiResponse<Record<string, number>>>(`/api/lead/statistics/${agentId}`);
 
-    // Backend returns wrapped: { success: true, data: { "new": 5, "contacted": 3, ... } }
+    // Backend returns wrapped: { success: true, data: { "new": 5, "processing": 3, ... } }
     const stats = data.data;
     return {
       new: stats.new || 0,
-      contacted: stats.contacted || 0,
-      qualified: stats.qualified || 0,
-      converted: stats.converted || 0,
-      lost: stats.lost || 0,
+      processing: stats.processing || 0,
+      completed: stats.completed || 0,
       total: Object.values(stats).reduce((sum, val) => sum + val, 0),
     };
   }
@@ -215,62 +213,62 @@ class LeadService {
   }
 
   // ========================================
-  // Comment Operations
+  // Note Operations
   // ========================================
 
   /**
-   * Get all comments for a lead (excludes soft-deleted by default)
+   * Get all notes for a lead (excludes soft-deleted by default)
    */
-  async getLeadComments(leadId: string, includeDeleted = false): Promise<LeadComment[]> {
-    const { data } = await api.get<ApiResponse<ApiLeadCommentResponse[]>>(
-      `/api/lead/${leadId}/comments`,
+  async getLeadNotes(leadId: string, includeDeleted = false): Promise<LeadNote[]> {
+    const { data } = await api.get<ApiResponse<ApiLeadNoteResponse[]>>(
+      `/api/lead/${leadId}/notes`,
       { params: { includeDeleted } }
     );
-    return data.data.map(comment => this.transformComment(comment));
+    return data.data.map(note => this.transformNote(note));
   }
 
   /**
-   * Add a comment to a lead
+   * Add a note to a lead
    */
-  async createLeadComment(leadId: string, request: CreateCommentRequest): Promise<LeadComment> {
+  async createLeadNote(leadId: string, request: CreateNoteRequest): Promise<LeadNote> {
     // Transform to snake_case for backend
     const payload = {
       text: request.text,
-      comment_type: request.commentType || 'user_comment',
+      note_type: request.noteType || 'user_note',
     };
 
-    const { data } = await api.post<ApiResponse<ApiLeadCommentResponse>>(
-      `/api/lead/${leadId}/comments`,
+    const { data } = await api.post<ApiResponse<ApiLeadNoteResponse>>(
+      `/api/lead/${leadId}/notes`,
       payload
     );
-    return this.transformComment(data.data);
+    return this.transformNote(data.data);
   }
 
   /**
-   * Update an existing comment (only by comment owner)
+   * Update an existing note (only by note owner)
    */
-  async updateLeadComment(
+  async updateLeadNote(
     leadId: string,
-    commentId: string,
-    request: UpdateCommentRequest
-  ): Promise<LeadComment> {
+    noteId: string,
+    request: UpdateNoteRequest
+  ): Promise<LeadNote> {
     // Transform to snake_case for backend
     const payload = {
       text: request.text,
     };
 
-    const { data } = await api.put<ApiResponse<ApiLeadCommentResponse>>(
-      `/api/lead/${leadId}/comments/${commentId}`,
+    const { data } = await api.put<ApiResponse<ApiLeadNoteResponse>>(
+      `/api/lead/${leadId}/notes/${noteId}`,
       payload
     );
-    return this.transformComment(data.data);
+    return this.transformNote(data.data);
   }
 
   /**
-   * Delete a comment (soft delete, only by comment owner)
+   * Delete a note (soft delete, only by note owner)
    */
-  async deleteLeadComment(leadId: string, commentId: string): Promise<void> {
-    await api.delete(`/api/lead/${leadId}/comments/${commentId}`);
+  async deleteLeadNote(leadId: string, noteId: string): Promise<void> {
+    await api.delete(`/api/lead/${leadId}/notes/${noteId}`);
   }
 }
 

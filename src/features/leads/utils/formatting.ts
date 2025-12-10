@@ -37,11 +37,11 @@ export function extractNameFromEmail(emailOrName: string): string {
 }
 
 /**
- * Get display name for comment author
+ * Get display name for note author
  * - If current user: "You"
  * - If other user: First name only (e.g., "John Doe" -> "John")
  */
-export function getCommentAuthorName(userName: string, userId: string, currentUserId?: string): string {
+export function getNoteAuthorName(userName: string, userId: string, currentUserId?: string): string {
   if (!userName) return 'Unknown';
 
   // If it's the current user, show "You"
@@ -124,14 +124,14 @@ export function formatPhoneNumber(phone: string): string {
 }
 
 /**
- * Format date/time for comments
+ * Format date/time for notes
  * - Last 5 minutes: "now"
  * - Today: "2:30 PM today" (or just "2:30 PM" if compact=true)
  * - Yesterday: "2:30 PM yesterday"
  * - This year: "2:30 PM 13 Jun"
  * - Previous years: "2:30 PM 13 Jun 2024"
  */
-export function formatCommentDate(date: Date | string, compact = false): string {
+export function formatNoteDate(date: Date | string, compact = false): string {
   // Ensure UTC dates are parsed correctly
   let dateStr = typeof date === 'string' ? date : date.toISOString();
   if (!dateStr.endsWith('Z') && !dateStr.includes('+')) {

@@ -22,25 +22,17 @@ export default function LeadStatsCards({ stats }: LeadStatsCardsProps) {
       value: stats.new,
     },
     {
-      label: 'Contacted',
-      value: stats.contacted,
+      label: 'Processing',
+      value: stats.processing,
     },
     {
-      label: 'Qualified',
-      value: stats.qualified,
-    },
-    {
-      label: 'Converted',
-      value: stats.converted,
-    },
-    {
-      label: 'Lost',
-      value: stats.lost,
+      label: 'Completed',
+      value: stats.completed,
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
       {cards.map((card) => (
         <div
           key={card.label}

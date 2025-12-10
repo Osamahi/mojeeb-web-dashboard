@@ -14,8 +14,8 @@ import type {
   UpdateLeadRequest,
   LeadFieldDefinition,
   CreateFieldDefinitionRequest,
-  CreateCommentRequest,
-  UpdateCommentRequest
+  CreateNoteRequest,
+  UpdateNoteRequest
 } from '../types';
 
 // ========================================
@@ -50,7 +50,7 @@ export function useLead(leadId: string | undefined) {
 
 /**
  * Fetch lead statistics for the current agent
- * Returns counts by status (new, contacted, qualified, converted, lost)
+ * Returns counts by status (new, processing, completed)
  */
 export function useLeadStatistics() {
   const { agentId } = useAgentContext();
@@ -236,98 +236,98 @@ export function useDeleteFieldDefinition() {
 }
 
 // ========================================
-// Comment Hooks
+// Note Hooks
 // ========================================
 
 /**
- * Fetch all comments for a lead (excludes soft-deleted by default)
- * @param leadId - The lead ID to fetch comments for
- * @param includeDeleted - Whether to include soft-deleted comments
+ * Fetch all notes for a lead (excludes soft-deleted by default)
+ * @param leadId - The lead ID to fetch notes for
+ * @param includeDeleted - Whether to include soft-deleted notes
  */
-export function useLeadComments(leadId: string | undefined, includeDeleted = false) {
+export function useLeadNotes(leadId: string | undefined, includeDeleted = false) {
   return useQuery({
-    queryKey: ['leads', leadId, 'comments', includeDeleted],
-    queryFn: () => leadService.getLeadComments(leadId!, includeDeleted),
+    queryKey: ['leads', leadId, 'notes', includeDeleted],
+    queryFn: () => leadService.getLeadNotes(leadId!, includeDeleted),
     enabled: !!leadId,
-    staleTime: 30000, // 30 seconds - comments don't change frequently
+    staleTime: 30000, // 30 seconds - notes don't change frequently
   });
 }
 
 /**
- * Add a comment to a lead
- * Invalidates lead comments, lead details, and leads list on success
+ * Add a note to a lead
+ * Invalidates lead notes, lead details, and leads list on success
  */
-export function useCreateLeadComment() {
+export function useCreateLeadNote() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ leadId, request }: { leadId: string; request: CreateCommentRequest }) =>
-      leadService.createLeadComment(leadId, request),
+    mutationFn: ({ leadId, request }: { leadId: string; request: CreateNoteRequest }) =>
+      leadService.createLeadNote(leadId, request),
     onSuccess: (_, { leadId }) => {
-      // Invalidate comments query
-      queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'comments'] });
-      // Invalidate lead detail (to show updated comments)
+      // Invalidate notes query
+      queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'notes'] });
+      // Invalidate lead detail (to show updated notes)
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
-      // Invalidate leads list (to show latest comment)
+      // Invalidate leads list (to show latest note)
       queryClient.invalidateQueries({ queryKey: queryKeys.leads(agentId) });
-      toast.success('Comment added successfully');
+      toast.success('Note added successfully');
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to add comment';
+      const message = error?.response?.data?.message || 'Failed to add note';
       toast.error(message);
     },
   });
 }
 
 /**
- * Update an existing comment (only by comment owner)
- * Invalidates lead comments on success
+ * Update an existing note (only by note owner)
+ * Invalidates lead notes on success
  */
-export function useUpdateLeadComment() {
+export function useUpdateLeadNote() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
       leadId,
-      commentId,
+      noteId,
       request,
     }: {
       leadId: string;
-      commentId: string;
-      request: UpdateCommentRequest;
-    }) => leadService.updateLeadComment(leadId, commentId, request),
+      noteId: string;
+      request: UpdateNoteRequest;
+    }) => leadService.updateLeadNote(leadId, noteId, request),
     onSuccess: (_, { leadId }) => {
-      queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'comments'] });
+      queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'notes'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
-      toast.success('Comment updated successfully');
+      toast.success('Note updated successfully');
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to update comment';
+      const message = error?.response?.data?.message || 'Failed to update note';
       toast.error(message);
     },
   });
 }
 
 /**
- * Delete a comment (soft delete, only by comment owner)
- * Invalidates lead comments and leads list on success
+ * Delete a note (soft delete, only by note owner)
+ * Invalidates lead notes and leads list on success
  */
-export function useDeleteLeadComment() {
+export function useDeleteLeadNote() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ leadId, commentId }: { leadId: string; commentId: string }) =>
-      leadService.deleteLeadComment(leadId, commentId),
+    mutationFn: ({ leadId, noteId }: { leadId: string; noteId: string }) =>
+      leadService.deleteLeadNote(leadId, noteId),
     onSuccess: (_, { leadId }) => {
-      queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'comments'] });
+      queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'notes'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.leads(agentId) });
-      toast.success('Comment deleted successfully');
+      toast.success('Note deleted successfully');
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to delete comment';
+      const message = error?.response?.data?.message || 'Failed to delete note';
       toast.error(message);
     },
   });

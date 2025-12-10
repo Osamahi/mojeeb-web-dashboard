@@ -17,21 +17,13 @@ const statusConfig: Record<LeadStatus, { label: string; className: string }> = {
     label: 'New',
     className: 'bg-neutral-100 text-neutral-700 border-neutral-300',
   },
-  contacted: {
-    label: 'Contacted',
+  processing: {
+    label: 'Processing',
     className: 'bg-blue-50 text-blue-700 border-blue-200',
   },
-  qualified: {
-    label: 'Qualified',
-    className: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  },
-  converted: {
-    label: 'Converted',
+  completed: {
+    label: 'Completed',
     className: 'bg-green-50 text-green-700 border-green-200',
-  },
-  lost: {
-    label: 'Lost',
-    className: 'bg-red-50 text-red-700 border-red-200',
   },
 };
 

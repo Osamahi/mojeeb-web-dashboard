@@ -7,24 +7,24 @@
 // Enums & Constants
 // ========================================
 
-export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
+export type LeadStatus = 'new' | 'processing' | 'completed';
 export type LeadSource = 'web_form' | 'chat_widget' | 'manual' | 'api' | 'whatsapp' | 'instagram';
 export type FieldType = 'text' | 'email' | 'phone' | 'select' | 'textarea' | 'date';
-export type CommentType = 'user_comment' | 'status_change';
+export type NoteType = 'user_note' | 'status_change';
 
 // ========================================
 // Main Lead Interface (camelCase for frontend)
 // ========================================
 
 /**
- * Represents a single comment in a lead's comment history
+ * Represents a single note in a lead's note history
  */
-export interface LeadComment {
+export interface LeadNote {
   id: string;
   userId: string;
   userName: string;
   text: string;
-  commentType: CommentType;
+  noteType: NoteType;
   isEdited: boolean;
   isDeleted: boolean;
   createdAt: string;
@@ -41,8 +41,8 @@ export interface Lead {
   phone: string | null;
   status: LeadStatus;
   customFields: Record<string, any>;
-  notes: string | null;
-  comments: LeadComment[];  // Comments array
+  summary: string | null;
+  notes: LeadNote[];  // Notes array
   conversationId: string | null;
   createdAt: string;
   updatedAt: string;
@@ -52,12 +52,12 @@ export interface Lead {
 // API Response Types (snake_case from backend)
 // ========================================
 
-export interface ApiLeadCommentResponse {
+export interface ApiLeadNoteResponse {
   id: string;
   user_id: string;
   user_name: string;
   text: string;
-  comment_type: CommentType;
+  note_type: NoteType;
   is_edited: boolean;
   is_deleted: boolean;
   created_at: string;
@@ -71,8 +71,8 @@ export interface ApiLeadResponse {
   phone: string | null;
   status: LeadStatus;
   custom_fields: Record<string, any>;
-  notes: string | null;
-  comments: ApiLeadCommentResponse[];  // Comments array
+  summary: string | null;
+  notes: ApiLeadNoteResponse[];  // Notes array
   conversation_id: string | null;
   created_at: string;
   updated_at: string;
@@ -88,7 +88,7 @@ export interface CreateLeadRequest {
   phone?: string;
   status?: LeadStatus;
   customFields?: Record<string, any>;
-  notes?: string;
+  summary?: string;
 }
 
 export interface UpdateLeadRequest {
@@ -96,21 +96,21 @@ export interface UpdateLeadRequest {
   phone?: string;
   status?: LeadStatus;
   customFields?: Record<string, any>;
-  notes?: string;
+  summary?: string;
 }
 
 /**
- * Request DTO for creating a new comment
+ * Request DTO for creating a new note
  */
-export interface CreateCommentRequest {
+export interface CreateNoteRequest {
   text: string;
-  commentType?: CommentType;
+  noteType?: NoteType;
 }
 
 /**
- * Request DTO for updating an existing comment
+ * Request DTO for updating an existing note
  */
-export interface UpdateCommentRequest {
+export interface UpdateNoteRequest {
   text: string;
 }
 
@@ -158,10 +158,8 @@ export interface CreateFieldDefinitionRequest {
 
 export interface LeadStatistics {
   new: number;
-  contacted: number;
-  qualified: number;
-  converted: number;
-  lost: number;
+  processing: number;
+  completed: number;
   total: number;
 }
 
@@ -180,7 +178,7 @@ export interface LeadFormData {
   name: string;
   phone: string;
   status: LeadStatus;
-  notes: string;
+  summary: string;
   customFields: Record<string, any>;
 }
 

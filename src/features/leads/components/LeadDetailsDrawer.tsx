@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { useLead, useUpdateLead, useLeadFieldDefinitions } from '../hooks/useLeads';
-import { LeadCommentsSection } from './LeadCommentsSection';
+import { LeadNotesSection } from './LeadNotesSection';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import { formatPhoneNumber } from '../utils/formatting';
 import type { LeadStatus, LeadFormErrors } from '../types';
@@ -28,7 +28,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
   const [isEditing, setIsEditing] = useState(initialEditMode);
   const [showConversationDrawer, setShowConversationDrawer] = useState(false);
   const [customFieldsExpanded, setCustomFieldsExpanded] = useState(false); // Default collapsed
-  const [commentsExpanded, setCommentsExpanded] = useState(true); // Default expanded
+  const [notesExpanded, setNotesExpanded] = useState(true); // Default expanded
 
   // Fetch lead data
   const { data: lead, isLoading } = useLead(leadId);
@@ -51,7 +51,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
       setName(lead.name || '');
       setPhone(lead.phone || '');
       setStatus(lead.status);
-      setNotes(lead.notes || '');
+      setNotes(lead.summary || '');
       setCustomFields(lead.customFields || {});
     }
   }, [isEditing, lead]);
@@ -199,10 +199,8 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                 className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
               >
                 <option value="new">New</option>
-                <option value="contacted">Contacted</option>
-                <option value="qualified">Qualified</option>
-                <option value="converted">Converted</option>
-                <option value="lost">Lost</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed</option>
               </select>
             </div>
 
@@ -412,10 +410,10 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
             )}
 
             {/* Summary */}
-            {lead.notes && (
+            {lead.summary && (
               <div>
                 <label className="block text-sm font-medium text-neutral-500 mb-1">Summary</label>
-                <p className="text-base text-neutral-900 whitespace-pre-wrap">{lead.notes}</p>
+                <p className="text-base text-neutral-900 whitespace-pre-wrap">{lead.summary}</p>
               </div>
             )}
 
@@ -432,21 +430,21 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
               </div>
             )}
 
-            {/* Comments Section - Collapsible */}
+            {/* Notes Section - Collapsible */}
             <div className="border-t border-neutral-200 pt-4 mt-4">
               <button
-                onClick={() => setCommentsExpanded(!commentsExpanded)}
+                onClick={() => setNotesExpanded(!notesExpanded)}
                 className="w-full flex items-center justify-between mb-3 hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
               >
-                <h3 className="text-sm font-medium text-neutral-900">Comments</h3>
-                {commentsExpanded ? (
+                <h3 className="text-sm font-medium text-neutral-900">Notes</h3>
+                {notesExpanded ? (
                   <ChevronUp className="w-4 h-4 text-neutral-500" />
                 ) : (
                   <ChevronDown className="w-4 h-4 text-neutral-500" />
                 )}
               </button>
-              {commentsExpanded && (
-                <LeadCommentsSection leadId={lead.id} />
+              {notesExpanded && (
+                <LeadNotesSection leadId={lead.id} />
               )}
             </div>
               </div>

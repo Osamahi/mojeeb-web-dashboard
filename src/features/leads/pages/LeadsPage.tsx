@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { UserPlus, Copy, MessageSquare, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAgentContext } from '@/hooks/useAgentContext';
-import { useLeads, useLeadStatistics, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
+import { useLeads, useUpdateLead, useDeleteLead } from '../hooks/useLeads';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -17,14 +17,13 @@ import { Spinner } from '@/components/ui/Spinner';
 import { DataTable } from '@/components/ui/DataTable/DataTable';
 import { InlineEditField } from '@/components/ui/InlineEditField';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import LeadStatsCards from '../components/LeadStatsCards';
 import AddLeadModal from '../components/AddLeadModal';
 import LeadDetailsDrawer from '../components/LeadDetailsDrawer';
-import { LeadCommentsModal } from '../components/LeadCommentsModal';
+import { LeadNotesModal } from '../components/LeadNotesModal';
 import { AddSummaryModal } from '../components/AddSummaryModal';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import { validateName, validatePhone } from '../utils/validation';
-import { extractNameFromEmail, formatCommentDate, formatPhoneNumber, getCommentAuthorName } from '../utils/formatting';
+import { extractNameFromEmail, formatNoteDate, formatPhoneNumber, getNoteAuthorName } from '../utils/formatting';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import type { Lead, LeadStatus } from '../types';
 
@@ -38,7 +37,7 @@ export default function LeadsPage() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<string | null>(null);
   const [openInEditMode, setOpenInEditMode] = useState(false);
-  const [commentsLead, setCommentsLead] = useState<{ id: string; name: string } | null>(null);
+  const [notesLead, setNotesLead] = useState<{ id: string; name: string } | null>(null);
   const [summaryLead, setSummaryLead] = useState<{ id: string; name: string; summary: string } | null>(null);
 
   // Filter state
@@ -51,7 +50,6 @@ export default function LeadsPage() {
 
   // Fetch data
   const { data: leads, isLoading, error } = useLeads();
-  const { data: stats } = useLeadStatistics();
   const updateMutation = useUpdateLead();
   const deleteMutation = useDeleteLead();
 
@@ -277,9 +275,6 @@ export default function LeadsPage() {
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      {stats && <LeadStatsCards stats={stats} />}
-
       {/* Filters */}
       <div className="bg-white rounded-lg border border-neutral-200 p-4">
         <div className="flex flex-col sm:flex-row gap-3">
@@ -301,10 +296,8 @@ export default function LeadsPage() {
             >
               <option value="all">All Status</option>
               <option value="new">New</option>
-              <option value="contacted">Contacted</option>
-              <option value="qualified">Qualified</option>
-              <option value="converted">Converted</option>
-              <option value="lost">Lost</option>
+              <option value="processing">Processing</option>
+              <option value="completed">Completed</option>
             </select>
           </div>
         </div>
@@ -380,18 +373,18 @@ export default function LeadsPage() {
                 sortable: false,
                 render: (_, lead: Lead) => {
                   const maxLength = 120; // Approximate 2 lines
-                  const shouldTruncate = lead.notes && lead.notes.length > maxLength;
+                  const shouldTruncate = lead.summary && lead.summary.length > maxLength;
                   const displayText = shouldTruncate
-                    ? lead.notes.substring(0, maxLength)
-                    : lead.notes;
+                    ? lead.summary.substring(0, maxLength)
+                    : lead.summary;
 
                   return (
                     <div className="py-1 max-w-sm min-w-0">
-                      {lead.notes ? (
+                      {lead.summary ? (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSummaryLead({ id: lead.id, name: lead.name || 'Unnamed Lead', summary: lead.notes || '' });
+                            setSummaryLead({ id: lead.id, name: lead.name || 'Unnamed Lead', summary: lead.summary || '' });
                           }}
                           className="text-left w-full group hover:text-neutral-900 transition-colors min-w-0"
                         >
@@ -438,10 +431,8 @@ export default function LeadsPage() {
                     }}
                   >
                     <option value="new">New</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="qualified">Qualified</option>
-                    <option value="converted">Converted</option>
-                    <option value="lost">Lost</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
                   </select>
                 ),
               },
@@ -472,14 +463,14 @@ export default function LeadsPage() {
                 },
               },
               {
-                key: 'comments',
-                label: 'Comments',
+                key: 'notes',
+                label: 'Notes',
                 sortable: false,
                 render: (_, lead: Lead) => {
-                  // Get the most recent user comment (exclude status updates)
-                  const latestComment = lead.comments && lead.comments.length > 0
-                    ? [...lead.comments]
-                        .filter(comment => comment.commentType === 'user_comment')
+                  // Get the most recent user note (exclude status updates)
+                  const latestNote = lead.notes && lead.notes.length > 0
+                    ? [...lead.notes]
+                        .filter(note => note.noteType === 'user_note')
                         .sort((a, b) =>
                           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                         )[0]
@@ -487,20 +478,20 @@ export default function LeadsPage() {
 
                   return (
                     <div className="py-1 max-w-xs">
-                      {latestComment ? (
+                      {latestNote ? (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setCommentsLead({ id: lead.id, name: lead.name || 'Unnamed Lead' });
+                            setNotesLead({ id: lead.id, name: lead.name || 'Unnamed Lead' });
                           }}
                           className="text-left w-full hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
                         >
                           <div className="flex flex-col gap-0.5">
                             <span className="text-[13px] text-neutral-900 truncate">
-                              {latestComment.text}
+                              {latestNote.text}
                             </span>
                             <span className="text-[12px] text-neutral-500">
-                              {getCommentAuthorName(latestComment.userName, latestComment.userId, user?.id)} · {formatCommentDate(latestComment.createdAt, true)}
+                              {getNoteAuthorName(latestNote.userName, latestNote.userId, user?.id)} · {formatNoteDate(latestNote.createdAt, true)}
                             </span>
                           </div>
                         </button>
@@ -508,11 +499,11 @@ export default function LeadsPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setCommentsLead({ id: lead.id, name: lead.name || 'Unnamed Lead' });
+                            setNotesLead({ id: lead.id, name: lead.name || 'Unnamed Lead' });
                           }}
                           className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
                         >
-                          Add comment
+                          Add note
                         </button>
                       )}
                     </div>
@@ -626,13 +617,13 @@ export default function LeadsPage() {
         onClose={() => setSelectedConversationId(null)}
       />
 
-      {/* Comments Modal */}
-      {commentsLead && (
-        <LeadCommentsModal
+      {/* Notes Modal */}
+      {notesLead && (
+        <LeadNotesModal
           isOpen={true}
-          onClose={() => setCommentsLead(null)}
-          leadId={commentsLead.id}
-          leadName={commentsLead.name}
+          onClose={() => setNotesLead(null)}
+          leadId={notesLead.id}
+          leadName={notesLead.name}
         />
       )}
 

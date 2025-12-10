@@ -81,7 +81,7 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
         name: name.trim(),
         phone: phone.trim() || undefined,
         status,
-        notes: notes.trim() || undefined,
+        summary: notes.trim() || undefined,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
       },
       {
@@ -176,10 +176,8 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
             className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
           >
             <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="qualified">Qualified</option>
-            <option value="converted">Converted</option>
-            <option value="lost">Lost</option>
+            <option value="processing">Processing</option>
+            <option value="completed">Completed</option>
           </select>
         </div>
 
