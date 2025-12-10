@@ -7,13 +7,17 @@
 import api from '@/lib/api';
 import type {
   Lead,
+  LeadComment,
   CreateLeadRequest,
   UpdateLeadRequest,
   LeadStatistics,
   LeadFieldDefinition,
   ApiLeadResponse,
+  ApiLeadCommentResponse,
   ApiLeadFieldDefinitionResponse,
   CreateFieldDefinitionRequest,
+  CreateCommentRequest,
+  UpdateCommentRequest,
 } from '../types';
 
 // Backend API Response Wrapper
@@ -30,6 +34,23 @@ class LeadService {
   // ========================================
 
   /**
+   * Transform comment API response (snake_case) to frontend model (camelCase)
+   */
+  private transformComment(apiComment: ApiLeadCommentResponse): LeadComment {
+    return {
+      id: apiComment.id,
+      userId: apiComment.user_id,
+      userName: apiComment.user_name,
+      text: apiComment.text,
+      commentType: apiComment.comment_type,
+      isEdited: apiComment.is_edited,
+      isDeleted: apiComment.is_deleted,
+      createdAt: apiComment.created_at,
+      updatedAt: apiComment.updated_at,
+    };
+  }
+
+  /**
    * Transform API response (snake_case) to frontend model (camelCase)
    */
   private transformLead(apiLead: ApiLeadResponse): Lead {
@@ -41,6 +62,7 @@ class LeadService {
       status: apiLead.status,
       customFields: apiLead.custom_fields,
       notes: apiLead.notes,
+      comments: apiLead.comments?.map(c => this.transformComment(c)) || [],
       conversationId: apiLead.conversation_id,
       createdAt: apiLead.created_at,
       updatedAt: apiLead.updated_at,
@@ -190,6 +212,65 @@ class LeadService {
    */
   async deleteFieldDefinition(fieldId: string): Promise<void> {
     await api.delete(`/api/lead/field-definitions/${fieldId}`);
+  }
+
+  // ========================================
+  // Comment Operations
+  // ========================================
+
+  /**
+   * Get all comments for a lead (excludes soft-deleted by default)
+   */
+  async getLeadComments(leadId: string, includeDeleted = false): Promise<LeadComment[]> {
+    const { data } = await api.get<ApiResponse<ApiLeadCommentResponse[]>>(
+      `/api/lead/${leadId}/comments`,
+      { params: { includeDeleted } }
+    );
+    return data.data.map(comment => this.transformComment(comment));
+  }
+
+  /**
+   * Add a comment to a lead
+   */
+  async createLeadComment(leadId: string, request: CreateCommentRequest): Promise<LeadComment> {
+    // Transform to snake_case for backend
+    const payload = {
+      text: request.text,
+      comment_type: request.commentType || 'user_comment',
+    };
+
+    const { data } = await api.post<ApiResponse<ApiLeadCommentResponse>>(
+      `/api/lead/${leadId}/comments`,
+      payload
+    );
+    return this.transformComment(data.data);
+  }
+
+  /**
+   * Update an existing comment (only by comment owner)
+   */
+  async updateLeadComment(
+    leadId: string,
+    commentId: string,
+    request: UpdateCommentRequest
+  ): Promise<LeadComment> {
+    // Transform to snake_case for backend
+    const payload = {
+      text: request.text,
+    };
+
+    const { data } = await api.put<ApiResponse<ApiLeadCommentResponse>>(
+      `/api/lead/${leadId}/comments/${commentId}`,
+      payload
+    );
+    return this.transformComment(data.data);
+  }
+
+  /**
+   * Delete a comment (soft delete, only by comment owner)
+   */
+  async deleteLeadComment(leadId: string, commentId: string): Promise<void> {
+    await api.delete(`/api/lead/${leadId}/comments/${commentId}`);
   }
 }
 

@@ -6,14 +6,14 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Edit2, MessageSquare } from 'lucide-react';
+import { Edit2, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { useLead, useUpdateLead, useLeadFieldDefinitions } from '../hooks/useLeads';
-import LeadStatusBadge from './LeadStatusBadge';
+import { LeadCommentsSection } from './LeadCommentsSection';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import type { LeadStatus, LeadFormErrors } from '../types';
 
@@ -26,6 +26,8 @@ interface LeadDetailsDrawerProps {
 export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = false }: LeadDetailsDrawerProps) {
   const [isEditing, setIsEditing] = useState(initialEditMode);
   const [showConversationDrawer, setShowConversationDrawer] = useState(false);
+  const [customFieldsExpanded, setCustomFieldsExpanded] = useState(false); // Default collapsed
+  const [commentsExpanded, setCommentsExpanded] = useState(true); // Default expanded
 
   // Fetch lead data
   const { data: lead, isLoading } = useLead(leadId);
@@ -206,62 +208,77 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
               </select>
             </div>
 
-            {/* Custom Fields */}
+            {/* Custom Fields - Collapsible in Edit Mode */}
             {fieldDefinitions && fieldDefinitions.length > 0 && (
               <div className="border-t border-neutral-200 pt-4">
-                <h3 className="text-sm font-medium text-neutral-900 mb-3">Custom Fields</h3>
-                {fieldDefinitions.map((field) => (
-                  <div key={field.id} className="mb-3">
-                    {field.fieldType === 'textarea' ? (
-                      <Textarea
-                        label={`${field.fieldLabel}${field.isRequired ? ' *' : ''}`}
-                        value={customFields[field.fieldKey] || ''}
-                        onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
-                        error={errors.customFields?.[field.fieldKey]}
-                      />
-                    ) : field.fieldType === 'select' && field.options ? (
-                      <div>
-                        <label className="block text-sm font-medium text-neutral-700 mb-1">
-                          {field.fieldLabel}
-                          {field.isRequired && ' *'}
-                        </label>
-                        <select
-                          value={customFields[field.fieldKey] || ''}
-                          onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                        >
-                          <option value="">Select...</option>
-                          {field.options.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                        {errors.customFields?.[field.fieldKey] && (
-                          <p className="text-sm text-red-600 mt-1">
-                            {errors.customFields[field.fieldKey]}
-                          </p>
+                <button
+                  type="button"
+                  onClick={() => setCustomFieldsExpanded(!customFieldsExpanded)}
+                  className="w-full flex items-center justify-between mb-3 hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
+                >
+                  <h3 className="text-sm font-medium text-neutral-900">Custom Fields</h3>
+                  {customFieldsExpanded ? (
+                    <ChevronUp className="w-4 h-4 text-neutral-500" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-neutral-500" />
+                  )}
+                </button>
+                {customFieldsExpanded && (
+                  <div className="space-y-3">
+                    {fieldDefinitions.map((field) => (
+                      <div key={field.id}>
+                        {field.fieldType === 'textarea' ? (
+                          <Textarea
+                            label={`${field.fieldLabel}${field.isRequired ? ' *' : ''}`}
+                            value={customFields[field.fieldKey] || ''}
+                            onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
+                            error={errors.customFields?.[field.fieldKey]}
+                          />
+                        ) : field.fieldType === 'select' && field.options ? (
+                          <div>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1">
+                              {field.fieldLabel}
+                              {field.isRequired && ' *'}
+                            </label>
+                            <select
+                              value={customFields[field.fieldKey] || ''}
+                              onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
+                              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                            >
+                              <option value="">Select...</option>
+                              {field.options.map((option) => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                            {errors.customFields?.[field.fieldKey] && (
+                              <p className="text-sm text-red-600 mt-1">
+                                {errors.customFields[field.fieldKey]}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <Input
+                            label={`${field.fieldLabel}${field.isRequired ? ' *' : ''}`}
+                            type={
+                              field.fieldType === 'email'
+                                ? 'email'
+                                : field.fieldType === 'phone'
+                                ? 'tel'
+                                : field.fieldType === 'date'
+                                ? 'date'
+                                : 'text'
+                            }
+                            value={customFields[field.fieldKey] || ''}
+                            onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
+                            error={errors.customFields?.[field.fieldKey]}
+                          />
                         )}
                       </div>
-                    ) : (
-                      <Input
-                        label={`${field.fieldLabel}${field.isRequired ? ' *' : ''}`}
-                        type={
-                          field.fieldType === 'email'
-                            ? 'email'
-                            : field.fieldType === 'phone'
-                            ? 'tel'
-                            : field.fieldType === 'date'
-                            ? 'date'
-                            : 'text'
-                        }
-                        value={customFields[field.fieldKey] || ''}
-                        onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
-                        error={errors.customFields?.[field.fieldKey]}
-                      />
-                    )}
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             )}
 
@@ -299,36 +316,68 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-neutral-500 mb-1">Name</label>
-              <p className="text-base text-neutral-900">{lead.name || '—'}</p>
+              {lead.name ? (
+                <p className="text-base text-neutral-900">{lead.name}</p>
+              ) : (
+                <button
+                  onClick={handleEdit}
+                  className="text-base text-neutral-400 hover:text-neutral-600 transition-colors"
+                >
+                  Add Name
+                </button>
+              )}
             </div>
 
             {/* Phone */}
             <div>
               <label className="block text-sm font-medium text-neutral-500 mb-1">Phone</label>
-              <p className="text-base text-neutral-900">{lead.phone || '—'}</p>
+              {lead.phone ? (
+                <p className="text-base text-neutral-900">{lead.phone}</p>
+              ) : (
+                <button
+                  onClick={handleEdit}
+                  className="text-base text-neutral-400 hover:text-neutral-600 transition-colors"
+                >
+                  Add Mobile
+                </button>
+              )}
             </div>
 
             {/* Status */}
             <div>
               <label className="block text-sm font-medium text-neutral-500 mb-1">Status</label>
-              <LeadStatusBadge status={lead.status} />
+              <p className="text-base text-neutral-900 capitalize">{lead.status}</p>
             </div>
 
-            {/* Custom Fields */}
+            {/* Custom Fields - Collapsible */}
             {lead.customFields && Object.keys(lead.customFields).length > 0 && (
               <div className="border-t border-neutral-200 pt-4">
-                <h3 className="text-sm font-medium text-neutral-900 mb-3">Custom Fields</h3>
-                {Object.entries(lead.customFields).map(([key, value]) => {
-                  const fieldDef = fieldDefinitions?.find((f) => f.fieldKey === key);
-                  return (
-                    <div key={key} className="mb-2">
-                      <label className="block text-sm font-medium text-neutral-500 mb-1">
-                        {fieldDef?.fieldLabel || key}
-                      </label>
-                      <p className="text-base text-neutral-900">{String(value) || '—'}</p>
-                    </div>
-                  );
-                })}
+                <button
+                  onClick={() => setCustomFieldsExpanded(!customFieldsExpanded)}
+                  className="w-full flex items-center justify-between mb-3 hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
+                >
+                  <h3 className="text-sm font-medium text-neutral-900">Custom Fields</h3>
+                  {customFieldsExpanded ? (
+                    <ChevronUp className="w-4 h-4 text-neutral-500" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-neutral-500" />
+                  )}
+                </button>
+                {customFieldsExpanded && (
+                  <div className="space-y-2">
+                    {Object.entries(lead.customFields).map(([key, value]) => {
+                      const fieldDef = fieldDefinitions?.find((f) => f.fieldKey === key);
+                      return (
+                        <div key={key}>
+                          <label className="block text-sm font-medium text-neutral-500 mb-1">
+                            {fieldDef?.fieldLabel || key}
+                          </label>
+                          <p className="text-base text-neutral-900">{String(value) || '—'}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -371,6 +420,24 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                   return 'Invalid date';
                 }
               })()}</p>
+            </div>
+
+            {/* Comments Section - Collapsible */}
+            <div className="border-t border-neutral-200 pt-4 mt-4">
+              <button
+                onClick={() => setCommentsExpanded(!commentsExpanded)}
+                className="w-full flex items-center justify-between mb-3 hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
+              >
+                <h3 className="text-sm font-medium text-neutral-900">Comments</h3>
+                {commentsExpanded ? (
+                  <ChevronUp className="w-4 h-4 text-neutral-500" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-neutral-500" />
+                )}
+              </button>
+              {commentsExpanded && (
+                <LeadCommentsSection leadId={lead.id} />
+              )}
             </div>
               </div>
             </div>

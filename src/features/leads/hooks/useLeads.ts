@@ -9,7 +9,14 @@ import { toast } from 'sonner';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { leadService } from '../services/leadService';
 import { queryKeys } from '@/lib/queryKeys';
-import type { CreateLeadRequest, UpdateLeadRequest, LeadFieldDefinition, CreateFieldDefinitionRequest } from '../types';
+import type {
+  CreateLeadRequest,
+  UpdateLeadRequest,
+  LeadFieldDefinition,
+  CreateFieldDefinitionRequest,
+  CreateCommentRequest,
+  UpdateCommentRequest
+} from '../types';
 
 // ========================================
 // Query Hooks (Data Fetching)
@@ -184,6 +191,104 @@ export function useDeleteFieldDefinition() {
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || 'Failed to delete custom field';
+      toast.error(message);
+    },
+  });
+}
+
+// ========================================
+// Comment Hooks
+// ========================================
+
+/**
+ * Fetch all comments for a lead (excludes soft-deleted by default)
+ * @param leadId - The lead ID to fetch comments for
+ * @param includeDeleted - Whether to include soft-deleted comments
+ */
+export function useLeadComments(leadId: string | undefined, includeDeleted = false) {
+  return useQuery({
+    queryKey: ['leads', leadId, 'comments', includeDeleted],
+    queryFn: () => leadService.getLeadComments(leadId!, includeDeleted),
+    enabled: !!leadId,
+    staleTime: 30000, // 30 seconds - comments don't change frequently
+  });
+}
+
+/**
+ * Add a comment to a lead
+ * Invalidates lead comments, lead details, and leads list on success
+ */
+export function useCreateLeadComment() {
+  const { agentId } = useAgentContext();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ leadId, request }: { leadId: string; request: CreateCommentRequest }) =>
+      leadService.createLeadComment(leadId, request),
+    onSuccess: (_, { leadId }) => {
+      // Invalidate comments query
+      queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'comments'] });
+      // Invalidate lead detail (to show updated comments)
+      queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
+      // Invalidate leads list (to show latest comment)
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads(agentId) });
+      toast.success('Comment added successfully');
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to add comment';
+      toast.error(message);
+    },
+  });
+}
+
+/**
+ * Update an existing comment (only by comment owner)
+ * Invalidates lead comments on success
+ */
+export function useUpdateLeadComment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      leadId,
+      commentId,
+      request,
+    }: {
+      leadId: string;
+      commentId: string;
+      request: UpdateCommentRequest;
+    }) => leadService.updateLeadComment(leadId, commentId, request),
+    onSuccess: (_, { leadId }) => {
+      queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'comments'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
+      toast.success('Comment updated successfully');
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to update comment';
+      toast.error(message);
+    },
+  });
+}
+
+/**
+ * Delete a comment (soft delete, only by comment owner)
+ * Invalidates lead comments and leads list on success
+ */
+export function useDeleteLeadComment() {
+  const { agentId } = useAgentContext();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ leadId, commentId }: { leadId: string; commentId: string }) =>
+      leadService.deleteLeadComment(leadId, commentId),
+    onSuccess: (_, { leadId }) => {
+      queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'comments'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads(agentId) });
+      toast.success('Comment deleted successfully');
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to delete comment';
       toast.error(message);
     },
   });

@@ -114,6 +114,28 @@ export default function LeadsPage() {
     });
   }, [updateMutation]);
 
+  // Handle summary save
+  const handleSummarySave = useCallback(async (leadId: string, newSummary: string) => {
+    return new Promise<void>((resolve, reject) => {
+      updateMutation.mutate(
+        {
+          leadId,
+          request: { notes: newSummary.trim() || undefined },
+        },
+        {
+          onSuccess: () => {
+            toast.success('Summary updated');
+            resolve();
+          },
+          onError: (error) => {
+            toast.error('Failed to update summary');
+            reject(error);
+          },
+        }
+      );
+    });
+  }, [updateMutation]);
+
   // Handle phone copy
   const handleCopyPhone = useCallback((phone: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent row click
@@ -354,6 +376,22 @@ export default function LeadsPage() {
                 },
               },
               {
+                key: 'notes',
+                label: 'Summary',
+                sortable: false,
+                render: (_, lead: Lead) => (
+                  <div className="py-1 max-w-xs">
+                    <InlineEditField
+                      value={lead.notes}
+                      fieldName="Summary"
+                      placeholder="Enter summary"
+                      onSave={(newSummary) => handleSummarySave(lead.id, newSummary)}
+                      isLoading={updateMutation.isPending}
+                    />
+                  </div>
+                ),
+              },
+              {
                 key: 'status',
                 label: 'Status',
                 sortable: true,
@@ -362,7 +400,14 @@ export default function LeadsPage() {
                     value={lead.status}
                     onChange={(e) => handleStatusChange(lead.id, e.target.value as LeadStatus, e)}
                     onClick={(e) => e.stopPropagation()}
-                    className="px-3 py-1.5 text-sm text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors cursor-pointer"
+                    className="px-3 py-1.5 text-sm font-medium text-neutral-950 bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: 'right 0.5rem center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '1.25em 1.25em',
+                      paddingRight: '2.5rem'
+                    }}
                   >
                     <option value="new">New</option>
                     <option value="contacted">Contacted</option>
