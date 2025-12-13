@@ -71,6 +71,17 @@ export const LeadsFilterDrawer = memo(({
     setDraftDateFrom(undefined);
     setDraftDateTo(undefined);
     setDraftDatePreset(null);
+
+    // Apply cleared state to actual filters
+    onApplyFilters({
+      search: '',
+      status: 'all',
+      dateFrom: undefined,
+      dateTo: undefined,
+    });
+
+    // Close drawer
+    onClose();
   };
 
   const handleDateFilterApply = (preset: DatePreset, dateFrom?: string, dateTo?: string) => {

@@ -22,6 +22,8 @@ interface TableHeaderProps<T> {
   onSort?: (field: keyof T) => void;
   /** Additional CSS classes */
   className?: string;
+  /** Inline styles */
+  style?: React.CSSProperties;
 }
 
 export function TableHeader<T>({
@@ -32,6 +34,7 @@ export function TableHeader<T>({
   sortDirection,
   onSort,
   className,
+  style,
 }: TableHeaderProps<T>) {
   const isSorted = field && sortField === field;
 
@@ -63,6 +66,7 @@ export function TableHeader<T>({
         className
       )}
       onClick={handleClick}
+      style={style}
     >
       {sortable ? (
         <div className="flex items-center gap-2">

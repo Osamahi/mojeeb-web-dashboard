@@ -105,28 +105,72 @@ export function useLeadsSubscription() {
         console.log('[Leads Subscription] Lead Name:', deletedLead.name);
       }
 
-      console.log('[Leads Subscription] 🔄 Invalidating queries...');
+      console.log('[Leads Subscription] 🔄 Updating cache...');
       console.log('========================================');
 
-      // Invalidate all leads queries (including all filter variations)
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.leads(agentId),
-        refetchType: 'active'
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
+      if (payload.eventType === 'UPDATE') {
+        // For UPDATE: Use setQueryData to update only the changed row (no blur/loading)
+        const updatedLeadRow = payload.new as LeadRow;
 
-      console.log('[Leads Subscription] ✅ Queries invalidated');
+        // Convert snake_case to camelCase
+        const updatedLead: any = {
+          id: updatedLeadRow.id,
+          agentId: updatedLeadRow.agent_id,
+          name: updatedLeadRow.name,
+          phone: updatedLeadRow.phone,
+          status: updatedLeadRow.status,
+          customFields: updatedLeadRow.custom_fields,
+          summary: updatedLeadRow.summary,
+          conversationId: updatedLeadRow.conversation_id,
+          createdAt: updatedLeadRow.created_at,
+          updatedAt: updatedLeadRow.updated_at,
+          notes: [], // Notes not included in realtime payload
+        };
 
-      // Show toast notifications for real-time updates
-      if (payload.eventType === 'INSERT') {
+        queryClient.setQueryData(
+          queryKeys.leads(agentId),
+          (oldData: any[] | undefined) => {
+            if (!oldData) return oldData;
+
+            // Create new array reference to trigger re-render
+            return oldData.map(lead =>
+              lead.id === updatedLead.id ? { ...lead, ...updatedLead } : lead
+            );
+          }
+        );
+
+        console.log('[Leads Subscription] ✅ Row updated in cache (no refetch)');
+      } else if (payload.eventType === 'INSERT') {
+        // For INSERT: Invalidate to refetch with proper formatting
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.leads(agentId),
+          refetchType: 'active'
+        });
+
         const newLead = payload.new as LeadRow;
         toast.success(`New lead: ${newLead.name}`);
+        console.log('[Leads Subscription] ✅ New lead - cache invalidated');
       } else if (payload.eventType === 'DELETE') {
+        // For DELETE: Remove lead from the list
         const deletedLead = payload.old as LeadRow;
+
+        queryClient.setQueryData(
+          queryKeys.leads(agentId),
+          (oldData: any[] | undefined) => {
+            if (!oldData) return oldData;
+            // Create new array reference to trigger re-render
+            return oldData.filter(lead => lead.id !== deletedLead.id);
+          }
+        );
+
         toast.info(`Lead deleted: ${deletedLead.name}`);
+        console.log('[Leads Subscription] ✅ Lead removed from cache');
       }
-      // Note: We don't show toast for UPDATE to avoid notification spam
-      // (status changes are already optimistically updated in the UI)
+
+      // Always invalidate stats (lightweight query)
+      queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
+
+      console.log('========================================');
     };
 
     const channel = supabase

@@ -25,6 +25,8 @@ export interface ColumnDef<T> {
   headerClassName?: string;
   /** Custom CSS classes for cell */
   cellClassName?: string;
+  /** Column width (CSS width value) */
+  width?: string;
 }
 
 interface DataTableProps<T> {
@@ -164,12 +166,14 @@ export function DataTable<T extends Record<string, any>>({
                     sortDirection={sortConfig?.direction}
                     onSort={handleSort}
                     className={column.headerClassName}
+                    style={column.width ? { width: column.width, maxWidth: column.width } : undefined}
                   />
                 ))}
                 {actionsColumn && (
                   <TableHeader
                     label="Actions"
                     sortable={false}
+                    style={{ width: '120px' }}
                   />
                 )}
               </tr>
@@ -184,7 +188,8 @@ export function DataTable<T extends Record<string, any>>({
                   {columns.map((column) => (
                     <td
                       key={String(column.key)}
-                      className={`px-6 py-4 whitespace-nowrap ${column.cellClassName || ''}`}
+                      className={`px-6 py-4 ${column.cellClassName || ''}`}
+                      style={column.width ? { width: column.width, maxWidth: column.width } : undefined}
                     >
                       {column.render
                         ? column.render(row[column.key], row)
@@ -192,7 +197,7 @@ export function DataTable<T extends Record<string, any>>({
                     </td>
                   ))}
                   {actionsColumn && (
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap" style={{ width: '120px' }}>
                       {actionsColumn(row)}
                     </td>
                   )}

@@ -194,6 +194,7 @@ export function LeadsTableView({
       key: 'name',
       label: 'Name',
       sortable: true,
+      width: '20%',
       render: (_: unknown, lead: Lead) => {
         const initial = lead?.name ? String(lead.name).charAt(0).toUpperCase() : '?';
         return (
@@ -241,6 +242,8 @@ export function LeadsTableView({
       key: 'summary',
       label: 'Summary',
       sortable: false,
+      width: '35%',
+      cellClassName: 'w-[35%]',
       render: (_: unknown, lead: Lead) => {
         const maxLength = 120;
         const shouldTruncate = lead.summary && lead.summary.length > maxLength;
@@ -280,6 +283,8 @@ export function LeadsTableView({
       key: 'status',
       label: 'Status',
       sortable: true,
+      width: '13%',
+      cellClassName: 'w-[13%]',
       render: (_: unknown, lead: Lead) => (
         <select
           value={lead.status}
@@ -306,6 +311,8 @@ export function LeadsTableView({
       key: 'createdAt',
       label: 'Created',
       sortable: true,
+      width: '14%',
+      cellClassName: 'w-[14%]',
       render: (_: unknown, lead: Lead) => {
         try {
           const dateStr = lead.createdAt.toString();
@@ -329,6 +336,8 @@ export function LeadsTableView({
       key: 'notes',
       label: 'Notes',
       sortable: false,
+      width: '18%',
+      cellClassName: 'w-[18%]',
       render: (_: unknown, lead: Lead) => {
         const latestNote = lead.notes && lead.notes.length > 0
           ? [...lead.notes]
