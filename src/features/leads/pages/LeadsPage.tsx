@@ -368,7 +368,7 @@ export default function LeadsPage() {
                 },
               },
               {
-                key: 'notes',
+                key: 'summary',
                 label: 'Summary',
                 sortable: false,
                 render: (_, lead: Lead) => {
