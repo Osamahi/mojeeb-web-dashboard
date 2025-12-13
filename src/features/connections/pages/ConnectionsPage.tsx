@@ -12,6 +12,7 @@ import { AvailablePlatformsSection } from '../components/sections/AvailablePlatf
 import { AddConnectionModal } from '../components/AddConnectionModal';
 import { DisconnectConfirmationDialog } from '../components/dialogs/DisconnectConfirmationDialog';
 import { HealthCheckDialog } from '../components/dialogs/HealthCheckDialog';
+import { WidgetCustomizationModal } from '../components/dialogs/WidgetCustomizationModal';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -21,6 +22,7 @@ import type { PlatformType, PlatformConnection } from '../types';
 
 export default function ConnectionsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | null>(null);
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false);
   const [healthCheckDialogOpen, setHealthCheckDialogOpen] = useState(false);
@@ -38,6 +40,12 @@ export default function ConnectionsPage() {
   const handleConnect = (platformId: PlatformType) => {
     setSelectedPlatform(platformId);
     setIsAddModalOpen(true);
+  };
+
+  // Handle widget customization
+  const handleCustomize = (platformId: PlatformType) => {
+    setSelectedPlatform(platformId);
+    setIsCustomizeModalOpen(true);
   };
 
   // Handle connection management
@@ -163,6 +171,7 @@ export default function ConnectionsPage() {
           <AvailablePlatformsSection
             connections={connections || []}
             onConnect={handleConnect}
+            onCustomize={handleCustomize}
             isLoading={isLoading}
           />
         </motion.div>
@@ -202,6 +211,18 @@ export default function ConnectionsPage() {
         isLoading={isLoadingHealth}
         error={healthError || null}
       />
+
+      {/* Widget Customization Modal */}
+      {globalSelectedAgent && (
+        <WidgetCustomizationModal
+          isOpen={isCustomizeModalOpen}
+          onClose={() => {
+            setIsCustomizeModalOpen(false);
+            setSelectedPlatform(null);
+          }}
+          agentId={globalSelectedAgent.id}
+        />
+      )}
     </div>
   );
 }

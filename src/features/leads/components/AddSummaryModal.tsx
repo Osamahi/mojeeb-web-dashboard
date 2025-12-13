@@ -29,14 +29,11 @@ export function AddSummaryModal({
     updateMutation.mutate(
       {
         leadId,
-        request: { notes: summary.trim() || undefined },
+        request: { summary: summary.trim() || undefined },
       },
       {
         onSuccess: () => {
-          // Close modal after a brief delay for smooth UX
-          setTimeout(() => {
-            onClose();
-          }, 800);
+          onClose();
         },
       }
     );

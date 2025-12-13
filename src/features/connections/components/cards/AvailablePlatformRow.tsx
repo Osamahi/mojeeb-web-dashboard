@@ -4,7 +4,7 @@
  * Used in the "Available Integrations" section
  */
 
-import { Plus } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { PlatformIcon } from '../PlatformIcon';
@@ -14,11 +14,18 @@ import type { PlatformType } from '../../types';
 export interface AvailablePlatformRowProps {
   platform: PlatformMetadata;
   onConnect: (platformId: PlatformType) => void;
+  onCustomize?: (platformId: PlatformType) => void;
   className?: string;
 }
 
-export function AvailablePlatformRow({ platform, onConnect, className }: AvailablePlatformRowProps) {
+export function AvailablePlatformRow({
+  platform,
+  onConnect,
+  onCustomize,
+  className,
+}: AvailablePlatformRowProps) {
   const isComingSoon = platform.status === 'coming_soon';
+  const showsWidget = platform.showsWidget;
 
   return (
     <div
@@ -26,10 +33,11 @@ export function AvailablePlatformRow({ platform, onConnect, className }: Availab
         'group relative flex items-center gap-2.5 sm:gap-3 rounded-lg border p-2.5 sm:p-3 transition-all',
         isComingSoon
           ? 'border-neutral-200 bg-neutral-50/50 opacity-60 cursor-not-allowed'
-          : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-sm cursor-pointer',
+          : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-sm',
+        !showsWidget && !isComingSoon && 'cursor-pointer',
         className
       )}
-      onClick={() => !isComingSoon && onConnect(platform.id)}
+      onClick={() => !isComingSoon && !showsWidget && onConnect(platform.id)}
     >
       {/* Platform Icon */}
       <div className="flex-shrink-0">
@@ -66,14 +74,42 @@ export function AvailablePlatformRow({ platform, onConnect, className }: Availab
         </p>
       </div>
 
-      {/* Coming Soon Badge or Connect Button */}
+      {/* Coming Soon Badge or Action Buttons */}
       {isComingSoon ? (
         <div className="flex-shrink-0">
           <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
             Coming Soon
           </span>
         </div>
+      ) : showsWidget ? (
+        // Widget platform: Show both Customize and Connect buttons
+        <div className="flex-shrink-0 flex items-center gap-2">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCustomize?.(platform.id);
+            }}
+            variant="ghost"
+            className="h-7 sm:h-8 px-2.5 sm:px-3 text-xs sm:text-sm text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50"
+            size="sm"
+          >
+            <Pencil className="w-3.5 h-3.5 sm:mr-1.5" />
+            <span className="hidden sm:inline">Edit</span>
+          </Button>
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              onConnect(platform.id);
+            }}
+            className="h-7 sm:h-8 px-2.5 sm:px-3 bg-[#00D084] hover:bg-[#00BA75] text-white text-xs sm:text-sm"
+            size="sm"
+          >
+            <span className="hidden sm:inline">Connect</span>
+            <Plus className="w-3.5 h-3.5 sm:ml-1" />
+          </Button>
+        </div>
       ) : (
+        // Other platforms: Show only Connect button
         <div className="flex-shrink-0">
           <Button
             onClick={(e) => {

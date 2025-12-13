@@ -8,6 +8,7 @@ import api from '@/lib/api';
 import type {
   Lead,
   LeadNote,
+  LeadFilters,
   CreateLeadRequest,
   UpdateLeadRequest,
   LeadStatistics,
@@ -91,10 +92,35 @@ class LeadService {
   // ========================================
 
   /**
-   * Get all leads for an agent
+   * Get all leads for an agent with optional filters
    */
-  async getLeads(agentId: string): Promise<Lead[]> {
-    const { data } = await api.get<ApiResponse<ApiLeadResponse[]>>(`/api/lead?agentId=${agentId}`);
+  async getLeads(agentId: string, filters?: Partial<LeadFilters>): Promise<Lead[]> {
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('agentId', agentId);
+
+    if (filters) {
+      if (filters.status && filters.status !== 'all') {
+        params.append('status', filters.status);
+      }
+      if (filters.dateFrom) {
+        params.append('dateFrom', filters.dateFrom);
+      }
+      if (filters.dateTo) {
+        params.append('dateTo', filters.dateTo);
+      }
+      if (filters.search && filters.search.trim()) {
+        params.append('search', filters.search.trim());
+      }
+    }
+
+    const url = `/api/lead?${params.toString()}`;
+    console.log('[LeadService] Fetching leads with URL:', url);
+    console.log('[LeadService] Filters:', filters);
+
+    const { data } = await api.get<ApiResponse<ApiLeadResponse[]>>(url);
+    console.log('[LeadService] Received', data.data.length, 'leads from backend');
+
     return data.data.map(lead => this.transformLead(lead));
   }
 

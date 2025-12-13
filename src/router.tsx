@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { useAuthStore } from './features/auth/stores/authStore';
 import { Role } from './features/auth/types/auth.types';
 import { AuthInitializer } from './features/auth/components/AuthInitializer';
-import { PageSpinner } from './components/ui/Spinner';
+import { PageSkeleton } from './components/ui/PageSkeleton';
 
 // Lazy load all page components for code splitting
 const LoginPage = lazy(() => import('./features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -32,7 +32,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   // Wrap with AuthInitializer to validate tokens before rendering
   return (
     <AuthInitializer>
-      <Suspense fallback={<PageSpinner />}>
+      <Suspense fallback={<PageSkeleton />}>
         {children}
       </Suspense>
     </AuthInitializer>
@@ -53,7 +53,7 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <Suspense fallback={<PageSpinner />}>
+    <Suspense fallback={<PageSkeleton />}>
       {children}
     </Suspense>
   );
@@ -68,7 +68,7 @@ const PublicRoute = ({ children, allowAuthenticatedAccess = false }: { children:
   }
 
   return (
-    <Suspense fallback={<PageSpinner />}>
+    <Suspense fallback={<PageSkeleton />}>
       {children}
     </Suspense>
   );
@@ -114,7 +114,7 @@ export const router = createBrowserRouter([
   {
     path: '/oauth/callback',
     element: (
-      <Suspense fallback={<PageSpinner />}>
+      <Suspense fallback={<PageSkeleton />}>
         <OAuthCallbackPage />
       </Suspense>
     ),

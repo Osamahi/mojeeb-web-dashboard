@@ -167,6 +167,8 @@ export interface LeadStatistics {
 // UI Helper Types
 // ========================================
 
+export type DatePreset = 'today' | 'last7days' | 'last30days' | 'thisMonth' | 'custom';
+
 export interface LeadFilters {
   search: string;
   status: LeadStatus | 'all';

@@ -10,12 +10,14 @@ import type { PlatformType, PlatformConnection } from '../../types';
 export interface AvailablePlatformsSectionProps {
   connections: PlatformConnection[];
   onConnect: (platformId: PlatformType) => void;
+  onCustomize?: (platformId: PlatformType) => void;
   isLoading?: boolean;
 }
 
 export function AvailablePlatformsSection({
   connections,
   onConnect,
+  onCustomize,
   isLoading = false,
 }: AvailablePlatformsSectionProps) {
   // Get IDs of already connected platforms
@@ -59,6 +61,7 @@ export function AvailablePlatformsSection({
               key={platform.id}
               platform={platform}
               onConnect={onConnect}
+              onCustomize={onCustomize}
             />
           ))}
         </div>

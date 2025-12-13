@@ -10,6 +10,7 @@ import { useAgentContext } from '@/hooks/useAgentContext';
 import { leadService } from '../services/leadService';
 import { queryKeys } from '@/lib/queryKeys';
 import type {
+  LeadFilters,
   CreateLeadRequest,
   UpdateLeadRequest,
   LeadFieldDefinition,
@@ -23,15 +24,16 @@ import type {
 // ========================================
 
 /**
- * Fetch all leads for the current agent
+ * Fetch all leads for the current agent with optional filters
  * Auto-scoped to selected agent from context
+ * Query key includes filters to enable proper caching per filter combination
  */
-export function useLeads() {
+export function useLeads(filters?: Partial<LeadFilters>) {
   const { agentId } = useAgentContext();
 
   return useQuery({
-    queryKey: queryKeys.leads(agentId),
-    queryFn: () => leadService.getLeads(agentId!),
+    queryKey: [...queryKeys.leads(agentId), filters],
+    queryFn: () => leadService.getLeads(agentId!, filters),
     enabled: !!agentId,
   });
 }
@@ -90,8 +92,11 @@ export function useCreateLead() {
   return useMutation({
     mutationFn: (request: CreateLeadRequest) => leadService.createLead(request),
     onSuccess: () => {
-      // Invalidate queries to trigger refetch
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads(agentId) });
+      // Invalidate all leads queries (including all filter variations)
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads(agentId),
+        refetchType: 'active'
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
       toast.success('Lead created successfully');
     },
@@ -115,51 +120,18 @@ export function useUpdateLead() {
     mutationFn: ({ leadId, request }: { leadId: string; request: UpdateLeadRequest }) =>
       leadService.updateLead(leadId, request),
 
-    // Optimistic update - update cache immediately before API call
-    onMutate: async ({ leadId, request }) => {
-      // Cancel any outgoing refetches to avoid overwriting optimistic update
-      await queryClient.cancelQueries({ queryKey: queryKeys.leads(agentId) });
-      await queryClient.cancelQueries({ queryKey: queryKeys.lead(leadId) });
-
-      // Snapshot the previous values for rollback
-      const previousLeads = queryClient.getQueryData(queryKeys.leads(agentId));
-      const previousLead = queryClient.getQueryData(queryKeys.lead(leadId));
-
-      // Optimistically update leads list
-      queryClient.setQueryData(queryKeys.leads(agentId), (old: any) => {
-        if (!old) return old;
-        return old.map((lead: any) =>
-          lead.id === leadId ? { ...lead, ...request } : lead
-        );
-      });
-
-      // Optimistically update individual lead
-      queryClient.setQueryData(queryKeys.lead(leadId), (old: any) => {
-        if (!old) return old;
-        return { ...old, ...request };
-      });
-
-      // Return context with previous data for rollback
-      return { previousLeads, previousLead };
-    },
-
     onSuccess: (_, { leadId }) => {
-      // Refetch to ensure we have the latest data from server
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads(agentId) });
+      // Invalidate all leads queries (including all filter variations)
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads(agentId),
+        refetchType: 'active'
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
       toast.success('Lead updated successfully');
     },
 
-    onError: (error: any, _, context) => {
-      // Rollback optimistic updates on error
-      if (context?.previousLeads) {
-        queryClient.setQueryData(queryKeys.leads(agentId), context.previousLeads);
-      }
-      if (context?.previousLead) {
-        queryClient.setQueryData(queryKeys.lead(context.previousLead.id), context.previousLead);
-      }
-
+    onError: (error: any) => {
       const message = error?.response?.data?.message || 'Failed to update lead';
       toast.error(message);
     },
@@ -177,7 +149,11 @@ export function useDeleteLead() {
   return useMutation({
     mutationFn: (leadId: string) => leadService.deleteLead(leadId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads(agentId) });
+      // Invalidate all leads queries (including all filter variations)
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads(agentId),
+        refetchType: 'active'
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
       toast.success('Lead deleted successfully');
     },
@@ -269,8 +245,11 @@ export function useCreateLeadNote() {
       queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'notes'] });
       // Invalidate lead detail (to show updated notes)
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
-      // Invalidate leads list (to show latest note)
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads(agentId) });
+      // Invalidate all leads queries (including all filter variations)
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads(agentId),
+        refetchType: 'active'
+      });
       toast.success('Note added successfully');
     },
     onError: (error: any) => {
@@ -323,7 +302,11 @@ export function useDeleteLeadNote() {
     onSuccess: (_, { leadId }) => {
       queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'notes'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.leads(agentId) });
+      // Invalidate all leads queries (including all filter variations)
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.leads(agentId),
+        refetchType: 'active'
+      });
       toast.success('Note deleted successfully');
     },
     onError: (error: any) => {
