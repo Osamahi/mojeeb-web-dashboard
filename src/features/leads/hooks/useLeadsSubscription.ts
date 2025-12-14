@@ -109,8 +109,10 @@ export function useLeadsSubscription() {
       console.log('========================================');
 
       if (payload.eventType === 'UPDATE') {
-        // For UPDATE: Use setQueryData to update only the changed row (no blur/loading)
+        // For UPDATE: Update all leads queries (they have different filters in the key)
         const updatedLeadRow = payload.new as LeadRow;
+
+        console.log('[Leads Subscription] 📦 Updating all leads query variants...');
 
         // Convert snake_case to camelCase
         const updatedLead: any = {
@@ -124,22 +126,46 @@ export function useLeadsSubscription() {
           conversationId: updatedLeadRow.conversation_id,
           createdAt: updatedLeadRow.created_at,
           updatedAt: updatedLeadRow.updated_at,
-          notes: [], // Notes not included in realtime payload
+          // Preserve notes from payload or existing cache
+          notes: (updatedLeadRow as any).notes || [],
         };
 
-        queryClient.setQueryData(
-          queryKeys.leads(agentId),
+        console.log('[Leads Subscription] 📝 Converted updatedLead:', updatedLead);
+
+        // Update all query variants (different filter combinations)
+        queryClient.setQueriesData(
+          { queryKey: queryKeys.leads(agentId) },
           (oldData: any[] | undefined) => {
-            if (!oldData) return oldData;
+            console.log('[Leads Subscription] 🔍 setQueriesData callback - oldData:', oldData);
+            if (!oldData) {
+              console.log('[Leads Subscription] ⚠️ No oldData for this query variant');
+              return oldData;
+            }
+
+            const existingLead = oldData.find(lead => lead.id === updatedLead.id);
+            console.log('[Leads Subscription] 🔍 Existing lead in cache:', existingLead);
 
             // Create new array reference to trigger re-render
-            return oldData.map(lead =>
-              lead.id === updatedLead.id ? { ...lead, ...updatedLead } : lead
-            );
+            const newData = oldData.map(lead => {
+              if (lead.id === updatedLead.id) {
+                // Preserve notes from existing lead if not in payload
+                const mergedLead = {
+                  ...lead,
+                  ...updatedLead,
+                  notes: updatedLead.notes.length > 0 ? updatedLead.notes : lead.notes,
+                };
+                console.log('[Leads Subscription] ✨ Merged lead:', mergedLead);
+                return mergedLead;
+              }
+              return lead;
+            });
+
+            console.log('[Leads Subscription] 📤 Returning new data array (length:', newData.length, ')');
+            return newData;
           }
         );
 
-        console.log('[Leads Subscription] ✅ Row updated in cache (no refetch)');
+        console.log('[Leads Subscription] ✅ Row updated in all query caches (no refetch)');
       } else if (payload.eventType === 'INSERT') {
         // For INSERT: Invalidate to refetch with proper formatting
         queryClient.invalidateQueries({
