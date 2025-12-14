@@ -285,14 +285,14 @@ export function LeadsTableView({
       key: 'status',
       label: 'Status',
       sortable: true,
-      width: '13%',
-      cellClassName: 'w-[13%]',
+      width: '160px',
+      cellClassName: 'w-[160px]',
       render: (_: unknown, lead: Lead) => (
         <select
           value={lead.status}
           onChange={(e) => handleStatusChange(lead.id, e.target.value as LeadStatus, e)}
           onClick={(e) => e.stopPropagation()}
-          className={`px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none ${
+          className={`px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none w-full ${
             lead.status === 'new' ? 'text-[#00D084]' : 'text-neutral-950'
           }`}
           style={{
@@ -383,8 +383,10 @@ export function LeadsTableView({
       key: 'actions' as keyof Lead,
       label: '',
       sortable: false,
+      width: '140px',
+      cellClassName: 'text-right pr-6',
       render: (_: unknown, lead: Lead) => (
-        <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-end gap-1">
           {lead.conversationId ? (
             <button
               onClick={(e) => {

@@ -12,6 +12,7 @@ interface CollaboratorInfo {
   user_id: string;
   email: string;
   full_name: string;
+  phone?: string | null;
   avatar_url?: string | null;
   role: TeamRole;
   granted_at: string;
@@ -48,6 +49,7 @@ class TeamService {
         id: collaborator.user_id,
         email: collaborator.email,
         name: collaborator.full_name,
+        phone: collaborator.phone,
         avatar_url: collaborator.avatar_url,
         role: collaborator.role,
         created_at: collaborator.granted_at,

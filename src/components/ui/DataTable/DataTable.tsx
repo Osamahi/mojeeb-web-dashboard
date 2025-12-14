@@ -153,7 +153,7 @@ export function DataTable<T extends Record<string, any>>({
       {/* Table */}
       <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full" style={{ tableLayout: 'fixed' }}>
             <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
                 {columns.map((column) => (
