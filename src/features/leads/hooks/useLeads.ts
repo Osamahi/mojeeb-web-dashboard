@@ -35,6 +35,7 @@ export function useLeads(filters?: Partial<LeadFilters>) {
     queryKey: [...queryKeys.leads(agentId), filters],
     queryFn: () => leadService.getLeads(agentId!, filters),
     enabled: !!agentId,
+    placeholderData: undefined, // Prevent flash of old data
   });
 }
 

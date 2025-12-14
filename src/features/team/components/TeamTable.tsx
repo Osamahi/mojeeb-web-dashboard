@@ -1,6 +1,7 @@
 /**
  * Team Table Component
- * Displays team members using the reusable DataTable component
+ * Responsive view: Desktop table / Mobile cards
+ * Switches layout based on screen size
  */
 
 import { useMemo } from 'react';
@@ -9,10 +10,13 @@ import { format } from 'date-fns';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { DataTable, type ColumnDef } from '@/components/ui/DataTable';
+import { TeamMobileCardView } from './TeamMobileCardView';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import type { TeamMember, TeamRole } from '../types';
 
 interface TeamTableProps {
   members: TeamMember[];
+  isLoading?: boolean;
 }
 
 const ROLE_COLORS: Record<TeamRole, 'success' | 'warning' | 'danger'> = {
@@ -21,8 +25,10 @@ const ROLE_COLORS: Record<TeamRole, 'success' | 'warning' | 'danger'> = {
   HumanAgent: 'success',
 };
 
-export default function TeamTable({ members }: TeamTableProps) {
-  // Define columns
+export default function TeamTable({ members, isLoading }: TeamTableProps) {
+  const isMobile = useIsMobile();
+
+  // Define columns for desktop table view (useMemo must ALWAYS be called on every render)
   const columns = useMemo<ColumnDef<TeamMember>[]>(() => [
     {
       key: 'name',
@@ -89,6 +95,81 @@ export default function TeamTable({ members }: TeamTableProps) {
     },
   ], []);
 
+  // Show skeleton only on initial load
+  if (isLoading) {
+    return (
+      <div>
+        {/* Mobile card skeleton (< 768px) */}
+        <div className="block md:hidden space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-white border border-neutral-200 rounded-lg p-4 animate-pulse"
+            >
+              {/* Header: Avatar + Name + Badge */}
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-10 h-10 bg-neutral-200 rounded-full"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-neutral-200 rounded w-32 mb-2"></div>
+                  <div className="h-3 bg-neutral-200 rounded w-16"></div>
+                </div>
+                <div className="h-6 bg-neutral-200 rounded w-16"></div>
+              </div>
+
+              {/* Contact Info */}
+              <div className="space-y-2 mb-3">
+                <div className="h-3 bg-neutral-200 rounded w-40"></div>
+                <div className="h-3 bg-neutral-200 rounded w-32"></div>
+              </div>
+
+              {/* Footer */}
+              <div className="pt-3 border-t border-neutral-100">
+                <div className="h-3 bg-neutral-200 rounded w-24"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table skeleton (≥ 768px) */}
+        <div className="hidden md:block bg-white border border-neutral-200 rounded-lg overflow-hidden">
+          <div className="animate-pulse">
+            {/* Table Header */}
+            <div className="border-b border-neutral-200 bg-neutral-50">
+              <div className="flex items-center px-6 py-3">
+                <div className="flex-1 h-4 bg-neutral-200 rounded w-32"></div>
+                <div className="flex-1 h-4 bg-neutral-200 rounded w-24 mx-4"></div>
+                <div className="flex-1 h-4 bg-neutral-200 rounded w-24 mx-4"></div>
+                <div className="flex-1 h-4 bg-neutral-200 rounded w-20 mx-4"></div>
+                <div className="flex-1 h-4 bg-neutral-200 rounded w-24"></div>
+              </div>
+            </div>
+            {/* Table Rows */}
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="border-b border-neutral-200 last:border-b-0">
+                <div className="flex items-center px-6 py-4">
+                  <div className="flex-1 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-neutral-200 rounded-full"></div>
+                    <div className="h-4 bg-neutral-200 rounded w-32"></div>
+                  </div>
+                  <div className="flex-1 h-4 bg-neutral-200 rounded w-40 mx-4"></div>
+                  <div className="flex-1 h-4 bg-neutral-200 rounded w-32 mx-4"></div>
+                  <div className="flex-1 h-6 bg-neutral-200 rounded w-20 mx-4"></div>
+                  <div className="flex-1 h-4 bg-neutral-200 rounded w-24"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render mobile card view
+  if (isMobile) {
+    return <TeamMobileCardView members={members} />;
+  }
+
+  // Render desktop table view
   return (
     <DataTable
       data={members}

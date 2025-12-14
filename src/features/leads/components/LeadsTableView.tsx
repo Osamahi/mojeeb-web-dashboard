@@ -1,7 +1,7 @@
 /**
  * LeadsTableView Component
- * Isolated table view with smooth data transitions
- * Only this component re-renders when data changes
+ * Responsive view: Desktop table / Mobile cards
+ * Switches layout based on screen size
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
@@ -14,9 +14,11 @@ import { InlineEditField } from '@/components/ui/InlineEditField';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { LeadsTableSkeleton } from './LeadsTableSkeleton';
+import { LeadsMobileCardView } from './LeadsMobileCardView';
 import { validateName, validatePhone } from '../utils/validation';
 import { formatPhoneNumber, getNoteAuthorName, formatNoteDate } from '../utils/formatting';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import type { Lead, LeadStatus, LeadFilters } from '../types';
 
 interface LeadsTableViewProps {
@@ -48,6 +50,7 @@ export function LeadsTableView({
 }: LeadsTableViewProps) {
   const user = useAuthStore((state) => state.user);
   const updateMutation = useUpdateLead();
+  const isMobile = useIsMobile();
 
   // Infinite scroll state
   const [displayCount, setDisplayCount] = useState(50);
@@ -140,9 +143,46 @@ export function LeadsTableView({
     });
   }, []);
 
+  const handleCardClick = useCallback((lead: Lead) => {
+    // Open the lead detail drawer by triggering edit
+    onEditClick(lead.id);
+  }, [onEditClick]);
+
   // Show skeleton only on initial load
   if (isLoading) {
-    return <LeadsTableSkeleton />;
+    return (
+      <div>
+        {/* Mobile card skeleton (< 768px) */}
+        <div className="block md:hidden space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-white border border-neutral-200 rounded-lg p-4 animate-pulse"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="h-5 bg-neutral-200 rounded w-32"></div>
+                <div className="flex gap-1">
+                  <div className="w-10 h-10 bg-neutral-200 rounded-lg"></div>
+                  <div className="w-10 h-10 bg-neutral-200 rounded-lg"></div>
+                </div>
+              </div>
+              <div className="h-4 bg-neutral-200 rounded w-40 mb-3"></div>
+              <div className="h-4 bg-neutral-200 rounded w-full mb-2"></div>
+              <div className="h-4 bg-neutral-200 rounded w-3/4 mb-3"></div>
+              <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+                <div className="h-8 bg-neutral-200 rounded w-28"></div>
+                <div className="h-4 bg-neutral-200 rounded w-20"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table skeleton (≥ 768px) */}
+        <div className="hidden md:block">
+          <LeadsTableSkeleton />
+        </div>
+      </div>
+    );
   }
 
   // Show error state
@@ -186,7 +226,33 @@ export function LeadsTableView({
     );
   }
 
-  // Table columns configuration
+  // Render mobile card view
+  if (isMobile) {
+    return (
+      <LeadsMobileCardView
+        leads={leads}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        error={error}
+        filters={filters}
+        onRowClick={handleCardClick}
+        onEditClick={onEditClick}
+        onDeleteClick={onDeleteClick}
+        onViewConversation={onViewConversation}
+        onAddLeadClick={onAddLeadClick}
+        onStatusChange={(leadId, newStatus) => {
+          updateMutation.mutate({
+            leadId,
+            request: { status: newStatus },
+          });
+        }}
+        onCopyPhone={handleCopyPhone}
+        isUpdating={updateMutation.isPending}
+      />
+    );
+  }
+
+  // Table columns configuration (only for desktop)
   const columns = [
     {
       key: 'name',
@@ -426,6 +492,7 @@ export function LeadsTableView({
     },
   ];
 
+  // Render desktop table view
   return (
     <>
       {/* Table with smooth content transition */}

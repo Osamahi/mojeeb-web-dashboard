@@ -48,27 +48,25 @@ export default function TeamPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900">Team</h1>
-          <p className="text-neutral-600 mt-1">
-            Manage team members for {globalSelectedAgent.name}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <h1 className="text-2xl font-semibold text-neutral-900">Team</h1>
+          <p className="text-sm text-neutral-600 mt-1">
+            Manage your team
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsInviteModalOpen(true)}
-          variant="primary"
-          className="flex items-center gap-2"
-        >
-          <UserPlus className="w-4 h-4" />
-          Invite Member
-        </Button>
-      </motion.div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => setIsInviteModalOpen(true)}
+            className="px-4 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
+            title="Invite Member"
+          >
+            <UserPlus className="w-4 h-4 text-neutral-700" />
+            <span className="text-sm font-medium text-neutral-900">Invite</span>
+          </button>
+        </div>
+      </div>
 
       {/* Team Table */}
       <motion.div
@@ -76,14 +74,7 @@ export default function TeamPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        {isLoading ? (
-          <div className="flex items-center justify-center min-h-[400px] bg-white border border-neutral-200 rounded-lg">
-            <div className="text-center">
-              <Spinner size="lg" />
-              <p className="mt-4 text-neutral-600">Loading team members...</p>
-            </div>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="bg-white border border-neutral-200 rounded-lg p-12">
             <EmptyState
               icon={<UsersIcon className="w-12 h-12 text-neutral-400" />}
@@ -95,9 +86,9 @@ export default function TeamPage() {
               }
             />
           </div>
-        ) : teamMembers ? (
-          <TeamTable members={teamMembers} />
-        ) : null}
+        ) : (
+          <TeamTable members={teamMembers || []} isLoading={isLoading} />
+        )}
       </motion.div>
 
       {/* Invite Modal */}
