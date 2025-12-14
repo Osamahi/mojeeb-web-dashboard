@@ -51,9 +51,6 @@ export function TablePagination({
             </option>
           ))}
         </select>
-        <span className="ml-4">
-          Showing {startIndex} to {endIndex} of {totalItems} {itemName}
-        </span>
       </div>
 
       <div className="flex items-center gap-2">

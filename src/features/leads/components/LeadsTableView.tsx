@@ -25,7 +25,6 @@ interface LeadsTableViewProps {
   isFetching: boolean;
   error: Error | null;
   filters: LeadFilters;
-  onRowClick: (lead: Lead) => void;
   onEditClick: (leadId: string) => void;
   onDeleteClick: (leadId: string) => void;
   onViewConversation: (conversationId: string) => void;
@@ -40,7 +39,6 @@ export function LeadsTableView({
   isFetching,
   error,
   filters,
-  onRowClick,
   onEditClick,
   onDeleteClick,
   onViewConversation,
@@ -194,25 +192,28 @@ export function LeadsTableView({
       key: 'name',
       label: 'Name',
       sortable: true,
-      width: '20%',
+      width: '25%',
       render: (_: unknown, lead: Lead) => {
-        const initial = lead?.name ? String(lead.name).charAt(0).toUpperCase() : '?';
         return (
-          <div className="flex items-center gap-3 py-1">
-            <div className="w-9 h-9 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-semibold text-neutral-700">{initial}</span>
-            </div>
-            <div className="flex flex-col gap-1.5 min-w-0">
-              <InlineEditField
-                value={lead.name}
-                fieldName="Name"
-                placeholder="Enter lead name"
-                onSave={(newName) => handleNameSave(lead.id, newName)}
-                validationFn={validateName}
-                isLoading={updateMutation.isPending}
-              />
-              <div className="flex items-center gap-1.5 group">
-                {lead.phone && (
+          <div className="flex flex-col gap-1.5 py-1">
+            <InlineEditField
+              value={lead.name}
+              fieldName="Name"
+              placeholder="Enter lead name"
+              onSave={(newName) => handleNameSave(lead.id, newName)}
+              validationFn={validateName}
+              isLoading={updateMutation.isPending}
+            />
+            <div className="flex items-center gap-1.5 group">
+              {lead.phone ? (
+                <>
+                  <a
+                    href={`tel:${lead.phone}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[13px] text-neutral-600 hover:text-neutral-900 transition-colors order-0"
+                  >
+                    {formatPhoneNumber(lead.phone)}
+                  </a>
                   <button
                     onClick={(e) => handleCopyPhone(lead.phone!, e)}
                     className="p-1 hover:bg-neutral-100 rounded transition-all order-1"
@@ -220,7 +221,8 @@ export function LeadsTableView({
                   >
                     <Copy className="w-3.5 h-3.5 text-neutral-400 hover:text-neutral-700" />
                   </button>
-                )}
+                </>
+              ) : (
                 <div className="order-0">
                   <InlineEditField
                     value={lead.phone}
@@ -232,7 +234,7 @@ export function LeadsTableView({
                     isLoading={updateMutation.isPending}
                   />
                 </div>
-              </div>
+              )}
             </div>
           </div>
         );
@@ -242,8 +244,8 @@ export function LeadsTableView({
       key: 'summary',
       label: 'Summary',
       sortable: false,
-      width: '35%',
-      cellClassName: 'w-[35%]',
+      width: '30%',
+      cellClassName: 'w-[30%]',
       render: (_: unknown, lead: Lead) => {
         const maxLength = 120;
         const shouldTruncate = lead.summary && lead.summary.length > maxLength;
@@ -450,7 +452,6 @@ export function LeadsTableView({
               rowKey="id"
               paginated={false}
               columns={columns}
-              onRowClick={onRowClick}
             />
           </div>
         </motion.div>

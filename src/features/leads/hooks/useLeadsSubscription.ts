@@ -214,7 +214,6 @@ export function useLeadsSubscription() {
           console.log('[Leads Subscription] Filter: agent_id =', agentId);
         } else if (status === 'CHANNEL_ERROR') {
           console.error('[Leads Subscription] ❌ CHANNEL ERROR - Subscription failed');
-          toast.error('Real-time updates disconnected. Refreshing...');
 
           // Retry connection after a delay
           setTimeout(() => {

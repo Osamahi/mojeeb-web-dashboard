@@ -156,7 +156,6 @@ export default function LeadsPage() {
         isFetching={isFetching}
         error={error}
         filters={filters}
-        onRowClick={handleRowClick}
         onEditClick={handleEditClick}
         onDeleteClick={handleDeleteClick}
         onViewConversation={handleViewConversation}

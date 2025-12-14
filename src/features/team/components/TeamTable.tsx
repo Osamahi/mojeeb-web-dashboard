@@ -58,6 +58,14 @@ export default function TeamTable({ members }: TeamTableProps) {
       ),
     },
     {
+      key: 'phone',
+      label: 'Phone',
+      sortable: true,
+      render: (phone) => (
+        <div className="text-sm text-neutral-900">{phone || '-'}</div>
+      ),
+    },
+    {
       key: 'role',
       label: 'Role',
       sortable: true,
@@ -89,6 +97,7 @@ export default function TeamTable({ members }: TeamTableProps) {
       initialSortField="created_at"
       initialSortDirection="desc"
       itemName="members"
+      rowsPerPageOptions={[10, 25, 50, 100]}
       emptyState={{
         icon: <Search className="w-12 h-12 text-neutral-400" />,
         title: 'No team members yet',
