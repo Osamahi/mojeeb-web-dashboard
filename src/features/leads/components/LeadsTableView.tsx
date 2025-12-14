@@ -285,8 +285,8 @@ export function LeadsTableView({
       key: 'status',
       label: 'Status',
       sortable: true,
-      width: '160px',
-      cellClassName: 'w-[160px]',
+      width: '180px',
+      cellClassName: 'w-[180px]',
       render: (_: unknown, lead: Lead) => (
         <select
           value={lead.status}
