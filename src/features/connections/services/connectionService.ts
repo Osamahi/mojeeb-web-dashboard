@@ -9,15 +9,21 @@ import type {
   PlatformType,
   OAuthInitiationResponse,
   FacebookPagesResponse,
+  WhatsAppAccountsResponse,
   ConnectPageRequest,
   ConnectPageResponse,
   ApiOAuthInitiationResponse,
   ApiFacebookPagesResponse,
+  ApiWhatsAppAccountsResponse,
   ApiConnectPageResponse,
   ApiFacebookPage,
   ApiInstagramAccount,
+  ApiWhatsAppBusinessAccount,
+  ApiWhatsAppPhoneNumber,
   FacebookPage,
   InstagramAccount,
+  WhatsAppBusinessAccount,
+  WhatsAppPhoneNumber,
   OAuthIntegrationType,
 } from '../types';
 import { VALID_PLATFORMS, API_PATHS } from '../constants';
@@ -246,6 +252,33 @@ class ConnectionService {
   }
 
   /**
+   * Transform WhatsApp phone number from API response
+   */
+  private transformWhatsAppPhoneNumber(apiPhone: ApiWhatsAppPhoneNumber): WhatsAppPhoneNumber {
+    return {
+      id: apiPhone.id,
+      displayPhoneNumber: apiPhone.display_phone_number,
+      verifiedName: apiPhone.verified_name ?? null,
+      qualityRating: apiPhone.quality_rating ?? null,
+      businessAccountId: apiPhone.business_account_id ?? null,
+      businessAccountName: apiPhone.business_account_name ?? null,
+    };
+  }
+
+  /**
+   * Transform WhatsApp Business Account from API response
+   */
+  private transformWhatsAppBusinessAccount(apiWaba: ApiWhatsAppBusinessAccount): WhatsAppBusinessAccount {
+    return {
+      id: apiWaba.id,
+      name: apiWaba.name,
+      phoneNumbers: (apiWaba.phone_numbers ?? []).map(phone =>
+        this.transformWhatsAppPhoneNumber(phone)
+      ),
+    };
+  }
+
+  /**
    * Initiate Facebook/Instagram OAuth flow
    * Returns the authorization URL to redirect the user to
    */
@@ -299,6 +332,50 @@ class ConnectionService {
   }
 
   /**
+   * Fetch available WhatsApp Business Accounts after OAuth authorization
+   */
+  async fetchAvailableWhatsAppAccounts(tempConnectionId: string): Promise<WhatsAppAccountsResponse> {
+    try {
+      const { data } = await api.get<ApiWhatsAppAccountsResponse>(
+        API_PATHS.OAUTH_PAGES(tempConnectionId)
+      );
+
+      // Validate response format
+      if (!data || !Array.isArray(data.whatsapp_accounts)) {
+        logger.error('Invalid WhatsApp accounts response format', {
+          tempConnectionId,
+          receivedData: data,
+          hasWhatsAppAccounts: !!data?.whatsapp_accounts,
+          isArray: Array.isArray(data?.whatsapp_accounts)
+        });
+
+        // Return empty array instead of throwing error
+        return {
+          whatsAppAccounts: [],
+          tempConnectionId,
+        };
+      }
+
+      const whatsAppAccounts = data.whatsapp_accounts.map(waba =>
+        this.transformWhatsAppBusinessAccount(waba)
+      );
+
+      logger.info('Fetched available WhatsApp accounts', {
+        tempConnectionId,
+        accountCount: whatsAppAccounts.length,
+      });
+
+      return {
+        whatsAppAccounts,
+        tempConnectionId,
+      };
+    } catch (error) {
+      logger.error('Error fetching available WhatsApp accounts', { tempConnectionId, error });
+      handleApiError(error, 'OAuth WhatsApp Accounts', tempConnectionId);
+    }
+  }
+
+  /**
    * Connect a selected Facebook page (and optionally Instagram account)
    */
   async connectSelectedPage(request: ConnectPageRequest): Promise<ConnectPageResponse> {
@@ -319,6 +396,10 @@ class ConnectionService {
         ...(request.instagramAccountId && {
           instagram_account_id: request.instagramAccountId,
           instagram_username: request.instagramUsername,
+        }),
+        ...(request.whatsAppPhoneNumberId && {
+          whats_app_phone_number_id: request.whatsAppPhoneNumberId,
+          whats_app_business_account_id: request.whatsAppBusinessAccountId,
         }),
       };
 

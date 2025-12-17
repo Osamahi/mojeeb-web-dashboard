@@ -2,7 +2,7 @@
 export type PlatformType = 'web' | 'widget' | 'facebook' | 'instagram' | 'whatsapp' | 'tiktok' | 'twitter' | 'linkedin';
 
 // OAuth connection types
-export type OAuthIntegrationType = 'facebook' | 'instagram';
+export type OAuthIntegrationType = 'facebook' | 'instagram' | 'whatsapp';
 
 export type InstagramAccount = {
   id: string;
@@ -21,6 +21,21 @@ export type FacebookPage = {
   instagramAccounts: InstagramAccount[];
 };
 
+export type WhatsAppPhoneNumber = {
+  id: string;
+  displayPhoneNumber: string;
+  verifiedName: string | null;
+  qualityRating: string | null;
+  businessAccountId: string | null;
+  businessAccountName: string | null;
+};
+
+export type WhatsAppBusinessAccount = {
+  id: string;
+  name: string;
+  phoneNumbers: WhatsAppPhoneNumber[];
+};
+
 export type OAuthInitiationResponse = {
   authorizationUrl: string;
   integrationType: string;
@@ -32,11 +47,18 @@ export type FacebookPagesResponse = {
   tempConnectionId: string;
 };
 
+export type WhatsAppAccountsResponse = {
+  whatsAppAccounts: WhatsAppBusinessAccount[];
+  tempConnectionId: string;
+};
+
 export type ConnectPageRequest = {
   tempConnectionId: string;
   pageId: string;
   instagramAccountId?: string;
   instagramUsername?: string;
+  whatsAppPhoneNumberId?: string;
+  whatsAppBusinessAccountId?: string;
 };
 
 export type ConnectPageResponse = {
@@ -64,6 +86,21 @@ export interface ApiInstagramAccount {
   profile_picture_url?: string;
 }
 
+export interface ApiWhatsAppPhoneNumber {
+  id: string;
+  display_phone_number: string;
+  verified_name?: string;
+  quality_rating?: string;
+  business_account_id?: string;
+  business_account_name?: string;
+}
+
+export interface ApiWhatsAppBusinessAccount {
+  id: string;
+  name: string;
+  phone_numbers?: ApiWhatsAppPhoneNumber[];
+}
+
 export interface ApiOAuthInitiationResponse {
   authorization_url: string;
   integration_type: string;
@@ -72,6 +109,10 @@ export interface ApiOAuthInitiationResponse {
 
 export interface ApiFacebookPagesResponse {
   pages: ApiFacebookPage[];
+}
+
+export interface ApiWhatsAppAccountsResponse {
+  whatsapp_accounts: ApiWhatsAppBusinessAccount[];
 }
 
 export interface ApiConnectPageResponse {

@@ -8,6 +8,7 @@ import { Plus, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { PlatformIcon } from '../PlatformIcon';
+import { getEffectivePlatformStatus } from '../../constants/platforms';
 import type { PlatformMetadata } from '../../constants/platforms';
 import type { PlatformType } from '../../types';
 
@@ -15,6 +16,7 @@ export interface AvailablePlatformRowProps {
   platform: PlatformMetadata;
   onConnect: (platformId: PlatformType) => void;
   onCustomize?: (platformId: PlatformType) => void;
+  userRole?: number;
   className?: string;
 }
 
@@ -22,9 +24,12 @@ export function AvailablePlatformRow({
   platform,
   onConnect,
   onCustomize,
+  userRole,
   className,
 }: AvailablePlatformRowProps) {
-  const isComingSoon = platform.status === 'coming_soon';
+  // Get effective status based on user role (will show 'coming_soon' for non-SuperAdmins if requiresSuperAdmin is true)
+  const effectiveStatus = getEffectivePlatformStatus(platform, userRole);
+  const isComingSoon = effectiveStatus === 'coming_soon';
   const showsWidget = platform.showsWidget;
 
   return (

@@ -28,6 +28,8 @@ export type PlatformMetadata = {
   brandColor: string;
   /** Light background color matching brand */
   brandBgColor: string;
+  /** Whether this platform requires SuperAdmin role (0) to access */
+  requiresSuperAdmin?: boolean;
 };
 
 /**
@@ -72,12 +74,13 @@ export const PLATFORMS: PlatformMetadata[] = [
     id: 'whatsapp',
     name: 'WhatsApp Business',
     description: 'Connect your WhatsApp Business account to automate customer conversations',
-    status: 'coming_soon',
-    usesOAuth: false,
+    status: 'available',
+    usesOAuth: true,
     showsWidget: false,
     category: 'messaging',
     brandColor: '#25D366',
     brandBgColor: '#E8F8EE',
+    requiresSuperAdmin: true, // Only SuperAdmins can access WhatsApp for now
   },
   {
     id: 'tiktok',
@@ -134,4 +137,46 @@ export function platformUsesOAuth(platformId: PlatformType): boolean {
 export function platformShowsWidget(platformId: PlatformType): boolean {
   const platform = getPlatformById(platformId);
   return platform?.showsWidget ?? false;
+}
+
+/**
+ * Get the effective platform status based on user role
+ * If a platform requires SuperAdmin and user is not SuperAdmin (role !== 0),
+ * it will be shown as 'coming_soon' regardless of actual status
+ *
+ * @param platform - The platform metadata
+ * @param userRole - The user's role (0 = SuperAdmin, 1 = Admin, 2 = Customer, etc.)
+ * @returns The effective status to display to the user
+ */
+export function getEffectivePlatformStatus(
+  platform: PlatformMetadata,
+  userRole?: number
+): PlatformStatus {
+  // If platform requires SuperAdmin and user is not SuperAdmin
+  if (platform.requiresSuperAdmin && userRole !== 0) {
+    return 'coming_soon';
+  }
+
+  // Otherwise, return the platform's actual status
+  return platform.status;
+}
+
+/**
+ * Check if user can access a platform based on their role
+ *
+ * @param platform - The platform metadata
+ * @param userRole - The user's role (0 = SuperAdmin, 1 = Admin, 2 = Customer, etc.)
+ * @returns true if user can access, false if shown as coming soon
+ */
+export function canUserAccessPlatform(
+  platform: PlatformMetadata,
+  userRole?: number
+): boolean {
+  // If platform requires SuperAdmin, check if user is SuperAdmin
+  if (platform.requiresSuperAdmin) {
+    return userRole === 0;
+  }
+
+  // Otherwise, check if platform is actually available
+  return platform.status === 'available';
 }

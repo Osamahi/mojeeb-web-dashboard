@@ -14,6 +14,7 @@ import { DisconnectConfirmationDialog } from '../components/dialogs/DisconnectCo
 import { HealthCheckDialog } from '../components/dialogs/HealthCheckDialog';
 import { WidgetCustomizationModal } from '../components/dialogs/WidgetCustomizationModal';
 import { useAgentContext } from '@/hooks/useAgentContext';
+import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -29,6 +30,7 @@ export default function ConnectionsPage() {
   const [selectedConnection, setSelectedConnection] = useState<PlatformConnection | null>(null);
 
   const { agent: globalSelectedAgent } = useAgentContext();
+  const { user } = useAuthStore();
 
   const { data: connections, isLoading, error, refetch, isFetching } = useConnections();
   const disconnectMutation = useDisconnectPlatform();
@@ -172,6 +174,7 @@ export default function ConnectionsPage() {
             connections={connections || []}
             onConnect={handleConnect}
             onCustomize={handleCustomize}
+            userRole={user?.role}
             isLoading={isLoading}
           />
         </motion.div>

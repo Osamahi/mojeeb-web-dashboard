@@ -11,6 +11,7 @@ export interface AvailablePlatformsSectionProps {
   connections: PlatformConnection[];
   onConnect: (platformId: PlatformType) => void;
   onCustomize?: (platformId: PlatformType) => void;
+  userRole?: number;
   isLoading?: boolean;
 }
 
@@ -18,6 +19,7 @@ export function AvailablePlatformsSection({
   connections,
   onConnect,
   onCustomize,
+  userRole,
   isLoading = false,
 }: AvailablePlatformsSectionProps) {
   // Get IDs of already connected platforms
@@ -62,6 +64,7 @@ export function AvailablePlatformsSection({
               platform={platform}
               onConnect={onConnect}
               onCustomize={onCustomize}
+              userRole={userRole}
             />
           ))}
         </div>

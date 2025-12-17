@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Loader2, AlertTriangle, ExternalLink, Facebook, Instagram } from 'lucide-react';
+import { Loader2, AlertTriangle, ExternalLink, Facebook, Instagram, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { logger } from '@/lib/logger';
@@ -30,8 +30,10 @@ type OAuthAuthorizeStepProps = {
 type AuthorizationState = 'idle' | 'initiating' | 'authorizing' | 'error';
 
 export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthorizeStepProps) {
+  console.log('⚡⚡⚡ OAuthAuthorizeStep RENDER - NEW CODE LOADED ⚡⚡⚡', { platform });
+
   const { agentId } = useAgentContext();
-  const { initiateOAuth, isInitiating, initiationData, resetAll } = useOAuthConnectionFlow();
+  const { initiateOAuthAsync, isInitiating, initiationData, resetAll } = useOAuthConnectionFlow();
 
   const [authState, setAuthState] = useState<AuthorizationState>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -41,23 +43,46 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
   // Track if component is mounted to prevent state updates after unmount
   const mountedRef = useRef(true);
   useEffect(() => {
+    console.log('🎬🎬🎬 OAuthAuthorizeStep MOUNTED 🎬🎬🎬');
+    logger.debug('🎬 OAuthAuthorizeStep MOUNTED', {
+      platform,
+      agentId,
+      authState,
+      isInitiating,
+      hasInitiateOAuthAsync: !!initiateOAuthAsync
+    });
     return () => {
+      console.log('💀💀💀 OAuthAuthorizeStep UNMOUNTING 💀💀💀');
+      console.trace('Component unmount stack trace');
+      logger.debug('🎬 OAuthAuthorizeStep UNMOUNTING');
       mountedRef.current = false;
     };
   }, []);
 
-  const platformName = platform === 'facebook' ? 'Facebook' : 'Instagram';
+  console.log('🔧 Component setup:', {
+    agentId,
+    platform,
+    hasInitiateOAuthAsync: !!initiateOAuthAsync,
+    isInitiating,
+    authState
+  });
+
+  const platformName = platform === 'facebook' ? 'Facebook' : platform === 'instagram' ? 'Instagram' : 'WhatsApp';
   const platformMetadata = getPlatformById(platform);
-  const PlatformIcon = platform === 'facebook' ? Facebook : Instagram;
+  const PlatformIcon = platform === 'facebook' ? Facebook : platform === 'instagram' ? Instagram : MessageCircle;
 
   // Start the OAuth flow
   const startOAuthFlow = useCallback(async () => {
+    console.log('🚀🚀🚀 startOAuthFlow CALLED', { agentId, platform });
+
     if (!agentId) {
+      console.error('❌ No agentId available');
       setErrorMessage('No agent selected. Please select an agent first.');
       setAuthState('error');
       return;
     }
 
+    console.log('✅ Setting authState to initiating');
     setAuthState('initiating');
     setErrorMessage('');
     setPopupBlocked(false);
@@ -66,97 +91,127 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
     const state = generateOAuthState();
     storeOAuthState(state, platform);
 
-    // Initiate OAuth to get authorization URL
-    initiateOAuth(
-      { agentId, platform },
-      {
-        onSuccess: async (data) => {
-          // Check if component is still mounted
-          if (!mountedRef.current) return;
+    try {
+      // Initiate OAuth to get authorization URL
+      console.log('📞 Calling initiateOAuthAsync');
 
-          // Validate authorization URL before proceeding
-          if (!data.authorizationUrl || typeof data.authorizationUrl !== 'string') {
-            logger.error('Invalid authorization URL received', { authUrl: data.authorizationUrl });
-            setErrorMessage('Invalid authorization URL received from server.');
-            setAuthState('error');
-            cleanupOAuthStorage();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT: initiateOAuthAsync took > 5s')), 5000)
+      );
+
+      const data = await Promise.race([
+        initiateOAuthAsync({ agentId, platform }),
+        timeoutPromise
+      ]).catch(err => {
+        console.error('💥 initiateOAuthAsync FAILED:', err);
+        throw err;
+      });
+
+      console.log('📥 OAuth initiation response received', { data });
+
+      // Validate authorization URL before proceeding
+      if (!data.authorizationUrl || typeof data.authorizationUrl !== 'string') {
+        logger.error('Invalid authorization URL received', { authUrl: data.authorizationUrl });
+        setErrorMessage('Invalid authorization URL received from server.');
+        setAuthState('error');
+        cleanupOAuthStorage();
+        return;
+      }
+
+      // Validate it's a proper URL
+      try {
+        const url = new URL(data.authorizationUrl);
+        if (!url.protocol.startsWith('http')) {
+          throw new Error('Invalid protocol');
+        }
+      } catch {
+        logger.error('Malformed authorization URL', { authUrl: data.authorizationUrl });
+        setErrorMessage('Received malformed authorization URL from server.');
+        setAuthState('error');
+        cleanupOAuthStorage();
+        return;
+      }
+
+      setAuthUrl(data.authorizationUrl);
+      console.log('🎯 Setting state to authorizing and opening popup', { authUrl: data.authorizationUrl });
+      setAuthState('authorizing');
+
+      try {
+        // Try to open popup
+        console.log('🪟 Calling openOAuthPopup');
+        const result = await openOAuthPopup(data.authorizationUrl);
+        console.log('✅ openOAuthPopup returned', { result });
+        console.log('🔍 Checking result.tempConnectionId:', result.tempConnectionId);
+        console.log('🔍 Checking result.result?.tempConnectionId:', (result as any).result?.tempConnectionId);
+
+        // Handle both direct and wrapped response formats
+        const tempConnectionId = result.tempConnectionId || (result as any).result?.tempConnectionId;
+        console.log('🎯 Final tempConnectionId:', tempConnectionId);
+
+        if (tempConnectionId) {
+          console.log('🎉🎉🎉 OAUTH FLOW COMPLETE! 🎉🎉🎉');
+          console.log('📋 tempConnectionId to pass to onSuccess:', tempConnectionId);
+          logger.info('OAuth completed successfully', { tempConnectionId });
+
+          // Call onSuccess BEFORE checking mounted state
+          // This ensures the parent component gets the result even if this component unmounts
+          console.log('🚀 Calling onSuccess callback...');
+          onSuccess(tempConnectionId);
+          console.log('✅ onSuccess callback completed');
+
+          // Now check if component is still mounted for state updates
+          console.log('🔍 Checking mountedRef.current:', mountedRef.current);
+          if (!mountedRef.current) {
+            console.log('ℹ️ Component unmounted after successful OAuth - this is OK');
             return;
           }
-
-          // Validate it's a proper URL
-          try {
-            const url = new URL(data.authorizationUrl);
-            if (!url.protocol.startsWith('http')) {
-              throw new Error('Invalid protocol');
-            }
-          } catch {
-            logger.error('Malformed authorization URL', { authUrl: data.authorizationUrl });
-            if (!mountedRef.current) return;
-            setErrorMessage('Received malformed authorization URL from server.');
+        } else {
+          console.error('❌ No tempConnectionId found in result:', result);
+          console.error('❌ This should not happen - OAuth flow stuck!');
+        }
+      } catch (error) {
+        if (!mountedRef.current) return;
+        if (error instanceof Error) {
+          if (error.message === OAuthErrorTypes.POPUP_BLOCKED) {
+            setPopupBlocked(true);
+            setAuthState('authorizing'); // Still show authorizing UI with manual option
+          } else if (error.message === OAuthErrorTypes.POPUP_CLOSED) {
+            setErrorMessage('Authorization was cancelled. Please try again.');
             setAuthState('error');
             cleanupOAuthStorage();
-            return;
-          }
-
-          if (!mountedRef.current) return;
-          setAuthUrl(data.authorizationUrl);
-          setAuthState('authorizing');
-
-          try {
-            // Try to open popup
-            const result = await openOAuthPopup(data.authorizationUrl);
-
-            if (!mountedRef.current) return;
-            if (result.tempConnectionId) {
-              logger.info('OAuth completed successfully', { tempConnectionId: result.tempConnectionId });
-              onSuccess(result.tempConnectionId);
-            }
-          } catch (error) {
-            if (!mountedRef.current) return;
-            if (error instanceof Error) {
-              if (error.message === OAuthErrorTypes.POPUP_BLOCKED) {
-                setPopupBlocked(true);
-                setAuthState('authorizing'); // Still show authorizing UI with manual option
-              } else if (error.message === OAuthErrorTypes.POPUP_CLOSED) {
-                setErrorMessage('Authorization was cancelled. Please try again.');
-                setAuthState('error');
-                cleanupOAuthStorage();
-              } else if (error.message === OAuthErrorTypes.OAUTH_TIMEOUT) {
-                setErrorMessage('Authorization timed out. Please try again.');
-                setAuthState('error');
-                cleanupOAuthStorage();
-              } else {
-                setErrorMessage(getOAuthErrorMessage(error));
-                setAuthState('error');
-                cleanupOAuthStorage();
-              }
-            } else {
-              setErrorMessage('An unexpected error occurred.');
-              setAuthState('error');
-              cleanupOAuthStorage();
-            }
-          }
-        },
-        onError: (error) => {
-          if (!mountedRef.current) return;
-          logger.error('OAuth initiation failed', { error });
-          // Check for network/server errors
-          const errorMsg = error instanceof Error ? error.message : String(error);
-          if (errorMsg.includes('Network') || errorMsg.includes('fetch') || errorMsg.includes('Failed to fetch')) {
-            setErrorMessage('Unable to connect to the server. Please ensure the backend is running.');
-          } else if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
-            setErrorMessage('Authentication failed. Please log in again.');
-          } else if (errorMsg.includes('404')) {
-            setErrorMessage('OAuth endpoint not found. Please check backend configuration.');
+          } else if (error.message === OAuthErrorTypes.OAUTH_TIMEOUT) {
+            setErrorMessage('Authorization timed out. Please try again.');
+            setAuthState('error');
+            cleanupOAuthStorage();
           } else {
             setErrorMessage(getOAuthErrorMessage(error));
+            setAuthState('error');
+            cleanupOAuthStorage();
           }
+        } else {
+          setErrorMessage('An unexpected error occurred.');
           setAuthState('error');
           cleanupOAuthStorage();
-        },
+        }
       }
-    );
-  }, [agentId, platform, initiateOAuth, onSuccess]);
+    } catch (error) {
+      if (!mountedRef.current) return;
+      logger.error('OAuth initiation failed', { error });
+      // Check for network/server errors
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes('Network') || errorMsg.includes('fetch') || errorMsg.includes('Failed to fetch')) {
+        setErrorMessage('Unable to connect to the server. Please ensure the backend is running.');
+      } else if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+        setErrorMessage('Authentication failed. Please log in again.');
+      } else if (errorMsg.includes('404')) {
+        setErrorMessage('OAuth endpoint not found. Please check backend configuration.');
+      } else {
+        setErrorMessage(getOAuthErrorMessage(error));
+      }
+      setAuthState('error');
+      cleanupOAuthStorage();
+    }
+  }, [agentId, platform, initiateOAuthAsync, onSuccess]);
 
   // Open OAuth URL in new tab (fallback)
   const openInNewTab = useCallback(() => {
@@ -177,8 +232,17 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
 
   // Auto-start OAuth when component mounts
   useEffect(() => {
+    logger.debug('🔍 Auto-start useEffect triggered', { authState, agentId, hasStartOAuthFlow: !!startOAuthFlow });
     if (authState === 'idle' && agentId) {
+      logger.debug('✅ Conditions met, calling startOAuthFlow');
       startOAuthFlow();
+    } else {
+      logger.debug('❌ Conditions NOT met', {
+        authStateIsIdle: authState === 'idle',
+        hasAgentId: !!agentId,
+        authState,
+        agentId
+      });
     }
   }, [authState, agentId, startOAuthFlow]);
 

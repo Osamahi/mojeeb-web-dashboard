@@ -120,6 +120,13 @@ export const queryKeys = {
    */
   facebookPages: (tempConnectionId: string | null) => ['facebook-pages', tempConnectionId] as const,
 
+  /**
+   * Query key for fetching available WhatsApp Business Accounts after OAuth
+   * @param {string | null} tempConnectionId - Temporary connection ID from OAuth callback
+   * @returns {readonly ['whatsapp-accounts', string | null]} Query key tuple
+   */
+  whatsappAccounts: (tempConnectionId: string | null) => ['whatsapp-accounts', tempConnectionId] as const,
+
   // ==================== Analytics Queries ====================
 
   /**

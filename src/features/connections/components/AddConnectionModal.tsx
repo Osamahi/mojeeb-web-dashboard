@@ -6,11 +6,12 @@
 import { useReducer, useEffect, useRef, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import { logger } from '@/lib/logger';
 import { useConnections } from '../hooks/useConnections';
 import { useConnectPage } from '../hooks/useAddConnection';
 import { cleanupOAuthStorage } from '../utils/oauthManager';
 import { platformShowsWidget } from '../constants/platforms';
-import type { OAuthIntegrationType, InstagramAccount, PlatformType } from '../types';
+import type { OAuthIntegrationType, InstagramAccount, WhatsAppPhoneNumber, PlatformType } from '../types';
 import { WidgetSnippetDialog } from './dialogs/WidgetSnippetDialog';
 
 import {
@@ -88,6 +89,16 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
   const contentRef = useRef<HTMLDivElement>(null);
   const [showWidgetDialog, setShowWidgetDialog] = useState(false);
 
+  // Log state changes
+  useEffect(() => {
+    logger.debug('📋 AddConnectionModal state changed', {
+      step: state.step,
+      platform: state.platform,
+      tempConnectionId: state.tempConnectionId,
+      isOpen
+    });
+  }, [state, isOpen]);
+
   // Handle widget platform
   useEffect(() => {
     if (isOpen && initialPlatform && platformShowsWidget(initialPlatform)) {
@@ -147,7 +158,11 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
     dispatch({ type: 'OAUTH_SUCCESS', tempConnectionId });
   };
 
-  const handleAccountSelect = (pageId: string, instagramAccount?: InstagramAccount) => {
+  const handleAccountSelect = (
+    pageId: string,
+    instagramAccount?: InstagramAccount,
+    whatsAppPhone?: WhatsAppPhoneNumber
+  ) => {
     if (!state.tempConnectionId) return;
 
     connectPage(
@@ -156,6 +171,8 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
         pageId,
         instagramAccountId: instagramAccount?.id,
         instagramUsername: instagramAccount?.username,
+        whatsAppPhoneNumberId: whatsAppPhone?.id,
+        whatsAppBusinessAccountId: whatsAppPhone?.businessAccountId || undefined,
       },
       {
         onSuccess: () => {
@@ -184,7 +201,11 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
   // Get modal title based on platform
   const getModalTitle = () => {
     if (state.platform) {
-      return `Connect ${state.platform === 'facebook' ? 'Facebook' : 'Instagram'}`;
+      const platformName =
+        state.platform === 'facebook' ? 'Facebook' :
+        state.platform === 'instagram' ? 'Instagram' :
+        'WhatsApp';
+      return `Connect ${platformName}`;
     }
     return 'Add Connection';
   };
@@ -208,13 +229,16 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
               <PlatformSelectStep onSelect={handlePlatformSelect} existingConnections={connections} />
             )}
 
-            {state.step === 'authorize' && state.platform && (
-              <OAuthAuthorizeStep
-                platform={state.platform}
-                onSuccess={handleOAuthSuccess}
-                onBack={handleBack}
-              />
-            )}
+            {state.step === 'authorize' && state.platform && (() => {
+              logger.debug('🎯 Rendering OAuthAuthorizeStep', { platform: state.platform });
+              return (
+                <OAuthAuthorizeStep
+                  platform={state.platform}
+                  onSuccess={handleOAuthSuccess}
+                  onBack={handleBack}
+                />
+              );
+            })()}
 
             {state.step === 'select' && state.platform && state.tempConnectionId && (
               <AccountSelectStep

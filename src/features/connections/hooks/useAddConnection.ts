@@ -16,6 +16,7 @@ import type {
   ConnectPageRequest,
   ConnectPageResponse,
   FacebookPagesResponse,
+  WhatsAppAccountsResponse,
 } from '../types';
 
 /**
@@ -57,6 +58,26 @@ export function useFacebookPages(tempConnectionId: string | null) {
     },
     enabled: !!tempConnectionId,
     staleTime: 10 * 60 * 1000, // 10 minutes - pages don't change often
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+  });
+}
+
+/**
+ * Hook for fetching available WhatsApp Business Accounts after OAuth authorization
+ * Enabled only when tempConnectionId is available
+ */
+export function useWhatsAppAccounts(tempConnectionId: string | null) {
+  return useQuery<WhatsAppAccountsResponse, Error>({
+    queryKey: queryKeys.whatsappAccounts(tempConnectionId),
+    queryFn: () => {
+      if (!tempConnectionId) {
+        throw new Error('No temporary connection ID available');
+      }
+      return connectionService.fetchAvailableWhatsAppAccounts(tempConnectionId);
+    },
+    enabled: !!tempConnectionId,
+    staleTime: 10 * 60 * 1000, // 10 minutes
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
@@ -108,6 +129,7 @@ export function useOAuthConnectionFlow() {
   return {
     // OAuth initiation
     initiateOAuth: initiateOAuth.mutate,
+    initiateOAuthAsync: initiateOAuth.mutateAsync,
     isInitiating: initiateOAuth.isPending,
     initiationError: initiateOAuth.error,
     initiationData: initiateOAuth.data,
