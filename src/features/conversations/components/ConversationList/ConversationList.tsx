@@ -28,6 +28,7 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isRefetching,
   } = useInfiniteConversations();
 
   // Subscribe to real-time updates - automatically syncs with React Query cache
@@ -94,8 +95,9 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
             className="p-2"
             variant="ghost"
             title="Refresh"
+            disabled={isRefetching}
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
           </Button>
         </div>
         <div className="flex-1">
@@ -117,9 +119,9 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
           className="p-2"
           variant="ghost"
           title="Refresh"
-          disabled={isLoading}
+          disabled={isRefetching}
         >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
         </Button>
       </div>
 
