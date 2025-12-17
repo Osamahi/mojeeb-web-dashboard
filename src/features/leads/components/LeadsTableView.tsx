@@ -207,17 +207,17 @@ export function LeadsTableView({
       <div className="bg-white rounded-lg border border-neutral-200 p-12">
         <EmptyState
           icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
-          title={hasActiveFilters ? 'No leads found' : 'No leads yet'}
+          title={hasActiveFilters ? 'No clients found' : 'No clients yet'}
           description={
             hasActiveFilters
               ? 'Try adjusting your filters or search query'
-              : 'Add your first lead to get started tracking potential customers'
+              : 'Add your first client to get started tracking potential customers'
           }
           action={
             !hasActiveFilters ? (
               <Button onClick={onAddLeadClick}>
                 <UserPlus className="w-4 h-4 mr-2" />
-                Add Lead
+                Add Client
               </Button>
             ) : undefined
           }

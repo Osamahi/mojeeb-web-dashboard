@@ -133,8 +133,8 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add Lead"
-      description="Create a new lead for this agent"
+      title="Add Client"
+      description="Create a new client for this agent"
       size="md"
     >
       <form onSubmit={handleSubmit}>

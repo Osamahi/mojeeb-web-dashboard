@@ -126,7 +126,7 @@ export default function LeadsPage() {
         <EmptyState
           icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
           title="No Agent Selected"
-          description="Please select an agent to view and manage leads"
+          description="Please select an agent to view and manage clients"
         />
       </div>
     );
@@ -205,8 +205,8 @@ export default function LeadsPage() {
 
       <ConfirmDialog
         isOpen={!!leadToDelete}
-        title="Delete Lead"
-        message="Are you sure you want to delete this lead? This action cannot be undone."
+        title="Delete Client"
+        message="Are you sure you want to delete this client? This action cannot be undone."
         confirmText="Delete"
         onConfirm={handleConfirmDelete}
         onCancel={() => setLeadToDelete(null)}

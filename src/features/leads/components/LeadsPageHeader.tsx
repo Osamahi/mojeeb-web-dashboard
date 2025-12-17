@@ -18,9 +18,9 @@ export const LeadsPageHeader = memo(({ activeFilterCount, onAddClick, onFilterCl
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="flex-1">
-        <h1 className="text-2xl font-semibold text-neutral-900">Leads</h1>
+        <h1 className="text-2xl font-semibold text-neutral-900">Clients</h1>
         <p className="text-sm text-neutral-600 mt-1">
-          Manage your leads
+          Manage your clients
         </p>
       </div>
 
@@ -39,11 +39,11 @@ export const LeadsPageHeader = memo(({ activeFilterCount, onAddClick, onFilterCl
           )}
         </button>
 
-        {/* Add Lead Button */}
+        {/* Add Client Button */}
         <button
           onClick={onAddClick}
           className="px-4 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
-          title="Add Lead"
+          title="Add Client"
         >
           <UserPlus className="w-4 h-4 text-neutral-700" />
           <span className="text-sm font-medium text-neutral-900">Add</span>

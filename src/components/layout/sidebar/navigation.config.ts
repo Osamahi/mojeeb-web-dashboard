@@ -7,10 +7,10 @@ import {
   Bot,
   Users,
   UserCog,
-  UserCheck,
   MessageSquare,
   Wrench,
   Plug,
+  Contact,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -41,11 +41,10 @@ export const navigation: NavigationItem[] = [
     icon: UserCog,
   },
   {
-    name: 'Leads',
+    name: 'Clients',
     href: '/leads',
-    icon: UserCheck,
+    icon: Contact,
     requiresAgent: true,
-    requireSuperAdmin: true,
   },
   {
     name: 'Agents',
