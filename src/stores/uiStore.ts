@@ -45,7 +45,9 @@ export const useUIStore = create<UIState>()(
     {
       name: 'mojeeb-ui-storage',
       partialize: (state) => ({
-        isSidebarCollapsed: state.isSidebarCollapsed,
+        // Don't persist isSidebarCollapsed - desktop sidebar should always start collapsed
+        // This ensures predictable behavior on page refresh (collapsed -> hover to expand)
+        // Only persist mobile drawer state if needed in the future
       }),
     }
   )

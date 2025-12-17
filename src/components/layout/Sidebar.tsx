@@ -105,6 +105,31 @@ const SidebarContent = () => {
     }
   };
 
+  // Click outside to collapse sidebar on desktop when expanded
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Only handle on desktop when sidebar is expanded
+      if (isMobile || isSidebarCollapsed) {
+        return;
+      }
+
+      const target = event.target as Node;
+
+      // Check if click is outside sidebar
+      if (sidebarRef.current && !sidebarRef.current.contains(target)) {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobile, isSidebarCollapsed, setSidebarCollapsed]);
+
   return (
     <>
       {/* Mobile Overlay Backdrop - Only shows on mobile when drawer is open */}
