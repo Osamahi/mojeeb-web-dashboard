@@ -24,9 +24,13 @@ interface AuthState {
   setLoading: (isLoading: boolean) => void;
 }
 
+// CRITICAL: In Zustand v5, middleware order matters!
+// persist() MUST be the outermost middleware or it cannot properly serialize/deserialize state.
+// Incorrect: subscribeWithSelector(persist(...)) ❌ - causes data loss on rehydration
+// Correct:   persist(subscribeWithSelector(...)) ✅ - proper state persistence
 export const useAuthStore = create<AuthState>()(
-  subscribeWithSelector(
-    persist(
+  persist(
+    subscribeWithSelector(
       (set, get) => ({
       user: null,
       accessToken: null,
@@ -240,7 +244,7 @@ export const useAuthStore = create<AuthState>()(
 
         console.log(`   🏁 Rehydration complete: isAuthenticated = ${state?.isAuthenticated}`);
       },
-    })
+    }
   )
 );
 
