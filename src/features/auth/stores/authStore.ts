@@ -70,6 +70,12 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
         });
 
+        // Start proactive token refresh service
+        import('./../../auth/services/tokenRefreshService').then(({ tokenRefreshService }) => {
+          tokenRefreshService.start();
+          console.log(`   🔄 Token refresh service started`);
+        });
+
         console.log(`   ✅ Auth state set, isAuthenticated = true`);
       },
 
@@ -109,6 +115,12 @@ export const useAuthStore = create<AuthState>()(
 
         // Clear phone collection tracking
         sessionHelper.resetSession();
+
+        // Stop proactive token refresh service
+        import('./../../auth/services/tokenRefreshService').then(({ tokenRefreshService }) => {
+          tokenRefreshService.stop();
+          console.log(`   🛑 Token refresh service stopped`);
+        });
 
         // Clear auth state
         set({
@@ -154,17 +166,67 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state) => {
         console.log(`\n💧 [AuthStore] Rehydrating from localStorage at ${new Date().toISOString()}`);
 
-        // CRITICAL FIX: Only check for refreshToken (persisted by Zustand - guaranteed to exist)
-        // Don't check accessToken from localStorage - it's in separate storage (tokenManager)
-        // and causes race condition. AuthInitializer will validate/refresh it later.
+        // CRITICAL FIX: Validate refresh token before trusting it
+        // This prevents false positive authentication state from expired/invalid tokens
         if (state?.refreshToken && state?.user) {
           console.log(`   ✅ Found persisted refreshToken and user`);
           console.log(`      User: ${state.user.email}`);
           console.log(`      User ID: ${state.user.id}`);
           console.log(`      Refresh Token: ${state.refreshToken.substring(0, 10)}... (${state.refreshToken.length} chars)`);
-          console.log(`   ✅ Setting isAuthenticated = true (AuthInitializer will validate tokens)`);
+          console.log(`   🔍 Validating refresh token with backend...`);
 
-          // Trust the persisted refreshToken - AuthInitializer will handle validation/refresh
+          // Validate the token asynchronously - don't block rehydration
+          (async () => {
+            try {
+              const { validateRefreshToken } = await import('@/lib/tokenManager');
+              const validation = await validateRefreshToken(state.refreshToken!);
+
+              if (validation.isValid && validation.tokens) {
+                console.log(`   ✅ Token validation SUCCEEDED - user is authenticated`);
+                console.log(`      New Access Token: ${validation.tokens.accessToken.substring(0, 10)}... (${validation.tokens.accessToken.length} chars)`);
+                console.log(`      New Refresh Token: ${validation.tokens.refreshToken.substring(0, 10)}... (${validation.tokens.refreshToken.length} chars)`);
+
+                // Update tokens in store with fresh tokens from validation
+                useAuthStore.getState().setTokens(validation.tokens.accessToken, validation.tokens.refreshToken);
+
+                // Ensure isAuthenticated is true
+                if (!useAuthStore.getState().isAuthenticated) {
+                  console.log(`   🔧 Setting isAuthenticated = true after successful validation`);
+                  useAuthStore.setState({ isAuthenticated: true });
+                }
+
+                // Start proactive token refresh service
+                const { tokenRefreshService } = await import('./../../auth/services/tokenRefreshService');
+                tokenRefreshService.start();
+                console.log(`   🔄 Token refresh service started after validation`);
+              } else {
+                console.log(`   ❌ Token validation FAILED - token is invalid/expired`);
+                console.log(`   🧹 Clearing invalid auth state and redirecting to login`);
+
+                // Clear all auth state - token is invalid
+                useAuthStore.getState().logout();
+
+                // Redirect to login page if not already there
+                if (window.location.pathname !== '/login') {
+                  window.location.href = '/login';
+                }
+              }
+            } catch (error) {
+              console.error(`   ❌ Token validation ERROR:`, error);
+              console.log(`   🧹 Clearing auth state due to validation error`);
+
+              // Clear all auth state on validation error
+              useAuthStore.getState().logout();
+
+              // Redirect to login page if not already there
+              if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+              }
+            }
+          })();
+
+          // Temporarily set authenticated to true to prevent flash of login page
+          // Will be corrected by validation above if token is invalid
           state.isAuthenticated = true;
         } else {
           console.log(`   ❌ No refresh token or user found in persisted state`);

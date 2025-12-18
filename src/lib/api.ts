@@ -161,7 +161,19 @@ api.interceptors.response.use(
       try {
         // Use centralized refresh method that handles token storage and Supabase auth
         const { authService } = await import('@/features/auth/services/authService');
+
+        logger.info('[API Interceptor] Attempting token refresh', {
+          refreshTokenLength: storedRefreshToken.length,
+          timestamp: new Date().toISOString(),
+        });
+
         const tokens = await authService.refreshAndUpdateSession(storedRefreshToken);
+
+        logger.info('[API Interceptor] Token refresh successful', {
+          accessTokenLength: tokens.accessToken.length,
+          refreshTokenLength: tokens.refreshToken.length,
+          queueSize: failedQueue.length,
+        });
 
         logger.debug(`[API Interceptor] Processing queued requests (${failedQueue.length} in queue)`);
         processQueue(null, tokens.accessToken);
@@ -174,7 +186,12 @@ api.interceptors.response.use(
         logger.debug('[API Interceptor] Retrying original request with new token');
         return api(originalRequest);
       } catch (refreshError) {
-        logger.debug('[API Interceptor] Token refresh failed', refreshError);
+        logger.error('[API Interceptor] Token refresh failed - will redirect to login', refreshError instanceof Error ? refreshError : new Error(String(refreshError)), {
+          refreshTokenLength: storedRefreshToken.length,
+          errorType: refreshError instanceof Error ? refreshError.name : 'Unknown',
+          timestamp: new Date().toISOString(),
+        });
+
         processQueue(refreshError as AxiosError, null);
         logger.debug('[API Interceptor] Redirecting to login');
         redirectToLogin();

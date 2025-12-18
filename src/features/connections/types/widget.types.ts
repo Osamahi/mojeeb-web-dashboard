@@ -4,6 +4,11 @@
  */
 
 /**
+ * Widget mode options
+ */
+export type WidgetMode = 'default' | 'headless';
+
+/**
  * Widget position options
  */
 export type WidgetPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
@@ -142,3 +147,34 @@ export const DEFAULT_WIDGET_CONFIG: Partial<WidgetCustomizationForm> = {
   showPoweredBy: true,
   delayAutoOpen: null,
 };
+
+/**
+ * Widget mode option interface
+ */
+export interface WidgetModeOption {
+  value: WidgetMode;
+  label: string;
+  description: string;
+  badge?: string;
+  badgeVariant?: 'recommended' | 'advanced';
+}
+
+/**
+ * Available widget mode options
+ */
+export const WIDGET_MODES: WidgetModeOption[] = [
+  {
+    value: 'default',
+    label: 'Ready Made Widget',
+    description: 'Includes launcher button, zero configuration, perfect for most websites',
+    badge: 'Recommended',
+    badgeVariant: 'recommended',
+  },
+  {
+    value: 'headless',
+    label: 'Customized Integration',
+    description: 'Use your own buttons/triggers, full control, for custom integrations',
+    badge: 'Advanced',
+    badgeVariant: 'advanced',
+  },
+];

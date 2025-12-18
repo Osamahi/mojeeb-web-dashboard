@@ -135,3 +135,35 @@ export const hasTokens = (): boolean => {
 export const hasValidSession = (): boolean => {
   return !!getAccessToken() && !!getRefreshToken();
 };
+
+/**
+ * Validate refresh token by attempting to use it for token refresh
+ * This is called during rehydration to ensure stored tokens are still valid
+ *
+ * @param refreshToken - The refresh token to validate
+ * @returns Promise resolving to validation result with new tokens if valid
+ */
+export const validateRefreshToken = async (
+  refreshToken: string
+): Promise<{ isValid: boolean; tokens?: { accessToken: string; refreshToken: string } }> => {
+  try {
+    logger.debug('[TokenManager] Validating refresh token during rehydration');
+
+    // Import authService dynamically to avoid circular dependencies
+    const { authService } = await import('@/features/auth/services/authService');
+
+    // Attempt to refresh tokens - if this succeeds, token is valid
+    const tokens = await authService.refreshToken(refreshToken);
+
+    if (tokens.accessToken && tokens.refreshToken) {
+      logger.debug('[TokenManager] Token validation successful - token is valid');
+      return { isValid: true, tokens };
+    } else {
+      logger.warn('[TokenManager] Token validation failed - no tokens returned');
+      return { isValid: false };
+    }
+  } catch (error) {
+    logger.error('[TokenManager] Token validation failed - refresh token is invalid/expired', error);
+    return { isValid: false };
+  }
+};

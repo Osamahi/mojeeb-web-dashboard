@@ -4,7 +4,7 @@
  */
 
 import api from '@/lib/api';
-import type { WidgetConfiguration, UpdateWidgetRequest } from '../types/widget.types';
+import type { WidgetConfiguration, UpdateWidgetRequest, WidgetMode } from '../types/widget.types';
 
 export interface WidgetSnippetResponse {
   snippet: string;
@@ -103,10 +103,14 @@ export async function updateWidget(
 /**
  * Get widget snippet for an agent
  * Fetches the default widget embed code snippet for the specified agent
+ * @param agentId - The agent ID
+ * @param mode - Widget mode: 'default' or 'headless' (defaults to 'default')
  */
-export async function getWidgetSnippet(agentId: string): Promise<string> {
+export async function getWidgetSnippet(agentId: string, mode: WidgetMode = 'default'): Promise<string> {
   try {
-    const response = await api.get<string>(`/api/widget/agent/${agentId}/default-snippet`);
+    const response = await api.get<string>(`/api/widget/agent/${agentId}/default-snippet`, {
+      params: { mode },
+    });
 
     // Backend returns plain HTML string directly
     return response.data;
@@ -118,10 +122,14 @@ export async function getWidgetSnippet(agentId: string): Promise<string> {
 
 /**
  * Get widget embed snippet by widget ID
+ * @param widgetId - The widget configuration ID
+ * @param mode - Widget mode: 'default' or 'headless' (defaults to 'default')
  */
-export async function getWidgetSnippetById(widgetId: string): Promise<string> {
+export async function getWidgetSnippetById(widgetId: string, mode: WidgetMode = 'default'): Promise<string> {
   try {
-    const response = await api.get<string>(`/api/widget/${widgetId}/snippet`);
+    const response = await api.get<string>(`/api/widget/${widgetId}/snippet`, {
+      params: { mode },
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching widget snippet:', error);
