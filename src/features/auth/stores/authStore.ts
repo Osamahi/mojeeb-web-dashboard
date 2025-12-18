@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, subscribeWithSelector } from 'zustand/middleware';
 import type { User } from '../types/auth.types';
 import { setTokens as setApiTokens, clearTokens as clearApiTokens } from '@/lib/tokenManager';
 import { setSentryUser, clearSentryUser } from '@/lib/sentry';
@@ -25,8 +25,9 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
+  subscribeWithSelector(
+    persist(
+      (set, get) => ({
       user: null,
       accessToken: null,
       refreshToken: null,
@@ -48,6 +49,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setAuth: (user, accessToken, refreshToken) => {
+        console.log(`\n🔐 [AuthStore] setAuth called at ${new Date().toISOString()}`);
+        console.log(`   User: ${user.email}`);
+        console.log(`   User ID: ${user.id}`);
+        console.log(`   Access Token: ${accessToken.substring(0, 10)}... (${accessToken.length} chars)`);
+        console.log(`   Refresh Token: ${refreshToken.substring(0, 10)}... (${refreshToken.length} chars)`);
+
         setApiTokens(accessToken, refreshToken);
 
         // Set Sentry user context for error tracking
@@ -62,6 +69,8 @@ export const useAuthStore = create<AuthState>()(
           refreshToken,
           isAuthenticated: true,
         });
+
+        console.log(`   ✅ Auth state set, isAuthenticated = true`);
       },
 
       updateUserPhone: (phone) => {
@@ -72,9 +81,22 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        // DIAGNOSTIC: Capture stack trace to see what triggered logout
+        const logoutStack = new Error().stack;
+
         console.log(`\n🚪 [AuthStore] logout called at ${new Date().toISOString()}`);
         console.log(`   Current user: ${get().user?.email || 'null'}`);
         console.log(`   Current isAuthenticated: ${get().isAuthenticated}`);
+        console.log(`   📍 Logout triggered from:\n${logoutStack}`);
+
+        // DIAGNOSTIC: Check localStorage state before clearing
+        const persistedState = localStorage.getItem('mojeeb-auth-storage');
+        const accessTokenLS = localStorage.getItem('accessToken');
+        const refreshTokenLS = localStorage.getItem('refreshToken');
+        console.log(`   📊 localStorage state before logout:`);
+        console.log(`      mojeeb-auth-storage: ${persistedState ? 'EXISTS' : 'MISSING'} (${persistedState?.length || 0} chars)`);
+        console.log(`      accessToken: ${accessTokenLS ? 'EXISTS' : 'MISSING'} (${accessTokenLS?.length || 0} chars)`);
+        console.log(`      refreshToken: ${refreshTokenLS ? 'EXISTS' : 'MISSING'} (${refreshTokenLS?.length || 0} chars)`);
 
         // Clear tokens from tokenManager
         clearApiTokens();
@@ -100,6 +122,15 @@ export const useAuthStore = create<AuthState>()(
         // Without this, if page refreshes before persist writes, old data persists causing redirect loops
         console.log(`   🧹 Force clearing Zustand persist storage...`);
         localStorage.removeItem('mojeeb-auth-storage');
+
+        // DIAGNOSTIC: Verify localStorage was cleared
+        const persistedAfter = localStorage.getItem('mojeeb-auth-storage');
+        const accessTokenAfter = localStorage.getItem('accessToken');
+        const refreshTokenAfter = localStorage.getItem('refreshToken');
+        console.log(`   📊 localStorage state after logout:`);
+        console.log(`      mojeeb-auth-storage: ${persistedAfter ? 'STILL EXISTS ⚠️' : 'CLEARED ✅'}`);
+        console.log(`      accessToken: ${accessTokenAfter ? 'STILL EXISTS ⚠️' : 'CLEARED ✅'}`);
+        console.log(`      refreshToken: ${refreshTokenAfter ? 'STILL EXISTS ⚠️' : 'CLEARED ✅'}`);
 
         // Clear other Zustand stores to prevent stale data
         console.log(`   🧹 Clearing AgentStore...`);
@@ -147,6 +178,25 @@ export const useAuthStore = create<AuthState>()(
 
         console.log(`   🏁 Rehydration complete: isAuthenticated = ${state?.isAuthenticated}`);
       },
-    }
+    })
   )
 );
+
+// DIAGNOSTIC: Subscribe to isAuthenticated changes to track unexpected sign-outs
+if (import.meta.env.DEV) {
+  useAuthStore.subscribe(
+    (state) => state.isAuthenticated,
+    (isAuthenticated, previousIsAuthenticated) => {
+      if (previousIsAuthenticated && !isAuthenticated) {
+        const stack = new Error().stack;
+        console.error(`\n🚨 [AuthStore] UNEXPECTED SIGN-OUT DETECTED at ${new Date().toISOString()}`);
+        console.error(`   isAuthenticated changed: true → false`);
+        console.error(`   Current user: ${useAuthStore.getState().user?.email || 'null'}`);
+        console.error(`   Current refreshToken: ${useAuthStore.getState().refreshToken ? 'EXISTS' : 'MISSING'}`);
+        console.error(`   📍 Sign-out triggered from:\n${stack}`);
+        console.error(`   ⚠️ This might indicate a bug - check the stack trace above!`);
+      }
+    }
+  );
+  console.log('🔍 [AuthStore] Monitoring isAuthenticated for unexpected sign-outs...');
+}

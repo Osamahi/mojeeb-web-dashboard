@@ -25,12 +25,24 @@ const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const refreshToken = useAuthStore((state) => state.refreshToken);
+  const user = useAuthStore((state) => state.user);
+
+  // DIAGNOSTIC: Log protected route access attempts
+  console.log(`\n🛡️ [ProtectedRoute] Access check at ${new Date().toISOString()}`);
+  console.log(`   isAuthenticated: ${isAuthenticated}`);
+  console.log(`   refreshToken: ${refreshToken ? 'EXISTS' : 'MISSING'}`);
+  console.log(`   user: ${user ? user.email : 'MISSING'}`);
+  console.log(`   Current URL: ${window.location.pathname}`);
 
   // DEFENSIVE CHECK: Don't redirect if we have a refreshToken
   // Even if isAuthenticated is false (due to race condition), AuthInitializer will handle token validation
   if (!isAuthenticated && !refreshToken) {
+    console.log(`   ⚠️ [ProtectedRoute] NOT AUTHENTICATED - Redirecting to /login`);
+    console.log(`   📍 Redirect triggered from: ${window.location.pathname}`);
     return <Navigate to="/login" replace />;
   }
+
+  console.log(`   ✅ [ProtectedRoute] Access granted - rendering protected content`);
 
   // Wrap with AuthInitializer to validate tokens before rendering
   return (
@@ -67,10 +79,22 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
 // Public route wrapper (redirect if already authenticated)
 const PublicRoute = ({ children, allowAuthenticatedAccess = false }: { children: React.ReactNode; allowAuthenticatedAccess?: boolean }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
+
+  // DIAGNOSTIC: Log public route access
+  console.log(`\n🌐 [PublicRoute] Access check at ${new Date().toISOString()}`);
+  console.log(`   isAuthenticated: ${isAuthenticated}`);
+  console.log(`   user: ${user ? user.email : 'MISSING'}`);
+  console.log(`   allowAuthenticatedAccess: ${allowAuthenticatedAccess}`);
+  console.log(`   Current URL: ${window.location.pathname}`);
 
   if (isAuthenticated && !allowAuthenticatedAccess) {
+    console.log(`   ⚠️ [PublicRoute] User already authenticated - Redirecting to /conversations`);
+    console.log(`   📍 Redirect triggered from: ${window.location.pathname}`);
     return <Navigate to="/conversations" replace />;
   }
+
+  console.log(`   ✅ [PublicRoute] Access granted - rendering public content`);
 
   return (
     <Suspense fallback={<PageSkeleton />}>
