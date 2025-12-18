@@ -96,6 +96,11 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
         });
 
+        // CRITICAL FIX: Immediately clear Zustand persist storage to prevent race condition
+        // Without this, if page refreshes before persist writes, old data persists causing redirect loops
+        console.log(`   🧹 Force clearing Zustand persist storage...`);
+        localStorage.removeItem('mojeeb-auth-storage');
+
         // Clear other Zustand stores to prevent stale data
         console.log(`   🧹 Clearing AgentStore...`);
         useAgentStore.getState().reset();
@@ -118,31 +123,24 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state) => {
         console.log(`\n💧 [AuthStore] Rehydrating from localStorage at ${new Date().toISOString()}`);
 
-        // Critical fix for flickering loop: Validate accessToken exists before setting isAuthenticated
+        // CRITICAL FIX: Only check for refreshToken (persisted by Zustand - guaranteed to exist)
+        // Don't check accessToken from localStorage - it's in separate storage (tokenManager)
+        // and causes race condition. AuthInitializer will validate/refresh it later.
         if (state?.refreshToken && state?.user) {
           console.log(`   ✅ Found persisted refreshToken and user`);
           console.log(`      User: ${state.user.email}`);
-          console.log(`      Refresh Token: ${state.refreshToken.substring(0, 10)}...`);
+          console.log(`      User ID: ${state.user.id}`);
+          console.log(`      Refresh Token: ${state.refreshToken.substring(0, 10)}... (${state.refreshToken.length} chars)`);
+          console.log(`   ✅ Setting isAuthenticated = true (AuthInitializer will validate tokens)`);
 
-          const accessToken = localStorage.getItem('accessToken');
-          console.log(`   🔍 Checking localStorage for accessToken...`);
-
-          // Only set isAuthenticated if we have BOTH tokens
-          if (accessToken && accessToken.trim() !== '') {
-            console.log(`   ✅ Access token found: ${accessToken.substring(0, 10)}... (${accessToken.length} chars)`);
-            console.log(`   ✅ Setting isAuthenticated = true`);
-            state.isAuthenticated = true;
-          } else {
-            console.log(`   ⚠️ No access token found - has refresh token but needs to refresh`);
-            console.log(`   ⚠️ Setting isAuthenticated = false (will trigger refresh flow)`);
-            // Has refresh token but no access token - trigger auth flow
-            state.isAuthenticated = false;
-          }
+          // Trust the persisted refreshToken - AuthInitializer will handle validation/refresh
+          state.isAuthenticated = true;
         } else {
           console.log(`   ❌ No refresh token or user found in persisted state`);
           console.log(`      Refresh Token: ${state?.refreshToken ? 'exists' : 'missing'}`);
           console.log(`      User: ${state?.user ? 'exists' : 'missing'}`);
           console.log(`   ❌ Setting isAuthenticated = false`);
+
           // No refresh token or user - definitely not authenticated
           state.isAuthenticated = false;
         }

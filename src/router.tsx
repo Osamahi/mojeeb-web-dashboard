@@ -24,8 +24,11 @@ const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const refreshToken = useAuthStore((state) => state.refreshToken);
 
-  if (!isAuthenticated) {
+  // DEFENSIVE CHECK: Don't redirect if we have a refreshToken
+  // Even if isAuthenticated is false (due to race condition), AuthInitializer will handle token validation
+  if (!isAuthenticated && !refreshToken) {
     return <Navigate to="/login" replace />;
   }
 
@@ -42,9 +45,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 // SuperAdmin-only route wrapper
 const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const refreshToken = useAuthStore((state) => state.refreshToken);
   const user = useAuthStore((state) => state.user);
 
-  if (!isAuthenticated) {
+  // DEFENSIVE CHECK: Don't redirect if we have a refreshToken
+  if (!isAuthenticated && !refreshToken) {
     return <Navigate to="/login" replace />;
   }
 
