@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, subscribeWithSelector } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 import type { User } from '../types/auth.types';
 import { setTokens as setApiTokens, clearTokens as clearApiTokens } from '@/lib/tokenManager';
 import { setSentryUser, clearSentryUser } from '@/lib/sentry';
@@ -24,14 +24,13 @@ interface AuthState {
   setLoading: (isLoading: boolean) => void;
 }
 
-// CRITICAL: In Zustand v5, middleware order matters!
-// persist() MUST be the outermost middleware or it cannot properly serialize/deserialize state.
-// Incorrect: subscribeWithSelector(persist(...)) ❌ - causes data loss on rehydration
-// Correct:   persist(subscribeWithSelector(...)) ✅ - proper state persistence
+// CRITICAL: In Zustand v5, persist configuration must be passed directly to persist middleware.
+// The subscribeWithSelector wrapper was causing the config object to be misplaced,
+// preventing persist from knowing where/how to save data to localStorage.
+// We use a manual subscriber at the bottom of the file instead (line 253).
 export const useAuthStore = create<AuthState>()(
   persist(
-    subscribeWithSelector(
-      (set, get) => ({
+    (set, get) => ({
       user: null,
       accessToken: null,
       refreshToken: null,
@@ -46,8 +45,31 @@ export const useAuthStore = create<AuthState>()(
         console.log(`   New Access Token: ${accessToken ? accessToken.substring(0, 10) + '...' : 'null'} (${accessToken?.length || 0} chars)`);
         console.log(`   New Refresh Token: ${refreshToken ? refreshToken.substring(0, 10) + '...' : 'null'} (${refreshToken?.length || 0} chars)`);
 
+        // DIAGNOSTIC: Check localStorage BEFORE state update
+        const beforePersist = localStorage.getItem('mojeeb-auth-storage');
+        console.log(`   📊 BEFORE set(): localStorage['mojeeb-auth-storage'] = ${beforePersist ? 'EXISTS' : 'MISSING'} (${beforePersist?.length || 0} chars)`);
+
         setApiTokens(accessToken, refreshToken);
         set({ accessToken, refreshToken });
+
+        // DIAGNOSTIC: Check localStorage AFTER state update (allow 100ms for persist middleware)
+        setTimeout(() => {
+          const afterPersist = localStorage.getItem('mojeeb-auth-storage');
+          console.log(`   📊 AFTER set() +100ms: localStorage['mojeeb-auth-storage'] = ${afterPersist ? 'EXISTS' : 'MISSING'} (${afterPersist?.length || 0} chars)`);
+          if (afterPersist) {
+            try {
+              const parsed = JSON.parse(afterPersist);
+              console.log(`   📊 Persisted data contains:`);
+              console.log(`      - user: ${parsed?.state?.user ? 'YES' : 'NO'}`);
+              console.log(`      - refreshToken: ${parsed?.state?.refreshToken ? 'YES (' + parsed.state.refreshToken.substring(0, 10) + '...)' : 'NO'}`);
+              console.log(`      - isAuthenticated: ${parsed?.state?.isAuthenticated}`);
+            } catch (e) {
+              console.error(`   ❌ Failed to parse persisted data:`, e);
+            }
+          } else {
+            console.warn(`   ⚠️ WARNING: Persist middleware did NOT write to localStorage!`);
+          }
+        }, 100);
 
         console.log(`   ✅ AuthStore state updated`);
       },
@@ -58,6 +80,10 @@ export const useAuthStore = create<AuthState>()(
         console.log(`   User ID: ${user.id}`);
         console.log(`   Access Token: ${accessToken.substring(0, 10)}... (${accessToken.length} chars)`);
         console.log(`   Refresh Token: ${refreshToken.substring(0, 10)}... (${refreshToken.length} chars)`);
+
+        // DIAGNOSTIC: Check localStorage BEFORE state update
+        const beforePersist = localStorage.getItem('mojeeb-auth-storage');
+        console.log(`   📊 BEFORE set(): localStorage['mojeeb-auth-storage'] = ${beforePersist ? 'EXISTS' : 'MISSING'} (${beforePersist?.length || 0} chars)`);
 
         setApiTokens(accessToken, refreshToken);
 
@@ -73,6 +99,27 @@ export const useAuthStore = create<AuthState>()(
           refreshToken,
           isAuthenticated: true,
         });
+
+        // DIAGNOSTIC: Check localStorage AFTER state update (allow 100ms for persist middleware)
+        setTimeout(() => {
+          const afterPersist = localStorage.getItem('mojeeb-auth-storage');
+          console.log(`   📊 AFTER set() +100ms: localStorage['mojeeb-auth-storage'] = ${afterPersist ? 'EXISTS' : 'MISSING'} (${afterPersist?.length || 0} chars)`);
+          if (afterPersist) {
+            try {
+              const parsed = JSON.parse(afterPersist);
+              console.log(`   📊 Persisted data contains:`);
+              console.log(`      - user: ${parsed?.state?.user ? `YES (${parsed.state.user.email})` : 'NO'}`);
+              console.log(`      - refreshToken: ${parsed?.state?.refreshToken ? 'YES (' + parsed.state.refreshToken.substring(0, 10) + '...)' : 'NO'}`);
+              console.log(`      - isAuthenticated: ${parsed?.state?.isAuthenticated}`);
+              console.log(`   ✅ Authentication data successfully persisted to localStorage!`);
+            } catch (e) {
+              console.error(`   ❌ Failed to parse persisted data:`, e);
+            }
+          } else {
+            console.error(`   ❌ CRITICAL: Persist middleware did NOT write to localStorage!`);
+            console.error(`   ❌ This will cause user to be logged out on page refresh!`);
+          }
+        }, 100);
 
         // Start proactive token refresh service
         import('./../../auth/services/tokenRefreshService').then(({ tokenRefreshService }) => {
@@ -162,17 +209,49 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'mojeeb-auth-storage',
-      partialize: (state) => ({
-        user: state.user,
-        refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated,
-      }),
-      onRehydrateStorage: () => (state) => {
-        console.log(`\n💧 [AuthStore] Rehydrating from localStorage at ${new Date().toISOString()}`);
+      partialize: (state) => {
+        // DIAGNOSTIC: Log what we're attempting to persist
+        const dataToPartialize = {
+          user: state.user,
+          refreshToken: state.refreshToken,
+          isAuthenticated: state.isAuthenticated,
+        };
+        console.log(`   📝 [Persist.partialize] Selecting data to persist:`);
+        console.log(`      - user: ${dataToPartialize.user ? `YES (${dataToPartialize.user.email})` : 'NO'}`);
+        console.log(`      - refreshToken: ${dataToPartialize.refreshToken ? `YES (${dataToPartialize.refreshToken.substring(0, 10)}...)` : 'NO'}`);
+        console.log(`      - isAuthenticated: ${dataToPartialize.isAuthenticated}`);
+        return dataToPartialize;
+      },
+      onRehydrateStorage: () => {
+        console.log(`\n💧 [Persist.onRehydrateStorage] Starting rehydration process...`);
 
-        // CRITICAL FIX: Validate refresh token before trusting it
-        // This prevents false positive authentication state from expired/invalid tokens
-        if (state?.refreshToken && state?.user) {
+        // DIAGNOSTIC: Check what's in localStorage before rehydration
+        const rawStorage = localStorage.getItem('mojeeb-auth-storage');
+        console.log(`   📊 Raw localStorage value: ${rawStorage ? 'EXISTS' : 'MISSING'} (${rawStorage?.length || 0} chars)`);
+        if (rawStorage) {
+          try {
+            const parsed = JSON.parse(rawStorage);
+            console.log(`   📊 Parsed localStorage structure:`);
+            console.log(`      - state: ${parsed?.state ? 'EXISTS' : 'MISSING'}`);
+            console.log(`      - state.user: ${parsed?.state?.user ? `EXISTS (${parsed.state.user.email})` : 'MISSING'}`);
+            console.log(`      - state.refreshToken: ${parsed?.state?.refreshToken ? `EXISTS (${parsed.state.refreshToken.substring(0, 10)}...)` : 'MISSING'}`);
+            console.log(`      - state.isAuthenticated: ${parsed?.state?.isAuthenticated}`);
+          } catch (e) {
+            console.error(`   ❌ Failed to parse localStorage JSON:`, e);
+          }
+        }
+
+        return (state) => {
+          console.log(`\n💧 [AuthStore] Rehydration callback executing at ${new Date().toISOString()}`);
+          console.log(`   📊 Rehydrated state received:`);
+          console.log(`      - state object: ${state ? 'EXISTS' : 'NULL'}`);
+          console.log(`      - user: ${state?.user ? `EXISTS (${state.user.email})` : 'MISSING'}`);
+          console.log(`      - refreshToken: ${state?.refreshToken ? `EXISTS (${state.refreshToken.substring(0, 10)}...)` : 'MISSING'}`);
+          console.log(`      - isAuthenticated: ${state?.isAuthenticated}`);
+
+          // CRITICAL FIX: Validate refresh token before trusting it
+          // This prevents false positive authentication state from expired/invalid tokens
+          if (state?.refreshToken && state?.user) {
           console.log(`   ✅ Found persisted refreshToken and user`);
           console.log(`      User: ${state.user.email}`);
           console.log(`      User ID: ${state.user.id}`);
@@ -242,7 +321,8 @@ export const useAuthStore = create<AuthState>()(
           state.isAuthenticated = false;
         }
 
-        console.log(`   🏁 Rehydration complete: isAuthenticated = ${state?.isAuthenticated}`);
+          console.log(`   🏁 Rehydration complete: isAuthenticated = ${state?.isAuthenticated}`);
+        };
       },
     }
   )
@@ -265,4 +345,65 @@ if (import.meta.env.DEV) {
     }
   );
   console.log('🔍 [AuthStore] Monitoring isAuthenticated for unexpected sign-outs...');
+}
+
+// DIAGNOSTIC: Global helper to verify auth persistence (available in browser console)
+if (typeof window !== 'undefined') {
+  (window as any).verifyAuthPersistence = () => {
+    console.log('\n🔍 [DIAGNOSTIC] Auth Persistence Verification Report');
+    console.log('================================================\n');
+
+    const currentState = useAuthStore.getState();
+    const rawStorage = localStorage.getItem('mojeeb-auth-storage');
+    const accessTokenLS = localStorage.getItem('accessToken');
+    const refreshTokenLS = localStorage.getItem('refreshToken');
+
+    console.log('1️⃣ ZUSTAND STORE STATE:');
+    console.log(`   - user: ${currentState.user ? `EXISTS (${currentState.user.email})` : 'MISSING'}`);
+    console.log(`   - accessToken: ${currentState.accessToken ? `EXISTS (${currentState.accessToken.substring(0, 10)}...)` : 'MISSING'}`);
+    console.log(`   - refreshToken: ${currentState.refreshToken ? `EXISTS (${currentState.refreshToken.substring(0, 10)}...)` : 'MISSING'}`);
+    console.log(`   - isAuthenticated: ${currentState.isAuthenticated}`);
+    console.log(`   - isLoading: ${currentState.isLoading}\n`);
+
+    console.log('2️⃣ LOCALSTORAGE - ZUSTAND PERSIST:');
+    console.log(`   - mojeeb-auth-storage: ${rawStorage ? `EXISTS (${rawStorage.length} chars)` : 'MISSING'}`);
+    if (rawStorage) {
+      try {
+        const parsed = JSON.parse(rawStorage);
+        console.log(`   - Persisted user: ${parsed?.state?.user ? `YES (${parsed.state.user.email})` : 'NO'}`);
+        console.log(`   - Persisted refreshToken: ${parsed?.state?.refreshToken ? `YES (${parsed.state.refreshToken.substring(0, 10)}...)` : 'NO'}`);
+        console.log(`   - Persisted isAuthenticated: ${parsed?.state?.isAuthenticated}`);
+      } catch (e) {
+        console.error(`   ❌ ERROR: Failed to parse - ${e}`);
+      }
+    }
+    console.log('');
+
+    console.log('3️⃣ LOCALSTORAGE - TOKEN MANAGER:');
+    console.log(`   - accessToken: ${accessTokenLS ? `EXISTS (${accessTokenLS.substring(0, 10)}...)` : 'MISSING'}`);
+    console.log(`   - refreshToken: ${refreshTokenLS ? `EXISTS (${refreshTokenLS.substring(0, 10)}...)` : 'MISSING'}\n`);
+
+    console.log('4️⃣ CONSISTENCY CHECK:');
+    const storeHasAuth = currentState.isAuthenticated && currentState.user && currentState.refreshToken;
+    const persistHasAuth = rawStorage && JSON.parse(rawStorage)?.state?.user && JSON.parse(rawStorage)?.state?.refreshToken;
+    const tokenManagerHasTokens = accessTokenLS && refreshTokenLS;
+
+    console.log(`   - Store has auth: ${storeHasAuth ? '✅ YES' : '❌ NO'}`);
+    console.log(`   - Persist has auth: ${persistHasAuth ? '✅ YES' : '❌ NO'}`);
+    console.log(`   - TokenManager has tokens: ${tokenManagerHasTokens ? '✅ YES' : '❌ NO'}`);
+
+    if (storeHasAuth && persistHasAuth && tokenManagerHasTokens) {
+      console.log('\n✅ VERDICT: All systems consistent - auth should persist correctly');
+    } else if (!storeHasAuth && !persistHasAuth && !tokenManagerHasTokens) {
+      console.log('\n✅ VERDICT: User is not logged in - this is correct');
+    } else {
+      console.warn('\n⚠️ VERDICT: INCONSISTENT STATE DETECTED!');
+      console.warn('   This indicates a bug in the auth system.');
+      console.warn('   Expected all three to match (all YES or all NO)');
+    }
+
+    console.log('\n================================================');
+  };
+
+  console.log('💡 [AuthStore] Type verifyAuthPersistence() in console to check auth state');
 }
