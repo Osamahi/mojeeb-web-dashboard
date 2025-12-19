@@ -27,6 +27,7 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
+  const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null);
 
   // Reset wizard when dialog opens
   useEffect(() => {
@@ -63,9 +64,10 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
     }
   };
 
-  const handleCopy = async () => {
+  const handleCopy = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(snippet);
+      await navigator.clipboard.writeText(text);
+      setCopiedSnippet(text);
       setIsCopied(true);
     } catch (err) {
       console.error('Failed to copy:', err);
@@ -92,6 +94,48 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
     setCurrentStep('mode-selection');
     setIsCopied(false);
   };
+
+  // Code snippets for headless mode
+  const customButtonSnippet = `<!-- Your custom button -->
+<button
+  id="my-chat-button"
+  style="padding: 10px 20px;
+         background: #00D084;
+         color: white;
+         border: none;
+         border-radius: 8px;
+         cursor: pointer;">
+  Chat with us
+</button>`;
+
+  const attachWidgetSnippet = `<!-- Attach widget to your button -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    MojeebWidget.attach('#my-chat-button');
+  });
+</script>`;
+
+  const completeExampleSnippet = `<!DOCTYPE html>
+<html>
+<body>
+  <!-- Step 1: Your custom button (place anywhere in body) -->
+  <button id="my-chat-button" style="padding: 10px 20px; background: #00D084; color: white; border: none; border-radius: 8px; cursor: pointer;">
+    Chat with us
+  </button>
+
+  <!-- Your website content... -->
+
+  <!-- Step 2: Mojeeb Widget Script (before </body>) -->
+${snippet}
+
+  <!-- Step 3: Attach widget to button (after widget script) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      MojeebWidget.attach('#my-chat-button');
+    });
+  </script>
+</body>
+</html>`;
 
   return (
     <Modal
@@ -129,47 +173,50 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
                   className={`
                     w-full flex items-start gap-4 p-5 border-2 rounded-lg text-left transition-all
                     ${
-                      isLoading
+                      isLoading && selectedMode === modeOption.value
+                        ? 'border-[#00D084] bg-[#F0FDF9] cursor-wait'
+                        : isLoading
                         ? 'opacity-50 cursor-not-allowed'
                         : 'border-neutral-200 bg-white hover:border-[#00D084] hover:bg-[#F0FDF9] cursor-pointer'
                     }
                   `}
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base font-semibold text-neutral-900">
-                        {modeOption.label}
-                      </span>
-                      {modeOption.badge && (
-                        <span
-                          className={`
-                            text-xs font-medium px-2 py-0.5 rounded
-                            ${
-                              modeOption.badgeVariant === 'recommended'
-                                ? 'bg-[#00D084] text-white'
-                                : 'bg-neutral-600 text-white'
-                            }
-                          `}
-                        >
-                          {modeOption.badge}
-                        </span>
-                      )}
+                  {isLoading && selectedMode === modeOption.value ? (
+                    // Show loading state INSIDE the selected card
+                    <div className="flex-1 flex flex-col items-center justify-center py-4">
+                      <Spinner size="md" />
+                      <p className="mt-3 text-sm text-neutral-600">Loading widget code...</p>
                     </div>
-                    <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-                      {modeOption.description}
-                    </p>
-                  </div>
+                  ) : (
+                    // Show normal card content
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-semibold text-neutral-900">
+                          {modeOption.label}
+                        </span>
+                        {modeOption.badge && (
+                          <span
+                            className={`
+                              text-xs font-medium px-2 py-0.5 rounded
+                              ${
+                                modeOption.badgeVariant === 'recommended'
+                                  ? 'bg-[#00D084] text-white'
+                                  : 'bg-neutral-600 text-white'
+                              }
+                            `}
+                          >
+                            {modeOption.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
+                        {modeOption.description}
+                      </p>
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
-
-            {/* Loading State */}
-            {isLoading && (
-              <div className="flex flex-col items-center justify-center py-8">
-                <Spinner size="lg" />
-                <p className="mt-4 text-sm text-neutral-600">Loading widget code...</p>
-              </div>
-            )}
 
             {/* Error State */}
             {error && !isLoading && (
@@ -212,37 +259,30 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
                 <div className="space-y-6">
                   {/* Step 1: Copy Widget Script */}
                   <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold">
+                    <div className="flex gap-3 items-start">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
                         1
                       </span>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-semibold text-neutral-900">Copy the Widget Script</h4>
-                          <Button
-                            variant={isCopied ? 'primary' : 'secondary'}
-                            size="sm"
-                            onClick={handleCopy}
-                            className="flex items-center gap-2"
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-neutral-900 mb-3">Copy the Widget Script</h4>
+                        <div className="relative">
+                          <button
+                            onClick={() => handleCopy(snippet)}
+                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-xs font-medium rounded transition-colors"
                           >
-                            {isCopied ? (
+                            {isCopied && copiedSnippet === snippet ? (
                               <>
-                                <Check className="w-3 h-3" />
+                                <Check className="w-3.5 h-3.5" />
                                 Copied!
                               </>
                             ) : (
                               <>
-                                <Copy className="w-3 h-3" />
-                                Copy Code
+                                <Copy className="w-3.5 h-3.5" />
+                                Copy
                               </>
                             )}
-                          </Button>
-                        </div>
-                        <p className="text-sm text-neutral-600 mb-3">
-                          Click "Copy Code" to copy the widget script below.
-                        </p>
-                        <div className="relative">
-                          <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-3 overflow-x-auto text-xs font-mono">
+                          </button>
+                          <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-3 overflow-x-auto text-xs font-mono max-w-full">
                             <code>{snippet}</code>
                           </pre>
                         </div>
@@ -252,31 +292,27 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
 
                   {/* Step 2: Paste in HTML */}
                   <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold">
+                    <div className="flex gap-3 items-start">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
                         2
                       </span>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-neutral-900 mb-1">Paste in Your HTML</h4>
-                        <p className="text-sm text-neutral-600">
-                          Paste the code in your website's HTML, right before the closing{' '}
-                          <code className="px-1 py-0.5 bg-neutral-100 rounded text-xs">&lt;/body&gt;</code> tag.
-                        </p>
+                        <h4 className="font-semibold text-neutral-900">
+                          Paste in Your HTML, right before the closing{' '}
+                          <code className="px-1 py-0.5 bg-neutral-100 rounded text-xs">&lt;/body&gt;</code> tag
+                        </h4>
                       </div>
                     </div>
                   </div>
 
                   {/* Step 3: Save and Publish */}
                   <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold">
+                    <div className="flex gap-3 items-start">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
                         3
                       </span>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-neutral-900 mb-1">Save and Publish</h4>
-                        <p className="text-sm text-neutral-600">
-                          Save your changes and publish your website. The widget will appear automatically with a launcher button in the bottom-right corner.
-                        </p>
+                        <h4 className="font-semibold text-neutral-900">Save and Publish</h4>
                       </div>
                     </div>
                   </div>
@@ -286,28 +322,31 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
                 <div className="space-y-6">
                   {/* Step 1: Create Custom Button */}
                   <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold">
+                    <div className="flex gap-3 items-start">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
                         1
                       </span>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-neutral-900 mb-1">Create Your Custom Button</h4>
-                        <p className="text-sm text-neutral-600 mb-3">
-                          Add this button anywhere in your HTML <code className="px-1 py-0.5 bg-neutral-100 rounded text-xs">&lt;body&gt;</code> where you want it to appear (e.g., header, footer, or main content).
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-neutral-900 mb-3">Create Your Custom Button</h4>
                         <div className="relative">
-                          <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-3 overflow-x-auto text-xs font-mono">
-                            <code>{`<!-- Your custom button -->
-<button
-  id="my-chat-button"
-  style="padding: 10px 20px;
-         background: #00D084;
-         color: white;
-         border: none;
-         border-radius: 8px;
-         cursor: pointer;">
-  Chat with us
-</button>`}</code>
+                          <button
+                            onClick={() => handleCopy(customButtonSnippet)}
+                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-xs font-medium rounded transition-colors"
+                          >
+                            {isCopied && copiedSnippet === customButtonSnippet ? (
+                              <>
+                                <Check className="w-3.5 h-3.5" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                Copy
+                              </>
+                            )}
+                          </button>
+                          <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-3 overflow-x-auto text-xs font-mono max-w-full">
+                            <code>{customButtonSnippet}</code>
                           </pre>
                         </div>
                         <p className="text-xs text-neutral-500 mt-2">
@@ -319,37 +358,30 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
 
                   {/* Step 2: Add Widget Script */}
                   <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold">
+                    <div className="flex gap-3 items-start">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
                         2
                       </span>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-semibold text-neutral-900">Add the Mojeeb Widget Script</h4>
-                          <Button
-                            variant={isCopied ? 'primary' : 'secondary'}
-                            size="sm"
-                            onClick={handleCopy}
-                            className="flex items-center gap-2"
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-neutral-900 mb-3">Add Script Before Closing &lt;/body&gt; Tag</h4>
+                        <div className="relative">
+                          <button
+                            onClick={() => handleCopy(snippet)}
+                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-xs font-medium rounded transition-colors"
                           >
-                            {isCopied ? (
+                            {isCopied && copiedSnippet === snippet ? (
                               <>
-                                <Check className="w-3 h-3" />
+                                <Check className="w-3.5 h-3.5" />
                                 Copied!
                               </>
                             ) : (
                               <>
-                                <Copy className="w-3 h-3" />
-                                Copy Code
+                                <Copy className="w-3.5 h-3.5" />
+                                Copy
                               </>
                             )}
-                          </Button>
-                        </div>
-                        <p className="text-sm text-neutral-600 mb-3">
-                          Paste this code in your HTML, right before the closing <code className="px-1 py-0.5 bg-neutral-100 rounded text-xs">&lt;/body&gt;</code> tag.
-                        </p>
-                        <div className="relative">
-                          <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-3 overflow-x-auto text-xs font-mono">
+                          </button>
+                          <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-3 overflow-x-auto text-xs font-mono max-w-full">
                             <code>{snippet}</code>
                           </pre>
                         </div>
@@ -362,23 +394,31 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
 
                   {/* Step 3: Attach Widget to Button */}
                   <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold">
+                    <div className="flex gap-3 items-start">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
                         3
                       </span>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-neutral-900 mb-1">Attach Widget to Your Button</h4>
-                        <p className="text-sm text-neutral-600 mb-3">
-                          Add this code right after the widget script (still before <code className="px-1 py-0.5 bg-neutral-100 rounded text-xs">&lt;/body&gt;</code>).
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-neutral-900 mb-3">Attach Widget to Your Button</h4>
                         <div className="relative">
-                          <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-3 overflow-x-auto text-xs font-mono">
-                            <code>{`<!-- Attach widget to your button -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    MojeebWidget.attach('#my-chat-button');
-  });
-</script>`}</code>
+                          <button
+                            onClick={() => handleCopy(attachWidgetSnippet)}
+                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-xs font-medium rounded transition-colors"
+                          >
+                            {isCopied && copiedSnippet === attachWidgetSnippet ? (
+                              <>
+                                <Check className="w-3.5 h-3.5" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                Copy
+                              </>
+                            )}
+                          </button>
+                          <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-3 overflow-x-auto text-xs font-mono max-w-full">
+                            <code>{attachWidgetSnippet}</code>
                           </pre>
                         </div>
                         <p className="text-xs text-neutral-500 mt-2">
@@ -401,28 +441,24 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
                   Here's how all three steps look together in your HTML:
                 </p>
                 <div className="relative">
-                  <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-4 overflow-x-auto text-sm font-mono">
-                    <code>{`<!DOCTYPE html>
-<html>
-<body>
-  <!-- Step 1: Your custom button (place anywhere in body) -->
-  <button id="my-chat-button" style="padding: 10px 20px; background: #00D084; color: white; border: none; border-radius: 8px; cursor: pointer;">
-    Chat with us
-  </button>
-
-  <!-- Your website content... -->
-
-  <!-- Step 2: Mojeeb Widget Script (before </body>) -->
-${snippet}
-
-  <!-- Step 3: Attach widget to button (after widget script) -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      MojeebWidget.attach('#my-chat-button');
-    });
-  </script>
-</body>
-</html>`}</code>
+                  <button
+                    onClick={() => handleCopy(completeExampleSnippet)}
+                    className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-xs font-medium rounded transition-colors"
+                  >
+                    {isCopied && copiedSnippet === completeExampleSnippet ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        Copy
+                      </>
+                    )}
+                  </button>
+                  <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-4 overflow-x-auto text-sm font-mono max-w-full">
+                    <code>{completeExampleSnippet}</code>
                   </pre>
                 </div>
               </div>

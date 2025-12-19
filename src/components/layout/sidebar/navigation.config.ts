@@ -11,6 +11,7 @@ import {
   Wrench,
   Plug,
   Contact,
+  MessagesSquare,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -56,5 +57,18 @@ export const navigation: NavigationItem[] = [
     href: '/users',
     icon: Users,
     requireSuperAdmin: true,
+  },
+  {
+    name: 'Support',
+    icon: MessagesSquare,
+    // No href - this is a non-navigable item with custom click handler
+    onClick: () => {
+      // Open Mojeeb support widget (headless mode)
+      if (window.MojeebWidget) {
+        window.MojeebWidget.open();
+      } else {
+        console.warn('Mojeeb Widget is not loaded yet. Please wait for the script to load.');
+      }
+    },
   },
 ];

@@ -48,6 +48,37 @@ export const NavigationItemComponent = memo(({
     );
   }
 
+  // Non-navigable item (no href)
+  if (!item.href) {
+    return (
+      <button
+        onClick={item.onClick}
+        className={cn(
+          'group flex items-center rounded-md transition-colors duration-200 w-full',
+          'text-neutral-600 hover:text-neutral-950',
+          isCollapsed && 'hover:bg-neutral-100'
+        )}
+        title={isCollapsed ? item.name : undefined}
+        aria-label={item.name}
+      >
+        {/* Fixed-width icon container - prevents shifting */}
+        <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+          <item.icon
+            className={cn(
+              'w-6 h-6 transition-transform text-neutral-600',
+              isCollapsed && 'group-hover:scale-110'
+            )}
+            aria-hidden="true"
+          />
+        </div>
+        {/* Text label - conditionally rendered */}
+        {!isCollapsed && (
+          <span className="text-sm pr-4 whitespace-nowrap">{item.name}</span>
+        )}
+      </button>
+    );
+  }
+
   // Active navigation link
   return (
     <NavLink
