@@ -16,7 +16,6 @@ export function InstallWidgetPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
-  const [isExampleCopied, setIsExampleCopied] = useState(false);
   const [isHeadlessCopied, setIsHeadlessCopied] = useState(false);
   const [selectedMode, setSelectedMode] = useState<'default' | 'headless' | null>(null);
 
@@ -54,24 +53,6 @@ export function InstallWidgetPage() {
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy snippet:', err);
-    }
-  };
-
-  const handleCopyExample = async () => {
-    const exampleCode = `  ...
-  <!-- Your website content -->
-
-  <!-- Mojeeb Chat Widget -->
-  <script id="mojeeb-chat-widget"...></script>
-</body>
-</html>`;
-
-    try {
-      await navigator.clipboard.writeText(exampleCode);
-      setIsExampleCopied(true);
-      setTimeout(() => setIsExampleCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy example:', err);
     }
   };
 
@@ -279,27 +260,9 @@ export function InstallWidgetPage() {
                       tag, then save and publish your changes.
                     </p>
                     <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs text-neutral-500">
-                          <strong>Example placement:</strong>
-                        </p>
-                        <button
-                          onClick={handleCopyExample}
-                          className="text-xs font-medium text-[#00D084] hover:text-[#00B570] transition-colors flex items-center gap-1"
-                        >
-                          {isExampleCopied ? (
-                            <>
-                              <Check className="w-3 h-3" />
-                              Copied!
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3" />
-                              Copy
-                            </>
-                          )}
-                        </button>
-                      </div>
+                      <p className="text-xs text-neutral-500 mb-2">
+                        <strong>Example placement:</strong>
+                      </p>
                       <pre className="text-xs font-mono text-neutral-700 overflow-x-auto">
 {`  ...
   <!-- Your website content -->
@@ -419,6 +382,53 @@ export function InstallWidgetPage() {
                     <p className="text-xs text-neutral-500 mt-2">
                       Replace <code className="px-1 py-0.5 bg-neutral-100 rounded">#your-button-id</code> with your button's CSS selector
                     </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3 - Full Example */}
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#00D084] text-white text-sm font-bold">
+                    3
+                  </span>
+                  <div className="flex-1">
+                    <h2 className="text-lg font-semibold text-neutral-900 mb-2">
+                      Full Example
+                    </h2>
+                    <p className="text-neutral-600 text-sm mb-3">
+                      Here's a complete example showing how to add a custom button and attach the widget:
+                    </p>
+                    <div className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
+                      <p className="text-xs text-neutral-500 mb-2">
+                        <strong>Complete HTML example:</strong>
+                      </p>
+                      <pre className="text-xs font-mono text-neutral-700 overflow-x-auto">
+{`<!DOCTYPE html>
+<html>
+<head>
+  <title>My Website</title>
+</head>
+<body>
+  <!-- Your website content -->
+  <h1>Welcome to My Website</h1>
+
+  <!-- Custom chat button -->
+  <button id="chat-support">Chat with us</button>
+
+  <!-- Mojeeb Chat Widget Script -->
+  <script id="mojeeb-chat-widget"...></script>
+
+  <!-- Attach widget to button -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      MojeebWidget.attach('#chat-support');
+    });
+  </script>
+</body>
+</html>`}
+                      </pre>
+                    </div>
                   </div>
                 </div>
               </div>
