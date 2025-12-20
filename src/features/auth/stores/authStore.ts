@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User } from '../types/auth.types';
 import { setTokens as setApiTokens, clearTokens as clearApiTokens } from '@/lib/tokenManager';
 import { setSentryUser, clearSentryUser } from '@/lib/sentry';
@@ -238,8 +238,9 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'mojeeb-auth-storage',
-      // DIAGNOSTIC: Custom storage with error handling and write verification
-      storage: {
+      // CRITICAL FIX: Use createJSONStorage to ensure proper StorageValue<S> structure
+      // This wraps localStorage with correct {state, version} format that Zustand persist expects
+      storage: createJSONStorage(() => ({
         getItem: (name) => {
           try {
             const item = localStorage.getItem(name);
@@ -296,7 +297,7 @@ export const useAuthStore = create<AuthState>()(
             console.error(`   ❌ [Persist.storage.removeItem] ERROR removing from localStorage:`, error);
           }
         },
-      },
+      })),
       partialize: (state) => {
         // DIAGNOSTIC: Log what we're attempting to persist
         const dataToPartialize = {
