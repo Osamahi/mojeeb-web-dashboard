@@ -27,9 +27,7 @@ export function LeadNotesModal({
       title={leadName ? `Notes - ${leadName}` : 'Notes'}
       size="md"
     >
-      <div className="px-6 py-4">
-        <LeadNotesSection leadId={leadId} onNoteAdded={onClose} />
-      </div>
+      <LeadNotesSection leadId={leadId} onNoteAdded={onClose} />
     </Modal>
   );
 }

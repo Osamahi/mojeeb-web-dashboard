@@ -171,8 +171,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
         {isEditing ? (
           /* Edit Mode */
           <>
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              <div className="space-y-4">
+            <div className="space-y-4">
             <div>
               <Input
                 label="Name"
@@ -286,7 +285,6 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                 rows={3}
               />
             </div>
-              </div>
             </div>
 
             {/* Actions Footer */}
@@ -307,8 +305,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
         ) : (
           /* View Mode */
           <>
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              <div className="space-y-4">
+            <div className="space-y-4">
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-neutral-500 mb-1">Name</label>
@@ -447,7 +444,6 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                 <LeadNotesSection leadId={lead.id} />
               )}
             </div>
-              </div>
             </div>
 
             {/* Actions Footer */}

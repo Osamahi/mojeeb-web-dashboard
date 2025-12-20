@@ -22,7 +22,7 @@ export const SimpleConfirmModal = ({
 }: SimpleConfirmModalProps) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="text-center space-y-6 py-4">
+      <div className="text-center space-y-6">
         {/* Title */}
         <h2 className="text-xl font-semibold text-neutral-900">
           {title}

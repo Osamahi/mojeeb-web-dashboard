@@ -46,8 +46,7 @@ export function AddSummaryModal({
       title={leadName ? `Summary - ${leadName}` : 'Summary'}
       size="md"
     >
-      <div className="px-6 py-4">
-        <div className="space-y-2">
+      <div className="space-y-2">
           <textarea
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
@@ -72,7 +71,6 @@ export function AddSummaryModal({
             </button>
           </div>
         </div>
-      </div>
     </Modal>
   );
 }

@@ -107,8 +107,10 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
                   </div>
                 )}
 
-                {/* Content - Let children control their layout */}
-                {children}
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                  {children}
+                </div>
               </motion.div>
             </div>
           </>

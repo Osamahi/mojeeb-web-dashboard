@@ -4,11 +4,12 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Copy, Check, Code, ArrowLeft } from 'lucide-react';
+import { Copy, Check, Code, ArrowLeft, Share2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { widgetService } from '../../services/widgetService';
+import { installationLinkService } from '../../services/installationLinkService';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { type WidgetMode, WIDGET_MODES } from '../../types/widget.types';
 
@@ -29,6 +30,11 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
   const [isCopied, setIsCopied] = useState(false);
   const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null);
 
+  // Share link state
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [isShareUrlCopied, setIsShareUrlCopied] = useState(false);
+
   // Reset wizard when dialog opens
   useEffect(() => {
     if (isOpen) {
@@ -37,6 +43,8 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
       setSnippet('');
       setError(null);
       setIsCopied(false);
+      setShareUrl(null);
+      setIsShareUrlCopied(false);
     }
   }, [isOpen]);
 
@@ -95,6 +103,41 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
     setIsCopied(false);
   };
 
+  const handleGenerateShareLink = async () => {
+    if (!agent) return;
+
+    setIsGeneratingLink(true);
+    setError(null);
+
+    try {
+      // Need to get widget ID first
+      const widgetConfig = await widgetService.getWidgetByAgentId(agent.id);
+      const response = await installationLinkService.generateShareLink(
+        widgetConfig.id,
+        selectedMode || 'default',
+        30 // 30 days expiration
+      );
+      setShareUrl(response.shareUrl);
+    } catch (err) {
+      console.error('[WidgetSnippetDialog] Share link generation failed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to generate share link');
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  const handleCopyShareUrl = async () => {
+    if (!shareUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setIsShareUrlCopied(true);
+      setTimeout(() => setIsShareUrlCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy share URL:', err);
+    }
+  };
+
   // Code snippets for headless mode
   const customButtonSnippet = `<!-- Your custom button -->
 <button
@@ -145,7 +188,7 @@ ${snippet}
       size="lg"
     >
       {/* Scrollable Content Area */}
-      <div className="relative flex-1 overflow-y-auto px-6 py-4">
+      <div className="relative flex-1 overflow-y-auto pb-6">
         {/* Step 1: Mode Selection */}
         <div
           className={`
@@ -469,24 +512,85 @@ ${snippet}
       </div>
 
       {/* Sticky Actions Footer - Pinned to bottom */}
-      <div className="flex-shrink-0 flex justify-between items-center px-6 py-4 border-t border-neutral-200 bg-white rounded-b-2xl">
-        {currentStep === 'installation' ? (
-          <>
-            <Button variant="secondary" onClick={handleBack} className="flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Button>
-            <Button variant="primary" onClick={onClose}>
-              Done
-            </Button>
-          </>
-        ) : (
-          <div className="w-full flex justify-end">
-            <Button variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
+      <div className="flex-shrink-0 border-t border-neutral-200 bg-white rounded-b-2xl">
+        {/* Share Link Section - Show when link is generated */}
+        {shareUrl && (
+          <div className="border-b border-neutral-200 py-4">
+            <div className="bg-neutral-50 rounded-lg px-4 py-3 border border-neutral-200">
+              <div className="flex items-center gap-3">
+                <a
+                  href={shareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 min-w-0 text-sm text-neutral-900 underline hover:text-neutral-600 transition-colors break-all"
+                >
+                  {shareUrl}
+                </a>
+                <button
+                  onClick={handleCopyShareUrl}
+                  className="flex-shrink-0 text-sm font-medium text-[#00D084] hover:text-[#00B570] transition-colors flex items-center gap-2"
+                >
+                  {isShareUrlCopied ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+            <p className="text-xs text-neutral-500 mt-3 flex items-start gap-2">
+              <span className="text-neutral-400 mt-0.5">ℹ️</span>
+              <span>This link will expire in 30 days. Anyone with this link can view the installation instructions.</span>
+            </p>
           </div>
         )}
+
+        {/* Action Buttons */}
+        <div className="flex justify-between items-center pt-4">
+          {currentStep === 'installation' ? (
+            <>
+              <Button variant="secondary" onClick={handleBack} className="flex items-center gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={handleGenerateShareLink}
+                  disabled={isGeneratingLink}
+                  className="flex items-center gap-2"
+                >
+                  {isGeneratingLink ? (
+                    <>
+                      <Spinner size="sm" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-4 h-4" />
+                      Share Link
+                    </>
+                  )}
+                </Button>
+                <Button variant="primary" onClick={onClose}>
+                  Done
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="w-full flex justify-end">
+              <Button variant="secondary" onClick={onClose}>
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </Modal>
   );

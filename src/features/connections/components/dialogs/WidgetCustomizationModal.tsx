@@ -111,7 +111,7 @@ export function WidgetCustomizationModal({
       {!isLoading && !error && widgetConfig && (
         <div className="flex flex-col">
           {/* Simple Form */}
-          <div className="p-6 space-y-6">
+          <div className="space-y-6">
             {/* Primary Color */}
             <div>
               <label className="block text-sm font-medium text-neutral-900 mb-2">

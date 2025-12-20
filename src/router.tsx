@@ -20,6 +20,7 @@ const TeamPage = lazy(() => import('./features/team/pages/TeamPage'));
 const ConnectionsPage = lazy(() => import('./features/connections/pages/ConnectionsPage'));
 const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthCallbackPage'));
 const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
+const InstallWidgetPage = lazy(() => import('./pages/InstallWidgetPage').then(m => ({ default: m.InstallWidgetPage })));
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -145,6 +146,14 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageSkeleton />}>
         <OAuthCallbackPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/install/:token',
+    element: (
+      <Suspense fallback={<PageSkeleton />}>
+        <InstallWidgetPage />
       </Suspense>
     ),
   },

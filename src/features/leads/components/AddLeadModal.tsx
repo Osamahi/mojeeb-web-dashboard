@@ -138,7 +138,7 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
       size="md"
     >
       <form onSubmit={handleSubmit}>
-        <div className="px-6 py-4 space-y-4">
+        <div className="space-y-4">
           {/* Name (Required) */}
           <div>
           <Input

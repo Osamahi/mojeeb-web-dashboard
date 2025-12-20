@@ -29,7 +29,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       onClose={onCancel}
       title={title}
     >
-      <div className="flex flex-col gap-6 px-6 py-4">
+      <div className="flex flex-col gap-6">
         {/* Message */}
         <div>
           <p className="text-sm text-neutral-700 leading-relaxed">
