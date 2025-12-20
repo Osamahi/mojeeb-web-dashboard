@@ -541,4 +541,64 @@ if (typeof window !== 'undefined') {
   });
 
   console.log('🔍 [AuthStore] Storage and lifecycle event listeners registered');
+
+  // DIAGNOSTIC: Browser environment diagnostics (one-time on init)
+  console.log('\n🌐 [Browser Environment] Diagnostics:');
+  console.log(`   Browser: ${navigator.userAgent}`);
+  console.log(`   Platform: ${navigator.platform}`);
+  console.log(`   Language: ${navigator.language}`);
+
+  // Check localStorage availability
+  try {
+    const testKey = '__localStorage_test__';
+    localStorage.setItem(testKey, 'test');
+    localStorage.removeItem(testKey);
+    console.log(`   ✅ localStorage: Available`);
+  } catch (e) {
+    console.error(`   ❌ localStorage: UNAVAILABLE or BLOCKED`);
+    console.error(`   This will cause all auth persistence to fail!`);
+  }
+
+  // Check storage quota
+  if (navigator.storage && navigator.storage.estimate) {
+    navigator.storage.estimate().then((estimate) => {
+      const usageInMB = ((estimate.usage || 0) / 1024 / 1024).toFixed(2);
+      const quotaInMB = ((estimate.quota || 0) / 1024 / 1024).toFixed(2);
+      const percentUsed = ((estimate.usage || 0) / (estimate.quota || 1) * 100).toFixed(1);
+
+      console.log(`   💾 Storage Quota:`);
+      console.log(`      Used: ${usageInMB} MB / ${quotaInMB} MB (${percentUsed}%)`);
+
+      if (parseFloat(percentUsed) > 80) {
+        console.warn(`      ⚠️ WARNING: Storage is ${percentUsed}% full - may cause persistence issues`);
+      }
+    });
+  }
+
+  // Detect incognito/private mode (heuristic)
+  const isIncognito = window.localStorage === null ||
+                      (window.localStorage && window.localStorage.length === 0 &&
+                       window.sessionStorage && window.sessionStorage.length === 0);
+  if (isIncognito) {
+    console.warn(`   🔒 Incognito/Private Mode: POSSIBLY DETECTED`);
+    console.warn(`   Auth persistence may not work in private browsing mode`);
+  } else {
+    console.log(`   🔓 Incognito/Private Mode: Not detected (normal mode)`);
+  }
+
+  // Check for service workers
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      console.log(`   👷 Service Workers: ${registrations.length} registered`);
+      if (registrations.length > 0) {
+        registrations.forEach((reg, index) => {
+          console.log(`      ${index + 1}. Scope: ${reg.scope}, State: ${reg.active?.state || 'inactive'}`);
+        });
+      }
+    });
+  } else {
+    console.log(`   👷 Service Workers: Not supported`);
+  }
+
+  console.log('');
 }

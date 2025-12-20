@@ -185,7 +185,7 @@ The manual subscriber at line 331-348 still works correctly for tracking `isAuth
 
 ## Diagnostic Enhancements
 
-To prevent future issues and enable faster debugging, extensive logging was added:
+To prevent future issues and enable faster debugging, **comprehensive diagnostic logging** was added across six critical areas:
 
 ### 1. localStorage Write Monitoring
 
@@ -278,6 +278,118 @@ To prevent future issues and enable faster debugging, extensive logging was adde
 ✅ VERDICT: All systems consistent - auth should persist correctly
 
 ================================================
+```
+
+### 4. Storage Event Listener
+
+**Location:** Bottom of `authStore.ts` (addEventListener('storage'))
+
+**Detects:**
+- External changes to `mojeeb-auth-storage` (from other tabs, extensions)
+- Storage deletions
+- Cross-tab login/logout events
+
+**Example Output:**
+```
+🔄 [Storage Event] localStorage['mojeeb-auth-storage'] changed externally
+   Triggered by: https://yourdomain.com/dashboard
+   Old value: EXISTS (519 chars)
+   New value: MISSING (0 chars)
+   ❌ CRITICAL: Auth storage was DELETED externally!
+   Possible causes: other tab, browser extension, privacy settings
+```
+
+### 5. Window Lifecycle Logging
+
+**Location:** Bottom of `authStore.ts` (beforeunload, pagehide, pageshow)
+
+**Tracks:**
+- Browser close/refresh events
+- Tab visibility changes
+- Back/forward navigation (bfcache)
+- Final localStorage state before unload
+
+**Example Output:**
+```
+👋 [Window Lifecycle] beforeunload event at 2025-12-20T...
+   Final localStorage state: EXISTS (519 chars)
+   ✅ Auth data preserved for next session
+
+📥 [Window Lifecycle] pageshow event at 2025-12-20T...
+   From cache (bfcache): true
+   Current isAuthenticated: true
+```
+
+### 6. Persist Middleware Error Handler & Write Verification
+
+**Location:** Custom storage handlers in persist config
+
+**Catches:**
+- localStorage write failures
+- Storage quota exceeded errors
+- Private browsing mode restrictions
+- Data corruption on write
+- Immediate read-back verification
+
+**Example Output:**
+```
+💾 [Persist.storage.setItem] Writing to localStorage['mojeeb-auth-storage']
+   Data size: 519 chars
+   ✅ Write verified - data persisted successfully
+
+OR (on error):
+
+❌ [Persist.storage.setItem] ERROR writing to localStorage
+   Error type: QuotaExceededError
+   💾 QUOTA EXCEEDED: localStorage is full!
+   Current usage: Try clearing old data or increasing quota
+```
+
+### 7. Token Expiration Tracking
+
+**Location:** `setTokens()` function
+
+**Monitors:**
+- JWT expiration timestamps
+- Time until token expires
+- Proactive warnings before expiration
+
+**Example Output:**
+```
+⏰ Access Token Expiration:
+   Expires at: 2025-12-20T11:00:00.000Z
+   Time until expiry: 12 minutes
+   ✅ Token is valid (expires in 12 minutes)
+
+OR (warning):
+
+⏰ Access Token Expiration:
+   Time until expiry: 3 minutes
+   ⚠️ WARNING: Token expires in less than 5 minutes!
+```
+
+### 8. Browser Environment Diagnostics
+
+**Location:** Bottom of `authStore.ts` (one-time on init)
+
+**Reports:**
+- Browser name/version
+- localStorage availability
+- Storage quota and usage
+- Incognito/private mode detection
+- Service worker status
+
+**Example Output:**
+```
+🌐 [Browser Environment] Diagnostics:
+   Browser: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...
+   Platform: MacIntel
+   Language: en-US
+   ✅ localStorage: Available
+   💾 Storage Quota:
+      Used: 2.34 MB / 5000.00 MB (0.0%)
+   🔓 Incognito/Private Mode: Not detected (normal mode)
+   👷 Service Workers: 0 registered
 ```
 
 ---
