@@ -153,8 +153,8 @@ export function InstallWidgetPage() {
                           </>
                         )}
                       </button>
-                      <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-4 pr-32 overflow-x-auto text-sm font-mono">
-                        <code>{data.snippet}</code>
+                      <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-4 pr-4 pb-12 sm:pr-32 sm:pb-4 overflow-x-auto text-sm font-mono break-all whitespace-pre-wrap">
+                        <code className="break-all">{data.snippet}</code>
                       </pre>
                     </div>
                   </div>
@@ -240,8 +240,8 @@ export function InstallWidgetPage() {
                           </>
                         )}
                       </button>
-                      <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-4 pr-32 overflow-x-auto text-sm font-mono">
-                        <code>{data.snippet}</code>
+                      <pre className="bg-neutral-900 text-neutral-100 rounded-lg p-4 pr-4 pb-12 sm:pr-32 sm:pb-4 overflow-x-auto text-sm font-mono break-all whitespace-pre-wrap">
+                        <code className="break-all">{data.snippet}</code>
                       </pre>
                     </div>
                   </div>
