@@ -63,11 +63,21 @@ export async function generateShareLink(
  * No authentication required
  */
 export async function getInstallationData(token: string): Promise<InstallationData> {
-  const response = await api.get<InstallationData>(
+  const response = await api.get<{ data: any }>(
     `/api/widget/public/install/${token}`
   );
 
-  return response.data;
+  // Convert snake_case to camelCase
+  const snakeData = response.data.data;
+  const camelData: InstallationData = {
+    widgetId: snakeData.widget_id || snakeData.widgetId,
+    mode: snakeData.mode,
+    snippet: snakeData.snippet,
+    agentName: snakeData.agent_name || snakeData.agentName,
+    expiresAt: snakeData.expires_at || snakeData.expiresAt,
+  };
+
+  return camelData;
 }
 
 export const installationLinkService = {
