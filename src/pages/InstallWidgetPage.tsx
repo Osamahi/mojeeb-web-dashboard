@@ -298,12 +298,6 @@ export function InstallWidgetPage() {
                 Back to mode selection
               </button>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-900">
-                  <strong>Headless Mode:</strong> You're using a custom button to trigger the chat widget. Follow all 3 steps carefully.
-                </p>
-              </div>
-
               {/* Headless steps - simplified for public page */}
               <div className="space-y-4">
                 <div className="flex items-start gap-4">

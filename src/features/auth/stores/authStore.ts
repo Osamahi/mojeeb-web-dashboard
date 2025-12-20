@@ -45,6 +45,35 @@ export const useAuthStore = create<AuthState>()(
         console.log(`   New Access Token: ${accessToken ? accessToken.substring(0, 10) + '...' : 'null'} (${accessToken?.length || 0} chars)`);
         console.log(`   New Refresh Token: ${refreshToken ? refreshToken.substring(0, 10) + '...' : 'null'} (${refreshToken?.length || 0} chars)`);
 
+        // DIAGNOSTIC: Token expiration tracking (decode JWT if possible)
+        try {
+          if (accessToken) {
+            const parts = accessToken.split('.');
+            if (parts.length === 3) {
+              const payload = JSON.parse(atob(parts[1]));
+              if (payload.exp) {
+                const expiresAt = new Date(payload.exp * 1000);
+                const now = new Date();
+                const minutesUntilExpiry = Math.floor((expiresAt.getTime() - now.getTime()) / 60000);
+
+                console.log(`   ⏰ Access Token Expiration:`);
+                console.log(`      Expires at: ${expiresAt.toISOString()}`);
+                console.log(`      Time until expiry: ${minutesUntilExpiry} minutes`);
+
+                if (minutesUntilExpiry < 0) {
+                  console.warn(`      ⚠️ WARNING: Token is already EXPIRED by ${Math.abs(minutesUntilExpiry)} minutes!`);
+                } else if (minutesUntilExpiry < 5) {
+                  console.warn(`      ⚠️ WARNING: Token expires in less than 5 minutes!`);
+                } else if (minutesUntilExpiry < 15) {
+                  console.log(`      ✅ Token is valid (expires in ${minutesUntilExpiry} minutes)`);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          // Silently ignore JWT decode errors - not all tokens are JWTs
+        }
+
         // DIAGNOSTIC: Check localStorage BEFORE state update
         const beforePersist = localStorage.getItem('mojeeb-auth-storage');
         console.log(`   📊 BEFORE set(): localStorage['mojeeb-auth-storage'] = ${beforePersist ? 'EXISTS' : 'MISSING'} (${beforePersist?.length || 0} chars)`);
@@ -209,6 +238,65 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'mojeeb-auth-storage',
+      // DIAGNOSTIC: Custom storage with error handling and write verification
+      storage: {
+        getItem: (name) => {
+          try {
+            const item = localStorage.getItem(name);
+            console.log(`   📖 [Persist.storage.getItem] Reading from localStorage['${name}']`);
+            console.log(`      Result: ${item ? 'EXISTS (' + item.length + ' chars)' : 'MISSING'}`);
+            return item;
+          } catch (error) {
+            console.error(`   ❌ [Persist.storage.getItem] ERROR reading from localStorage:`, error);
+            console.error(`      Error type: ${error instanceof Error ? error.name : 'Unknown'}`);
+            console.error(`      Error message: ${error instanceof Error ? error.message : String(error)}`);
+            return null;
+          }
+        },
+        setItem: (name, value) => {
+          try {
+            console.log(`   💾 [Persist.storage.setItem] Writing to localStorage['${name}']`);
+            console.log(`      Data size: ${value.length} chars`);
+
+            // Attempt write
+            localStorage.setItem(name, value);
+
+            // DIAGNOSTIC: Immediate read-back verification
+            const verification = localStorage.getItem(name);
+            if (verification === value) {
+              console.log(`      ✅ Write verified - data persisted successfully`);
+            } else if (verification === null) {
+              console.error(`      ❌ CRITICAL: Write appeared to succeed but read-back returned NULL!`);
+              console.error(`      Possible causes: storage quota exceeded, privacy mode, browser blocking`);
+            } else {
+              console.error(`      ❌ CRITICAL: Write succeeded but data was CORRUPTED!`);
+              console.error(`      Expected length: ${value.length}, Got length: ${verification?.length || 0}`);
+            }
+          } catch (error) {
+            console.error(`   ❌ [Persist.storage.setItem] ERROR writing to localStorage:`, error);
+            console.error(`      Error type: ${error instanceof Error ? error.name : 'Unknown'}`);
+            console.error(`      Error message: ${error instanceof Error ? error.message : String(error)}`);
+
+            if (error instanceof Error && error.name === 'QuotaExceededError') {
+              console.error(`      💾 QUOTA EXCEEDED: localStorage is full!`);
+              console.error(`      Current usage: Try clearing old data or increasing quota`);
+            } else if (error instanceof Error && error.message.includes('private browsing')) {
+              console.error(`      🔒 PRIVATE MODE: localStorage disabled in incognito/private browsing`);
+            }
+
+            // Don't throw - persist middleware handles it gracefully
+          }
+        },
+        removeItem: (name) => {
+          try {
+            console.log(`   🗑️ [Persist.storage.removeItem] Removing localStorage['${name}']`);
+            localStorage.removeItem(name);
+            console.log(`      ✅ Removal complete`);
+          } catch (error) {
+            console.error(`   ❌ [Persist.storage.removeItem] ERROR removing from localStorage:`, error);
+          }
+        },
+      },
       partialize: (state) => {
         // DIAGNOSTIC: Log what we're attempting to persist
         const dataToPartialize = {
@@ -406,4 +494,51 @@ if (typeof window !== 'undefined') {
   };
 
   console.log('💡 [AuthStore] Type verifyAuthPersistence() in console to check auth state');
+
+  // DIAGNOSTIC: Listen for localStorage changes from other tabs/sources
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'mojeeb-auth-storage') {
+      console.warn(`\n🔄 [Storage Event] localStorage['mojeeb-auth-storage'] changed externally at ${new Date().toISOString()}`);
+      console.warn(`   Triggered by: ${event.url || 'unknown source'}`);
+      console.warn(`   Old value: ${event.oldValue ? 'EXISTS (' + event.oldValue.length + ' chars)' : 'MISSING'}`);
+      console.warn(`   New value: ${event.newValue ? 'EXISTS (' + event.newValue.length + ' chars)' : 'MISSING'}`);
+
+      if (!event.newValue && event.oldValue) {
+        console.error(`   ❌ CRITICAL: Auth storage was DELETED externally!`);
+        console.error(`   This will cause logout on next page refresh.`);
+        console.error(`   Possible causes: other tab, browser extension, privacy settings`);
+      } else if (event.newValue && !event.oldValue) {
+        console.log(`   ✅ Auth storage was CREATED externally (login from another tab)`);
+      } else if (event.newValue && event.oldValue) {
+        console.log(`   🔄 Auth storage was UPDATED externally (token refresh from another tab)`);
+      }
+    }
+  });
+
+  // DIAGNOSTIC: Track window lifecycle events that might affect auth
+  window.addEventListener('beforeunload', () => {
+    const finalState = localStorage.getItem('mojeeb-auth-storage');
+    console.log(`\n👋 [Window Lifecycle] beforeunload event at ${new Date().toISOString()}`);
+    console.log(`   Final localStorage state: ${finalState ? 'EXISTS (' + finalState.length + ' chars)' : 'MISSING'}`);
+    if (finalState) {
+      console.log(`   ✅ Auth data preserved for next session`);
+    } else {
+      console.warn(`   ⚠️ WARNING: No auth data in localStorage - user will be logged out`);
+    }
+  });
+
+  window.addEventListener('pagehide', () => {
+    const currentState = useAuthStore.getState();
+    console.log(`\n📤 [Window Lifecycle] pagehide event at ${new Date().toISOString()}`);
+    console.log(`   Store isAuthenticated: ${currentState.isAuthenticated}`);
+    console.log(`   Store has user: ${currentState.user ? 'YES' : 'NO'}`);
+  });
+
+  window.addEventListener('pageshow', (event) => {
+    console.log(`\n📥 [Window Lifecycle] pageshow event at ${new Date().toISOString()}`);
+    console.log(`   From cache (bfcache): ${event.persisted}`);
+    console.log(`   Current isAuthenticated: ${useAuthStore.getState().isAuthenticated}`);
+  });
+
+  console.log('🔍 [AuthStore] Storage and lifecycle event listeners registered');
 }

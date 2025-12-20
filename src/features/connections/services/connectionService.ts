@@ -310,11 +310,48 @@ class ConnectionService {
    */
   async fetchAvailablePages(tempConnectionId: string): Promise<FacebookPagesResponse> {
     try {
+      console.log('========== FETCHING PAGES FROM BACKEND ==========');
+      console.log('Temp Connection ID:', tempConnectionId);
+      console.log('API Endpoint:', API_PATHS.OAUTH_PAGES(tempConnectionId));
+
       const { data } = await api.get<ApiFacebookPagesResponse>(
         API_PATHS.OAUTH_PAGES(tempConnectionId)
       );
 
+      console.log('========== RAW API RESPONSE ==========');
+      console.log('Full Response:', data);
+      console.log('Pages Count:', data?.pages?.length ?? 0);
+
+      if (data?.pages && data.pages.length > 0) {
+        console.log('========== INDIVIDUAL PAGES FROM API ==========');
+        data.pages.forEach((page, index) => {
+          console.log(`Page ${index + 1}/${data.pages.length}:`, {
+            id: page.id,
+            name: page.name,
+            category: page.category,
+            followerCount: page.follower_count,
+            instagramAccounts: page.instagram_accounts?.length ?? 0,
+          });
+        });
+        console.log('==============================================');
+      } else {
+        console.warn('⚠️ API returned ZERO pages!');
+      }
+
       const pages = data.pages.map(page => this.transformFacebookPage(page));
+
+      console.log('========== AFTER TRANSFORMATION ==========');
+      console.log('Transformed Pages Count:', pages.length);
+      pages.forEach((page, index) => {
+        console.log(`Transformed Page ${index + 1}:`, {
+          id: page.id,
+          name: page.name,
+          category: page.category,
+          followerCount: page.followerCount,
+          instagramAccounts: page.instagramAccounts?.length ?? 0,
+        });
+      });
+      console.log('==========================================');
 
       logger.info('Fetched available pages', {
         tempConnectionId,
@@ -326,6 +363,7 @@ class ConnectionService {
         tempConnectionId,
       };
     } catch (error) {
+      console.error('❌ ERROR fetching pages:', error);
       logger.error('Error fetching available pages', { tempConnectionId, error });
       handleApiError(error, 'OAuth Pages', tempConnectionId);
     }

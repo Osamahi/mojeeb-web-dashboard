@@ -42,7 +42,7 @@ export function TeamMemberCard({ member }: TeamMemberCardProps) {
         </div>
 
         {/* Role Badge */}
-        <Badge variant={ROLE_COLORS[member.role]} size="sm">
+        <Badge variant={ROLE_COLORS[member.role]}>
           {member.role === 'HumanAgent' ? 'Agent' : member.role}
         </Badge>
       </div>
