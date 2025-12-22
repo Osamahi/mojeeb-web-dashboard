@@ -7,6 +7,7 @@ import { identifyClarityUser, clearClarityUser } from '@/lib/clarity';
 import { sessionHelper } from '@/lib/sessionHelper';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useConversationStore } from '@/features/conversations/stores/conversationStore';
+import { runStorageHealthCheck, quickStorageCheck } from '@/lib/storageHealthCheck';
 
 interface AuthState {
   user: User | null;
@@ -496,6 +497,15 @@ if (typeof window !== 'undefined') {
 
   console.log('💡 [AuthStore] Type verifyAuthPersistence() in console to check auth state');
 
+  // DIAGNOSTIC: Global helper to run storage health check
+  (window as any).runStorageHealthCheck = async () => {
+    console.log('\n🏥 Running manual storage health check...\n');
+    const report = await runStorageHealthCheck();
+    return report;
+  };
+
+  console.log('💡 [AuthStore] Type runStorageHealthCheck() in console to test localStorage health');
+
   // DIAGNOSTIC: Listen for localStorage changes from other tabs/sources
   window.addEventListener('storage', (event) => {
     if (event.key === 'mojeeb-auth-storage') {
@@ -576,16 +586,41 @@ if (typeof window !== 'undefined') {
     });
   }
 
-  // Detect incognito/private mode (heuristic)
-  const isIncognito = window.localStorage === null ||
-                      (window.localStorage && window.localStorage.length === 0 &&
-                       window.sessionStorage && window.sessionStorage.length === 0);
-  if (isIncognito) {
-    console.warn(`   🔒 Incognito/Private Mode: POSSIBLY DETECTED`);
-    console.warn(`   Auth persistence may not work in private browsing mode`);
-  } else {
-    console.log(`   🔓 Incognito/Private Mode: Not detected (normal mode)`);
-  }
+  // COMPREHENSIVE STORAGE HEALTH CHECK
+  // Run comprehensive health check on app initialization
+  // This will detect incognito mode, clear-on-close settings, and other issues
+  console.log('   🏥 Running comprehensive storage health check...');
+  console.log('   (This will take ~5 seconds to test persistence)\n');
+
+  runStorageHealthCheck().then((healthReport) => {
+    // Health report is already printed to console by the utility
+    // Store globally for debugging if needed
+    if (typeof window !== 'undefined') {
+      (window as any).__storageHealthReport__ = healthReport;
+      console.log('   💡 Access detailed report via: window.__storageHealthReport__');
+    }
+
+    // Critical warnings
+    if (healthReport.incognitoDetected) {
+      console.error('\n⚠️ ⚠️ ⚠️  CRITICAL WARNING  ⚠️ ⚠️ ⚠️');
+      console.error('Browser is in INCOGNITO/PRIVATE MODE!');
+      console.error('Authentication WILL NOT persist across browser restarts!');
+      console.error('Exit private browsing mode to enable auth persistence.');
+      console.error('⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n');
+    }
+
+    if (healthReport.verdict === 'FAILED') {
+      console.error('\n❌ localStorage is in FAILED state!');
+      console.error('Authentication persistence will NOT work!');
+      console.error('Check the health report above for recommendations.\n');
+    } else if (healthReport.verdict === 'DEGRADED') {
+      console.warn('\n⚠️ localStorage is DEGRADED!');
+      console.warn('Authentication may not persist reliably.');
+      console.warn('Check the health report above for recommendations.\n');
+    }
+  }).catch((error) => {
+    console.error('❌ Storage health check failed:', error);
+  });
 
   // Check for service workers
   if ('serviceWorker' in navigator) {
