@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { Users as UsersIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { userService } from '../services/userService';
 import UsersTable from '../components/UsersTable';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { BaseHeader } from '@/components/ui/BaseHeader';
 
 export default function UsersPage() {
   const {
@@ -19,25 +19,13 @@ export default function UsersPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900">Users</h1>
-          <p className="text-neutral-600 mt-1">
-            Manage and view all system users
-          </p>
-        </div>
-      </motion.div>
+      <BaseHeader
+        title="Users"
+        subtitle="Manage and view all system users"
+      />
 
       {/* Users Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      <div>
         {isLoading ? (
           <div className="flex items-center justify-center min-h-[400px] bg-white border border-neutral-200 rounded-lg">
             <div className="text-center">
@@ -58,7 +46,7 @@ export default function UsersPage() {
         ) : users ? (
           <UsersTable users={users} />
         ) : null}
-      </motion.div>
+      </div>
     </div>
   );
 }

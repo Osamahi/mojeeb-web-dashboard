@@ -8,13 +8,12 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { UserPlus, Trash2, Mail, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { organizationService } from '../services/organizationService';
-import { userService } from '@/features/users/services/userService';
 import AssignUserToOrgModal from '../components/AssignUserToOrgModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TeamTableSkeleton } from '../components/TeamTableSkeleton';
+import { BaseHeader } from '@/components/ui/BaseHeader';
 import type { OrganizationMember } from '../types';
 
 export default function TeamManagementPage() {
@@ -24,7 +23,7 @@ export default function TeamManagementPage() {
   const [memberToRemove, setMemberToRemove] = useState<OrganizationMember & { user?: { name: string | null; email: string | null; phone?: string | null } } | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
 
-  // Fetch organization members based on global agent's organization
+  // Fetch organization members with enriched user details (from backend)
   const { data: members = [], isLoading, refetch } = useQuery({
     queryKey: ['organization-members', agent?.organizationId],
     queryFn: () =>
@@ -32,26 +31,6 @@ export default function TeamManagementPage() {
         ? organizationService.getOrganizationMembers(agent.organizationId)
         : Promise.resolve([]),
     enabled: !!agent?.organizationId,
-  });
-
-  // Fetch all users to enrich member data with user details
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => userService.getUsers(),
-  });
-
-  // Enrich members with user details
-  const enrichedMembers = members.map(member => {
-    const user = allUsers.find(u => u.id === member.userId);
-    return {
-      ...member,
-      user: user ? {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone
-      } : undefined
-    };
   });
 
   const handleOpenAssignModal = () => {
@@ -109,31 +88,20 @@ export default function TeamManagementPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-neutral-900">Team</h1>
-          <p className="text-sm text-neutral-600 mt-1">
-            Manage your team
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Add Member Button - matches Clients page style */}
-          <button
-            onClick={handleOpenAssignModal}
-            className="px-4 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
-            title="Add Member"
-          >
-            <UserPlus className="w-4 h-4 text-neutral-700" />
-            <span className="text-sm font-medium text-neutral-900">Add</span>
-          </button>
-        </div>
-      </div>
+      <BaseHeader
+        title="Team"
+        subtitle="Manage your team"
+        primaryAction={{
+          label: "Add",
+          icon: UserPlus,
+          onClick: handleOpenAssignModal
+        }}
+      />
 
       {/* Members Table */}
       {isLoading ? (
         <TeamTableSkeleton />
-      ) : enrichedMembers.length === 0 ? (
+      ) : members.length === 0 ? (
         <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
 
           <div className="p-12 text-center">
@@ -167,7 +135,7 @@ export default function TeamManagementPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-neutral-200">
-                {enrichedMembers.map((member) => (
+                {members.map((member) => (
                   <tr key={member.id} className="hover:bg-neutral-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-neutral-900">

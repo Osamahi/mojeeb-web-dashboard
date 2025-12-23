@@ -115,8 +115,20 @@ class AgentService {
    * Get all agents for current user
    */
   async getAgents(): Promise<Agent[]> {
+    const stack = new Error().stack;
+    console.log(`\n🌐 [AgentService] getAgents() API call at ${new Date().toISOString()}`);
+    console.log(`   📍 Called from:\n${stack}`);
+
     const { data } = await api.get<ApiResponse<ApiAgentResponse[]>>('/api/agents');
-    return data.data.map(agent => this.transformAgent(agent));
+    const agents = data.data.map(agent => this.transformAgent(agent));
+
+    console.log(`   ✅ API returned ${agents.length} agents`);
+    if (agents.length > 0) {
+      console.log(`   First agent: ${agents[0].name} (ID: ${agents[0].id})`);
+      console.log(`   Organization: ${agents[0].organizationName || 'N/A'} (ID: ${agents[0].organizationId})`);
+    }
+
+    return agents;
   }
 
   /**

@@ -11,7 +11,7 @@ import { Plus, Search } from 'lucide-react';
 import { useAgentStore } from '../stores/agentStore';
 import AgentCard from '../components/AgentCard';
 import AgentFormModal from '../components/AgentFormModal';
-import AgentsPageHeader from '../components/AgentsPageHeader';
+import { BaseHeader } from '@/components/ui/BaseHeader';
 import AgentsFilterDrawer, { type AgentFilters } from '../components/AgentsFilterDrawer';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
@@ -131,11 +131,17 @@ export default function AgentsPage() {
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header with Filter Button (SuperAdmin only) */}
-      <AgentsPageHeader
+      <BaseHeader
+        title="AI Agents"
+        subtitle="Manage your intelligent AI assistants"
+        showFilterButton={isSuperAdmin}
         activeFilterCount={activeFilterCount}
         onFilterClick={handleFilterDrawerToggle}
-        onCreateClick={() => setIsCreateModalOpen(true)}
-        isSuperAdmin={isSuperAdmin}
+        primaryAction={{
+          label: "Create",
+          icon: Plus,
+          onClick: () => setIsCreateModalOpen(true)
+        }}
       />
 
       {/* Agents List - Vertical Cards */}

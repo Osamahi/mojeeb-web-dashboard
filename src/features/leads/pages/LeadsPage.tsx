@@ -1,7 +1,7 @@
 /**
  * LeadsPage Component - Refactored for Performance
  * Architecture: Isolated components prevent unnecessary re-renders
- * - LeadsPageHeader: Static, never re-renders
+ * - BaseHeader: Static, never re-renders
  * - LeadsFiltersToolbar: Only re-renders when filter state changes
  * - LeadsTableView: Only re-renders when data changes
  */
@@ -13,7 +13,7 @@ import { useLeadsSubscription } from '../hooks/useLeadsSubscription';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { UserPlus } from 'lucide-react';
-import { LeadsPageHeader } from '../components/LeadsPageHeader';
+import { BaseHeader } from '@/components/ui/BaseHeader';
 import { LeadsFilterDrawer } from '../components/LeadsFilterDrawer';
 import { LeadsTableView } from '../components/LeadsTableView';
 import AddLeadModal from '../components/AddLeadModal';
@@ -135,10 +135,17 @@ export default function LeadsPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Static Header with Filter Button - never re-renders */}
-      <LeadsPageHeader
+      <BaseHeader
+        title="Clients"
+        subtitle="Manage your clients"
+        showFilterButton
         activeFilterCount={activeFilterCount}
-        onAddClick={handleAddLeadClick}
         onFilterClick={handleFilterDrawerToggle}
+        primaryAction={{
+          label: "Add",
+          icon: UserPlus,
+          onClick: handleAddLeadClick
+        }}
       />
 
       {/* Filter Drawer - slides in from right */}

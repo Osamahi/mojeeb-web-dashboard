@@ -5,15 +5,16 @@
  */
 
 import { Settings } from 'lucide-react';
+import { BaseHeader } from '@/components/ui/BaseHeader';
 
 export const SettingsPage = () => {
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-neutral-950 mb-2">Settings</h1>
-        <p className="text-neutral-600">Manage your account and application preferences</p>
-      </div>
+      <BaseHeader
+        title="Settings"
+        subtitle="Manage your account and application preferences"
+      />
 
       {/* Coming Soon - Minimal Empty State */}
       <div className="flex items-center justify-center min-h-[400px]">

@@ -52,22 +52,42 @@ class AuthService {
    * @private
    */
   private async initializeAgentData(): Promise<void> {
+    console.log(`\n🔐 [AuthService] initializeAgentData() called at ${new Date().toISOString()}`);
+    console.log(`   Current agentStore state:`);
+    console.log(`      - agents count: ${useAgentStore.getState().agents.length}`);
+    console.log(`      - globalSelectedAgent: ${useAgentStore.getState().globalSelectedAgent ? useAgentStore.getState().globalSelectedAgent.name : 'null'}`);
+
     try {
+      console.log(`   📡 Fetching agents from API...`);
       const agents = await agentService.getAgents();
+
+      console.log(`   ✅ Fetched ${agents.length} agents from API`);
+      if (agents.length > 0) {
+        console.log(`   First agent: ${agents[0].name} (ID: ${agents[0].id})`);
+      }
 
       if (!agents || agents.length === 0) {
         logger.warn('User has no agents - needs onboarding or agent creation');
+        console.log(`   ⚠️ No agents found for user`);
         // User authenticated successfully but has no agents
         // This is a valid state - they may need to create their first agent
         return;
       }
 
+      console.log(`   🔄 Calling useAgentStore.getState().setAgents()...`);
+      useAgentStore.getState().setAgents(agents);
+
+      console.log(`   🎯 Calling initializeAgentSelection()...`);
       useAgentStore.getState().initializeAgentSelection();
+
       logger.info('Agent selection initialized successfully', {
         selectedAgentId: agents[0]?.id,
         totalAgents: agents.length,
       });
+
+      console.log(`   ✅ Agent data initialization complete`);
     } catch (error) {
+      console.error(`   ❌ Failed to initialize agent data:`, error);
       logger.error('Failed to initialize agent selection', error instanceof Error ? error : new Error(String(error)));
       // Don't fail the authentication if agent initialization fails
       // The user can still access the app and retry manually or create an agent

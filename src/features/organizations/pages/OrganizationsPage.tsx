@@ -13,7 +13,7 @@ import OrganizationsTableSkeleton from '../components/OrganizationsTableSkeleton
 import EditOrganizationModal from '../components/EditOrganizationModal';
 import CreateOrganizationModal from '../components/CreateOrganizationModal';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Button } from '@/components/ui/Button';
+import { BaseHeader } from '@/components/ui/BaseHeader';
 import type { Organization } from '../types';
 
 export default function OrganizationsPage() {
@@ -51,22 +51,15 @@ export default function OrganizationsPage() {
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Organizations</h1>
-          <p className="text-sm sm:text-base text-neutral-600 mt-1">
-            Manage and view all system organizations
-          </p>
-        </div>
-        <Button onClick={handleOpenCreateModal} className="w-full sm:w-auto">
-          <Plus className="h-5 w-5 mr-2" />
-          Create Organization
-        </Button>
-      </motion.div>
+      <BaseHeader
+        title="Organizations"
+        subtitle="Manage and view all system organizations"
+        primaryAction={{
+          label: "Create",
+          icon: Plus,
+          onClick: handleOpenCreateModal
+        }}
+      />
 
       {/* Organizations Table */}
       <motion.div

@@ -229,6 +229,10 @@ export const useAuthStore = create<AuthState>()(
         console.log(`   🧹 Clearing AgentStore...`);
         useAgentStore.getState().reset();
 
+        // CRITICAL FIX: Force clear agent persist storage to prevent race condition
+        console.log(`   🧹 Force clearing agent persist storage...`);
+        localStorage.removeItem('mojeeb-agent-storage');
+
         console.log(`   🧹 Clearing ConversationStore...`);
         useConversationStore.getState().clearSelection();
 

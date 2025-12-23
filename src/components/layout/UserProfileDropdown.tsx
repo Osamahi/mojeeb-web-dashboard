@@ -32,22 +32,28 @@ export const UserProfileDropdown = () => {
     }
   }, [isOpen]);
 
-  const handleLogout = () => {
-    // 1. Clear React Query cache to prevent stale data
+  const handleLogout = async () => {
+    // 1. Clear auth state and other Zustand stores FIRST
+    // This triggers .reset() which sets stores to default state
+    useAuthStore.getState().logout();
+
+    // 2. Wait 100ms for Zustand persist middleware to finish writing (race condition fix)
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // 3. Clear React Query cache to prevent stale data
     queryClient.clear();
 
-    // 2. Clear persisted localStorage (agent and other stores)
+    // 4. Force clear persisted localStorage AFTER stores are reset
+    // This prevents persist middleware from re-writing old data after we clear
+    localStorage.removeItem('mojeeb-auth-storage');
     localStorage.removeItem('mojeeb-agent-storage');
     localStorage.removeItem('mojeeb-ui-storage');
     localStorage.removeItem('mojeeb-onboarding-storage');
 
-    // 3. Clear auth state and other Zustand stores
-    useAuthStore.getState().logout();
-
-    // 4. Redirect immediately - don't wait for API
+    // 5. Redirect to login page
     window.location.href = '/login';
 
-    // 5. Fire-and-forget: invalidate refresh token on server (optional, non-blocking)
+    // 6. Fire-and-forget: invalidate refresh token on server (optional, non-blocking)
     authService.logout().catch(() => {});
   };
 

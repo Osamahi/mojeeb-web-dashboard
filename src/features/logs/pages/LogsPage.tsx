@@ -11,6 +11,7 @@ import { useAgentContext } from '@/hooks/useAgentContext';
 import { LogStreamTerminal } from '../components/LogStreamTerminal';
 import { useLogStream } from '../hooks/useLogStream';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { BaseHeader } from '@/components/ui/BaseHeader';
 import type { LogEntry } from '../components/LogStreamTerminal';
 
 export default function LogsPage() {
@@ -55,54 +56,48 @@ export default function LogsPage() {
       className="p-6 space-y-6 h-[calc(100vh-80px)] flex flex-col"
     >
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-neutral-900">
-              {currentAgent?.name || 'Agent'} | Log Stream
-            </h1>
-            {isConnected && (
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 border border-green-200 rounded-full">
-                <Radio className="w-3.5 h-3.5 text-green-600 animate-pulse" />
-                <span className="text-xs font-medium text-green-700">Live</span>
-              </div>
-            )}
+      <BaseHeader
+        title={`${currentAgent?.name || 'Agent'} | Log Stream`}
+        subtitle="Real-time application logs and diagnostics"
+        badge={
+          isConnected && (
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 border border-green-200 rounded-full">
+              <Radio className="w-3.5 h-3.5 text-green-600 animate-pulse" />
+              <span className="text-xs font-medium text-green-700">Live</span>
+            </div>
+          )
+        }
+        additionalActions={
+          <div className="flex items-center gap-4 bg-white border border-neutral-200 rounded-lg p-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="logType"
+                checked={showApplicationLogs}
+                onChange={() => {
+                  setShowApplicationLogs(true);
+                  setShowWebServerLogs(false);
+                }}
+                className="w-4 h-4 text-black focus:ring-black"
+              />
+              <span className="text-sm text-neutral-700">Application logs</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="logType"
+                checked={showWebServerLogs}
+                onChange={() => {
+                  setShowApplicationLogs(false);
+                  setShowWebServerLogs(true);
+                }}
+                className="w-4 h-4 text-black focus:ring-black"
+              />
+              <span className="text-sm text-neutral-700">Web server logs</span>
+            </label>
           </div>
-          <p className="text-sm text-neutral-600 mt-1">
-            Real-time application logs and diagnostics
-          </p>
-        </div>
-
-        {/* Log Type Selector (Azure-style radio buttons) */}
-        <div className="flex items-center gap-4 bg-white border border-neutral-200 rounded-lg p-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="logType"
-              checked={showApplicationLogs}
-              onChange={() => {
-                setShowApplicationLogs(true);
-                setShowWebServerLogs(false);
-              }}
-              className="w-4 h-4 text-black focus:ring-black"
-            />
-            <span className="text-sm text-neutral-700">Application logs</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="logType"
-              checked={showWebServerLogs}
-              onChange={() => {
-                setShowApplicationLogs(false);
-                setShowWebServerLogs(true);
-              }}
-              className="w-4 h-4 text-black focus:ring-black"
-            />
-            <span className="text-sm text-neutral-700">Web server logs</span>
-          </label>
-        </div>
-      </div>
+        }
+      />
 
       {/* Controls Bar */}
       <div className="bg-white rounded-lg border border-neutral-200 p-4">

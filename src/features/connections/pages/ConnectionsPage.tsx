@@ -18,6 +18,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { BaseHeader } from '@/components/ui/BaseHeader';
 import NoAgentEmptyState from '@/features/agents/components/NoAgentEmptyState';
 import type { PlatformType, PlatformConnection } from '../types';
 
@@ -96,18 +97,10 @@ export default function ConnectionsPage() {
   return (
     <div className="p-6 space-y-8">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
-      >
-        <div className="flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Connections</h1>
-          <p className="text-sm text-neutral-600 mt-1">
-            Platform connections for {globalSelectedAgent.name}
-          </p>
-        </div>
-      </motion.div>
+      <BaseHeader
+        title="Connections"
+        subtitle={`Platform connections for ${globalSelectedAgent.name}`}
+      />
 
       {/* Error State */}
       {error && (
