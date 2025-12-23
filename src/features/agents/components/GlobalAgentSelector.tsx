@@ -26,6 +26,7 @@ export default function GlobalAgentSelector() {
     agents,
     globalSelectedAgent,
     isAgentSwitching,
+    isLoading,
     switchAgent
   } = useAgentStore();
 
@@ -58,6 +59,16 @@ export default function GlobalAgentSelector() {
     setIsModalOpen(false);
     setSearchQuery(''); // Clear search on close
   };
+
+  // Show loading skeleton during initial agent load
+  if (isLoading && agents.length === 0) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-1.5 rounded-md">
+        <div className="h-3.5 w-20 bg-neutral-200 rounded animate-pulse" />
+        <div className="h-3.5 w-3.5 bg-neutral-200 rounded animate-pulse" />
+      </div>
+    );
+  }
 
   // Show loading spinner during agent switching
   if (isAgentSwitching) {

@@ -18,7 +18,7 @@ export const DashboardLayout = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const selectedConversation = useConversationStore((state) => state.selectedConversation);
-  const { setAgents, initializeAgentSelection } = useAgentStore();
+  const { setAgents, initializeAgentSelection, setLoading } = useAgentStore();
   const { user } = useAuthStore();
   const hasInitialized = useRef(false);
   const hasProcessedPhoneCheck = useRef<string | null>(null); // Track which user we've processed
@@ -73,8 +73,12 @@ export const DashboardLayout = () => {
     },
   });
 
-  // Sync agents to store whenever data changes, initialize selection ONCE
+  // Sync agents and loading state to store whenever data changes
   useEffect(() => {
+    // Sync loading state
+    setLoading(isLoading);
+
+    // Sync agents once loaded
     if (!isLoading && agents) {
       setAgents(agents);  // Always sync agents to store
       if (!hasInitialized.current) {
