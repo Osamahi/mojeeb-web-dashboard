@@ -3,7 +3,7 @@
  * iOS-style minimal confirmation dialog
  */
 
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { ModalActions } from '@/components/ui/ModalActions';
 import type { BaseModalProps } from '../types/onboarding.types';
 
@@ -21,13 +21,8 @@ export const SimpleConfirmModal = ({
   onConfirm,
 }: SimpleConfirmModalProps) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <BaseModal isOpen={isOpen} onClose={onClose} title={title} maxWidth="sm">
       <div className="text-center space-y-6">
-        {/* Title */}
-        <h2 className="text-xl font-semibold text-neutral-900">
-          {title}
-        </h2>
-
         {/* Buttons - stacked vertically */}
         <ModalActions
           primary={{
@@ -42,6 +37,6 @@ export const SimpleConfirmModal = ({
           layout="vertical"
         />
       </div>
-    </Modal>
+    </BaseModal>
   );
 };

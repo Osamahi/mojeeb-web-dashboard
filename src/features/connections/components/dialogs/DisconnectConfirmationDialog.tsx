@@ -4,7 +4,7 @@
  */
 
 import { AlertTriangle } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import type { PlatformConnection } from '../../types';
 import { getPlatformById } from '../../constants/platforms';
@@ -30,11 +30,13 @@ export function DisconnectConfirmationDialog({
   const accountName = connection.platformAccountName || connection.platformAccountHandle || 'this account';
 
   return (
-    <Modal
+    <BaseModal
       isOpen={isOpen}
       onClose={onClose}
       title="Disconnect Platform"
-      size="sm"
+      maxWidth="sm"
+      isLoading={isDisconnecting}
+      closable={!isDisconnecting}
     >
       <div className="space-y-4">
         {/* Warning Icon */}
@@ -73,6 +75,6 @@ export function DisconnectConfirmationDialog({
           </Button>
         </div>
       </div>
-    </Modal>
+    </BaseModal>
   );
 }

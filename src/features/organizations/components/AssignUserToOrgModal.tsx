@@ -5,8 +5,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { X, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { BaseModal } from '@/components/ui/BaseModal';
+import { Button } from '@/components/ui/Button';
 import { organizationService } from '../services/organizationService';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import AgentSearchDropdown from './AgentSearchDropdown';
@@ -118,37 +120,18 @@ export default function AssignUserToOrgModal({
 
   const canSubmit = targetOrganizationId && selectedUser;
 
-  if (!isOpen) return null;
-
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 z-[60]" onClick={handleClose} />
-
-      {/* Modal */}
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full pointer-events-auto max-h-[90vh] flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
-            <div>
-              <h2 className="text-xl font-semibold text-neutral-900">
-                Assign User to Organization
-              </h2>
-              <p className="text-sm text-neutral-500 mt-1">
-                Select an agent, user, and role to complete the assignment
-              </p>
-            </div>
-            <button
-              onClick={handleClose}
-              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-              disabled={isSubmitting}
-            >
-              <X className="h-5 w-5 text-neutral-500" />
-            </button>
-          </div>
-
-          {/* Content - Simplified Form */}
-          <div className="flex-1 px-6 py-6 overflow-visible">
+      <BaseModal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title="Assign User to Organization"
+        subtitle="Select an agent, user, and role to complete the assignment"
+        maxWidth="2xl"
+        isLoading={isSubmitting}
+        closable={!isSubmitting}
+      >
+        <div className="space-y-4">
             <div className="space-y-4">
               {/* Agent Selection - Only shown when organizationId is not provided */}
               {!organizationId && (
@@ -199,72 +182,71 @@ export default function AssignUserToOrgModal({
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Footer */}
-          <div className="px-6 py-4 border-t border-neutral-200 flex items-center justify-end gap-3">
-            <button
-              onClick={handleClose}
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAssign}
-              disabled={!canSubmit || isSubmitting}
-              className="px-6 py-2 text-sm font-medium text-white bg-brand-cyan hover:bg-brand-cyan/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Assigning...' : 'Assign User'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Confirmation Dialog for Cross-Org Assignment */}
-      {showConfirmation && (
-        <>
-          <div className="fixed inset-0 bg-black/60 z-[70]" onClick={() => setShowConfirmation(false)} />
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full pointer-events-auto">
-              <div className="px-6 py-4 border-b border-neutral-200">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                    <AlertTriangle className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-neutral-900">
-                    User Already in Organization
-                  </h3>
-                </div>
-              </div>
-              <div className="px-6 py-4">
-                <p className="text-neutral-700 mb-4">
-                  This user is currently in <span className="font-medium">{selectedUser?.currentOrganization?.name}</span>.
-                </p>
-                <p className="text-neutral-700">
-                  Do you want to remove them from their current organization and assign them to the selected organization?
-                </p>
-              </div>
-              <div className="px-6 py-4 border-t border-neutral-200 flex items-center justify-end gap-3">
-                <button
-                  onClick={() => setShowConfirmation(false)}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleSubmit(true)}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Moving...' : 'Yes, Move User'}
-                </button>
-              </div>
+            {/* Footer Actions */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
+              <Button
+                variant="secondary"
+                onClick={handleClose}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAssign}
+                disabled={!canSubmit || isSubmitting}
+                className="bg-brand-cyan hover:bg-brand-cyan/90"
+              >
+                {isSubmitting ? 'Assigning...' : 'Assign User'}
+              </Button>
             </div>
           </div>
-        </>
-      )}
+      </BaseModal>
+
+      {/* Confirmation Dialog for Cross-Org Assignment */}
+      <BaseModal
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        title="User Already in Organization"
+        maxWidth="md"
+        isLoading={isSubmitting}
+        closable={!isSubmitting}
+      >
+        <div className="space-y-4">
+          {/* Warning Icon */}
+          <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-neutral-700 mb-2">
+                This user is currently in <span className="font-medium">{selectedUser?.currentOrganization?.name}</span>.
+              </p>
+              <p className="text-neutral-700">
+                Do you want to remove them from their current organization and assign them to the selected organization?
+              </p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => setShowConfirmation(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => handleSubmit(true)}
+              disabled={isSubmitting}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {isSubmitting ? 'Moving...' : 'Yes, Move User'}
+            </Button>
+          </div>
+        </div>
+      </BaseModal>
     </>
   );
 }

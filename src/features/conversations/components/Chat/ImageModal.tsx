@@ -4,7 +4,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, Download, Share2, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { Download, Share2, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { BaseModal } from '@/components/ui/BaseModal';
 import type { MessageAttachment } from '../../types';
 import { chatToasts } from '../../utils/chatToasts';
 
@@ -94,19 +95,15 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
-      onClick={onClose}
+    <BaseModal
+      isOpen={true}
+      onClose={onClose}
+      title={currentImage.filename || `Image ${currentIndex + 1}`}
+      maxWidth="2xl"
+      className="bg-black/90"
+      contentClassName="!p-0"
     >
-      <div className="relative max-w-[90vw] max-h-[90vh] flex flex-col items-center">
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
-          title="Close (Esc)"
-        >
-          <X className="w-6 h-6 text-white" />
-        </button>
+      <div className="relative flex flex-col items-center -m-4">
 
         {/* Image counter - only show if multiple images */}
         {hasMultipleImages && (
@@ -186,6 +183,6 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
           </button>
         </div>
       </div>
-    </div>
+    </BaseModal>
   );
 }

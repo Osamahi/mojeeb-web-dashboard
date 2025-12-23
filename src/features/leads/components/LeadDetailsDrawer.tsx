@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Edit2, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
@@ -148,11 +148,11 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
 
   if (isLoading) {
     return (
-      <Modal isOpen={true} onClose={handleClose} title="Lead Details">
+      <BaseModal isOpen={true} onClose={handleClose} title="Lead Details" maxWidth="md" isLoading={true}>
         <div className="flex justify-center p-8">
           <Spinner size="lg" />
         </div>
-      </Modal>
+      </BaseModal>
     );
   }
 
@@ -162,11 +162,13 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
 
   return (
     <>
-      <Modal
+      <BaseModal
         isOpen={true}
         onClose={handleClose}
         title={isEditing ? 'Edit Lead' : 'Lead Details'}
-        size="md"
+        maxWidth="md"
+        isLoading={updateMutation.isPending}
+        closable={!updateMutation.isPending}
       >
         {isEditing ? (
           /* Edit Mode */
@@ -454,7 +456,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
             </div>
           </>
         )}
-      </Modal>
+      </BaseModal>
 
       {/* Conversation View Drawer */}
       <ConversationViewDrawer

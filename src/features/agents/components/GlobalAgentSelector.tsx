@@ -9,7 +9,7 @@ import { ChevronDown, Check, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAgentStore } from '../stores/agentStore';
 import { Spinner } from '@/components/ui/Spinner';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { cn } from '@/lib/utils';
 
 export default function GlobalAgentSelector() {
@@ -84,11 +84,11 @@ export default function GlobalAgentSelector() {
       </button>
 
       {/* Agent Selection Modal */}
-      <Modal
+      <BaseModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Select Agent"
-        size="sm"
+        maxWidth="sm"
       >
         <div className="flex flex-col">
           {/* Agent List - Scrollable */}
@@ -127,7 +127,7 @@ export default function GlobalAgentSelector() {
             <span className="text-sm font-medium text-brand-cyan">Create New Agent</span>
           </button>
         </div>
-      </Modal>
+      </BaseModal>
     </>
   );
 }

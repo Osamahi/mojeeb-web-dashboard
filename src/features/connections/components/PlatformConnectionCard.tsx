@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { PlatformIcon } from './PlatformIcon';
 import { ConnectionHealthIndicator, ConnectionHealthDetails } from './ConnectionHealthBadge';
 import { useDisconnectPlatform, useConnectionHealth } from '../hooks/useConnections';
@@ -157,10 +157,13 @@ export function PlatformConnectionCard({
       </Card>
 
       {/* Disconnect Confirmation Modal */}
-      <Modal
+      <BaseModal
         isOpen={showDisconnectModal}
         onClose={() => setShowDisconnectModal(false)}
         title="Disconnect Platform"
+        maxWidth="md"
+        isLoading={disconnectMutation.isPending}
+        closable={!disconnectMutation.isPending}
       >
         <div className="space-y-4">
           <p className="text-neutral-600">
@@ -185,7 +188,7 @@ export function PlatformConnectionCard({
             </Button>
           </div>
         </div>
-      </Modal>
+      </BaseModal>
     </>
   );
 }

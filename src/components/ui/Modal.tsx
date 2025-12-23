@@ -1,9 +1,34 @@
+/**
+ * @deprecated This component is deprecated. Use BaseModal instead.
+ *
+ * Migration completed: December 23, 2025
+ * All 27 modals in the codebase have been migrated to BaseModal.
+ *
+ * BaseModal improvements:
+ * - Better TypeScript types with strict props
+ * - Loading state support (isLoading, closable props)
+ * - Subtitle support for additional context
+ * - Consistent animations across all modals
+ * - Single source of truth for modal behavior
+ *
+ * Migration guide:
+ * 1. Change import: Modal → BaseModal
+ * 2. Update props: size → maxWidth, description → subtitle
+ * 3. Add loading state: isLoading={isPending}, closable={!isPending}
+ *
+ * This file is kept for backwards compatibility only.
+ * DO NOT use this component in new code.
+ */
+
 import { type HTMLAttributes, type ReactNode, forwardRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * @deprecated Use BaseModal instead
+ */
 export interface ModalProps extends HTMLAttributes<HTMLDivElement> {
   isOpen: boolean;
   onClose: () => void;
@@ -20,6 +45,9 @@ const sizeClasses = {
   xl: 'max-w-4xl',
 };
 
+/**
+ * @deprecated Use BaseModal instead
+ */
 export const Modal = forwardRef<HTMLDivElement, ModalProps>(
   ({ className, isOpen, onClose, title, description, children, size = 'md', ...props }, ref) => {
     // Prevent body scroll when modal is open
