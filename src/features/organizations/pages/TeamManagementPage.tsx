@@ -109,22 +109,26 @@ export default function TeamManagementPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900">Team Management</h1>
-          <p className="text-neutral-600 mt-1">
-            Organization members for {agent.name}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <h1 className="text-2xl font-semibold text-neutral-900">Team</h1>
+          <p className="text-sm text-neutral-600 mt-1">
+            Manage your team
           </p>
         </div>
-        <Button onClick={handleOpenAssignModal}>
-          <UserPlus className="h-5 w-5 mr-2" />
-          Assign User
-        </Button>
-      </motion.div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Add Member Button - matches Clients page style */}
+          <button
+            onClick={handleOpenAssignModal}
+            className="px-4 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
+            title="Add Member"
+          >
+            <UserPlus className="w-4 h-4 text-neutral-700" />
+            <span className="text-sm font-medium text-neutral-900">Add</span>
+          </button>
+        </div>
+      </div>
 
       {/* Members Table */}
       <motion.div

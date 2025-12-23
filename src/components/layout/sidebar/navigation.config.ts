@@ -61,10 +61,9 @@ export const navigation: NavigationItem[] = [
     requireSuperAdmin: true,
   },
   {
-    name: 'Team Management',
+    name: 'Team',
     href: '/team-management',
     icon: UserPlus,
-    requireSuperAdmin: true,
   },
   {
     name: 'Support',
