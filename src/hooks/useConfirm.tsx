@@ -23,7 +23,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export interface ConfirmOptions {
   title: string;

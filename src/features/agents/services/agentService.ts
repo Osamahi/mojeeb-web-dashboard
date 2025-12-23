@@ -13,6 +13,7 @@ import type {
   DocumentJobCreated,
   DocumentJobStatus,
 } from '../types/agent.types';
+import { organizationService } from '@/features/organizations/services/organizationService';
 
 // API Response Types (snake_case from backend)
 interface ApiAgentResponse {
@@ -21,6 +22,8 @@ interface ApiAgentResponse {
   description?: string;
   persona_prompt?: string;
   owner_id: string;
+  organization_id: string; // NEW: Organization-centric architecture
+  organization_name?: string; // NEW: Organization name (populated by backend)
   avatar_url?: string;
   status?: string;
   language?: string;
@@ -85,6 +88,8 @@ class AgentService {
       description: apiAgent.description ?? null,
       personaPrompt: apiAgent.persona_prompt ?? null,
       ownerId: apiAgent.owner_id,
+      organizationId: apiAgent.organization_id, // NEW: Organization-centric architecture
+      organizationName: apiAgent.organization_name ?? null, // NEW: Organization name for display
       avatarUrl: apiAgent.avatar_url ?? null,
       status: (apiAgent.status as AgentStatus) ?? 'draft',
       language: apiAgent.language ?? null,
@@ -123,9 +128,30 @@ class AgentService {
   }
 
   /**
+   * Get agents by organization ID
+   */
+  async getAgentsByOrganization(organizationId: string): Promise<Agent[]> {
+    const { data } = await api.get<ApiResponse<ApiAgentResponse[]>>(`/api/agents/by-organization/${organizationId}`);
+    return data.data.map(agent => this.transformAgent(agent));
+  }
+
+  /**
    * Create new agent
+   * NEW: Automatically fetches user's organization_id if not provided
    */
   async createAgent(request: CreateAgentRequest): Promise<Agent> {
+    // Get organization_id - either from request or fetch user's organization
+    let organizationId = request.organizationId;
+
+    if (!organizationId) {
+      try {
+        const userOrg = await organizationService.getUserOrganization();
+        organizationId = userOrg.organization.id;
+      } catch (error) {
+        throw new Error('Failed to get user organization. Please ensure you are logged in.');
+      }
+    }
+
     // Transform camelCase to snake_case for backend
     const snakeCaseRequest = {
       name: request.name,
@@ -136,6 +162,7 @@ class AgentService {
       allow_handoff: request.allowHandoff,
       model_provider: request.modelProvider,
       avatar_url: request.avatarUrl,
+      organization_id: organizationId, // REQUIRED: Organization-centric architecture
     };
 
     // Backend returns minimal response { id, name, status } or { Id, Name, Status }
@@ -177,6 +204,17 @@ class AgentService {
    */
   async deleteAgent(id: string): Promise<void> {
     await api.delete(`/api/agents/${id}`);
+  }
+
+  /**
+   * Reassign agent to different organization (SuperAdmin only)
+   */
+  async reassignOrganization(agentId: string, organizationId: string): Promise<Agent> {
+    const { data } = await api.patch<ApiResponse<ApiAgentResponse>>(
+      `/api/agents/${agentId}/organization`,
+      { organization_id: organizationId }
+    );
+    return this.transformAgent(data.data);
   }
 
   /**

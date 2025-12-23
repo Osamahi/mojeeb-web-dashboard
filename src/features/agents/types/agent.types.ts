@@ -10,6 +10,8 @@ export type Agent = {
   description: string | null;
   personaPrompt: string | null;
   ownerId: string;
+  organizationId: string; // NEW: Organization-centric architecture
+  organizationName?: string | null; // NEW: Organization name for display (populated by backend)
   avatarUrl: string | null;
   status: AgentStatus;
   language: string | null;
@@ -39,6 +41,7 @@ export type CreateAgentRequest = {
   allowHandoff?: boolean;
   modelProvider?: ModelProvider;
   avatarUrl?: string;
+  organizationId?: string; // Optional - will be auto-fetched if not provided
 };
 
 export type UpdateAgentRequest = {

@@ -6,17 +6,20 @@
 
 import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Crown, Wrench } from 'lucide-react';
+import { Trash2, Crown, Wrench, Building2, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { isAxiosError } from 'axios';
-import type { Agent } from '../types';
+import type { Agent } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
 import { useConfirm } from '@/hooks/useConfirm';
 import AgentFormModal from './AgentFormModal';
+import ReassignOrganizationModal from './ReassignOrganizationModal';
 import { Avatar } from '@/components/ui/Avatar';
+import { useAuthStore } from '@/features/auth/stores/authStore';
+import { Role } from '@/features/auth/types/auth.types';
 
 interface AgentCardProps {
   agent: Agent;
@@ -27,6 +30,11 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
+
+  // Check if user is SuperAdmin
+  const user = useAuthStore((state) => state.user);
+  const isSuperAdmin = user?.role === Role.SuperAdmin;
 
   const deleteMutation = useMutation({
     mutationFn: () => agentService.deleteAgent(agent.id),
@@ -94,6 +102,12 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
     setIsEditModalOpen(true);
   };
 
+  const handleReassignOrgClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsReassignModalOpen(true);
+  };
+
   return (
     <>
       {ConfirmDialogComponent}
@@ -103,6 +117,13 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
         mode="edit"
         agent={agent}
       />
+      {isSuperAdmin && (
+        <ReassignOrganizationModal
+          isOpen={isReassignModalOpen}
+          onClose={() => setIsReassignModalOpen(false)}
+          agent={agent}
+        />
+      )}
       <div
         onClick={() => setIsEditModalOpen(true)}
         className="bg-white rounded-lg border border-neutral-200 p-3 sm:p-4 transition-colors duration-200 hover:border-neutral-300 cursor-pointer"
@@ -161,6 +182,19 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
                 <span className="hidden sm:inline">•</span>
                 <span className="whitespace-nowrap">Updated: {formatDate(agent.updatedAt)}</span>
               </div>
+
+              {/* Organization Display - SuperAdmin only */}
+              {isSuperAdmin && agent.organizationName && (
+                <button
+                  onClick={handleReassignOrgClick}
+                  className="flex items-center gap-2 text-xs text-neutral-500 mt-1.5 hover:text-neutral-700 transition-colors group"
+                  title="Click to reassign to different organization"
+                >
+                  <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">{agent.organizationName}</span>
+                  <Pencil className="w-3 h-3 text-neutral-400 group-hover:text-neutral-600 transition-colors" />
+                </button>
+              )}
             </div>
           </div>
       </div>

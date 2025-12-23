@@ -16,6 +16,8 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ defa
 const AgentsPage = lazy(() => import('./features/agents/pages/AgentsPage'));
 const StudioPage = lazy(() => import('./features/agents/pages/StudioPage'));
 const UsersPage = lazy(() => import('./features/users/pages/UsersPage'));
+const OrganizationsPage = lazy(() => import('./features/organizations/pages/OrganizationsPage'));
+const TeamManagementPage = lazy(() => import('./features/organizations/pages/TeamManagementPage'));
 const TeamPage = lazy(() => import('./features/team/pages/TeamPage'));
 const ConnectionsPage = lazy(() => import('./features/connections/pages/ConnectionsPage'));
 const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthCallbackPage'));
@@ -190,6 +192,22 @@ export const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <UsersPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'organizations',
+        element: (
+          <SuperAdminRoute>
+            <OrganizationsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'team-management',
+        element: (
+          <SuperAdminRoute>
+            <TeamManagementPage />
           </SuperAdminRoute>
         ),
       },

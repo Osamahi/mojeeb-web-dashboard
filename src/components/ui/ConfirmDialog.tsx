@@ -1,28 +1,30 @@
 /**
- * Confirm Dialog Component
- * Professional confirmation dialog for destructive actions
- * Replaces native window.confirm() with a branded, customizable dialog
+ * Confirmation Dialog Component
+ * Feature-complete confirmation dialog with portal rendering, keyboard support, and accessibility
+ * Standardized implementation - DO NOT CREATE DUPLICATES
  */
 
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Info, X } from 'lucide-react';
-import { Button } from './ui/Button';
+import { Button } from './Button';
 import { cn } from '@/lib/utils';
 
 export interface ConfirmDialogProps {
-  open: boolean;
+  isOpen?: boolean;  // Support both isOpen and open
+  open?: boolean;
   onClose: () => void;
   onConfirm: () => void | Promise<void>;
   title: string;
   message: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'info';
+  variant?: 'danger' | 'warning' | 'info';
   isLoading?: boolean;
 }
 
 export const ConfirmDialog = ({
+  isOpen,
   open,
   onClose,
   onConfirm,
@@ -33,6 +35,8 @@ export const ConfirmDialog = ({
   variant = 'danger',
   isLoading = false,
 }: ConfirmDialogProps) => {
+  const dialogOpen = isOpen ?? open ?? false;
+
   // Close on ESC key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -41,7 +45,7 @@ export const ConfirmDialog = ({
       }
     };
 
-    if (open) {
+    if (dialogOpen) {
       document.addEventListener('keydown', handleEscape);
       // Prevent body scroll when dialog is open
       document.body.style.overflow = 'hidden';
@@ -51,7 +55,7 @@ export const ConfirmDialog = ({
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [open, isLoading, onClose]);
+  }, [dialogOpen, isLoading, onClose]);
 
   const handleConfirm = async () => {
     try {
@@ -70,7 +74,7 @@ export const ConfirmDialog = ({
     }
   };
 
-  if (!open) return null;
+  if (!dialogOpen) return null;
 
   const icon = variant === 'danger' ? (
     <AlertTriangle className="w-6 h-6 text-error" />
@@ -129,7 +133,7 @@ export const ConfirmDialog = ({
               </h2>
               <p
                 id="dialog-description"
-                className="text-sm text-neutral-600 leading-relaxed"
+                className="text-sm text-neutral-600 leading-relaxed whitespace-pre-line"
               >
                 {message}
               </p>
@@ -140,7 +144,6 @@ export const ConfirmDialog = ({
           <div className="flex gap-3 justify-end mt-6">
             <Button
               variant="secondary"
-              size="md"
               onClick={onClose}
               disabled={isLoading}
             >
@@ -148,12 +151,10 @@ export const ConfirmDialog = ({
             </Button>
             <Button
               variant={variant === 'danger' ? 'danger' : 'primary'}
-              size="md"
               onClick={handleConfirm}
-              isLoading={isLoading}
               disabled={isLoading}
             >
-              {confirmText}
+              {isLoading ? 'Processing...' : confirmText}
             </Button>
           </div>
         </div>

@@ -50,6 +50,20 @@ class UserService {
   }
 
   /**
+   * Get a single user by ID from API (Admin only)
+   */
+  async getUserByIdFromApi(id: string): Promise<User> {
+    try {
+      const { data } = await api.get<User>(`/api/usermanagement/users/${id}`);
+      return data;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
+      useUserStore.getState().setError(errorMessage);
+      throw error;
+    }
+  }
+
+  /**
    * Get a single user by ID (using local store)
    */
   getUserById(id: string): User | undefined {

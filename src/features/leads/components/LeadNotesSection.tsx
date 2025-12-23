@@ -282,7 +282,7 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
         title="Delete Note"
         message="Are you sure you want to delete this note? This action cannot be undone."
         confirmText="Delete"
-        confirmVariant="danger"
+        variant="danger"
         isLoading={deleteMutation.isPending}
       />
     </div>

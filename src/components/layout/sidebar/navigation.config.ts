@@ -12,6 +12,8 @@ import {
   Plug,
   Contact,
   MessagesSquare,
+  Building2,
+  UserPlus,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -56,6 +58,18 @@ export const navigation: NavigationItem[] = [
     name: 'Users',
     href: '/users',
     icon: Users,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Organizations',
+    href: '/organizations',
+    icon: Building2,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Team Management',
+    href: '/team-management',
+    icon: UserPlus,
     requireSuperAdmin: true,
   },
   {
