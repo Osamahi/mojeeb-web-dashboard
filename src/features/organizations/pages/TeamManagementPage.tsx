@@ -1,6 +1,6 @@
 /**
  * Team Management Page
- * SuperAdmin-only page for assigning users to organizations
+ * Manage organization members and their roles
  * Shows organization members based on global selected agent
  */
 
@@ -14,7 +14,7 @@ import { organizationService } from '../services/organizationService';
 import { userService } from '@/features/users/services/userService';
 import AssignUserToOrgModal from '../components/AssignUserToOrgModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { Button } from '@/components/ui/Button';
+import { TeamTableSkeleton } from '../components/TeamTableSkeleton';
 import type { OrganizationMember } from '../types';
 
 export default function TeamManagementPage() {
@@ -131,21 +131,17 @@ export default function TeamManagementPage() {
       </div>
 
       {/* Members Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-white border border-neutral-200 rounded-lg overflow-hidden"
-      >
-        {isLoading ? (
+      {isLoading ? (
+        <TeamTableSkeleton />
+      ) : enrichedMembers.length === 0 ? (
+        <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+
           <div className="p-12 text-center">
-            <p className="text-neutral-500">Loading members...</p>
+            <p className="text-neutral-500">No members found. Click "Add" to add team members.</p>
           </div>
-        ) : enrichedMembers.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-neutral-500">No members found. Click "Assign User" to add team members.</p>
-          </div>
-        ) : (
+        </div>
+      ) : (
+        <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-neutral-50 border-b border-neutral-200">
@@ -220,8 +216,8 @@ export default function TeamManagementPage() {
               </tbody>
             </table>
           </div>
-        )}
-      </motion.div>
+        </div>
+      )}
 
       {/* Assign User Modal */}
       <AssignUserToOrgModal

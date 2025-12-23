@@ -200,11 +200,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'team-management',
-        element: (
-          <SuperAdminRoute>
-            <TeamManagementPage />
-          </SuperAdminRoute>
-        ),
+        element: <TeamManagementPage />,
       },
       {
         path: 'conversations',
