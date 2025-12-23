@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Copy, Check, Code, ArrowLeft, Share2 } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { widgetService } from '../../services/widgetService';
@@ -181,11 +181,13 @@ ${snippet}
 </html>`;
 
   return (
-    <Modal
+    <BaseModal
       isOpen={isOpen}
       onClose={onClose}
       title={currentStep === 'mode-selection' ? 'Choose Integration Type' : 'Install Widget Code'}
-      size="lg"
+      maxWidth="lg"
+      isLoading={isLoading || isGeneratingLink}
+      closable={!isLoading && !isGeneratingLink}
     >
       {/* Scrollable Content Area */}
       <div className="relative flex-1 overflow-y-auto pb-6">
@@ -592,6 +594,6 @@ ${snippet}
           )}
         </div>
       </div>
-    </Modal>
+    </BaseModal>
   );
 }

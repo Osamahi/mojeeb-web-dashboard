@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { ModalActions } from '@/components/ui/ModalActions';
 import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
@@ -153,11 +153,13 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
   if (!selectedCountry) return null;
 
   return (
-    <Modal
+    <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
-      size="sm"
-      title={isSuccess ? undefined : 'Add Your Phone Number'}
+      maxWidth="sm"
+      title={isSuccess ? 'Success' : 'Add Your Phone Number'}
+      isLoading={isSubmitting}
+      closable={!isSubmitting}
     >
       {isSuccess ? (
         // Success State
@@ -276,6 +278,6 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
           />
         </form>
       )}
-    </Modal>
+    </BaseModal>
   );
 };

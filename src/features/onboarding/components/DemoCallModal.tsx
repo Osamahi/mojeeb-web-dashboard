@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { ModalActions } from '@/components/ui/ModalActions';
 import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
@@ -137,12 +137,14 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess }: DemoCallModalProps
   if (!selectedCountry) return null;
 
   return (
-    <Modal
+    <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
-      size="sm"
-      title={isSuccess ? undefined : 'Request Free Demo Call'}
-      description={isSuccess ? undefined : 'Our team will call you within 24 hours'}
+      maxWidth="sm"
+      title={isSuccess ? 'Success' : 'Request Free Demo Call'}
+      subtitle={isSuccess ? undefined : 'Our team will call you within 24 hours'}
+      isLoading={isSubmitting}
+      closable={!isSubmitting}
     >
       {isSuccess ? (
         // Success State
@@ -255,6 +257,6 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess }: DemoCallModalProps
           </PrimaryButton>
         </form>
       )}
-    </Modal>
+    </BaseModal>
   );
 };

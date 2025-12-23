@@ -4,7 +4,7 @@
  */
 
 import { CheckCircle, AlertCircle, XCircle, Clock, Shield } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import type { PlatformConnection, ConnectionHealthStatus } from '../../types';
 import { getPlatformById } from '../../constants/platforms';
@@ -36,11 +36,12 @@ export function HealthCheckDialog({
   const hasWarning = healthStatus?.daysUntilExpiry !== null && healthStatus?.daysUntilExpiry !== undefined && healthStatus.daysUntilExpiry < 30;
 
   return (
-    <Modal
+    <BaseModal
       isOpen={isOpen}
       onClose={onClose}
       title="Connection Health Check"
-      size="md"
+      maxWidth="md"
+      isLoading={isLoading}
     >
       <div className="space-y-6">
         {/* Header */}
@@ -194,6 +195,6 @@ export function HealthCheckDialog({
           </Button>
         </div>
       </div>
-    </Modal>
+    </BaseModal>
   );
 }

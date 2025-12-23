@@ -1,12 +1,14 @@
 /**
  * Edit Organization Modal
  * Modal for editing organization details with owner change support
+ * Refactored to use BaseModal component for consistency
  */
 
 import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { X, User as UserIcon, Bot, Search, Check, UserPlus, Trash2, Mail, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
@@ -222,33 +224,20 @@ export default function EditOrganizationModal({
     }
   };
 
-  if (!isOpen || !organization) return null;
+  if (!organization) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-neutral-900">
-            Edit Organization
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-neutral-400 hover:text-neutral-600 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+    <>
+      <BaseModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Edit Organization"
+        maxWidth="2xl"
+        isLoading={updateMutation.isPending}
+        closable={!updateMutation.isPending}
+        contentClassName="space-y-4 px-6"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">
@@ -530,21 +519,21 @@ export default function EditOrganizationModal({
             )}
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={updateMutation.isPending}
-              isLoading={updateMutation.isPending}
-            >
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        </form>
-      </div>
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={updateMutation.isPending}
+            isLoading={updateMutation.isPending}
+          >
+            {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </form>
+      </BaseModal>
 
       {/* Assign User Modal */}
       <AssignUserToOrgModal
@@ -566,6 +555,6 @@ export default function EditOrganizationModal({
         variant="danger"
         isLoading={isRemoving}
       />
-    </div>
+    </>
   );
 }

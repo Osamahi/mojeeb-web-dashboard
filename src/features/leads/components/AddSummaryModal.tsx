@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { useUpdateLead } from '../hooks/useLeads';
 
 interface AddSummaryModalProps {
@@ -40,11 +40,13 @@ export function AddSummaryModal({
   };
 
   return (
-    <Modal
+    <BaseModal
       isOpen={isOpen}
       onClose={onClose}
       title={leadName ? `Summary - ${leadName}` : 'Summary'}
-      size="md"
+      maxWidth="md"
+      isLoading={updateMutation.isPending}
+      closable={!updateMutation.isPending}
     >
       <div className="space-y-2">
           <textarea
@@ -71,6 +73,6 @@ export function AddSummaryModal({
             </button>
           </div>
         </div>
-    </Modal>
+    </BaseModal>
   );
 }

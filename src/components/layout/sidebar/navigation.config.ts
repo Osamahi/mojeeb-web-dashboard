@@ -6,7 +6,6 @@
 import {
   Bot,
   Users,
-  UserCog,
   MessageSquare,
   Wrench,
   Plug,
@@ -37,11 +36,6 @@ export const navigation: NavigationItem[] = [
     name: 'Connect',
     href: '/connections',
     icon: Plug,
-  },
-  {
-    name: 'Team',
-    href: '/team',
-    icon: UserCog,
   },
   {
     name: 'Clients',

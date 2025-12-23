@@ -18,7 +18,6 @@ const StudioPage = lazy(() => import('./features/agents/pages/StudioPage'));
 const UsersPage = lazy(() => import('./features/users/pages/UsersPage'));
 const OrganizationsPage = lazy(() => import('./features/organizations/pages/OrganizationsPage'));
 const TeamManagementPage = lazy(() => import('./features/organizations/pages/TeamManagementPage'));
-const TeamPage = lazy(() => import('./features/team/pages/TeamPage'));
 const ConnectionsPage = lazy(() => import('./features/connections/pages/ConnectionsPage'));
 const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthCallbackPage'));
 const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
@@ -174,10 +173,6 @@ export const router = createBrowserRouter([
       {
         path: 'studio',
         element: <StudioPage />,
-      },
-      {
-        path: 'team',
-        element: <TeamPage />,
       },
       {
         path: 'connections',

@@ -3,7 +3,7 @@
  * Displays when user tries to leave onboarding to prevent abandonment
  */
 
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { ModalActions } from '@/components/ui/ModalActions';
 import { WarningIcon } from '@/shared/components/icons';
 import type { BaseModalProps } from '../types/onboarding.types';
@@ -20,7 +20,7 @@ export const ExitIntentModal = ({
   onExit,
 }: ExitIntentModalProps) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Are you sure you want to leave?">
+    <BaseModal isOpen={isOpen} onClose={onClose} title="Are you sure you want to leave?" maxWidth="md">
       <div className="space-y-4">
         {/* Warning Message */}
         <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
@@ -76,6 +76,6 @@ export const ExitIntentModal = ({
           />
         </div>
       </div>
-    </Modal>
+    </BaseModal>
   );
 };

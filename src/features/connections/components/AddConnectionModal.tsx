@@ -5,7 +5,7 @@
 
 import { useReducer, useEffect, useRef, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { logger } from '@/lib/logger';
 import { useConnections } from '../hooks/useConnections';
 import { useConnectPage } from '../hooks/useAddConnection';
@@ -213,7 +213,14 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
   return (
     <>
       {/* OAuth Connection Modal */}
-      <Modal isOpen={isOpen && !showWidgetDialog} onClose={handleClose} title={getModalTitle()} size="lg">
+      <BaseModal
+        isOpen={isOpen && !showWidgetDialog}
+        onClose={handleClose}
+        title={getModalTitle()}
+        maxWidth="lg"
+        isLoading={isConnecting}
+        closable={!isConnecting}
+      >
         <div className="space-y-6">
           {/* Step indicator - only show if we're in the multi-step flow */}
           {state.step !== 'complete' && !initialPlatform && (
@@ -262,7 +269,7 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
             )}
           </div>
         </div>
-      </Modal>
+      </BaseModal>
 
       {/* Widget Snippet Dialog */}
       <WidgetSnippetDialog

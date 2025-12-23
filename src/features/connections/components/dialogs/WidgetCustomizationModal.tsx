@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -92,7 +92,14 @@ export function WidgetCustomizationModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md" title="Customize Widget">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="md"
+      title="Customize Widget"
+      isLoading={updateMutation.isPending}
+      closable={!updateMutation.isPending}
+    >
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Spinner size="lg" />
@@ -175,6 +182,6 @@ export function WidgetCustomizationModal({
           </div>
         </div>
       )}
-    </Modal>
+    </BaseModal>
   );
 }

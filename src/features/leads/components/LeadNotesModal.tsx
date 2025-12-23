@@ -4,7 +4,7 @@
  * Shows add note input and note history without full lead details
  */
 
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { LeadNotesSection } from './LeadNotesSection';
 
 interface LeadNotesModalProps {
@@ -21,13 +21,13 @@ export function LeadNotesModal({
   leadName,
 }: LeadNotesModalProps) {
   return (
-    <Modal
+    <BaseModal
       isOpen={isOpen}
       onClose={onClose}
       title={leadName ? `Notes - ${leadName}` : 'Notes'}
-      size="md"
+      maxWidth="md"
     >
       <LeadNotesSection leadId={leadId} onNoteAdded={onClose} />
-    </Modal>
+    </BaseModal>
   );
 }

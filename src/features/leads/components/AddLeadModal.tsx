@@ -1,12 +1,12 @@
 /**
  * AddLeadModal Component
  * Modal for creating a new lead
- * Follows Knowledge Base modal pattern with validation
+ * Migrated to BaseModal for consistency and better UX
  */
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
@@ -130,12 +130,14 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
   };
 
   return (
-    <Modal
+    <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
       title="Add Client"
-      description="Create a new client for this agent"
-      size="md"
+      subtitle="Create a new client for this agent"
+      maxWidth="md"
+      isLoading={createMutation.isPending}
+      closable={!createMutation.isPending}
     >
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
@@ -258,6 +260,6 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
           </Button>
         </div>
       </form>
-    </Modal>
+    </BaseModal>
   );
 }

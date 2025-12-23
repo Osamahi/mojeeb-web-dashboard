@@ -11,7 +11,7 @@ import { FileText, Upload } from 'lucide-react';
 import { agentService } from '../services/agentService';
 import { useUploadDocumentAsync } from '../hooks/useDocumentJobs';
 import { validateDocumentFile } from '../utils/fileValidation';
-import { Modal } from '@/components/ui/Modal';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
@@ -157,13 +157,17 @@ export default function AddKnowledgeBaseModal({
     }
   };
 
+  const isLoading = createMutation.isPending || uploadMutation.isPending;
+
   return (
-    <Modal
+    <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
       title="Add Knowledge"
-      description="Create knowledge via manual entry or document upload"
-      size="lg"
+      subtitle="Create knowledge via manual entry or document upload"
+      maxWidth="lg"
+      isLoading={isLoading}
+      closable={!isLoading}
     >
       {/* Tabs */}
       <div className="flex gap-2 mb-4 border-b border-neutral-200">
@@ -290,6 +294,6 @@ export default function AddKnowledgeBaseModal({
           </div>
         </div>
       )}
-    </Modal>
+    </BaseModal>
   );
 }

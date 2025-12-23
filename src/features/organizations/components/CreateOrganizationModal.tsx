@@ -1,12 +1,14 @@
 /**
  * Create Organization Modal
  * Modal for creating new organizations with user search for owner selection
+ * Refactored to use BaseModal component for consistency
  */
 
 import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, Search, User as UserIcon, Check } from 'lucide-react';
+import { Search, User as UserIcon, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
@@ -137,33 +139,17 @@ export default function CreateOrganizationModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-neutral-900">
-            Create Organization
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-          >
-            <X className="h-5 w-5 text-neutral-500" />
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Create Organization"
+      maxWidth="2xl"
+      isLoading={createMutation.isPending}
+      closable={!createMutation.isPending}
+      contentClassName="space-y-6 px-6"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
           {/* Organization Name */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -306,25 +292,24 @@ export default function CreateOrganizationModal({
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={createMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={createMutation.isPending}
-            >
-              {createMutation.isPending ? 'Creating...' : 'Create Organization'}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-neutral-200">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={createMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending ? 'Creating...' : 'Create Organization'}
+          </Button>
+        </div>
+      </form>
+    </BaseModal>
   );
 }
