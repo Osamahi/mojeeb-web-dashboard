@@ -4,10 +4,12 @@
  * Displays in top navigation bar and persists selection to localStorage
  */
 
-import { useState } from 'react';
-import { ChevronDown, Check, Plus } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ChevronDown, Check, Plus, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAgentStore } from '../stores/agentStore';
+import { useAuthStore } from '@/features/auth/stores/authStore';
+import { Role } from '@/features/auth/types/auth.types';
 import { Spinner } from '@/components/ui/Spinner';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { cn } from '@/lib/utils';
@@ -15,6 +17,10 @@ import { cn } from '@/lib/utils';
 export default function GlobalAgentSelector() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const user = useAuthStore((state) => state.user);
+  const isSuperAdmin = user?.role === Role.SuperAdmin;
 
   const {
     agents,
@@ -23,8 +29,19 @@ export default function GlobalAgentSelector() {
     switchAgent
   } = useAgentStore();
 
+  // Filter agents by name only (only for super admins)
+  const filteredAgents = useMemo(() => {
+    if (!isSuperAdmin || !searchQuery.trim()) return agents;
+
+    const query = searchQuery.toLowerCase();
+    return agents.filter(agent =>
+      agent.name.toLowerCase().includes(query)
+    );
+  }, [agents, searchQuery, isSuperAdmin]);
+
   const handleAgentSelect = async (agentId: string) => {
     setIsModalOpen(false);
+    setSearchQuery(''); // Clear search on close
     if (globalSelectedAgent?.id === agentId) return;
 
     // No callback needed - React Query will auto-refetch queries with agentId in keys
@@ -33,7 +50,13 @@ export default function GlobalAgentSelector() {
 
   const handleCreateAgent = () => {
     setIsModalOpen(false);
+    setSearchQuery(''); // Clear search on close
     navigate('/onboarding');
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSearchQuery(''); // Clear search on close
   };
 
   // Show loading spinner during agent switching
@@ -86,14 +109,34 @@ export default function GlobalAgentSelector() {
       {/* Agent Selection Modal */}
       <BaseModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleModalClose}
         title="Select Agent"
         maxWidth="sm"
       >
         <div className="flex flex-col">
+          {/* Search Input - Only for Super Admins */}
+          {isSuperAdmin && (
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search agents..."
+                className="w-full pl-10 pr-4 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
+                autoFocus
+              />
+            </div>
+          )}
+
           {/* Agent List - Scrollable */}
           <div className="max-h-[400px] overflow-y-auto space-y-1 mb-3">
-            {agents.map((agent) => (
+            {filteredAgents.length === 0 && isSuperAdmin && searchQuery ? (
+              <div className="text-center py-8 text-neutral-500">
+                <p className="text-sm">No agents found matching "{searchQuery}"</p>
+              </div>
+            ) : (
+              filteredAgents.map((agent) => (
               <button
                 key={agent.id}
                 onClick={() => handleAgentSelect(agent.id)}
@@ -112,7 +155,8 @@ export default function GlobalAgentSelector() {
                   <Check className="w-4 h-4 text-white flex-shrink-0" />
                 )}
               </button>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Divider */}
