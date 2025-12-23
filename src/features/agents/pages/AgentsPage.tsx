@@ -14,11 +14,11 @@ import AgentFormModal from '../components/AgentFormModal';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import AgentsFilterDrawer, { type AgentFilters } from '../components/AgentsFilterDrawer';
 import { Button } from '@/components/ui/Button';
-import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { Agent } from '../types/agent.types';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
+import { AgentListSkeleton } from '../components/AgentCardSkeleton';
 
 export default function AgentsPage() {
   // Read agents from store - DashboardLayout handles fetching and syncing
@@ -119,15 +119,6 @@ export default function AgentsPage() {
     setFilters(newFilters);
   };
 
-  // Show loading state
-  if (isLoading || !agents) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header with Filter Button (SuperAdmin only) */}
@@ -144,49 +135,56 @@ export default function AgentsPage() {
         }}
       />
 
-      {/* Agents List - Vertical Cards */}
-      {filteredAgents.length > 0 ? (
-        <div className="space-y-4">
-          {filteredAgents.map((agent) => (
-            <AgentCard key={agent.id} agent={agent} />
-          ))}
-        </div>
-      ) : agents && agents.length > 0 ? (
-        // Has agents but no matches after filtering
-        <EmptyState
-          icon={<Search className="w-12 h-12 text-neutral-400" />}
-          title="No agents found"
-          description="No agents match your current filters. Try adjusting your search or filters."
-          action={
-            <Button
-              variant="outline"
-              onClick={() => {
-                setFilters({
-                  search: '',
-                  status: 'all',
-                  modelProvider: 'all',
-                  platformTarget: 'all',
-                  sortBy: 'createdAt',
-                });
-              }}
-            >
-              Clear Filters
-            </Button>
-          }
-        />
+      {/* Show loading state with skeleton */}
+      {isLoading || !agents ? (
+        <AgentListSkeleton count={5} />
       ) : (
-        // No agents at all
-        <EmptyState
-          icon={<Search className="w-12 h-12 text-neutral-400" />}
-          title="No agents yet"
-          description="Create your first AI agent to get started"
-          action={
-            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Agent
-            </Button>
-          }
-        />
+        <>
+          {/* Agents List - Vertical Cards */}
+          {filteredAgents.length > 0 ? (
+            <div className="space-y-4">
+              {filteredAgents.map((agent) => (
+                <AgentCard key={agent.id} agent={agent} />
+              ))}
+            </div>
+          ) : agents && agents.length > 0 ? (
+            // Has agents but no matches after filtering
+            <EmptyState
+              icon={<Search className="w-12 h-12 text-neutral-400" />}
+              title="No agents found"
+              description="No agents match your current filters. Try adjusting your search or filters."
+              action={
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setFilters({
+                      search: '',
+                      status: 'all',
+                      modelProvider: 'all',
+                      platformTarget: 'all',
+                      sortBy: 'createdAt',
+                    });
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              }
+            />
+          ) : (
+            // No agents at all
+            <EmptyState
+              icon={<Search className="w-12 h-12 text-neutral-400" />}
+              title="No agents yet"
+              description="Create your first AI agent to get started"
+              action={
+                <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Agent
+                </Button>
+              }
+            />
+          )}
+        </>
       )}
 
       {/* Filter Drawer */}

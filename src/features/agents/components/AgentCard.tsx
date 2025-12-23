@@ -17,7 +17,6 @@ import { queryKeys } from '@/lib/queryKeys';
 import { useConfirm } from '@/hooks/useConfirm';
 import AgentFormModal from './AgentFormModal';
 import ReassignOrganizationModal from './ReassignOrganizationModal';
-import { Avatar } from '@/components/ui/Avatar';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
 
@@ -130,16 +129,7 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
       >
           {/* Header - Responsive Layout */}
           <div className="flex gap-3">
-            {/* Avatar - Hidden on very small screens, shown on sm+ */}
-            <div className="hidden sm:block flex-shrink-0">
-              <Avatar
-                src={agent.avatarUrl ?? undefined}
-                name={agent.name}
-                size="md"
-              />
-            </div>
-
-            {/* Content Area - Full width on mobile */}
+            {/* Content Area - Full width */}
             <div className="flex-1 min-w-0">
               {/* Title Row */}
               <div className="flex items-start justify-between gap-2 mb-2">

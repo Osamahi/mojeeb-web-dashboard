@@ -47,7 +47,7 @@ describe('agentService', () => {
     name: 'Test Agent',
     description: 'Test agent description',
     persona_prompt: 'You are a helpful assistant',
-    owner_id: 'user-123',
+    organization_id: 'org-123',
     avatar_url: 'https://example.com/avatar.jpg',
     status: 'active',
     language: 'en',
@@ -73,7 +73,7 @@ describe('agentService', () => {
     name: 'Test Agent',
     description: 'Test agent description',
     personaPrompt: 'You are a helpful assistant',
-    ownerId: 'user-123',
+    organizationId: 'org-123',
     avatarUrl: 'https://example.com/avatar.jpg',
     status: 'active',
     language: 'en',
@@ -102,7 +102,6 @@ describe('agentService', () => {
     sourceUrl: null,
     tags: ['test', 'demo'],
     status: 'active',
-    ownerId: 'user-123',
     createdAt: '2025-01-01T00:00:00Z',
     updatedAt: '2025-01-01T00:00:00Z',
   };
@@ -130,7 +129,7 @@ describe('agentService', () => {
         id: 'agent-123',
         name: 'Test Agent',
         personaPrompt: 'You are a helpful assistant',
-        ownerId: 'user-123',
+        organizationId: 'org-123',
         platformTarget: 'both',
         allowHandoff: true,
         modelProvider: 'gemini',
@@ -566,7 +565,7 @@ describe('agentService', () => {
 
       // Ensure all snake_case properties are converted to camelCase
       expect(result).toHaveProperty('personaPrompt');
-      expect(result).toHaveProperty('ownerId');
+      expect(result).toHaveProperty('organizationId');
       expect(result).toHaveProperty('avatarUrl');
       expect(result).toHaveProperty('platformTarget');
       expect(result).toHaveProperty('allowHandoff');
@@ -586,7 +585,7 @@ describe('agentService', () => {
 
       // Ensure no snake_case properties remain
       expect(result).not.toHaveProperty('persona_prompt');
-      expect(result).not.toHaveProperty('owner_id');
+      expect(result).not.toHaveProperty('organization_id');
       expect(result).not.toHaveProperty('avatar_url');
       expect(result).not.toHaveProperty('platform_target');
       expect(result).not.toHaveProperty('allow_handoff');

@@ -9,9 +9,8 @@ export type Agent = {
   name: string;
   description: string | null;
   personaPrompt: string | null;
-  ownerId: string;
-  organizationId: string; // NEW: Organization-centric architecture
-  organizationName?: string | null; // NEW: Organization name for display (populated by backend)
+  organizationId: string;
+  organizationName?: string | null;
   avatarUrl: string | null;
   status: AgentStatus;
   language: string | null;
@@ -64,7 +63,6 @@ export type KnowledgeBase = {
   sourceUrl: string | null;
   tags: string[] | null;
   status: string;
-  ownerId: string;
   createdAt: string;
   updatedAt: string;
 };

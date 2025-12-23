@@ -21,9 +21,8 @@ interface ApiAgentResponse {
   name: string;
   description?: string;
   persona_prompt?: string;
-  owner_id: string;
-  organization_id: string; // NEW: Organization-centric architecture
-  organization_name?: string; // NEW: Organization name (populated by backend)
+  organization_id: string;
+  organization_name?: string;
   avatar_url?: string;
   status?: string;
   language?: string;
@@ -87,9 +86,8 @@ class AgentService {
       name: apiAgent.name,
       description: apiAgent.description ?? null,
       personaPrompt: apiAgent.persona_prompt ?? null,
-      ownerId: apiAgent.owner_id,
-      organizationId: apiAgent.organization_id, // NEW: Organization-centric architecture
-      organizationName: apiAgent.organization_name ?? null, // NEW: Organization name for display
+      organizationId: apiAgent.organization_id,
+      organizationName: apiAgent.organization_name ?? null,
       avatarUrl: apiAgent.avatar_url ?? null,
       status: (apiAgent.status as AgentStatus) ?? 'draft',
       language: apiAgent.language ?? null,
