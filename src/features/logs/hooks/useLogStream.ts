@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { LogEntry } from '../components/LogStreamTerminal';
+import { channelRegistry } from '@/lib/supabaseChannelRegistry';
 
 interface UseLogStreamOptions {
   agentId?: string;
@@ -129,7 +130,11 @@ export function useLogStream({
 
     subscriptionRef.current = channel;
 
+    // Register channel for cleanup on logout
+    channelRegistry.register(channel, 'application-logs');
+
     return () => {
+      channelRegistry.unregister(channel);
       channel.unsubscribe();
       subscriptionRef.current = null;
       setIsConnected(false);

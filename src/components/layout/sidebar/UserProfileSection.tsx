@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { LogOut, Rocket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/features/auth/types/auth.types';
+import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
+import { useUIStore } from '@/stores/uiStore';
 
 interface UserProfileSectionProps {
   user: User | null;
@@ -15,21 +16,28 @@ interface UserProfileSectionProps {
  * Used in both mobile and desktop sidebars
  */
 export const UserProfileSection = ({ user, onLogout }: UserProfileSectionProps) => {
-  const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Read subscription from global store (loaded once on app init)
+  const subscription = useSubscriptionStore(state => state.subscription);
+  const loadingSubscription = useSubscriptionStore(state => state.isLoading);
+
+  // Use UI store for modal state (prevents loss when sidebar unmounts on mobile)
+  const setShowUpgradeWizard = useUIStore(state => state.setShowUpgradeWizard);
 
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      await onLogout(); // Clear auth state
-      navigate('/login', { replace: true }); // Navigate using React Router
+      // authStore.logout() now handles everything including redirect via logoutService
+      await onLogout();
     } catch (error) {
       console.error('Logout failed:', error);
-      // Error is logged, user can try again
-    } finally {
       setIsLoggingOut(false);
     }
   };
+
+  // Check if user is on free plan
+  const isFreePlan = subscription?.planCode?.toLowerCase() === 'free';
 
   return (
     <div className="mt-auto p-4 bg-white">
@@ -41,6 +49,21 @@ export const UserProfileSection = ({ user, onLogout }: UserProfileSectionProps) 
           <p className="text-xs text-neutral-600 truncate">{user?.email || ''}</p>
         </div>
       </div>
+
+      {/* Upgrade Plan Button - Only show for free plan users */}
+      {!loadingSubscription && isFreePlan && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent event bubbling
+            setShowUpgradeWizard(true);
+          }}
+          className="mt-3 w-full px-4 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
+          title="Upgrade Plan"
+        >
+          <Rocket className="w-4 h-4 text-neutral-700" />
+          <span className="text-sm font-medium text-neutral-900">Upgrade Plan</span>
+        </button>
+      )}
 
       {/* Logout Button */}
       <button

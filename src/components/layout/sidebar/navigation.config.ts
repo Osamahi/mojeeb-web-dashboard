@@ -13,6 +13,8 @@ import {
   MessagesSquare,
   Building2,
   UserPlus,
+  Receipt,
+  CreditCard,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -59,6 +61,17 @@ export const navigation: NavigationItem[] = [
     href: '/organizations',
     icon: Building2,
     requireSuperAdmin: true,
+  },
+  {
+    name: 'Subscriptions',
+    href: '/subscriptions',
+    icon: Receipt,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'My Subscription',
+    href: '/my-subscription',
+    icon: CreditCard,
   },
   {
     name: 'Team',

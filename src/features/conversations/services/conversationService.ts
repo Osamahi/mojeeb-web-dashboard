@@ -13,6 +13,7 @@ import type {
 } from '../types';
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
+import { channelRegistry } from '@/lib/supabaseChannelRegistry';
 
 const PAGE_SIZE = 20;
 const CHAT_PAGE_SIZE = 50;
@@ -153,6 +154,9 @@ export const subscribeToConversations = (
     )
     .subscribe();
 
+  // Register channel for cleanup on logout
+  channelRegistry.register(channel, `conversations-${agentId}`);
+
   return channel;
 };
 
@@ -197,6 +201,9 @@ export const subscribeToMessages = (
       handleChange
     )
     .subscribe();
+
+  // Register channel for cleanup on logout
+  channelRegistry.register(channel, `chats-${conversationId}`);
 
   return channel;
 };
@@ -324,5 +331,6 @@ export const toggleAIMode = async (
 // === Unsubscribe Channel ===
 
 export const unsubscribeChannel = (channel: RealtimeChannel): void => {
+  channelRegistry.unregister(channel);
   supabase.removeChannel(channel);
 };

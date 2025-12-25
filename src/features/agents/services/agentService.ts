@@ -193,8 +193,29 @@ class AgentService {
       avatar_url: request.avatarUrl,
       status: request.status,
     };
-    const { data } = await api.put<ApiAgentResponse>(`/api/agents/${id}`, snakeCaseRequest);
-    return this.transformAgent(data);
+
+    const { data } = await api.put<ApiResponse<ApiAgentResponse>>(`/api/agents/${id}`, snakeCaseRequest);
+
+    // Backend wraps response in { success, message, data, timestamp }
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid response format from server');
+    }
+
+    // Extract agent data from wrapped response
+    const agentData = 'data' in data ? data.data : data;
+
+    if (!agentData) {
+      throw new Error('Agent data missing in response');
+    }
+
+    const transformedAgent = this.transformAgent(agentData as ApiAgentResponse);
+
+    if (!transformedAgent.id) {
+      console.error('Transform failed - missing agent ID:', { agentData, transformedAgent });
+      throw new Error('Agent update failed - invalid response data');
+    }
+
+    return transformedAgent;
   }
 
   /**

@@ -190,12 +190,17 @@ export default function EditOrganizationModal({
     setIsAssignModalOpen(false);
   };
 
-  const handleAssignSuccess = () => {
-    refetchMembers(); // Refresh the members list
-    toast.success('Member list updated');
+  const handleAssignSuccess = async () => {
+    console.log('[EditOrganizationModal] Assignment successful, refetching members...');
+    // Invalidate and refetch both members and users (needed for enrichedMembers)
+    await queryClient.invalidateQueries({ queryKey: ['organization-members', organization?.id] });
+    await queryClient.invalidateQueries({ queryKey: ['users'] });
+    await refetchMembers();
+    console.log('[EditOrganizationModal] Members refetched');
   };
 
   const handleRemoveMember = (member: OrganizationMember & { user?: { name: string | null; email: string | null; phone?: string | null } }) => {
+    console.log('[EditOrganizationModal] Remove member clicked:', member);
     setMemberToRemove(member);
     setIsConfirmDialogOpen(true);
   };
@@ -500,7 +505,11 @@ export default function EditOrganizationModal({
                         <td className="px-4 py-3 whitespace-nowrap text-right">
                           <button
                             type="button"
-                            onClick={() => handleRemoveMember(member)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleRemoveMember(member);
+                            }}
                             className="text-red-600 hover:text-red-800 transition-colors p-2"
                             title="Remove member"
                           >

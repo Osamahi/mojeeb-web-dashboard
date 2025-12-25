@@ -8,7 +8,7 @@
  * - Refactored with extracted components for maintainability
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FocusTrap } from 'focus-trap-react';
@@ -16,9 +16,11 @@ import { useUIStore } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 import { Avatar } from '@/components/ui/Avatar';
 import { NavigationList } from './sidebar/NavigationList';
 import { UserProfileSection } from './sidebar/UserProfileSection';
+import { PlanChangeWizard } from '@/features/subscriptions/components/PlanChangeWizard';
 import { navigation } from './sidebar/navigation.config';
 import { SidebarErrorBoundary } from './sidebar/SidebarErrorBoundary';
 import {
@@ -32,6 +34,7 @@ const SidebarContent = () => {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const currentAgent = useAgentStore((state) => state.globalSelectedAgent);
+  const subscription = useSubscriptionStore((state) => state.subscription);
   const isMobile = useIsMobile();
 
   const {
@@ -40,11 +43,19 @@ const SidebarContent = () => {
     setSidebarOpen,
     setSidebarCollapsed,
     closeSidebarOnMobile,
+    showUpgradeWizard,
+    setShowUpgradeWizard,
   } = useUIStore();
 
   // Refs for focus management
   const sidebarRef = useRef<HTMLElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  // Handle upgrade wizard success
+  const handleUpgradeSuccess = useCallback(async () => {
+    // Refresh subscription data after successful upgrade
+    await useSubscriptionStore.getState().refreshSubscription();
+  }, []);
 
   // Auto-close sidebar on mobile when navigating
   useEffect(() => {
@@ -115,8 +126,14 @@ const SidebarContent = () => {
 
       const target = event.target as Node;
 
-      // Check if click is outside sidebar
-      if (sidebarRef.current && !sidebarRef.current.contains(target)) {
+      // Check if click is inside a modal/portal (e.g., BaseModal, PlanChangeWizard)
+      // Modals render as portals with role="dialog" or aria-modal="true"
+      const clickedElement = event.target as HTMLElement;
+      const isInsideModal = clickedElement.closest('[role="dialog"]') !== null ||
+                           clickedElement.closest('[aria-modal="true"]') !== null;
+
+      // Check if click is outside sidebar (and not in a modal)
+      if (sidebarRef.current && !sidebarRef.current.contains(target) && !isInsideModal) {
         setSidebarCollapsed(true);
       }
     };
@@ -246,6 +263,16 @@ const SidebarContent = () => {
             </FocusTrap>
           )}
         </AnimatePresence>
+      )}
+
+      {/* Plan Change Wizard - Rendered outside sidebar to prevent unmounting issues */}
+      {subscription && (
+        <PlanChangeWizard
+          isOpen={showUpgradeWizard}
+          onClose={() => setShowUpgradeWizard(false)}
+          currentSubscription={subscription}
+          onSuccess={handleUpgradeSuccess}
+        />
       )}
     </>
   );

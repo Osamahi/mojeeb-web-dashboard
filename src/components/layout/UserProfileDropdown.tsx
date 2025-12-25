@@ -7,16 +7,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Settings, LogOut, ChevronDown, User } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/features/auth/stores/authStore';
-import { authService } from '@/features/auth/services/authService';
+import { performLogout } from '@/features/auth/services/logoutService';
 import { cn } from '@/lib/utils';
 
 export const UserProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((state) => state.user);
-  const queryClient = useQueryClient();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -33,28 +31,12 @@ export const UserProfileDropdown = () => {
   }, [isOpen]);
 
   const handleLogout = async () => {
-    // 1. Clear auth state and other Zustand stores FIRST
-    // This triggers .reset() which sets stores to default state
-    useAuthStore.getState().logout();
-
-    // 2. Wait 100ms for Zustand persist middleware to finish writing (race condition fix)
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // 3. Clear React Query cache to prevent stale data
-    queryClient.clear();
-
-    // 4. Force clear persisted localStorage AFTER stores are reset
-    // This prevents persist middleware from re-writing old data after we clear
-    localStorage.removeItem('mojeeb-auth-storage');
-    localStorage.removeItem('mojeeb-agent-storage');
-    localStorage.removeItem('mojeeb-ui-storage');
-    localStorage.removeItem('mojeeb-onboarding-storage');
-
-    // 5. Redirect to login page
-    window.location.href = '/login';
-
-    // 6. Fire-and-forget: invalidate refresh token on server (optional, non-blocking)
-    authService.logout().catch(() => {});
+    // Use centralized logout service for consistent, secure logout
+    await performLogout({
+      reason: 'user-initiated',
+      callBackend: true,
+      redirect: true,
+    });
   };
 
   return (

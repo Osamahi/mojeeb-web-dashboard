@@ -217,7 +217,7 @@ export default function StudioPage() {
 
         {/* Right Column - Test Chat (Desktop only - Hidden on mobile) */}
         <div className="hidden lg:flex flex-col bg-white overflow-hidden">
-          <TestChat agentId={agent.id} />
+          <TestChat agentId={agentId} />
         </div>
       </div>
 
@@ -242,7 +242,7 @@ export default function StudioPage() {
 
       {/* Slide-out Test Chat Panel - Mobile only */}
       <TestChatPanel
-        agentId={agent.id}
+        agentId={agentId}
         isOpen={isChatPanelOpen}
         onClose={() => setIsChatPanelOpen(false)}
       />

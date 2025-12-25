@@ -55,7 +55,7 @@ export default function TestChat({ agentId }: TestChatProps) {
     storage,
     enablePagination: false,
     onError: (err) => {
-      logger.error('Test chat error', err);
+      logger.error('[TestChat]', 'Test chat error', err);
       toast.error(err.message || 'Failed to send message');
     },
     sendMessageFn: async (params) => {
@@ -107,12 +107,12 @@ export default function TestChat({ agentId }: TestChatProps) {
         const conv = await testChatService.initStudioConversation(widget.id, customerName);
 
         setConversation(conv);
-        logger.info('Test chat initialized', { conversationId: conv.id });
+        logger.info('[TestChat]', 'Test chat initialized', `conversationId: ${conv.id}`);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to initialize chat';
         setError(errorMessage);
-        logger.error('Failed to initialize test chat', err);
+        logger.error('[TestChat]', 'Failed to initialize test chat', err);
         toast.error(errorMessage);
       } finally {
         setIsInitializing(false);
@@ -132,12 +132,12 @@ export default function TestChat({ agentId }: TestChatProps) {
       const widget = await testChatService.getAgentWidget(agentId);
       const conv = await testChatService.initStudioConversation(widget.id, customerName);
       setConversation(conv);
-      logger.info('New test conversation started', { conversationId: conv.id });
+      logger.info('[TestChat]', 'New test conversation started', `conversationId: ${conv.id}`);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to start new conversation';
       setError(errorMessage);
-      logger.error('Failed to start new conversation', err);
+      logger.error('[TestChat]', 'Failed to start new conversation', err);
       toast.error(errorMessage);
     } finally {
       setIsInitializing(false);

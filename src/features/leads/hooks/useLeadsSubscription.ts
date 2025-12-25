@@ -20,6 +20,7 @@ import { useAgentContext } from '@/hooks/useAgentContext';
 import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { channelRegistry } from '@/lib/supabaseChannelRegistry';
 
 /**
  * Database row type for leads table (snake_case)
@@ -258,9 +259,13 @@ export function useLeadsSubscription() {
 
     console.log('[Leads Subscription] 📺 Channel created:', channel);
 
+    // Register channel for cleanup on logout
+    channelRegistry.register(channel, `leads-${agentId}`);
+
     // Cleanup on unmount or agentId change
     return () => {
       console.log('[Leads Subscription] 🧹 Cleaning up subscription for agent:', agentId);
+      channelRegistry.unregister(channel);
       supabase.removeChannel(channel);
     };
   }, [agentId, queryClient]);
@@ -318,8 +323,12 @@ export function useLeadSubscription(leadId: string | undefined, enabled = true) 
       )
       .subscribe();
 
+    // Register channel for cleanup on logout
+    channelRegistry.register(channel, `lead-${leadId}`);
+
     return () => {
       console.log('[Lead Subscription] Cleaning up subscription for lead:', leadId);
+      channelRegistry.unregister(channel);
       supabase.removeChannel(channel);
     };
   }, [leadId, enabled, queryClient]);

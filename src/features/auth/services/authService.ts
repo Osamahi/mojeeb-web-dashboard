@@ -215,20 +215,6 @@ class AuthService {
   }
 
   /**
-   * Logout current user
-   */
-  async logout(): Promise<void> {
-    try {
-      await api.post('/api/auth/logout');
-    } catch (error) {
-      logger.error('Logout error', error instanceof Error ? error : new Error(String(error)));
-    } finally {
-      // Clear auth state regardless of API call result
-      useAuthStore.getState().logout();
-    }
-  }
-
-  /**
    * Request password reset email
    */
   async forgotPassword(request: ForgotPasswordRequest): Promise<void> {

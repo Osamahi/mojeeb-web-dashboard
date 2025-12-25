@@ -26,6 +26,10 @@ export const setGlobalQueryClient = (client: QueryClient) => {
   logger.info('Global QueryClient registered in API interceptor');
 };
 
+export const getGlobalQueryClient = (): QueryClient | null => {
+  return globalQueryClient;
+};
+
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
@@ -91,21 +95,20 @@ const shouldRedirectToLogin = (): boolean => {
   return true;
 };
 
-const redirectToLogin = () => {
+const redirectToLogin = async () => {
   if (shouldRedirectToLogin()) {
     lastRedirectTime = Date.now();
 
-    // Clear React Query cache to prevent stale data
-    if (globalQueryClient) {
-      logger.info('Clearing React Query cache on redirect to login');
-      globalQueryClient.clear();
-    }
+    // Use centralized logout service for consistent cleanup
+    // Dynamic import to avoid circular dependencies
+    const { performLogout } = await import('@/features/auth/services/logoutService');
 
-    clearTokens();
-    // Sync Zustand auth state - Critical fix for flickering loop
-    // This also clears AgentStore and ConversationStore
-    useAuthStore.getState().logout();
-    window.location.href = '/login';
+    await performLogout({
+      callBackend: false, // Don't call backend - we already got 401, server knows session is invalid
+      redirect: true,
+      redirectUrl: '/login',
+      reason: 'token-expired',
+    });
   }
 };
 

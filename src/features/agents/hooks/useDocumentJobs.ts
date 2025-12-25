@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { notifyJobStatusChange } from '../utils/documentJobNotifications';
 import { getApiErrorMessage } from '../utils/errorHandling';
 import { createDocumentJobRetryConfig } from '../utils/queryRetryConfig';
+import { channelRegistry } from '@/lib/supabaseChannelRegistry';
 
 /**
  * Database row type for document_processing_jobs table (snake_case)
@@ -123,7 +124,11 @@ export function useDocumentJob(jobId: string | undefined, enabled = true) {
       )
       .subscribe();
 
+    // Register channel for cleanup on logout
+    channelRegistry.register(channel, `document-job-${jobId}`);
+
     return () => {
+      channelRegistry.unregister(channel);
       supabase.removeChannel(channel);
     };
   }, [jobId, enabled, queryClient]);
@@ -209,7 +214,11 @@ export function useDocumentJobs(agentIdOverride?: string, status?: DocumentJobSt
       )
       .subscribe();
 
+    // Register channel for cleanup on logout
+    channelRegistry.register(channel, `document-jobs-${agentId}`);
+
     return () => {
+      channelRegistry.unregister(channel);
       supabase.removeChannel(channel);
     };
   }, [agentId, status, queryClient]);

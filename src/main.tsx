@@ -8,10 +8,14 @@ import { env } from './config/env'
 import { initializeSentry } from './lib/sentry'
 import { initializeClarity } from './lib/clarity'
 import { startStorageMonitoring } from './lib/storageMonitor'
+import { initializeLogoutListener } from './features/auth/services/logoutService'
 
 // Initialize error tracking and analytics
 initializeSentry(); // Error tracking (only in production if DSN provided)
 initializeClarity(); // Session recording and UX analytics (only in production if Project ID provided)
+
+// Initialize multi-tab logout propagation
+initializeLogoutListener(); // Listen for logout events from other tabs
 
 // DIAGNOSTIC: Monitor localStorage changes to track auth issues
 if (import.meta.env.DEV) {

@@ -8,6 +8,8 @@ import { sessionHelper } from '@/lib/sessionHelper';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useConversationStore } from '@/features/conversations/stores/conversationStore';
 import { runStorageHealthCheck, quickStorageCheck } from '@/lib/storageHealthCheck';
+import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
+import { usePlanStore } from '@/features/subscriptions/stores/planStore';
 
 interface AuthState {
   user: User | null;
@@ -21,7 +23,7 @@ interface AuthState {
   setTokens: (accessToken: string, refreshToken: string) => void;
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   updateUserPhone: (phone: string) => void;
-  logout: () => void;
+  logout: (options?: { redirect?: boolean; reason?: string }) => Promise<void>;
   setLoading: (isLoading: boolean) => void;
 }
 
@@ -42,9 +44,9 @@ export const useAuthStore = create<AuthState>()(
 
       setTokens: (accessToken, refreshToken) => {
         console.log(`\n📦 [AuthStore] setTokens called at ${new Date().toISOString()}`);
-        console.log(`   Old Access Token: ${get().accessToken ? get().accessToken?.substring(0, 10) + '...' : 'null'}`);
-        console.log(`   New Access Token: ${accessToken ? accessToken.substring(0, 10) + '...' : 'null'} (${accessToken?.length || 0} chars)`);
-        console.log(`   New Refresh Token: ${refreshToken ? refreshToken.substring(0, 10) + '...' : 'null'} (${refreshToken?.length || 0} chars)`);
+        console.log(`   Old Access Token: ${get().accessToken ? `EXISTS (${get().accessToken.length} chars)` : 'MISSING'}`);
+        console.log(`   New Access Token: ${accessToken ? `EXISTS (${accessToken.length} chars)` : 'MISSING'}`);
+        console.log(`   New Refresh Token: ${refreshToken ? `EXISTS (${refreshToken.length} chars)` : 'MISSING'}`);
 
         // DIAGNOSTIC: Token expiration tracking (decode JWT if possible)
         try {
@@ -108,8 +110,8 @@ export const useAuthStore = create<AuthState>()(
         console.log(`\n🔐 [AuthStore] setAuth called at ${new Date().toISOString()}`);
         console.log(`   User: ${user.email}`);
         console.log(`   User ID: ${user.id}`);
-        console.log(`   Access Token: ${accessToken.substring(0, 10)}... (${accessToken.length} chars)`);
-        console.log(`   Refresh Token: ${refreshToken.substring(0, 10)}... (${refreshToken.length} chars)`);
+        console.log(`   Access Token: EXISTS (${accessToken.length} chars)`);
+        console.log(`   Refresh Token: EXISTS (${refreshToken.length} chars)`);
 
         // DIAGNOSTIC: Check localStorage BEFORE state update
         const beforePersist = localStorage.getItem('mojeeb-auth-storage');
@@ -157,6 +159,12 @@ export const useAuthStore = create<AuthState>()(
           console.log(`   🔄 Token refresh service started`);
         });
 
+        // Re-initialize logout listener (may have been closed during previous logout)
+        import('./../../auth/services/logoutService').then(({ initializeLogoutListener }) => {
+          initializeLogoutListener();
+          console.log(`   📡 Logout listener re-initialized`);
+        });
+
         console.log(`   ✅ Auth state set, isAuthenticated = true`);
       },
 
@@ -167,76 +175,33 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      logout: () => {
-        // DIAGNOSTIC: Capture stack trace to see what triggered logout
-        const logoutStack = new Error().stack;
+      /**
+       * Logout the current user
+       *
+       * IMPORTANT: This method now delegates to the centralized logoutService
+       * for consistent, secure logout behavior across all logout paths.
+       *
+       * Do NOT add cleanup logic here - use logoutService instead.
+       *
+       * @param options - Optional logout configuration
+       */
+      logout: async (options?: { redirect?: boolean; reason?: string }) => {
+        // DIAGNOSTIC: Log logout trigger
+        if (import.meta.env.DEV) {
+          const logoutStack = new Error().stack;
+          console.log(`\n🚪 [AuthStore] logout called at ${new Date().toISOString()}`);
+          console.log(`   Current user: ${get().user?.email || 'null'}`);
+          console.log(`   📍 Triggered from:\n${logoutStack}`);
+        }
 
-        console.log(`\n🚪 [AuthStore] logout called at ${new Date().toISOString()}`);
-        console.log(`   Current user: ${get().user?.email || 'null'}`);
-        console.log(`   Current isAuthenticated: ${get().isAuthenticated}`);
-        console.log(`   📍 Logout triggered from:\n${logoutStack}`);
+        // Use centralized logout service (dynamic import to avoid circular dependencies)
+        const { performLogout } = await import('./../../auth/services/logoutService');
 
-        // DIAGNOSTIC: Check localStorage state before clearing
-        const persistedState = localStorage.getItem('mojeeb-auth-storage');
-        const accessTokenLS = localStorage.getItem('accessToken');
-        const refreshTokenLS = localStorage.getItem('refreshToken');
-        console.log(`   📊 localStorage state before logout:`);
-        console.log(`      mojeeb-auth-storage: ${persistedState ? 'EXISTS' : 'MISSING'} (${persistedState?.length || 0} chars)`);
-        console.log(`      accessToken: ${accessTokenLS ? 'EXISTS' : 'MISSING'} (${accessTokenLS?.length || 0} chars)`);
-        console.log(`      refreshToken: ${refreshTokenLS ? 'EXISTS' : 'MISSING'} (${refreshTokenLS?.length || 0} chars)`);
-
-        // Clear tokens from tokenManager
-        clearApiTokens();
-
-        // Clear Sentry user context on logout
-        clearSentryUser();
-
-        // Clear Clarity user identification on logout
-        clearClarityUser();
-
-        // Clear phone collection tracking
-        sessionHelper.resetSession();
-
-        // Stop proactive token refresh service
-        import('./../../auth/services/tokenRefreshService').then(({ tokenRefreshService }) => {
-          tokenRefreshService.stop();
-          console.log(`   🛑 Token refresh service stopped`);
+        await performLogout({
+          callBackend: true,
+          redirect: options?.redirect !== false, // Default to redirect unless explicitly false
+          reason: options?.reason || 'user-initiated',
         });
-
-        // Clear auth state
-        set({
-          user: null,
-          accessToken: null,
-          refreshToken: null,
-          isAuthenticated: false,
-        });
-
-        // CRITICAL FIX: Immediately clear Zustand persist storage to prevent race condition
-        // Without this, if page refreshes before persist writes, old data persists causing redirect loops
-        console.log(`   🧹 Force clearing Zustand persist storage...`);
-        localStorage.removeItem('mojeeb-auth-storage');
-
-        // DIAGNOSTIC: Verify localStorage was cleared
-        const persistedAfter = localStorage.getItem('mojeeb-auth-storage');
-        const accessTokenAfter = localStorage.getItem('accessToken');
-        const refreshTokenAfter = localStorage.getItem('refreshToken');
-        console.log(`   📊 localStorage state after logout:`);
-        console.log(`      mojeeb-auth-storage: ${persistedAfter ? 'STILL EXISTS ⚠️' : 'CLEARED ✅'}`);
-        console.log(`      accessToken: ${accessTokenAfter ? 'STILL EXISTS ⚠️' : 'CLEARED ✅'}`);
-        console.log(`      refreshToken: ${refreshTokenAfter ? 'STILL EXISTS ⚠️' : 'CLEARED ✅'}`);
-
-        // Clear other Zustand stores to prevent stale data
-        console.log(`   🧹 Clearing AgentStore...`);
-        useAgentStore.getState().reset();
-
-        // CRITICAL FIX: Force clear agent persist storage to prevent race condition
-        console.log(`   🧹 Force clearing agent persist storage...`);
-        localStorage.removeItem('mojeeb-agent-storage');
-
-        console.log(`   🧹 Clearing ConversationStore...`);
-        useConversationStore.getState().clearSelection();
-
-        console.log(`   ✅ User logged out, all stores cleared`);
       },
 
       setLoading: (isLoading) => set({ isLoading }),
@@ -349,7 +314,7 @@ export const useAuthStore = create<AuthState>()(
           console.log(`   ✅ Found persisted refreshToken and user`);
           console.log(`      User: ${state.user.email}`);
           console.log(`      User ID: ${state.user.id}`);
-          console.log(`      Refresh Token: ${state.refreshToken.substring(0, 10)}... (${state.refreshToken.length} chars)`);
+          console.log(`      Refresh Token: EXISTS (${state.refreshToken.length} chars)`);
           console.log(`   🔍 Validating refresh token with backend...`);
 
           // Validate the token asynchronously - don't block rehydration
@@ -360,8 +325,8 @@ export const useAuthStore = create<AuthState>()(
 
               if (validation.isValid && validation.tokens) {
                 console.log(`   ✅ Token validation SUCCEEDED - user is authenticated`);
-                console.log(`      New Access Token: ${validation.tokens.accessToken.substring(0, 10)}... (${validation.tokens.accessToken.length} chars)`);
-                console.log(`      New Refresh Token: ${validation.tokens.refreshToken.substring(0, 10)}... (${validation.tokens.refreshToken.length} chars)`);
+                console.log(`      New Access Token: EXISTS (${validation.tokens.accessToken.length} chars)`);
+                console.log(`      New Refresh Token: EXISTS (${validation.tokens.refreshToken.length} chars)`);
 
                 // Update tokens in store with fresh tokens from validation
                 useAuthStore.getState().setTokens(validation.tokens.accessToken, validation.tokens.refreshToken);

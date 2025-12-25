@@ -59,7 +59,9 @@ const secureStorage = new SecureLS({
  * This ensures tokens persist even if SecureLS fails on mobile browsers
  */
 export const setTokens = (accessToken: string, refreshToken: string): void => {
-  logger.debug('[TokenManager] setTokens called');
+  if (import.meta.env.DEV) {
+    console.log('[TokenManager] setTokens called');
+  }
 
   // Always write to plain localStorage first (backup)
   localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
@@ -105,22 +107,88 @@ export const getRefreshToken = (): string | null => {
 /**
  * Remove both tokens from encrypted localStorage
  * Clears from BOTH SecureLS and plain localStorage (dual storage)
+ * GUARANTEES tokens are removed even if SecureLS fails
  */
-export const clearTokens = (): void => {
-  logger.debug('[TokenManager] clearTokens called');
+export function clearTokens(): void {
+  if (import.meta.env.DEV) {
+    console.log('[TokenManager] clearTokens called');
+  }
 
-  // Clear from plain localStorage
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  let secureCleared = false;
+  let plainCleared = false;
 
-  // Clear from SecureLS
+  // Step 1: Clear from SecureLS (encrypted storage)
   try {
     secureStorage.remove(ACCESS_TOKEN_KEY);
     secureStorage.remove(REFRESH_TOKEN_KEY);
+    secureCleared = true;
+    if (import.meta.env.DEV) {
+      console.log('[TokenManager] ✓ SecureLS tokens cleared');
+    }
   } catch (error) {
-    logger.warn('Failed to clear tokens from SecureLS', error);
+    logger.warn('Failed to clear tokens from SecureLS, will force clear');
+    console.error(error);
+
+    // Force clear by removing ALL SecureLS data (nuclear option)
+    try {
+      secureStorage.removeAll();
+      secureCleared = true;
+      if (import.meta.env.DEV) {
+        console.log('[TokenManager] ✓ SecureLS force cleared (removeAll)');
+      }
+    } catch (removeAllError) {
+      logger.error('Failed to force clear SecureLS');
+      console.error(removeAllError);
+      // Continue to plain localStorage cleanup
+    }
   }
-};
+
+  // Step 2: Clear from plain localStorage (backup storage)
+  try {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    plainCleared = true;
+    if (import.meta.env.DEV) {
+      console.log('[TokenManager] ✓ Plain localStorage tokens cleared');
+    }
+  } catch (error) {
+    logger.error('Failed to clear tokens from plain localStorage');
+    console.error(error);
+    // This should never fail, but log if it does
+  }
+
+  // Step 3: Verification - ensure tokens are actually gone
+  try {
+    const accessStillExists = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const refreshStillExists = localStorage.getItem(REFRESH_TOKEN_KEY);
+
+    if (accessStillExists || refreshStillExists) {
+      logger.error('⚠️ CRITICAL: Tokens still exist after clearTokens!');
+      console.error({
+        accessStillExists: !!accessStillExists,
+        refreshStillExists: !!refreshStillExists,
+      });
+
+      // Force remove one more time
+      try {
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
+        localStorage.removeItem(REFRESH_TOKEN_KEY);
+      } catch (retryError) {
+        logger.error('Failed to force remove tokens on retry');
+        console.error(retryError);
+      }
+    }
+  } catch (verifyError) {
+    // Ignore verification errors
+  }
+
+  if (import.meta.env.DEV) {
+    console.log('[TokenManager] clearTokens complete', {
+      secureCleared,
+      plainCleared,
+    });
+  }
+}
 
 /**
  * Check if user has valid tokens (at least refresh token exists)
@@ -147,7 +215,9 @@ export const validateRefreshToken = async (
   refreshToken: string
 ): Promise<{ isValid: boolean; tokens?: { accessToken: string; refreshToken: string } }> => {
   try {
-    logger.debug('[TokenManager] Validating refresh token during rehydration');
+    if (import.meta.env.DEV) {
+      console.log('[TokenManager] Validating refresh token during rehydration');
+    }
 
     // Import authService dynamically to avoid circular dependencies
     const { authService } = await import('@/features/auth/services/authService');
@@ -156,14 +226,16 @@ export const validateRefreshToken = async (
     const tokens = await authService.refreshToken(refreshToken);
 
     if (tokens.accessToken && tokens.refreshToken) {
-      logger.debug('[TokenManager] Token validation successful - token is valid');
+      if (import.meta.env.DEV) {
+        console.log('[TokenManager] Token validation successful - token is valid');
+      }
       return { isValid: true, tokens };
     } else {
-      logger.warn('[TokenManager] Token validation failed - no tokens returned');
+      logger.warn('[TokenManager]', 'Token validation failed - no tokens returned');
       return { isValid: false };
     }
   } catch (error) {
-    logger.error('[TokenManager] Token validation failed - refresh token is invalid/expired', error);
+    logger.error('[TokenManager]', 'Token validation failed - refresh token is invalid/expired', error);
     return { isValid: false };
   }
 };

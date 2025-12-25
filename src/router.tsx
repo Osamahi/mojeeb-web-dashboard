@@ -22,6 +22,8 @@ const ConnectionsPage = lazy(() => import('./features/connections/pages/Connecti
 const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthCallbackPage'));
 const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 const InstallWidgetPage = lazy(() => import('./pages/InstallWidgetPage').then(m => ({ default: m.InstallWidgetPage })));
+const AdminSubscriptionsPage = lazy(() => import('./features/subscriptions/pages/AdminSubscriptionsPage'));
+const MySubscriptionPage = lazy(() => import('./features/subscriptions/pages/MySubscriptionPage'));
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -35,6 +37,20 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   console.log(`   refreshToken: ${refreshToken ? 'EXISTS' : 'MISSING'}`);
   console.log(`   user: ${user ? user.email : 'MISSING'}`);
   console.log(`   Current URL: ${window.location.pathname}`);
+
+  // CRITICAL: Handle edge case - isAuthenticated but no refreshToken (corrupted state)
+  if (isAuthenticated && !refreshToken) {
+    console.log(`   ⚠️ [ProtectedRoute] CORRUPTED STATE - isAuthenticated=true but no refreshToken!`);
+    console.log(`   🔧 Clearing auth state and redirecting to /login`);
+    // Clear the corrupted state immediately
+    useAuthStore.setState({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      isAuthenticated: false,
+    });
+    return <Navigate to="/login" replace />;
+  }
 
   // DEFENSIVE CHECK: Don't redirect if we have a refreshToken
   // Even if isAuthenticated is false (due to race condition), AuthInitializer will handle token validation
@@ -62,19 +78,51 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const user = useAuthStore((state) => state.user);
 
-  // DEFENSIVE CHECK: Don't redirect if we have a refreshToken
-  if (!isAuthenticated && !refreshToken) {
+  // DIAGNOSTIC: Log SuperAdmin route access attempts
+  console.log(`\n👑 [SuperAdminRoute] Access check at ${new Date().toISOString()}`);
+  console.log(`   isAuthenticated: ${isAuthenticated}`);
+  console.log(`   refreshToken: ${refreshToken ? 'EXISTS' : 'MISSING'}`);
+  console.log(`   user: ${user ? user.email : 'MISSING'}`);
+  console.log(`   user.role: ${user?.role || 'MISSING'}`);
+  console.log(`   Current URL: ${window.location.pathname}`);
+
+  // CRITICAL: Handle corrupted state - isAuthenticated but no refreshToken
+  if (isAuthenticated && !refreshToken) {
+    console.log(`   ⚠️ [SuperAdminRoute] CORRUPTED STATE - isAuthenticated=true but no refreshToken!`);
+    console.log(`   🔧 Clearing auth state and redirecting to /login`);
+    useAuthStore.setState({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      isAuthenticated: false,
+    });
     return <Navigate to="/login" replace />;
   }
 
+  // DEFENSIVE CHECK: Don't redirect if we have a refreshToken
+  if (!isAuthenticated && !refreshToken) {
+    console.log(`   ⚠️ [SuperAdminRoute] NOT AUTHENTICATED - Redirecting to /login`);
+    return <Navigate to="/login" replace />;
+  }
+
+  // CRITICAL: Check role BEFORE mounting children to prevent API calls
   if (user?.role !== Role.SuperAdmin) {
+    console.log(`   ⚠️ [SuperAdminRoute] INSUFFICIENT PRIVILEGES - User role is ${user?.role}, requires SuperAdmin`);
+    console.log(`   🔄 Redirecting to /conversations`);
     return <Navigate to="/conversations" replace />;
   }
 
+  console.log(`   ✅ [SuperAdminRoute] Access granted - rendering SuperAdmin content`);
+
+  // CRITICAL FIX: Wrap with AuthInitializer like ProtectedRoute does
+  // This ensures user data is loaded before children components mount
+  // Prevents race condition where OrganizationsPage calls API before role check completes
   return (
-    <Suspense fallback={<PageSkeleton />}>
-      {children}
-    </Suspense>
+    <AuthInitializer>
+      <Suspense fallback={<PageSkeleton />}>
+        {children}
+      </Suspense>
+    </AuthInitializer>
   );
 };
 
@@ -82,16 +130,35 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
 const PublicRoute = ({ children, allowAuthenticatedAccess = false }: { children: React.ReactNode; allowAuthenticatedAccess?: boolean }) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
+  const refreshToken = useAuthStore((state) => state.refreshToken);
 
   // DIAGNOSTIC: Log public route access
   console.log(`\n🌐 [PublicRoute] Access check at ${new Date().toISOString()}`);
   console.log(`   isAuthenticated: ${isAuthenticated}`);
   console.log(`   user: ${user ? user.email : 'MISSING'}`);
+  console.log(`   refreshToken: ${refreshToken ? 'EXISTS' : 'MISSING'}`);
   console.log(`   allowAuthenticatedAccess: ${allowAuthenticatedAccess}`);
   console.log(`   Current URL: ${window.location.pathname}`);
 
-  if (isAuthenticated && !allowAuthenticatedAccess) {
-    console.log(`   ⚠️ [PublicRoute] User already authenticated - Redirecting to /conversations`);
+  // CRITICAL: Handle corrupted state - isAuthenticated but no refreshToken
+  if (isAuthenticated && !refreshToken) {
+    console.log(`   ⚠️ [PublicRoute] CORRUPTED STATE - isAuthenticated=true but no refreshToken!`);
+    console.log(`   🔧 Clearing auth state to allow login`);
+    // Clear the corrupted state immediately
+    useAuthStore.setState({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      isAuthenticated: false,
+    });
+    // Don't redirect, just render the public page with clean state
+  }
+
+  // CRITICAL FIX: Only redirect if BOTH isAuthenticated AND refreshToken exist
+  // This prevents redirect loops during logout when isAuthenticated is briefly true
+  // but refreshToken has already been cleared
+  if (isAuthenticated && refreshToken && !allowAuthenticatedAccess) {
+    console.log(`   ⚠️ [PublicRoute] User already authenticated with valid tokens - Redirecting to /conversations`);
     console.log(`   📍 Redirect triggered from: ${window.location.pathname}`);
     return <Navigate to="/conversations" replace />;
   }
@@ -209,6 +276,18 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         element: <SettingsPage />,
+      },
+      {
+        path: 'subscriptions',
+        element: (
+          <SuperAdminRoute>
+            <AdminSubscriptionsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'my-subscription',
+        element: <MySubscriptionPage />,
       },
     ],
   },

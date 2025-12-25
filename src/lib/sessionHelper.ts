@@ -22,9 +22,10 @@ class SessionHelper {
 
   /**
    * Reset session tracking (call on logout)
+   * Clears ALL sessionStorage to prevent data leakage between users
    */
   resetSession(): void {
-    sessionStorage.removeItem(PHONE_MODAL_SHOWN_KEY);
+    sessionStorage.clear();
   }
 
   /**

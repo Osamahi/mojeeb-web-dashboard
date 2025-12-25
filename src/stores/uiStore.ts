@@ -6,11 +6,15 @@ interface UIState {
   isSidebarOpen: boolean;
   isSidebarCollapsed: boolean;
 
+  // Plan upgrade wizard state
+  showUpgradeWizard: boolean;
+
   // Actions
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   closeSidebarOnMobile: () => void;
+  setShowUpgradeWizard: (show: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -19,6 +23,7 @@ export const useUIStore = create<UIState>()(
       // Initial state
       isSidebarOpen: false, // Closed on mobile by default
       isSidebarCollapsed: true, // Collapsed on desktop by default (hover to expand)
+      showUpgradeWizard: false, // Upgrade wizard modal closed by default
 
       // Toggle sidebar open/closed (mobile drawer)
       toggleSidebar: () =>
@@ -41,6 +46,10 @@ export const useUIStore = create<UIState>()(
           set({ isSidebarOpen: false });
         }
       },
+
+      // Set upgrade wizard modal visibility
+      setShowUpgradeWizard: (show: boolean) =>
+        set({ showUpgradeWizard: show }),
     }),
     {
       name: 'mojeeb-ui-storage',
