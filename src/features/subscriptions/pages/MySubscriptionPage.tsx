@@ -119,12 +119,25 @@ export default function MySubscriptionPage() {
                   {/* Billing */}
                   <div>
                     <p className="text-sm font-medium text-gray-500">Billing</p>
-                    <p className="mt-1 text-2xl font-semibold text-gray-900">
-                      {subscription.currency} {subscription.amount.toLocaleString()}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {subscription.amount === 0 ? 'free' : `per ${subscription.billingInterval === 'monthly' ? 'month' : 'year'}`}
-                    </p>
+                    {subscription.amount === 0 ? (
+                      <>
+                        <p className="mt-1 text-2xl font-semibold text-gray-900">Free</p>
+                        <p className="mt-1 text-sm text-gray-500">
+                          {subscription.billingInterval === 'monthly' ? 'Monthly' : 'Annual'}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="mt-1 flex items-baseline gap-1">
+                          <span className="text-2xl font-semibold text-gray-900">
+                            {subscription.amount.toLocaleString()}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {subscription.currency}/{subscription.billingInterval === 'monthly' ? 'month' : 'year'}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Status */}
