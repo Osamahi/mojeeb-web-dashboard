@@ -1,58 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket } from 'lucide-react';
-import { subscriptionService } from '../services/subscriptionService';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
-import type { UsageSummary } from '../types/subscription.types';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { PlanChangeWizard } from '../components/PlanChangeWizard';
-import { toast } from 'sonner';
 import { format, differenceInDays } from 'date-fns';
 
 export default function MySubscriptionPage() {
-  // Read subscription from global store (loaded once on app init)
+  // Read subscription and usage from global store (loaded once on app init)
   const subscription = useSubscriptionStore(state => state.subscription);
-  const subscriptionLoading = useSubscriptionStore(state => state.isLoading);
-
-  // Page-specific state: usage data
-  const [usage, setUsage] = useState<UsageSummary | null>(null);
-  const [usageLoading, setUsageLoading] = useState(true);
+  const usage = useSubscriptionStore(state => state.usage);
+  const loading = useSubscriptionStore(state => state.isLoading);
   const [showWizard, setShowWizard] = useState(false);
-
-  // Combined loading state
-  const loading = subscriptionLoading || usageLoading;
-
-  const loadUsage = async () => {
-    try {
-      setUsageLoading(true);
-      const usageData = await subscriptionService.getMyUsage();
-
-      console.log('📊 Usage data loaded:', usageData);
-      setUsage(usageData);
-    } catch (error) {
-      console.error('Failed to load usage data:', error);
-      toast.error('Failed to load usage data');
-      setUsage(null);
-    } finally {
-      setUsageLoading(false);
-    }
-  };
 
   const handleUpgradeClick = useCallback(() => {
     setShowWizard(true);
   }, []);
 
   const handleWizardSuccess = useCallback(async () => {
-    // Refresh subscription from store
+    // Refresh subscription and usage from store
     await useSubscriptionStore.getState().refreshSubscription();
-    // Reload usage data
-    await loadUsage();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadUsage is recreated on every render, but we only want to call it once on success
-  }, []);
-
-  useEffect(() => {
-    // Only load usage data (subscription is loaded globally)
-    loadUsage();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- loadUsage is recreated on every render, but we only want initial load
   }, []);
 
   // Calculate percentages only when data is available

@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { LogOut, Rocket } from 'lucide-react';
+import { useState } from 'react';
+import { LogOut, Rocket, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/features/auth/types/auth.types';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
@@ -18,8 +18,9 @@ interface UserProfileSectionProps {
 export const UserProfileSection = ({ user, onLogout }: UserProfileSectionProps) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Read subscription from global store (loaded once on app init)
+  // Read subscription and usage from global store (loaded once on app init)
   const subscription = useSubscriptionStore(state => state.subscription);
+  const usage = useSubscriptionStore(state => state.usage);
   const loadingSubscription = useSubscriptionStore(state => state.isLoading);
 
   // Use UI store for modal state (prevents loss when sidebar unmounts on mobile)
@@ -39,6 +40,11 @@ export const UserProfileSection = ({ user, onLogout }: UserProfileSectionProps) 
   // Check if user is on free plan
   const isFreePlan = subscription?.planCode?.toLowerCase() === 'free';
 
+  // Calculate message usage percentage
+  const messagePercentage = usage
+    ? ((usage.messagesUsed ?? 0) / (usage.messagesLimit ?? 1)) * 100
+    : 0;
+
   return (
     <div className="mt-auto p-4 bg-white">
       <div className="flex items-center gap-3 px-2 py-2">
@@ -50,19 +56,36 @@ export const UserProfileSection = ({ user, onLogout }: UserProfileSectionProps) 
         </div>
       </div>
 
-      {/* Upgrade Plan Button - Only show for free plan users */}
-      {!loadingSubscription && isFreePlan && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent event bubbling
-            setShowUpgradeWizard(true);
-          }}
-          className="mt-3 w-full px-4 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
-          title="Upgrade Plan"
-        >
-          <Rocket className="w-4 h-4 text-neutral-700" />
-          <span className="text-sm font-medium text-neutral-900">Upgrade Plan</span>
-        </button>
+      {/* Message Usage Bar */}
+      {!loadingSubscription && usage && (
+        <div className="mt-3 px-2 pb-3">
+          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-gray-200 mb-2">
+            <div
+              className="h-full bg-green-600 transition-all duration-300"
+              style={{ width: `${Math.min(messagePercentage, 100)}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <MessageSquare className="w-4 h-4 text-neutral-500" />
+              <span className="text-sm font-medium text-neutral-700">
+                {(usage.messagesUsed ?? 0).toLocaleString()}/{(usage.messagesLimit ?? 0).toLocaleString()}
+              </span>
+            </div>
+            {/* Upgrade link - Only show for free plan users */}
+            {isFreePlan && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowUpgradeWizard(true);
+                }}
+                className="text-sm font-medium text-green-600 hover:text-green-700 transition-colors"
+              >
+                Upgrade
+              </button>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Logout Button */}

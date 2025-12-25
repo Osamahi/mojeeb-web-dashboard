@@ -91,25 +91,24 @@ class SubscriptionService {
    */
 
   /**
-   * Get current user's subscription details
-   * GET /api/subscriptions/my-subscription
+   * Get current user's subscription and usage data in one call
+   * GET /api/subscriptions/me
    */
-  async getMySubscription(): Promise<SubscriptionDetails> {
-    const response = await api.get<ApiResponse<ApiSubscriptionResponse>>(
-      '/api/subscriptions/my-subscription'
+  async getMySubscriptionWithUsage(): Promise<{
+    subscription: SubscriptionDetails;
+    usage: UsageSummary;
+  }> {
+    const response = await api.get<ApiResponse<{
+      subscription: ApiSubscriptionResponse;
+      usage: ApiUsageResponse;
+    }>>(
+      '/api/subscriptions/me'
     );
-    return this.transformSubscriptionResponse(response.data.data);
-  }
 
-  /**
-   * Get current user's usage statistics
-   * GET /api/subscriptions/my-usage
-   */
-  async getMyUsage(): Promise<UsageSummary> {
-    const response = await api.get<ApiResponse<ApiUsageResponse>>(
-      '/api/subscriptions/my-usage'
-    );
-    return this.transformUsageResponse(response.data.data);
+    return {
+      subscription: this.transformSubscriptionResponse(response.data.data.subscription),
+      usage: this.transformUsageResponse(response.data.data.usage),
+    };
   }
 
   /**
