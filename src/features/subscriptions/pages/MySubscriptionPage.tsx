@@ -68,7 +68,8 @@ export default function MySubscriptionPage() {
     ? ((usage.agentsUsed ?? 0) / (usage.agentsLimit ?? 1)) * 100
     : 0;
 
-  const isNearLimit = messagePercentage >= 80 || agentPercentage >= 80;
+  // Only check message limit for "approaching limit" warnings
+  const isNearLimit = messagePercentage >= 80;
 
   // Show error state if loading finished but no data
   const hasError = !loading && (!subscription || !usage);
@@ -80,7 +81,7 @@ export default function MySubscriptionPage() {
         title="My Subscription"
         subtitle="Manage your plan and view usage statistics"
         primaryAction={{
-          label: "Upgrade Plan",
+          label: subscription?.planCode === 'free' ? "Upgrade Plan" : "Change Plan",
           icon: Rocket,
           onClick: handleUpgradeClick
         }}
@@ -113,7 +114,7 @@ export default function MySubscriptionPage() {
               <p className="text-sm text-orange-700">
                 {subscription.isFlaggedNonPaying
                   ? 'Your subscription has been flagged for non-payment. Please contact support.'
-                  : 'You are approaching your usage limits. Consider upgrading your plan.'}
+                  : 'You are approaching your message limit. Consider upgrading your plan.'}
               </p>
             </div>
           </div>
@@ -256,13 +257,7 @@ export default function MySubscriptionPage() {
                       </div>
                       <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-200">
                         <div
-                          className={`h-full ${
-                            messagePercentage >= 90
-                              ? 'bg-red-500'
-                              : messagePercentage >= 80
-                              ? 'bg-orange-500'
-                              : 'bg-green-500'
-                          }`}
+                          className="h-full bg-green-600"
                           style={{ width: `${Math.min(messagePercentage, 100)}%` }}
                         />
                       </div>
@@ -284,13 +279,7 @@ export default function MySubscriptionPage() {
                       </div>
                       <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-200">
                         <div
-                          className={`h-full ${
-                            agentPercentage >= 90
-                              ? 'bg-red-500'
-                              : agentPercentage >= 80
-                              ? 'bg-orange-500'
-                              : 'bg-green-500'
-                          }`}
+                          className="h-full bg-green-600"
                           style={{ width: `${Math.min(agentPercentage, 100)}%` }}
                         />
                       </div>
@@ -313,8 +302,8 @@ export default function MySubscriptionPage() {
                           </h3>
                           <div className="mt-2 text-sm text-green-700">
                             <p>
-                              You're using {Math.max(messagePercentage, agentPercentage).toFixed(0)}% of your
-                              plan. Upgrade to get more capacity and unlock advanced features.
+                              You're using {messagePercentage.toFixed(0)}% of your message limit.
+                              Upgrade to get more capacity and unlock advanced features.
                             </p>
                           </div>
                           <div className="mt-4">
