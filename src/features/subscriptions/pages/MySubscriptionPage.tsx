@@ -120,10 +120,10 @@ export default function MySubscriptionPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-500">Billing</p>
                     <p className="mt-1 text-2xl font-semibold text-gray-900">
-                      {subscription.currency} {subscription.amount}
+                      {subscription.currency} {subscription.amount.toLocaleString()}
                     </p>
                     <p className="mt-1 text-sm text-gray-500">
-                      per {subscription.billingInterval}
+                      {subscription.amount === 0 ? 'free' : `per ${subscription.billingInterval === 'monthly' ? 'month' : 'year'}`}
                     </p>
                   </div>
 

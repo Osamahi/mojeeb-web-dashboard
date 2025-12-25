@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import { detectCountryFromTimezone } from '@/features/onboarding/utils/countryDetector';
 import type {
   SubscriptionDetails,
   UsageSummary,
@@ -112,12 +113,15 @@ class SubscriptionService {
   }
 
   /**
-   * Get all available subscription plans
-   * GET /api/subscriptions/plans
+   * Get all available subscription plans with auto-detected currency
+   * GET /api/subscriptions/plans?countryCode=EG
    */
   async getPlans(): Promise<SubscriptionPlan[]> {
+    // Auto-detect country from browser timezone
+    const countryCode = detectCountryFromTimezone();
+
     const response = await api.get<ApiResponse<ApiPlanResponse[]>>(
-      '/api/subscriptions/plans'
+      `/api/subscriptions/plans?countryCode=${countryCode}`
     );
     return response.data.data.map((plan) => this.transformPlanResponse(plan));
   }

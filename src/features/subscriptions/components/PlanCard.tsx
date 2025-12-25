@@ -53,12 +53,21 @@ export const PlanCard = memo(({
   const canChange = allowSelectCurrent || !isCurrent;
 
   const getPrice = () => {
-    const pricing = plan.pricing[currency];
+    // Backend now returns only ONE currency (the detected one)
+    // So we get the first (and only) currency key from the pricing object
+    const availableCurrency = Object.keys(plan.pricing)[0];
+    const pricing = plan.pricing[availableCurrency || currency];
     if (!pricing) return 0;
     return billingInterval === 'annual' ? (pricing.annual || 0) : (pricing.monthly || 0);
   };
 
+  const getCurrency = () => {
+    // Get the actual currency from the pricing object
+    return Object.keys(plan.pricing)[0] || currency;
+  };
+
   const price = getPrice();
+  const displayCurrency = getCurrency();
 
   const handleClick = () => {
     if (canChange) {
@@ -103,10 +112,10 @@ export const PlanCard = memo(({
       <div className="mb-4">
         <div className="flex items-baseline gap-1">
           <span className="text-3xl font-bold text-gray-900">
-            {currency} {price}
+            {price.toLocaleString()}
           </span>
           <span className="text-sm text-gray-500">
-            /{billingInterval === 'annual' ? 'year' : 'mo'}
+            {displayCurrency}/{billingInterval === 'annual' ? 'year' : 'month'}
           </span>
         </div>
       </div>
