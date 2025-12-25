@@ -17,9 +17,8 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
-import { Avatar } from '@/components/ui/Avatar';
 import { NavigationList } from './sidebar/NavigationList';
-import { UserProfileSection } from './sidebar/UserProfileSection';
+import { SidebarUsageIndicator } from './sidebar/SidebarUsageIndicator';
 import { PlanChangeWizard } from '@/features/subscriptions/components/PlanChangeWizard';
 import { navigation } from './sidebar/navigation.config';
 import { SidebarErrorBoundary } from './sidebar/SidebarErrorBoundary';
@@ -32,7 +31,6 @@ import {
 const SidebarContent = () => {
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
   const currentAgent = useAgentStore((state) => state.globalSelectedAgent);
   const subscription = useSubscriptionStore((state) => state.subscription);
   const isMobile = useIsMobile();
@@ -199,20 +197,8 @@ const SidebarContent = () => {
             currentAgent={currentAgent}
           />
 
-          {/* User Profile Section - Desktop - Only show when expanded */}
-          {!isSidebarCollapsed && <UserProfileSection user={user} onLogout={logout} />}
-
-          {/* Small Profile Avatar - Desktop Collapsed State */}
-          {isSidebarCollapsed && (
-            <div className="mt-auto p-4 flex justify-center">
-              <Avatar
-                src={user?.avatarUrl}
-                name={user?.name || 'User'}
-                size="sm"
-                className="cursor-pointer hover:ring-2 hover:ring-neutral-300 transition-all"
-              />
-            </div>
-          )}
+          {/* Usage Indicator - Desktop - Only show when expanded */}
+          {!isSidebarCollapsed && <SidebarUsageIndicator />}
         </motion.aside>
       )}
 
@@ -257,8 +243,8 @@ const SidebarContent = () => {
                   currentAgent={currentAgent}
                 />
 
-                {/* User Profile Section - Mobile */}
-                <UserProfileSection user={user} onLogout={logout} />
+                {/* Usage Indicator - Mobile */}
+                <SidebarUsageIndicator />
               </motion.aside>
             </FocusTrap>
           )}
