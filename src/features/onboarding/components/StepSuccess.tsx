@@ -14,6 +14,7 @@ import { StepHeading, StepSubtitle } from './shared/StepHeading';
 import { StepNumberBadge } from './shared/StepNumberBadge';
 import { NextStepItem } from './shared/NextStepItem';
 import { Card } from './shared/Card';
+import { trackAgentCreated } from '@/utils/gtmTracking';
 
 interface StepSuccessProps {
   onReadyChange: (isReady: boolean) => void;
@@ -123,6 +124,9 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
       setCreatedAgentId(data.agent.id);
       setPhase('ready');
       onReadyChange(true);
+
+      // Track agent creation success in Google Tag Manager
+      trackAgentCreated(data.agent.id, agentName);
 
       // Visual effects only (can safely be canceled on unmount)
       setShowConfetti(true);

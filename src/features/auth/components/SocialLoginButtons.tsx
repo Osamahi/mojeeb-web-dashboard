@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { authService } from '../services/authService';
 // import { env } from '@/config/env'; // Temporarily disabled for Apple
 import { logger } from '@/lib/logger';
+import { trackSignupSuccess } from '@/utils/gtmTracking';
 
 interface SocialLoginButtonsProps {
   disabled?: boolean;
@@ -44,11 +45,19 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
         });
 
         // Send complete data to backend (matches Flutter's OAuthResult)
-        await authService.loginWithGoogle(
+        const authResponse = await authService.loginWithGoogle(
           tokenResponse.access_token,
           userInfo.email || '',
           userInfo.name || '',
           userInfo.picture || ''
+        );
+
+        // Track signup/login success in Google Tag Manager
+        trackSignupSuccess(
+          authResponse.user.id,
+          authResponse.user.email,
+          authResponse.user.name,
+          'google'
         );
 
         navigate('/conversations');
