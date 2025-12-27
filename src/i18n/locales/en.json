@@ -25,7 +25,9 @@
     "invalid_date": "Invalid date",
     "deleting": "Deleting...",
     "add": "Add",
-    "back": "Back"
+    "back": "Back",
+    "logo_alt": "Mojeeb",
+    "saving": "Saving..."
   },
   "agents": {
     "title": "AI Agents",
@@ -41,7 +43,11 @@
     "delete_failed": "Failed to delete agent",
     "organization": "Organization",
     "created": "Created",
-    "updated": "Updated"
+    "updated": "Updated",
+    "owner_title": "Owner",
+    "open_studio_title": "Open Studio",
+    "delete_agent_title": "Delete agent",
+    "reassign_tooltip": "Click to reassign to different organization"
   },
   "agents_filter": {
     "title": "Filter Agents",
@@ -269,7 +275,12 @@
     "no_agent_selected": "No agent selected",
     "creating_lead": "Please wait while lead is being created...",
     "field_required": "{{field}} is required",
-    "select_placeholder": "Select..."
+    "select_placeholder": "Select...",
+    "enter_lead_name_placeholder": "Enter lead name",
+    "enter_phone_placeholder": "Enter phone number",
+    "filter_search_label": "Search",
+    "status_processing_option": "Processing",
+    "status_completed_option": "Completed"
   },
   "connections": {
     "title": "Connections",
@@ -290,11 +301,15 @@
     "status_coming_soon": "Coming Soon",
     "no_connections_title": "No connections yet",
     "no_connections_description": "Let your agent respond to customers on Facebook, Instagram, WhatsApp, and your website. Connect a platform to get started.",
-    "no_platform_connections": "No {{platform}} connections found for this agent."
-  },
-  "lead_notes": {
-    "title": "Notes",
-    "title_with_name": "Notes - {{name}}"
+    "no_platform_connections": "No {{platform}} connections found for this agent.",
+    "status_connected_label": "Connected",
+    "edit_button": "Edit",
+    "connect_button_short": "Connect",
+    "fetching_pages": "Fetching your available pages",
+    "failed_load_pages_title": "Failed to Load Pages",
+    "retry_label": "Retry",
+    "step_select": "Select",
+    "wizard_progress_aria": "Connection wizard progress"
   },
   "lead_summary": {
     "title": "Summary",
@@ -322,7 +337,13 @@
     "file_selected": "Selected: {{name}} ({{size}} KB)",
     "upload_button": "Upload & Process",
     "uploading": "Uploading...",
-    "upload_started": "Document upload started! Processing in background..."
+    "upload_started": "Document upload started! Processing in background...",
+    "edit_title": "Edit",
+    "edit_aria": "Edit knowledge base",
+    "delete_title": "Delete",
+    "delete_aria": "Delete knowledge base",
+    "name_placeholder": "Knowledge base name...",
+    "content_edit_placeholder": "Enter the knowledge base content..."
   },
   "organizations": {
     "title": "Organizations",
@@ -424,7 +445,11 @@
     "ai_mode_placeholder": "Type a message... (AI will respond)",
     "human_mode_placeholder": "Type a message... (You are responding)",
     "more_options": "More options",
-    "go_back": "Go back to conversations list"
+    "go_back": "Go back to conversations list",
+    "no_messages_yet": "No messages yet",
+    "message_send_failed": "Failed to send",
+    "chat_messages_aria": "Chat messages",
+    "ai_typing_aria": "AI is typing"
   },
   "auth": {
     "login_title": "Welcome back",
@@ -514,7 +539,31 @@
     "purpose_onboarding": "Onboarding Assistant",
     "purpose_onboarding_desc": "Guide new users through setup and first steps",
     "purpose_general": "General Assistant",
-    "purpose_general_desc": "Multi-purpose assistant for various tasks"
+    "purpose_general_desc": "Multi-purpose assistant for various tasks",
+    "step_success": {
+      "heading_ready": "Congratulations!",
+      "heading_error": "Something went wrong",
+      "heading_creating": "Setting up your agent...",
+      "subtitle_ready": "Your agent is ready to help customers",
+      "subtitle_error": "We encountered an error while creating your agent",
+      "subtitle_creating": "Creating {{agentName}}...",
+      "agent_pending": "Create agent",
+      "agent_creating": "Creating agent...",
+      "agent_success": "✨ Your agent was created successfully",
+      "agent_error": "Failed to create agent",
+      "kb_pending": "Add knowledge base",
+      "kb_creating": "Adding knowledge base...",
+      "kb_success": "📚 Your knowledge has been added",
+      "kb_error": "Knowledge base failed (can add later)",
+      "kb_skipped": "📚 Knowledge to be added later",
+      "ready_pending": "Finishing up",
+      "ready_success": "🎉 Your agent is now fully ready",
+      "next_steps_title": "Next Steps:",
+      "next_step_4": "Try your agent now",
+      "next_step_5": "Add more knowledge anytime",
+      "next_step_6": "Connect it to Facebook, Instagram, your website & more",
+      "error_default": "Failed to create agent"
+    }
   },
   "navigation": {
     "chats": "Chats",
@@ -527,7 +576,8 @@
     "subscriptions": "Subscriptions",
     "my_subscription": "My Subscription",
     "team": "Team",
-    "support": "Support"
+    "support": "Support",
+    "main_aria_label": "Main navigation"
   },
   "sidebar": {
     "upgrade": "Upgrade"
@@ -638,7 +688,8 @@
     "upgrade_plan": "Upgrade Plan",
     "manage_subscription": "Manage Subscription",
     "logout": "Logout",
-    "logging_out": "Logging out..."
+    "logging_out": "Logging out...",
+    "user_menu_aria": "User menu"
   },
   "test_chat": {
     "tip_1": "Test your agent's responses in real-time",
@@ -651,7 +702,11 @@
     "new_conversation": "New conversation",
     "empty_title": "Start Testing",
     "empty_description": "Send a message below to test your agent's responses based on the current prompt and knowledge bases.",
-    "placeholder": "Type a message to test your agent..."
+    "placeholder": "Type a message to test your agent...",
+    "new_conversation_aria": "Start a new conversation",
+    "send_failed": "Failed to send message",
+    "init_failed": "Failed to initialize chat",
+    "new_conversation_failed": "Failed to start new conversation"
   },
   "no_agent": {
     "title": "No Agent Selected",
@@ -818,32 +873,6 @@
     "share_link": "Share Link",
     "generating": "Generating...",
     "done": "Done"
-  },
-  "onboarding": {
-    "step_success": {
-      "heading_ready": "Congratulations!",
-      "heading_error": "Something went wrong",
-      "heading_creating": "Setting up your agent...",
-      "subtitle_ready": "Your agent is ready to help customers",
-      "subtitle_error": "We encountered an error while creating your agent",
-      "subtitle_creating": "Creating {{agentName}}...",
-      "agent_pending": "Create agent",
-      "agent_creating": "Creating agent...",
-      "agent_success": "✨ Your agent was created successfully",
-      "agent_error": "Failed to create agent",
-      "kb_pending": "Add knowledge base",
-      "kb_creating": "Adding knowledge base...",
-      "kb_success": "📚 Your knowledge has been added",
-      "kb_error": "Knowledge base failed (can add later)",
-      "kb_skipped": "📚 Knowledge to be added later",
-      "ready_pending": "Finishing up",
-      "ready_success": "🎉 Your agent is now fully ready",
-      "next_steps_title": "Next Steps:",
-      "next_step_4": "Try your agent now",
-      "next_step_5": "Add more knowledge anytime",
-      "next_step_6": "Connect it to Facebook, Instagram, your website & more",
-      "error_default": "Failed to create agent"
-    }
   },
   "floating_prompt_editor": {
     "title": "Edit Prompt",
@@ -1023,6 +1052,8 @@
     "apply_custom": "Apply Custom Range"
   },
   "lead_notes": {
+    "title": "Notes",
+    "title_with_name": "Notes - {{name}}",
     "add_placeholder": "Add a note...",
     "adding": "Adding...",
     "add_note": "Add Note",
@@ -1128,7 +1159,8 @@
     "google_error": "Google sign-in failed. Please try again.",
     "google_cancelled": "Google sign-in was cancelled",
     "signing_in": "Signing in...",
-    "continue_with_google": "Continue with Google"
+    "continue_with_google": "Continue with Google",
+    "continue_with_facebook": "Continue with Facebook"
   },
   "agent_search_dropdown": {
     "placeholder": "Search agents by name...",
@@ -1141,5 +1173,57 @@
     "currently_in": "Currently in: {{orgName}}",
     "min_chars": "Type at least 2 characters to search",
     "no_results": "No users found matching \"{{query}}\""
+  },
+  "logs": {
+    "no_agent_description": "Please select an agent to view application logs",
+    "page_subtitle": "Real-time application logs and diagnostics",
+    "status_live": "Live",
+    "application_logs": "Application logs",
+    "web_server_logs": "Web server logs",
+    "log_level_label": "Log Level:",
+    "all_levels": "All Levels",
+    "level_critical": "Critical",
+    "level_error": "Error",
+    "level_warning": "Warning",
+    "level_information": "Information",
+    "level_debug": "Debug",
+    "web_server_disabled_message": "Web server logs are currently disabled. Enable them in Azure App Service settings to stream server-level diagnostics.",
+    "application_logs_off_message": "Application logs are switched off in Azure App Service. Enable them to see diagnostic output here.",
+    "web_server_config_required": "Web server logs require additional configuration in Azure App Service.",
+    "stream_active": "Active",
+    "stream_paused": "Paused",
+    "connection_connected": "Connected",
+    "connection_disconnected": "Disconnected",
+    "buffer_status": "Buffer: {{count}} / 1000 logs",
+    "search_tip": "Tip: Use Ctrl+F to search within the terminal"
+  },
+  "message_composer": {
+    "upload_images_aria": "Upload images",
+    "upload_audio_aria": "Upload audio files",
+    "upload_failed": "Failed",
+    "input_aria_label": "Message input. Press Enter to send, Shift+Enter for new line",
+    "attach_images_aria": "Attach images",
+    "attach_images_title": "Attach images (JPEG, PNG)",
+    "add_emoji_aria": "Add emoji",
+    "add_emoji_title": "Add emoji",
+    "human_mode_badge": "Human",
+    "send_message_aria": "Send message",
+    "attach_audio_aria": "Attach audio",
+    "voice_send_failed": "Failed to send voice recording"
+  },
+  "voice_recorder": {
+    "cancel_recording_aria": "Cancel recording",
+    "cancel_recording_title": "Cancel recording",
+    "send_recording_aria": "Send recording",
+    "send_recording_title": "Send recording"
+  },
+  "widget_snippet": {
+    "custom_button_html": "<!-- Your custom button -->",
+    "chat_button_text": "Chat with us",
+    "attach_widget_comment": "<!-- Attach widget to your button -->",
+    "step1_html_comment": "<!-- Step 1: Your custom button (place anywhere in body) -->",
+    "step2_html_comment": "<!-- Step 2: Mojeeb Widget Script (before </body>) -->",
+    "step3_html_comment": "<!-- Step 3: Attach widget to button (after widget script) -->",
+    "selector_tip": "💡 **Tip:** The <code>#my-chat-button</code> selector must match your button's ID from Step 1."
   }
 }
