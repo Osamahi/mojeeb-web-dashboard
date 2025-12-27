@@ -2,14 +2,16 @@
  * Error Boundary Component
  * Catches React errors and prevents full app crashes
  * Provides graceful error handling with fallback UI
+ *
+ * Note: Error boundaries must be class components in React.
+ * Translations are not used in fallback to avoid dependency on i18n being loaded.
  */
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { withTranslation, type WithTranslation } from 'react-i18next';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from './ui/Button';
 
-interface Props extends WithTranslation {
+interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
@@ -21,7 +23,7 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-class ErrorBoundaryClass extends Component<Props, State> {
+export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -74,7 +76,6 @@ class ErrorBoundaryClass extends Component<Props, State> {
   };
 
   render() {
-    const { t } = this.props;
 
     if (this.state.hasError) {
       // Custom fallback UI if provided
@@ -97,30 +98,30 @@ class ErrorBoundaryClass extends Component<Props, State> {
 
               {/* Title */}
               <h1 className="text-2xl font-semibold text-neutral-950 text-center mb-2">
-                {t('error_boundary.title')}
+                Something went wrong
               </h1>
 
               {/* Description */}
               <p className="text-neutral-600 text-center mb-6">
-                {t('error_boundary.description')}
+                We encountered an unexpected error. Please try again or contact support if the issue persists.
               </p>
 
               {/* Error Details (Development only) */}
               {import.meta.env.DEV && this.state.error && (
                 <details className="mb-6 bg-neutral-50 rounded-lg p-4 border border-neutral-200">
                   <summary className="cursor-pointer text-sm font-medium text-neutral-700 mb-2">
-                    {t('error_boundary.details_title')}
+                    Technical Details
                   </summary>
                   <div className="mt-4 space-y-2">
                     <div>
-                      <p className="text-xs font-medium text-neutral-700 mb-1">{t('error_boundary.error_message_label')}</p>
+                      <p className="text-xs font-medium text-neutral-700 mb-1">Error Message:</p>
                       <p className="text-xs text-red-600 font-mono bg-red-50 p-2 rounded border border-red-200">
                         {this.state.error.message}
                       </p>
                     </div>
                     {this.state.error.stack && (
                       <div>
-                        <p className="text-xs font-medium text-neutral-700 mb-1">{t('error_boundary.stack_trace_label')}</p>
+                        <p className="text-xs font-medium text-neutral-700 mb-1">Stack Trace:</p>
                         <pre className="text-xs text-neutral-600 font-mono bg-neutral-100 p-2 rounded border border-neutral-200 overflow-auto max-h-48">
                           {this.state.error.stack}
                         </pre>
@@ -128,7 +129,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
                     )}
                     {this.state.errorInfo?.componentStack && (
                       <div>
-                        <p className="text-xs font-medium text-neutral-700 mb-1">{t('error_boundary.component_stack_label')}</p>
+                        <p className="text-xs font-medium text-neutral-700 mb-1">Component Stack:</p>
                         <pre className="text-xs text-neutral-600 font-mono bg-neutral-100 p-2 rounded border border-neutral-200 overflow-auto max-h-48">
                           {this.state.errorInfo.componentStack}
                         </pre>
@@ -146,7 +147,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
                   onClick={this.handleReset}
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  {t('error_boundary.try_again')}
+                  Try Again
                 </Button>
                 <Button
                   variant="secondary"
@@ -154,7 +155,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
                   onClick={this.handleReload}
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  {t('error_boundary.reload_page')}
+                  Reload Page
                 </Button>
                 <Button
                   variant="secondary"
@@ -162,21 +163,21 @@ class ErrorBoundaryClass extends Component<Props, State> {
                   onClick={this.handleGoHome}
                 >
                   <Home className="w-4 h-4 mr-2" />
-                  {t('error_boundary.go_home')}
+                  Go Home
                 </Button>
               </div>
             </div>
 
             {/* Contact Support */}
             <p className="text-center text-sm text-neutral-500 mt-6">
-              {t('error_boundary.contact_support_prefix')}{' '}
+              If this problem persists, please{' '}
               <a
                 href="mailto:support@mojeeb.com"
                 className="text-neutral-900 hover:underline font-medium"
               >
-                {t('error_boundary.contact_support_link')}
+                contact support
               </a>
-              {t('error_boundary.contact_support_suffix')}
+              .
             </p>
           </div>
         </div>
@@ -186,5 +187,3 @@ class ErrorBoundaryClass extends Component<Props, State> {
     return this.props.children;
   }
 }
-
-export const ErrorBoundary = withTranslation()(ErrorBoundaryClass);

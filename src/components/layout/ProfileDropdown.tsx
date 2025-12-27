@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils';
 import type { User } from '@/features/auth/types/auth.types';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 import { useUIStore } from '@/stores/uiStore';
+import { changeLanguageAsync } from '@/i18n/config';
+import type { Locale } from '@/i18n/locales';
 
 interface ProfileDropdownProps {
   user: User | null;
@@ -25,6 +27,7 @@ interface ProfileDropdownProps {
 
 export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isChangingLanguage, setIsChangingLanguage] = useState(false);
   const { t, i18n } = useTranslation();
 
   // Read subscription from global store
@@ -51,10 +54,21 @@ export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
     setShowUpgradeWizard(true);
   };
 
-  const toggleLanguage = () => {
+  const toggleLanguage = async () => {
+    if (isChangingLanguage) return; // Prevent multiple clicks
+
     const currentLang = i18n.language;
     const newLang = currentLang.startsWith('ar') ? 'en' : 'ar-SA';
-    i18n.changeLanguage(newLang);
+
+    setIsChangingLanguage(true);
+    try {
+      await changeLanguageAsync(newLang as Locale);
+    } catch (error) {
+      console.error('[ProfileDropdown] Failed to change language:', error);
+      // Language change failed, but we'll silently fail to avoid disrupting UX
+    } finally {
+      setIsChangingLanguage(false);
+    }
   };
 
   const getLanguageLabel = () => {
@@ -112,10 +126,19 @@ export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
         {/* Language Switcher */}
         <DropdownMenuItem
           onClick={toggleLanguage}
-          className="text-neutral-700 hover:text-neutral-900"
+          disabled={isChangingLanguage}
+          className={cn(
+            'text-neutral-700 hover:text-neutral-900',
+            isChangingLanguage && 'opacity-50 cursor-not-allowed'
+          )}
         >
           <Languages className="w-4 h-4 me-2" />
           <span>{getLanguageLabel()}</span>
+          {isChangingLanguage && (
+            <span className="ms-auto">
+              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            </span>
+          )}
         </DropdownMenuItem>
 
         {/* Logout */}

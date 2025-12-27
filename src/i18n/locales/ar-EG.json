@@ -211,6 +211,7 @@
     "status_new": "جديد",
     "status_processing": "قيد المعالجة",
     "status_completed": "مكتمل",
+    "status_unknown": "غير معروف",
     "date_range_label": "نطاق التاريخ",
     "date_range_select": "اختر نطاق التاريخ",
     "date_range_custom": "نطاق مخصص",
@@ -283,11 +284,13 @@
     "connect_platform": "ربط {{platform}}",
     "success_title": "تم الاتصال بنجاح!",
     "success_message": "تم ربط حساب {{platform}} بتاعك.",
-    "auto_close": "الشباك ده هيقفل لوحده..."
-  },
-  "lead_notes": {
-    "title": "الملاحظات",
-    "title_with_name": "الملاحظات - {{name}}"
+    "auto_close": "الشباك ده هيقفل لوحده...",
+    "status_connected": "متصل",
+    "status_available": "متاح",
+    "status_coming_soon": "قريباً",
+    "no_connections_title": "لا توجد اتصالات بعد",
+    "no_connections_description": "دع وكيلك يستجيب للعملاء على فيسبوك وإنستغرام وواتساب وموقعك الإلكتروني. قم بتوصيل منصة للبدء.",
+    "no_platform_connections": "لم يتم العثور على اتصالات {{platform}} لهذا الوكيل."
   },
   "lead_summary": {
     "title": "الملخص",
@@ -663,11 +666,6 @@
   "onboarding_progress": {
     "aria_label": "الخطوة {{current}} من {{total}}"
   },
-  "connections": {
-    "no_connections_title": "لا توجد اتصالات بعد",
-    "no_connections_description": "دع وكيلك يستجيب للعملاء على فيسبوك وإنستغرام وواتساب وموقعك الإلكتروني. قم بتوصيل منصة للبدء.",
-    "no_platform_connections": "لم يتم العثور على اتصالات {{platform}} لهذا الوكيل."
-  },
   "lead_stats": {
     "new_leads": "عملاء جدد",
     "processing": "قيد المعالجة",
@@ -886,18 +884,33 @@
     "return_message": "بعد التفويض، ارجع للصفحة دي",
     "error_title": "التفويض فشل"
   },
+  "connection_health": {
+    "loading": "بنحمل حالة الصحة",
+    "critical_token_invalid": "صحة الاتصال خطيرة: التوكن مش صالح",
+    "warning_token_expires": "تحذير صحة الاتصال: التوكن هينتهي في {{days}} يوم",
+    "health_good": "صحة الاتصال كويسة",
+    "meta_platforms_only": "مراقبة الصحة بس لمنصات Meta",
+    "token_expired": "التوكن منتهي أو مش صالح",
+    "token_expires_in": "التوكن هينتهي في {{days}} يوم",
+    "token_expires_in_plural": "التوكن هينتهي في {{days}} يوم",
+    "webhook_inactive": "اشتراك Webhook مش نشط",
+    "error": "خطأ: {{message}}",
+    "checking": "بنفحص...",
+    "refresh_status": "حدّث الحالة"
+  },
   "error_boundary": {
     "title": "في حاجة غلط",
-    "description": "آسفين، بس حصل حاجة مش متوقعة. حاول تاني.",
+    "description": "آسفين، بس حصل حاجة مش متوقعة. الخطأ اتسجل وهنبص عليه.",
+    "details_title": "تفاصيل الخطأ (التطوير)",
+    "error_message_label": "رسالة الخطأ:",
+    "stack_trace_label": "تتبع المكدس:",
+    "component_stack_label": "مكدس المكونات:",
     "try_again": "حاول تاني",
     "reload_page": "حمّل الصفحة تاني",
     "go_home": "روح للصفحة الرئيسية",
-    "details_header": "التفاصيل الفنية:",
-    "error_label": "الخطأ:",
-    "component_stack_label": "مكان الخطأ:",
-    "report_issue": "بلّغ عن المشكلة",
-    "time_label": "الوقت:",
-    "browser_label": "المتصفح:"
+    "contact_support_prefix": "لو المشكلة استمرت، لو سمحت",
+    "contact_support_link": "اتصل بالدعم",
+    "contact_support_suffix": "."
   },
   "onboarding_banner": {
     "message_title": "ابدأ بإنشاء أول وكيل ليك.",
@@ -1006,6 +1019,8 @@
     "apply_custom": "طبّق النطاق المخصص"
   },
   "lead_notes": {
+    "title": "الملاحظات",
+    "title_with_name": "الملاحظات - {{name}}",
     "add_placeholder": "اكتب ملاحظة...",
     "adding": "بيضيف...",
     "add_note": "ضيف ملاحظة",

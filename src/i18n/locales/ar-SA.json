@@ -211,6 +211,7 @@
     "status_new": "جديد",
     "status_processing": "قيد المعالجة",
     "status_completed": "مكتمل",
+    "status_unknown": "غير معروف",
     "date_range_label": "نطاق التاريخ",
     "date_range_select": "اختر نطاق التاريخ",
     "date_range_custom": "نطاق مخصص",
@@ -283,11 +284,13 @@
     "connect_platform": "ربط {{platform}}",
     "success_title": "تم الاتصال بنجاح!",
     "success_message": "تم ربط حساب {{platform}} الخاص بك.",
-    "auto_close": "سيتم إغلاق هذا المربع تلقائياً..."
-  },
-  "lead_notes": {
-    "title": "الملاحظات",
-    "title_with_name": "الملاحظات - {{name}}"
+    "auto_close": "سيتم إغلاق هذا المربع تلقائياً...",
+    "status_connected": "متصل",
+    "status_available": "متاح",
+    "status_coming_soon": "قريباً",
+    "no_connections_title": "لا توجد اتصالات بعد",
+    "no_connections_description": "دع وكيلك يستجيب للعملاء على فيسبوك وإنستغرام وواتساب وموقعك الإلكتروني. قم بتوصيل منصة للبدء.",
+    "no_platform_connections": "لم يتم العثور على اتصالات {{platform}} لهذا الوكيل."
   },
   "lead_summary": {
     "title": "الملخص",
@@ -663,11 +666,6 @@
   "onboarding_progress": {
     "aria_label": "الخطوة {{current}} من {{total}}"
   },
-  "connections": {
-    "no_connections_title": "لا توجد اتصالات بعد",
-    "no_connections_description": "دع وكيلك يستجيب للعملاء على فيسبوك وإنستغرام وواتساب وموقعك الإلكتروني. قم بتوصيل منصة للبدء.",
-    "no_platform_connections": "لم يتم العثور على اتصالات {{platform}} لهذا الوكيل."
-  },
   "lead_stats": {
     "new_leads": "عملاء جدد",
     "processing": "قيد المعالجة",
@@ -902,16 +900,17 @@
   },
   "error_boundary": {
     "title": "حدث خطأ ما",
-    "description": "نأسف، لكن حدث شيء غير متوقع. يرجى المحاولة مرة أخرى.",
+    "description": "نأسف، لكن حدث شيء غير متوقع. تم تسجيل الخطأ وسننظر فيه.",
+    "details_title": "تفاصيل الخطأ (التطوير)",
+    "error_message_label": "رسالة الخطأ:",
+    "stack_trace_label": "تتبع المكدس:",
+    "component_stack_label": "مكدس المكونات:",
     "try_again": "إعادة المحاولة",
     "reload_page": "إعادة تحميل الصفحة",
     "go_home": "الذهاب للصفحة الرئيسية",
-    "details_header": "التفاصيل الفنية:",
-    "error_label": "الخطأ:",
-    "component_stack_label": "مكان الخطأ:",
-    "report_issue": "إبلاغ عن المشكلة",
-    "time_label": "الوقت:",
-    "browser_label": "المتصفح:"
+    "contact_support_prefix": "إذا استمرت هذه المشكلة، يرجى",
+    "contact_support_link": "الاتصال بالدعم",
+    "contact_support_suffix": "."
   },
   "onboarding_banner": {
     "message_title": "ابدأ بإنشاء أول وكيل لك.",
@@ -1020,6 +1019,8 @@
     "apply_custom": "تطبيق النطاق المخصص"
   },
   "lead_notes": {
+    "title": "الملاحظات",
+    "title_with_name": "الملاحظات - {{name}}",
     "add_placeholder": "أضف ملاحظة...",
     "adding": "جارٍ الإضافة...",
     "add_note": "إضافة ملاحظة",

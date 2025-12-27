@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
@@ -21,24 +22,38 @@ const queryClient = new QueryClient({
 // Register QueryClient globally for API interceptor to clear cache on logout
 setGlobalQueryClient(queryClient);
 
+// Translation loading fallback
+function TranslationLoader() {
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-neutral-50">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
+        <p className="text-sm text-neutral-600">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
     <ErrorBoundary>
-      <AppLifecycleProvider>
-        <QueryClientProvider client={queryClient}>
-          <RouterProvider router={router} />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              style: {
-                background: 'white',
-                color: '#171717',
-                border: '1px solid #e5e5e5',
-              },
-            }}
-          />
-        </QueryClientProvider>
-      </AppLifecycleProvider>
+      <Suspense fallback={<TranslationLoader />}>
+        <AppLifecycleProvider>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                style: {
+                  background: 'white',
+                  color: '#171717',
+                  border: '1px solid #e5e5e5',
+                },
+              }}
+            />
+          </QueryClientProvider>
+        </AppLifecycleProvider>
+      </Suspense>
     </ErrorBoundary>
   );
 }

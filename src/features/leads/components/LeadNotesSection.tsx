@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { arSA } from 'date-fns/locale/ar-SA';
 import { useTranslation } from 'react-i18next';
 import { Trash2, Edit2, Check, X } from 'lucide-react';
 import {
@@ -268,7 +269,10 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
 
                 {/* Timestamp */}
                 <p className="text-xs text-neutral-400 mt-1">
-                  {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true, locale: i18n.language === 'ar-SA' || i18n.language === 'ar-EG' ? require('date-fns/locale/ar-SA') : undefined })}
+                  {formatDistanceToNow(new Date(note.createdAt), {
+                    addSuffix: true,
+                    locale: i18n.language.startsWith('ar') ? arSA : undefined
+                  })}
                 </p>
               </div>
             ))}

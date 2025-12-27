@@ -4,9 +4,14 @@
  * Supports: English, Arabic (Saudi), Arabic (Egypt)
  */
 
+import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
+import { changeLanguageAsync } from '@/i18n/config';
+import { isValidLocale } from '@/i18n/locales';
+import type { Locale } from '@/i18n/locales';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', native: 'English' },
@@ -16,10 +21,36 @@ const LANGUAGES = [
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLanguageChange = (languageCode: string) => {
-    i18n.changeLanguage(languageCode);
-  };
+  const handleLanguageChange = useCallback(
+    async (languageCode: string) => {
+      // Validate locale
+      if (!isValidLocale(languageCode)) {
+        return;
+      }
+
+      if (isLoading) {
+        return;
+      }
+
+      // Don't reload if already selected
+      if (i18n.language === languageCode) {
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        await changeLanguageAsync(languageCode as Locale);
+      } catch (error) {
+        console.error('[LanguageSwitcher] Failed to change language:', error);
+        toast.error(t('language_switcher.error') || 'Failed to change language. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [i18n.language, isLoading, t]
+  );
 
   return (
     <div className="space-y-2">
@@ -34,12 +65,18 @@ export function LanguageSwitcher() {
             variant={i18n.language === lang.code ? 'primary' : 'outline'}
             size="sm"
             onClick={() => handleLanguageChange(lang.code)}
+            disabled={isLoading}
             className="justify-start"
           >
             <span className="flex items-center gap-2">
               <span>{lang.native}</span>
               {lang.label !== lang.native && (
                 <span className="text-xs text-neutral-500">({lang.label})</span>
+              )}
+              {isLoading && i18n.language !== lang.code && (
+                <span className="ml-auto">
+                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                </span>
               )}
             </span>
           </Button>
@@ -64,15 +101,33 @@ export function LanguageSwitcher() {
  */
 export function CompactLanguageSwitcher() {
   const { i18n, t } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const currentLang = LANGUAGES.find(lang => lang.code === i18n.language) || LANGUAGES[0];
+  const handleChange = useCallback(
+    async (languageCode: string) => {
+      if (!isValidLocale(languageCode) || isLoading) return;
+      if (i18n.language === languageCode) return;
+
+      setIsLoading(true);
+      try {
+        await changeLanguageAsync(languageCode as Locale);
+      } catch (error) {
+        console.error('Failed to change language:', error);
+        toast.error(t('language_switcher.error') || 'Failed to change language. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [i18n.language, isLoading, t]
+  );
 
   return (
     <div className="relative">
       <select
         value={i18n.language}
-        onChange={(e) => i18n.changeLanguage(e.target.value)}
-        className="appearance-none bg-white border border-neutral-300 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
+        onChange={(e) => handleChange(e.target.value)}
+        disabled={isLoading}
+        className="appearance-none bg-white border border-neutral-300 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label={t('language_switcher.select_language')}
       >
         {LANGUAGES.map((lang) => (

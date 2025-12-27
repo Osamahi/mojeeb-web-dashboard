@@ -10,10 +10,13 @@ import { Settings, LogOut, ChevronDown, User, Languages } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { performLogout } from '@/features/auth/services/logoutService';
+import { changeLanguageAsync } from '@/i18n/config';
 import { cn } from '@/lib/utils';
+import type { Locale } from '@/i18n/locales';
 
 export const UserProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isChangingLanguage, setIsChangingLanguage] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((state) => state.user);
   const { t, i18n } = useTranslation();
@@ -41,10 +44,21 @@ export const UserProfileDropdown = () => {
     });
   };
 
-  const toggleLanguage = () => {
+  const toggleLanguage = async () => {
+    if (isChangingLanguage) return; // Prevent multiple clicks
+
     const currentLang = i18n.language;
     const newLang = currentLang.startsWith('ar') ? 'en' : 'ar-SA';
-    i18n.changeLanguage(newLang);
+
+    setIsChangingLanguage(true);
+    try {
+      await changeLanguageAsync(newLang as Locale);
+    } catch (error) {
+      console.error('[UserProfileDropdown] Failed to change language:', error);
+      // Language change failed, but we'll silently fail to avoid disrupting UX
+    } finally {
+      setIsChangingLanguage(false);
+    }
   };
 
   const getLanguageLabel = () => {
@@ -99,10 +113,16 @@ export const UserProfileDropdown = () => {
 
             <button
               onClick={toggleLanguage}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+              disabled={isChangingLanguage}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Languages className="w-4 h-4" />
               <span>{getLanguageLabel()}</span>
+              {isChangingLanguage && (
+                <span className="ml-auto">
+                  <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                </span>
+              )}
             </button>
 
             <button

@@ -1,8 +1,7 @@
 import { Component } from 'react';
 import type { ReactNode } from 'react';
-import { withTranslation, WithTranslation } from 'react-i18next';
 
-interface Props extends WithTranslation {
+interface Props {
   children: ReactNode;
   fallback?: ReactNode;
 }
@@ -15,8 +14,11 @@ interface State {
  * Error Boundary for Sidebar Component
  * Prevents sidebar errors from crashing the entire application
  * Shows minimal fallback UI when errors occur
+ *
+ * Note: Error boundaries must be class components in React.
+ * Translations are not used in fallback to avoid dependency on i18n being loaded.
  */
-class SidebarErrorBoundaryComponent extends Component<Props, State> {
+export class SidebarErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
@@ -31,14 +33,12 @@ class SidebarErrorBoundaryComponent extends Component<Props, State> {
   }
 
   render() {
-    const { t } = this.props;
-
     if (this.state.hasError) {
       return (
         this.props.fallback || (
           <aside className="fixed left-0 top-16 h-[calc(100vh-64px)] w-20 bg-neutral-50 border-r border-neutral-200 flex items-center justify-center">
             <p className="text-xs text-neutral-500 p-4 text-center">
-              {t('sidebar_error_boundary.navigation_unavailable')}
+              Navigation unavailable
             </p>
           </aside>
         )
@@ -48,5 +48,3 @@ class SidebarErrorBoundaryComponent extends Component<Props, State> {
     return this.props.children;
   }
 }
-
-export const SidebarErrorBoundary = withTranslation()(SidebarErrorBoundaryComponent);

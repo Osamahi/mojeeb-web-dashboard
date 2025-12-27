@@ -287,7 +287,10 @@
     "auto_close": "This dialog will close automatically...",
     "status_connected": "Connected",
     "status_available": "Available",
-    "status_coming_soon": "Coming Soon"
+    "status_coming_soon": "Coming Soon",
+    "no_connections_title": "No connections yet",
+    "no_connections_description": "Let your agent respond to customers on Facebook, Instagram, WhatsApp, and your website. Connect a platform to get started.",
+    "no_platform_connections": "No {{platform}} connections found for this agent."
   },
   "lead_notes": {
     "title": "Notes",
@@ -666,11 +669,6 @@
   },
   "onboarding_progress": {
     "aria_label": "Step {{current}} of {{total}}"
-  },
-  "connections": {
-    "no_connections_title": "No connections yet",
-    "no_connections_description": "Let your agent respond to customers on Facebook, Instagram, WhatsApp, and your website. Connect a platform to get started.",
-    "no_platform_connections": "No {{platform}} connections found for this agent."
   },
   "lead_stats": {
     "new_leads": "New Leads",
