@@ -481,10 +481,10 @@ ${snippet}
             {selectedMode === 'headless' && (
               <div className="space-y-3 border-t border-neutral-200 pt-6">
                 <h3 className="text-sm font-semibold text-neutral-900">
-                  ✅ Complete Code Example
+                  {t('widget_snippet.complete_example_title')}
                 </h3>
                 <p className="text-xs text-neutral-600 mb-3">
-                  Here's how all three steps look together in your HTML:
+                  {t('widget_snippet.complete_example_desc')}
                 </p>
                 <div className="relative">
                   <button
@@ -494,12 +494,12 @@ ${snippet}
                     {isCopied && copiedSnippet === completeExampleSnippet ? (
                       <>
                         <Check className="w-3.5 h-3.5" />
-                        Copied!
+                        {t('widget_snippet.copied')}
                       </>
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5" />
-                        Copy
+                        {t('widget_snippet.copy')}
                       </>
                     )}
                   </button>
@@ -536,12 +536,12 @@ ${snippet}
                   {isShareUrlCopied ? (
                     <>
                       <Check className="w-4 h-4" />
-                      Copied!
+                      {t('widget_snippet.copied')}
                     </>
                   ) : (
                     <>
                       <Copy className="w-4 h-4" />
-                      Copy
+                      {t('widget_snippet.copy_link')}
                     </>
                   )}
                 </button>
@@ -549,7 +549,7 @@ ${snippet}
             </div>
             <p className="text-xs text-neutral-500 mt-3 flex items-start gap-2">
               <span className="text-neutral-400 mt-0.5">ℹ️</span>
-              <span>This link will expire in 30 days. Anyone with this link can view the installation instructions.</span>
+              <span>{t('widget_snippet.link_expiry_info')}</span>
             </p>
           </div>
         )}

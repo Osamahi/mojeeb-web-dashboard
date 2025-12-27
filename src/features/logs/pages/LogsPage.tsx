@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Activity, AlertCircle, Radio } from 'lucide-react';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -15,6 +16,7 @@ import { BaseHeader } from '@/components/ui/BaseHeader';
 import type { LogEntry } from '../components/LogStreamTerminal';
 
 export default function LogsPage() {
+  const { t } = useTranslation();
   const { currentAgent, isAgentSelected } = useAgentContext();
   const [logLevel, setLogLevel] = useState<'all' | 'critical' | 'error' | 'warning' | 'information' | 'debug'>('all');
   const [showApplicationLogs, setShowApplicationLogs] = useState(true);
@@ -41,8 +43,8 @@ export default function LogsPage() {
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <EmptyState
           icon={<Activity className="w-12 h-12 text-neutral-400" />}
-          title="No Agent Selected"
-          description="Please select an agent to view application logs"
+          title={t('no_agent.title')}
+          description={t('logs.no_agent_description')}
         />
       </div>
     );
@@ -58,12 +60,12 @@ export default function LogsPage() {
       {/* Header */}
       <BaseHeader
         title={`${currentAgent?.name || 'Agent'} | Log Stream`}
-        subtitle="Real-time application logs and diagnostics"
+        subtitle={t('logs.page_subtitle')}
         badge={
           isConnected && (
             <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 border border-green-200 rounded-full">
               <Radio className="w-3.5 h-3.5 text-green-600 animate-pulse" />
-              <span className="text-xs font-medium text-green-700">Live</span>
+              <span className="text-xs font-medium text-green-700">{t('logs.status_live')}</span>
             </div>
           )
         }
@@ -80,7 +82,7 @@ export default function LogsPage() {
                 }}
                 className="w-4 h-4 text-black focus:ring-black"
               />
-              <span className="text-sm text-neutral-700">Application logs</span>
+              <span className="text-sm text-neutral-700">{t('logs.application_logs')}</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -93,7 +95,7 @@ export default function LogsPage() {
                 }}
                 className="w-4 h-4 text-black focus:ring-black"
               />
-              <span className="text-sm text-neutral-700">Web server logs</span>
+              <span className="text-sm text-neutral-700">{t('logs.web_server_logs')}</span>
             </label>
           </div>
         }
@@ -104,18 +106,18 @@ export default function LogsPage() {
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
           {/* Log Level Filter */}
           <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-neutral-700">Log Level:</label>
+            <label className="text-sm font-medium text-neutral-700">{t('logs.log_level_label')}</label>
             <select
               value={logLevel}
               onChange={(e) => setLogLevel(e.target.value as typeof logLevel)}
               className="px-3 py-1.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black text-sm bg-white"
             >
-              <option value="all">All Levels</option>
-              <option value="critical">Critical</option>
-              <option value="error">Error</option>
-              <option value="warning">Warning</option>
-              <option value="information">Information</option>
-              <option value="debug">Debug</option>
+              <option value="all">{t('logs.all_levels')}</option>
+              <option value="critical">{t('logs.level_critical')}</option>
+              <option value="error">{t('logs.level_error')}</option>
+              <option value="warning">{t('logs.level_warning')}</option>
+              <option value="information">{t('logs.level_information')}</option>
+              <option value="debug">{t('logs.level_debug')}</option>
             </select>
           </div>
 

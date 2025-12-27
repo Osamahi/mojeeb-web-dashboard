@@ -159,8 +159,8 @@ export default function KnowledgeBaseItem({
                     setIsEditing(true);
                   }}
                   className="p-2 sm:p-1.5 hover:bg-neutral-100 rounded transition-colors text-neutral-600 hover:text-neutral-950 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-                  title="Edit"
-                  aria-label="Edit knowledge base"
+                  title={t('knowledge_base.edit_title')}
+                  aria-label={t('knowledge_base.edit_aria_label')}
                 >
                   <Edit2 className="w-5 h-5 sm:w-4 sm:h-4" />
                 </button>
@@ -171,8 +171,8 @@ export default function KnowledgeBaseItem({
                   }}
                   disabled={deleteMutation.isPending}
                   className="p-2 sm:p-1.5 hover:bg-red-50 rounded transition-colors text-neutral-600 hover:text-red-600 disabled:opacity-50 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-                  title="Delete"
-                  aria-label="Delete knowledge base"
+                  title={t('knowledge_base.delete_title')}
+                  aria-label={t('knowledge_base.delete_aria_label')}
                 >
                   <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
                 </button>
@@ -225,7 +225,7 @@ export default function KnowledgeBaseItem({
                     }}
                     disabled={updateMutation.isPending}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                   <Button
                     variant="primary"
@@ -249,7 +249,7 @@ export default function KnowledgeBaseItem({
                 {showSuccessMessage && (
                   <div className="flex items-center gap-2 text-sm text-green-600">
                     <Check className="w-4 h-4" />
-                    Saved successfully
+                    {t('knowledge_base.saved_successfully')}
                   </div>
                 )}
               </div>

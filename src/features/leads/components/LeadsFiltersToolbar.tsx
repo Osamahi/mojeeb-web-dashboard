@@ -72,7 +72,7 @@ export const LeadsFiltersToolbar = memo(({
               className="absolute right-1 top-1/2 -translate-y-1/2 px-3 h-7 bg-black text-white rounded-md hover:bg-neutral-800 transition-colors flex items-center gap-1.5"
             >
               <Search className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">Search</span>
+              <span className="text-xs font-medium">{t('leads.search_button')}</span>
             </button>
           )}
         </div>
@@ -102,7 +102,7 @@ export const LeadsFiltersToolbar = memo(({
             `}
           >
             <Calendar className="w-4 h-4" />
-            {filters.dateFrom || filters.dateTo ? 'Date Filter' : 'Add Filter'}
+            {filters.dateFrom || filters.dateTo ? t('leads.date_filter') : t('leads.add_filter')}
           </button>
 
           {/* Filter Popover */}
@@ -123,7 +123,7 @@ export const LeadsFiltersToolbar = memo(({
             onClick={onClearFilters}
             className="px-3 h-9 text-sm text-neutral-600 hover:text-black transition-colors"
           >
-            Clear filters
+            {t('leads.clear_filters')}
           </button>
         )}
       </div>

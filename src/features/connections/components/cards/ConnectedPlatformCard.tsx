@@ -5,6 +5,7 @@
  */
 
 import { MoreVertical, AlertCircle, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { PlatformIcon } from '../PlatformIcon';
 import { getPlatformById } from '../../constants/platforms';
@@ -66,6 +67,7 @@ export function ConnectedPlatformCard({
   className,
   hasWarning = false,
 }: ConnectedPlatformCardProps) {
+  const { t } = useTranslation();
   const platform = getPlatformById(connection.platform);
   const displayName = connection.platformAccountName || connection.platformAccountHandle || platform?.name || 'Connected';
 
@@ -145,7 +147,7 @@ export function ConnectedPlatformCard({
               {/* Mobile: Brief format */}
               <span className="whitespace-nowrap sm:hidden">{formatFollowerCount(followerCount)}</span>
               {/* Desktop: Full format */}
-              <span className="whitespace-nowrap hidden sm:inline">{formatFollowerCountFull(followerCount)} Followers</span>
+              <span className="whitespace-nowrap hidden sm:inline">{formatFollowerCountFull(followerCount)} {t('connections.followers_label')}</span>
             </>
           )}
 

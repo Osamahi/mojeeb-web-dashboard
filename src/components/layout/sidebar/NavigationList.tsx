@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Role } from '@/features/auth/types/auth.types';
 import type { User } from '@/features/auth/types/auth.types';
 import type { Agent } from '@/features/agents/types/agent.types';
@@ -24,10 +25,12 @@ export const NavigationList = memo(({
   user,
   currentAgent,
 }: NavigationListProps) => {
+  const { t } = useTranslation();
+
   return (
     <nav
       className="flex-1 overflow-x-hidden py-4 px-4 space-y-2"
-      aria-label="Main navigation"
+      aria-label={t('navigation.main_nav_aria')}
     >
       {items
         .filter((item) => {

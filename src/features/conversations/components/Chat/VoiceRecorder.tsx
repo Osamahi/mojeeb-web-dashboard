@@ -311,8 +311,8 @@ export function VoiceRecorder({
         }}
         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#404040'}
         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = MINIMAL_COLORS.grey700}
-        aria-label="Cancel recording"
-        title="Cancel recording"
+        aria-label={t('voice_recorder.cancel_aria')}
+        title={t('voice_recorder.cancel_title')}
       >
         <X className="w-5 h-5" style={{ color: MINIMAL_COLORS.white }} />
       </button>
@@ -350,8 +350,8 @@ export function VoiceRecorder({
         }}
         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = MINIMAL_COLORS.grey100}
         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = MINIMAL_COLORS.white}
-        aria-label="Send recording"
-        title="Send recording"
+        aria-label={t('voice_recorder.send_aria')}
+        title={t('voice_recorder.send_title')}
       >
         <Check className="w-5 h-5" style={{ color: MINIMAL_COLORS.grey900 }} />
       </button>

@@ -5,6 +5,7 @@
  */
 
 import { Plus, Pencil } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { PlatformIcon } from '../PlatformIcon';
@@ -27,6 +28,7 @@ export function AvailablePlatformRow({
   userRole,
   className,
 }: AvailablePlatformRowProps) {
+  const { t } = useTranslation();
   // Get effective status based on user role (will show 'coming_soon' for non-SuperAdmins if requiresSuperAdmin is true)
   const effectiveStatus = getEffectivePlatformStatus(platform, userRole);
   const isComingSoon = effectiveStatus === 'coming_soon';
@@ -99,7 +101,7 @@ export function AvailablePlatformRow({
             size="sm"
           >
             <Pencil className="w-3.5 h-3.5 sm:mr-1.5" />
-            <span className="hidden sm:inline">Edit</span>
+            <span className="hidden sm:inline">{t('connections.edit_button')}</span>
           </Button>
           <Button
             onClick={(e) => {
@@ -109,7 +111,7 @@ export function AvailablePlatformRow({
             className="h-7 sm:h-8 px-2.5 sm:px-3 bg-[#00D084] hover:bg-[#00BA75] text-white text-xs sm:text-sm"
             size="sm"
           >
-            <span className="hidden sm:inline">Connect</span>
+            <span className="hidden sm:inline">{t('connections.connect_button')}</span>
             <Plus className="w-3.5 h-3.5 sm:ml-1" />
           </Button>
         </div>
@@ -124,7 +126,7 @@ export function AvailablePlatformRow({
             className="h-7 sm:h-8 px-2.5 sm:px-3 bg-[#00D084] hover:bg-[#00BA75] text-white text-xs sm:text-sm"
             size="sm"
           >
-            <span className="hidden sm:inline">Connect</span>
+            <span className="hidden sm:inline">{t('connections.connect_button')}</span>
             <Plus className="w-3.5 h-3.5 sm:ml-1" />
           </Button>
         </div>

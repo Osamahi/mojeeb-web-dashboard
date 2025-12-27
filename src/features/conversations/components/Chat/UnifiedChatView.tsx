@@ -5,6 +5,7 @@
  */
 
 import { useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Loader2, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ChatMessage } from '../../types/conversation.types';
@@ -46,12 +47,13 @@ export interface UnifiedChatViewProps {
  * Default empty state when no messages
  */
 function DefaultEmptyState() {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-4">
       <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
         <Send className="w-8 h-8 text-neutral-400" />
       </div>
-      <p className="text-neutral-950 font-medium mb-1">No messages yet</p>
+      <p className="text-neutral-950 font-medium mb-1">{t('conversations.no_messages_yet')}</p>
       <p className="text-sm text-neutral-600 max-w-sm">
         Start the conversation by sending a message below.
       </p>

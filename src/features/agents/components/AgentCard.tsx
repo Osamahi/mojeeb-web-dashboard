@@ -140,7 +140,7 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
                     {agent.name}
                   </h3>
                   {agent.isOwner && (
-                    <span title="Owner">
+                    <span title={t('agents.owner_title')}>
                       <Crown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-warning flex-shrink-0" />
                     </span>
                   )}
@@ -151,7 +151,7 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
                   <button
                     onClick={handleStudioClick}
                     className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-md transition-colors"
-                    title="Open Studio"
+                    title={t('agents.open_studio_title')}
                   >
                     <Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-600" />
                   </button>
@@ -159,7 +159,7 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
                     <button
                       onClick={handleDelete}
                       className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-md transition-colors disabled:opacity-50"
-                      title="Delete agent"
+                      title={t('agents.delete_agent_title')}
                       disabled={deleteMutation.isPending}
                     >
                       <Trash2 className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-neutral-600 ${deleteMutation.isPending ? 'animate-pulse' : ''}`} />
@@ -180,7 +180,7 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
                 <button
                   onClick={handleReassignOrgClick}
                   className="flex items-center gap-2 text-xs text-neutral-500 mt-1.5 hover:text-neutral-700 transition-colors group"
-                  title="Click to reassign to different organization"
+                  title={t('agents.reassign_tooltip')}
                 >
                   <Building2 className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="truncate">{agent.organizationName}</span>

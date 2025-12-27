@@ -6,6 +6,7 @@
  */
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
@@ -92,6 +93,7 @@ export default memo(function MessageComposer({
   conversationId,
   agentId,
 }: MessageComposerProps) {
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isLocalSending, setIsLocalSending] = useState(false);
@@ -692,7 +694,7 @@ export default memo(function MessageComposer({
         multiple
         onChange={handleFileSelect}
         className="hidden"
-        aria-label="Upload images"
+        aria-label={t('message_composer.upload_images_aria')}
       />
 
       {/* Hidden Audio Input */}
@@ -703,7 +705,7 @@ export default memo(function MessageComposer({
         multiple
         onChange={handleAudioSelect}
         className="hidden"
-        aria-label="Upload audio files"
+        aria-label={t('message_composer.upload_audio_aria')}
       />
 
       {/* Image Previews - ChatGPT Style with Upload Progress */}
@@ -865,7 +867,7 @@ export default memo(function MessageComposer({
           maxHeight: `${MAX_TEXTAREA_HEIGHT_PX}px`,
           fontSize: '16px', // Prevent iOS zoom on focus
         }}
-        aria-label="Message input. Press Enter to send, Shift+Enter for new line"
+        aria-label={t('message_composer.input_aria_label')}
         aria-multiline="true"
         aria-describedby="char-count"
       />
@@ -896,8 +898,8 @@ export default memo(function MessageComposer({
               'transition-all duration-150',
               (isSending || isLocalSending) && 'opacity-50 cursor-not-allowed'
             )}
-            aria-label="Attach images"
-            title="Attach images (JPEG, PNG)"
+            aria-label={t('message_composer.attach_images_aria')}
+            title={t('message_composer.attach_images_title')}
             disabled={isSending || isLocalSending}
           >
             <Paperclip className="w-5 h-5" />
@@ -1004,7 +1006,7 @@ export default memo(function MessageComposer({
                 : 'Send message (Enter)'
               : 'Attach audio'
           }
-          aria-label={message.trim() ? 'Send message' : 'Attach audio'}
+          aria-label={message.trim() ? t('message_composer.send_message_aria') : t('message_composer.attach_audio_aria')}
         >
           {message.trim() ? (
             isSending || isLocalSending ? (

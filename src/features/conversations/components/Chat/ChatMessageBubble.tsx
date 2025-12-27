@@ -7,6 +7,7 @@
  */
 
 import { memo, useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Copy, Check, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import type { ChatMessage, MessageAttachment } from '../../types';
@@ -25,6 +26,7 @@ interface ChatMessageBubbleProps {
 }
 
 const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: ChatMessageBubbleProps) {
+  const { t } = useTranslation();
   const isUser = isCustomerMessage(message);
   const isDeleted = isMessageDeleted(message);
 
@@ -224,7 +226,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
           {hasError && (
             <div className="flex items-center gap-1">
               <AlertCircle className="w-3 h-3 text-red-500" />
-              <span className="text-xs text-red-500">Failed to send</span>
+              <span className="text-xs text-red-500">{t('conversations.message_send_failed')}</span>
               {onRetry && (
                 <button
                   onClick={onRetry}

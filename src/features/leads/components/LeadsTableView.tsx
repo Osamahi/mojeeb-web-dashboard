@@ -267,7 +267,7 @@ export function LeadsTableView({
             <InlineEditField
               value={lead.name}
               fieldName="Name"
-              placeholder="Enter lead name"
+              placeholder={t('leads.enter_lead_name_placeholder')}
               onSave={(newName) => handleNameSave(lead.id, newName)}
               validationFn={validateName}
               isLoading={updateMutation.isPending}
@@ -295,7 +295,7 @@ export function LeadsTableView({
                   <InlineEditField
                     value={lead.phone}
                     fieldName="Phone"
-                    placeholder="Enter phone number"
+                    placeholder={t('leads.enter_phone_placeholder')}
                     onSave={(newPhone) => handlePhoneSave(lead.id, newPhone)}
                     validationFn={validatePhone}
                     isPhone={true}

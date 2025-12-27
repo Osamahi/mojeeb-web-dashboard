@@ -25,7 +25,9 @@
     "invalid_date": "تاريخ غير صالح",
     "deleting": "جاري الحذف...",
     "add": "إضافة",
-    "back": "رجوع"
+    "back": "رجوع",
+    "logo_alt": "مجيب",
+    "saving": "بيحفظ..."
   },
   "agents": {
     "title": "الوكلاء الذكيون",
@@ -39,6 +41,10 @@
     "delete_confirm_message": "هل أنت متأكد من حذف \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
     "deleted_success": "تم حذف الوكيل \"{{name}}\" بنجاح",
     "delete_failed": "فشل حذف الوكيل",
+    "owner_title": "المالك",
+    "open_studio_title": "افتح الاستوديو",
+    "delete_agent_title": "امسح الوكيل",
+    "reassign_tooltip": "اضغط عشان تعيد التخصيص لمنظمة تانية",
     "organization": "المنظمة",
     "created": "تاريخ الإنشاء",
     "updated": "تاريخ التحديث"
@@ -269,7 +275,12 @@
     "no_agent_selected": "لم يتم اختيار وكيل",
     "creating_lead": "يرجى الانتظار بينما يتم إنشاء العميل...",
     "field_required": "{{field}} مطلوب",
-    "select_placeholder": "اختر..."
+    "select_placeholder": "اختر...",
+    "enter_lead_name_placeholder": "اكتب اسم العميل",
+    "enter_phone_placeholder": "اكتب رقم الموبايل",
+    "filter_search_label": "دوّر",
+    "status_processing_option": "بيتعالج",
+    "status_completed_option": "خلص"
   },
   "connections": {
     "title": "الاتصالات",
@@ -290,7 +301,15 @@
     "status_coming_soon": "قريباً",
     "no_connections_title": "لا توجد اتصالات بعد",
     "no_connections_description": "دع وكيلك يستجيب للعملاء على فيسبوك وإنستغرام وواتساب وموقعك الإلكتروني. قم بتوصيل منصة للبدء.",
-    "no_platform_connections": "لم يتم العثور على اتصالات {{platform}} لهذا الوكيل."
+    "no_platform_connections": "لم يتم العثور على اتصالات {{platform}} لهذا الوكيل.",
+    "status_connected_label": "متصل",
+    "edit_button": "عدّل",
+    "connect_button_short": "وصّل",
+    "fetching_pages": "بنجيب الصفحات...",
+    "failed_load_pages_title": "مش قادرين نجيب الصفحات",
+    "retry_label": "حاول تاني",
+    "step_select": "اختار",
+    "wizard_progress_aria": "خطوة {{current}} من {{total}}: {{label}}"
   },
   "lead_summary": {
     "title": "الملخص",
@@ -318,7 +337,13 @@
     "file_selected": "تم اختيار: {{name}} ({{size}} كيلوبايت)",
     "upload_button": "ارفع ومعالج",
     "uploading": "بنرفع...",
-    "upload_started": "بدأ رفع المستند! بنعالج في الخلفية..."
+    "upload_started": "بدأ رفع المستند! بنعالج في الخلفية...",
+    "edit_title": "عدّل المعرفة",
+    "edit_aria": "عدّل المعرفة",
+    "delete_title": "امسح المعرفة",
+    "delete_aria": "امسح المعرفة",
+    "name_placeholder": "اكتب اسم المعرفة...",
+    "content_edit_placeholder": "اكتب محتوى المعرفة..."
   },
   "organizations": {
     "title": "المنظمات",
@@ -420,7 +445,11 @@
     "ai_mode_placeholder": "اكتب رسالة... (سيرد الذكاء الاصطناعي)",
     "human_mode_placeholder": "اكتب رسالة... (أنت ترد)",
     "more_options": "المزيد من الخيارات",
-    "go_back": "العودة لقائمة المحادثات"
+    "go_back": "العودة لقائمة المحادثات",
+    "no_messages_yet": "مفيش رسايل لسه",
+    "message_send_failed": "فشل إرسال الرسالة",
+    "chat_messages_aria": "رسايل الشات",
+    "ai_typing_aria": "الذكاء الاصطناعي بيكتب..."
   },
   "auth": {
     "login_title": "مرحباً بعودتك",
@@ -547,7 +576,8 @@
     "subscriptions": "الاشتراكات",
     "my_subscription": "اشتراكي",
     "team": "الفريق",
-    "support": "الدعم"
+    "support": "الدعم",
+    "main_aria_label": "التنقل الرئيسي"
   },
   "sidebar": {
     "upgrade": "ترقية"
@@ -658,7 +688,8 @@
     "upgrade_plan": "ترقية الخطة",
     "manage_subscription": "إدارة الاشتراك",
     "logout": "تسجيل الخروج",
-    "logging_out": "جارٍ تسجيل الخروج..."
+    "logging_out": "جارٍ تسجيل الخروج...",
+    "user_menu_aria": "قايمة حساب المستخدم"
   },
   "test_chat": {
     "tip_1": "اختبر استجابات الوكيل في الوقت الفعلي",
@@ -671,7 +702,11 @@
     "new_conversation": "محادثة جديدة",
     "empty_title": "ابدأ الاختبار",
     "empty_description": "أرسل رسالة أدناه لاختبار استجابات الوكيل بناءً على التعليمات وقواعد المعرفة الحالية.",
-    "placeholder": "اكتب رسالة لاختبار وكيلك..."
+    "placeholder": "اكتب رسالة لاختبار وكيلك...",
+    "new_conversation_aria": "ابدأ محادثة تجريبية جديدة",
+    "send_failed": "فشل إرسال الرسالة",
+    "init_failed": "فشل تهيئة بيئة الاختبار",
+    "new_conversation_failed": "فشل إنشاء محادثة جديدة"
   },
   "no_agent": {
     "title": "لم يتم اختيار وكيل",
@@ -1124,7 +1159,8 @@
     "google_error": "الدخول بجوجل مانجحش. جرب تاني.",
     "google_cancelled": "إلغيت الدخول بجوجل",
     "signing_in": "بندخّل...",
-    "continue_with_google": "كمّل بجوجل"
+    "continue_with_google": "كمّل بجوجل",
+    "continue_with_facebook": "كمّل بفيسبوك"
   },
   "agent_search_dropdown": {
     "placeholder": "دوّر على المساعدين بالاسم...",
@@ -1137,5 +1173,58 @@
     "currently_in": "دلوقتي في: {{orgName}}",
     "min_chars": "اكتب حرفين على الأقل عشان تدوّر",
     "no_results": "مفيش مستخدمين لقيناهم بـ \"{{query}}\""
+  },
+  "logs": {
+    "no_agent_description": "اختار إيجنت عشان تشوف سجلات التطبيق",
+    "page_subtitle": "سجلات التطبيق والتشخيصات لايف",
+    "status_live": "لايف",
+    "application_logs": "سجلات التطبيق",
+    "web_server_logs": "سجلات خادم الويب",
+    "log_level_label": "مستوى السجل:",
+    "all_levels": "كل المستويات",
+    "level_critical": "حرج",
+    "level_error": "خطأ",
+    "level_warning": "تحذير",
+    "level_information": "معلومات",
+    "level_debug": "تصحيح",
+    "status_paused": "متوقف",
+    "status_searching": "بيدوّر...",
+    "status_filtered": "متفلتر",
+    "clear_search": "امسح البحث",
+    "no_logs_title": "مفيش سجلات",
+    "no_logs_description": "مفيش سجلات تطابق الفلاتر بتاعتك",
+    "no_logs_yet": "مفيش سجلات لسه",
+    "waiting_logs": "منتظرين السجلات...",
+    "pause_aria": "وقّف البث",
+    "resume_aria": "كمّل البث"
+  },
+  "message_composer": {
+    "upload_images_aria": "ارفع صور",
+    "upload_audio_aria": "ارفع ملفات صوتية",
+    "upload_failed": "فشل",
+    "input_aria_label": "إدخال الرسالة. اضغط Enter عشان تبعت، Shift+Enter لسطر جديد",
+    "attach_images_aria": "ضيف صور",
+    "attach_images_title": "ضيف صور (JPEG، PNG)",
+    "attach_audio_aria": "ضيف صوت",
+    "attach_audio_title": "ضيف ملفات صوتية",
+    "record_voice_aria": "سجّل رسالة صوتية",
+    "record_voice_title": "سجّل صوت",
+    "send_message_aria": "ابعت رسالة"
+  },
+  "voice_recorder": {
+    "start_recording_aria": "ابدأ التسجيل",
+    "stop_recording_aria": "وقّف التسجيل",
+    "cancel_recording_aria": "إلغِ التسجيل",
+    "send_recording_aria": "ابعت التسجيل"
+  },
+  "widget_snippet": {
+    "html_comment_step1": "خطوة 1: انسخ الكود ده",
+    "html_comment_step2": "خطوة 2: الصقه قبل تاج الإغلاق </body> في HTML بتاعك",
+    "html_comment_step3": "خطوة 3: احفظ واعمل publish للموقع بتاعك",
+    "html_comment_note": "ملحوظة: الويدجت بيظهر تلقائي في كل صفحات موقعك",
+    "help_customize": "عايز تخصص شكل الويدجت؟",
+    "help_customize_link": "روح إعدادات الويدجت",
+    "help_headless_title": "عايز تستخدم الزرار بتاعك؟",
+    "help_headless_link": "اختار وضع بدون رأس"
   }
 }
