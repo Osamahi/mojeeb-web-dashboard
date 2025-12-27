@@ -24,62 +24,73 @@ import type { NavigationItem } from './types';
  */
 export const navigation: NavigationItem[] = [
   {
-    name: 'Chats',
+    name: 'Chats', // Fallback for non-translated contexts
+    translationKey: 'navigation.chats',
     href: '/conversations',
     icon: MessageSquare,
   },
   {
     name: 'Setup',
+    translationKey: 'navigation.setup',
     href: '/studio',
     icon: Wrench,
     requiresAgent: true,
   },
   {
     name: 'Connect',
+    translationKey: 'navigation.connect',
     href: '/connections',
     icon: Plug,
   },
   {
     name: 'Clients',
+    translationKey: 'navigation.clients',
     href: '/leads',
     icon: Contact,
     requiresAgent: true,
   },
   {
     name: 'Agents',
+    translationKey: 'navigation.agents',
     href: '/agents',
     icon: Bot,
   },
   {
     name: 'Users',
+    translationKey: 'navigation.users',
     href: '/users',
     icon: Users,
     requireSuperAdmin: true,
   },
   {
     name: 'Organizations',
+    translationKey: 'navigation.organizations',
     href: '/organizations',
     icon: Building2,
     requireSuperAdmin: true,
   },
   {
     name: 'Subscriptions',
+    translationKey: 'navigation.subscriptions',
     href: '/subscriptions',
     icon: Receipt,
     requireSuperAdmin: true,
   },
   {
     name: 'My Subscription',
+    translationKey: 'navigation.my_subscription',
     href: '/my-subscription',
     icon: CreditCard,
   },
   {
     name: 'Team',
+    translationKey: 'navigation.team',
     href: '/team-management',
     icon: UserPlus,
   },
   {
     name: 'Support',
+    translationKey: 'navigation.support',
     icon: MessagesSquare,
     // No href - this is a non-navigable item with custom click handler
     onClick: () => {

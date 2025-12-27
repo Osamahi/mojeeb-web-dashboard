@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { Edit2, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Input } from '@/components/ui/Input';
@@ -25,6 +26,7 @@ interface LeadDetailsDrawerProps {
 }
 
 export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = false }: LeadDetailsDrawerProps) {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(initialEditMode);
   const [showConversationDrawer, setShowConversationDrawer] = useState(false);
   const [customFieldsExpanded, setCustomFieldsExpanded] = useState(false); // Default collapsed
@@ -99,7 +101,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
       const value = customFields[field.fieldKey];
       const isEmpty = value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
       if (field.isRequired && isEmpty) {
-        customFieldErrors[field.fieldKey] = `${field.fieldLabel} is required`;
+        customFieldErrors[field.fieldKey] = t('lead_details.field_required', { field: field.fieldLabel });
       }
     });
 
@@ -109,7 +111,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      toast.error('Please fix the validation errors');
+      toast.error(t('lead_details.validation_errors'));
       return;
     }
 
@@ -148,7 +150,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
 
   if (isLoading) {
     return (
-      <BaseModal isOpen={true} onClose={handleClose} title="Lead Details" maxWidth="md" isLoading={true}>
+      <BaseModal isOpen={true} onClose={handleClose} title={t('lead_details.title')} maxWidth="md" isLoading={true}>
         <div className="flex justify-center p-8">
           <Spinner size="lg" />
         </div>
@@ -165,7 +167,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
       <BaseModal
         isOpen={true}
         onClose={handleClose}
-        title={isEditing ? 'Edit Lead' : 'Lead Details'}
+        title={isEditing ? t('lead_details.edit_title') : t('lead_details.title')}
         maxWidth="md"
         isLoading={updateMutation.isPending}
         closable={!updateMutation.isPending}
@@ -176,7 +178,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
             <div className="space-y-4">
             <div>
               <Input
-                label="Name"
+                label={t('lead_details.name_label')}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value);
@@ -189,19 +191,19 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
             </div>
 
             <div>
-              <Input label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <Input label={t('lead_details.phone_label')} value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">Status</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">{t('lead_details.status_label')}</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as LeadStatus)}
                 className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
               >
-                <option value="new">New</option>
-                <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
+                <option value="new">{t('lead_details.status_new')}</option>
+                <option value="processing">{t('lead_details.status_processing')}</option>
+                <option value="completed">{t('lead_details.status_completed')}</option>
               </select>
             </div>
 
@@ -213,7 +215,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                   onClick={() => setCustomFieldsExpanded(!customFieldsExpanded)}
                   className="w-full flex items-center justify-between mb-3 hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
                 >
-                  <h3 className="text-sm font-medium text-neutral-900">Custom Fields</h3>
+                  <h3 className="text-sm font-medium text-neutral-900">{t('lead_details.custom_fields')}</h3>
                   {customFieldsExpanded ? (
                     <ChevronUp className="w-4 h-4 text-neutral-500" />
                   ) : (
@@ -242,7 +244,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                               onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
                               className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
                             >
-                              <option value="">Select...</option>
+                              <option value="">{t('lead_details.select_placeholder')}</option>
                               {field.options.map((option) => (
                                 <option key={option} value={option}>
                                   {option}
@@ -281,7 +283,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
 
             <div>
               <Textarea
-                label="Summary"
+                label={t('lead_details.summary_label')}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
@@ -297,10 +299,10 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                 onClick={handleCancelEdit}
                 disabled={updateMutation.isPending}
               >
-                Cancel
+                {t('lead_details.cancel_button')}
               </Button>
               <Button onClick={handleSave} isLoading={updateMutation.isPending}>
-                Save Changes
+                {t('lead_details.save_button')}
               </Button>
             </div>
           </>
@@ -310,7 +312,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
             <div className="space-y-4">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-neutral-500 mb-1">Name</label>
+              <label className="block text-sm font-medium text-neutral-500 mb-1">{t('lead_details.name_label')}</label>
               {lead.name ? (
                 <p className="text-base text-neutral-900">{lead.name}</p>
               ) : (
@@ -318,14 +320,14 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                   onClick={handleEdit}
                   className="text-base text-neutral-400 hover:text-neutral-600 transition-colors"
                 >
-                  Add Name
+                  {t('lead_details.add_name')}
                 </button>
               )}
             </div>
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-neutral-500 mb-1">Phone</label>
+              <label className="block text-sm font-medium text-neutral-500 mb-1">{t('lead_details.phone_label')}</label>
               {lead.phone ? (
                 <p className="text-base text-neutral-900">{formatPhoneNumber(lead.phone)}</p>
               ) : (
@@ -333,26 +335,26 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                   onClick={handleEdit}
                   className="text-base text-neutral-400 hover:text-neutral-600 transition-colors"
                 >
-                  Add Mobile
+                  {t('lead_details.add_phone')}
                 </button>
               )}
             </div>
 
             {/* Status */}
             <div>
-              <label className="block text-sm font-medium text-neutral-500 mb-1">Status</label>
+              <label className="block text-sm font-medium text-neutral-500 mb-1">{t('lead_details.status_label')}</label>
               <p className="text-base text-neutral-900 capitalize">{lead.status}</p>
             </div>
 
             {/* Created */}
             <div>
-              <label className="block text-sm font-medium text-neutral-500 mb-1">Created</label>
+              <label className="block text-sm font-medium text-neutral-500 mb-1">{t('lead_details.created_label')}</label>
               <p className="text-xs text-neutral-400">{(() => {
                 try {
                   const date = new Date(lead.createdAt);
-                  return !isNaN(date.getTime()) ? date.toLocaleString() : 'Invalid date';
+                  return !isNaN(date.getTime()) ? date.toLocaleString() : t('lead_details.invalid_date');
                 } catch {
-                  return 'Invalid date';
+                  return t('lead_details.invalid_date');
                 }
               })()}</p>
             </div>
@@ -365,7 +367,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                 if (!isNaN(updated) && updated > created) {
                   return (
                     <div>
-                      <label className="block text-sm font-medium text-neutral-500 mb-1">Updated</label>
+                      <label className="block text-sm font-medium text-neutral-500 mb-1">{t('lead_details.updated_label')}</label>
                       <p className="text-xs text-neutral-400">{new Date(lead.updatedAt).toLocaleString()}</p>
                     </div>
                   );
@@ -383,7 +385,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                   onClick={() => setCustomFieldsExpanded(!customFieldsExpanded)}
                   className="w-full flex items-center justify-between mb-3 hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
                 >
-                  <h3 className="text-sm font-medium text-neutral-900">Custom Fields</h3>
+                  <h3 className="text-sm font-medium text-neutral-900">{t('lead_details.custom_fields')}</h3>
                   {customFieldsExpanded ? (
                     <ChevronUp className="w-4 h-4 text-neutral-500" />
                   ) : (
@@ -411,7 +413,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
             {/* Summary */}
             {lead.summary && (
               <div>
-                <label className="block text-sm font-medium text-neutral-500 mb-1">Summary</label>
+                <label className="block text-sm font-medium text-neutral-500 mb-1">{t('lead_details.summary_label')}</label>
                 <p className="text-base text-neutral-900 whitespace-pre-wrap">{lead.summary}</p>
               </div>
             )}
@@ -421,10 +423,10 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
               <div className="bg-neutral-50 rounded-lg p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-neutral-600" />
-                  <span className="text-sm text-neutral-700">Linked to conversation</span>
+                  <span className="text-sm text-neutral-700">{t('lead_details.linked_conversation')}</span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={handleViewConversation}>
-                  View
+                  {t('lead_details.view_conversation')}
                 </Button>
               </div>
             )}
@@ -435,7 +437,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
                 onClick={() => setNotesExpanded(!notesExpanded)}
                 className="w-full flex items-center justify-between mb-3 hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
               >
-                <h3 className="text-sm font-medium text-neutral-900">Notes</h3>
+                <h3 className="text-sm font-medium text-neutral-900">{t('lead_details.notes')}</h3>
                 {notesExpanded ? (
                   <ChevronUp className="w-4 h-4 text-neutral-500" />
                 ) : (
@@ -451,7 +453,7 @@ export default function LeadDetailsDrawer({ leadId, onClose, initialEditMode = f
             {/* Actions Footer */}
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-neutral-200 bg-white flex-shrink-0 rounded-b-2xl">
               <Button variant="secondary" onClick={handleEdit} icon={Edit2}>
-                Edit
+                {t('lead_details.edit_button')}
               </Button>
             </div>
           </>

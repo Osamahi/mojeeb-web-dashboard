@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, RefreshCw, Filter, Search, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { subscriptionService } from '../services/subscriptionService';
 import type { SubscriptionDetails, SubscriptionFilters, PlanCode, SubscriptionStatus } from '../types/subscription.types';
 import { CreateSubscriptionModal } from '../components/CreateSubscriptionModal';
@@ -8,6 +9,7 @@ import { BaseHeader } from '@/components/ui/BaseHeader';
 import { toast } from 'sonner';
 
 export default function AdminSubscriptionsPage() {
+  const { t } = useTranslation();
   const [subscriptions, setSubscriptions] = useState<SubscriptionDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -57,7 +59,7 @@ export default function AdminSubscriptionsPage() {
       setHasMore(response.pagination.hasNext);
     } catch (error) {
       console.error('Failed to load subscriptions:', error);
-      toast.error('Failed to load subscriptions');
+      toast.error(t('subscriptions.load_failed'));
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -112,33 +114,33 @@ export default function AdminSubscriptionsPage() {
   const handleFlag = async (id: string, flag: boolean) => {
     try {
       await subscriptionService.flagSubscription(id, flag);
-      toast.success(flag ? 'Subscription flagged for non-payment' : 'Subscription unflagged');
+      toast.success(flag ? t('subscriptions.flag_success') : t('subscriptions.unflag_success'));
       handleRefresh();
     } catch (error) {
       console.error('Failed to flag subscription:', error);
-      toast.error('Failed to update subscription');
+      toast.error(t('subscriptions.update_failed'));
     }
   };
 
   const handlePause = async (id: string, pause: boolean) => {
     try {
       await subscriptionService.pauseSubscription(id, pause);
-      toast.success(pause ? 'Subscription paused' : 'Subscription resumed');
+      toast.success(pause ? t('subscriptions.pause_success') : t('subscriptions.resume_success'));
       handleRefresh();
     } catch (error) {
       console.error('Failed to pause subscription:', error);
-      toast.error('Failed to update subscription');
+      toast.error(t('subscriptions.update_failed'));
     }
   };
 
   const handleRenew = async (id: string) => {
     try {
       await subscriptionService.renewSubscription(id);
-      toast.success('Subscription renewed successfully');
+      toast.success(t('subscriptions.renew_success'));
       handleRefresh();
     } catch (error) {
       console.error('Failed to renew subscription:', error);
-      toast.error('Failed to renew subscription');
+      toast.error(t('subscriptions.renew_failed'));
     }
   };
 
@@ -160,10 +162,10 @@ export default function AdminSubscriptionsPage() {
     <div className="space-y-6 p-6">
       {/* Header */}
       <BaseHeader
-        title="Subscriptions"
-        subtitle="Manage organization subscriptions and billing"
+        title={t('subscriptions.admin_title')}
+        subtitle={t('subscriptions.admin_subtitle')}
         primaryAction={{
-          label: "Create Subscription",
+          label: t('subscriptions.create_subscription'),
           icon: Plus,
           onClick: handleCreateClick
         }}
@@ -178,7 +180,7 @@ export default function AdminSubscriptionsPage() {
           </div>
           <input
             type="text"
-            placeholder="Search by organization name or ID..."
+            placeholder={t('subscriptions.search_placeholder')}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="block w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
@@ -194,11 +196,11 @@ export default function AdminSubscriptionsPage() {
             }
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
           >
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-            <option value="canceled">Canceled</option>
-            <option value="expired">Expired</option>
+            <option value="">{t('subscriptions.all_statuses')}</option>
+            <option value="active">{t('subscriptions.status_active')}</option>
+            <option value="paused">{t('subscriptions.status_paused')}</option>
+            <option value="canceled">{t('subscriptions.status_canceled')}</option>
+            <option value="expired">{t('subscriptions.status_expired')}</option>
           </select>
 
           <select
@@ -210,11 +212,11 @@ export default function AdminSubscriptionsPage() {
             }}
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
           >
-            <option value="">All Plans</option>
-            <option value="free">Free</option>
-            <option value="starter">Starter</option>
-            <option value="professional">Professional</option>
-            <option value="enterprise">Enterprise</option>
+            <option value="">{t('subscriptions.all_plans')}</option>
+            <option value="free">{t('subscriptions.plan_free')}</option>
+            <option value="starter">{t('subscriptions.plan_starter')}</option>
+            <option value="professional">{t('subscriptions.plan_professional')}</option>
+            <option value="enterprise">{t('subscriptions.plan_enterprise')}</option>
           </select>
 
           <button
@@ -223,7 +225,7 @@ export default function AdminSubscriptionsPage() {
             className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('subscriptions.refresh')}
           </button>
         </div>
       </div>
@@ -236,7 +238,14 @@ export default function AdminSubscriptionsPage() {
             {/* Table Header Skeleton */}
             <div className="border-b border-gray-200 bg-gray-50">
               <div className="grid grid-cols-6 gap-4 px-6 py-3">
-                {['Organization', 'Plan', 'Amount', 'Status', 'Next Renewal', 'Actions'].map((header, i) => (
+                {[
+                  t('subscriptions.skeleton_organization'),
+                  t('subscriptions.skeleton_plan'),
+                  t('subscriptions.skeleton_amount'),
+                  t('subscriptions.skeleton_status'),
+                  t('subscriptions.skeleton_renewal'),
+                  t('subscriptions.skeleton_actions')
+                ].map((header, i) => (
                   <div key={i} className="animate-pulse">
                     <div className="h-4 w-24 bg-gray-300 rounded"></div>
                   </div>
@@ -289,9 +298,9 @@ export default function AdminSubscriptionsPage() {
         ) : subscriptions.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-center">
             <Filter className="h-12 w-12 text-gray-300" />
-            <h3 className="mt-4 text-sm font-medium text-gray-900">No subscriptions found</h3>
+            <h3 className="mt-4 text-sm font-medium text-gray-900">{t('subscriptions.no_subscriptions_title')}</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Try adjusting your search or filters
+              {t('subscriptions.no_subscriptions_description')}
             </p>
           </div>
         ) : (
@@ -308,15 +317,15 @@ export default function AdminSubscriptionsPage() {
               {loadingMore ? (
                 <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Loading more subscriptions...</span>
+                  <span>{t('subscriptions.loading_more')}</span>
                 </div>
               ) : hasMore ? (
                 <div className="text-center text-sm text-gray-500">
-                  Scroll down to load more • Showing {subscriptions.length} of {totalCount}
+                  {t('subscriptions.scroll_to_load', { showing: subscriptions.length, total: totalCount })}
                 </div>
               ) : (
                 <div className="text-center text-sm text-gray-500">
-                  All {totalCount} subscriptions loaded
+                  {t('subscriptions.all_loaded', { count: totalCount })}
                 </div>
               )}
             </div>

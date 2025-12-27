@@ -7,6 +7,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, Info, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 import { cn } from '@/lib/utils';
 
@@ -30,12 +31,17 @@ export const ConfirmDialog = ({
   onConfirm,
   title,
   message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText,
+  cancelText,
   variant = 'danger',
   isLoading = false,
 }: ConfirmDialogProps) => {
+  const { t } = useTranslation();
   const dialogOpen = isOpen ?? open ?? false;
+
+  // Use translations as defaults if not provided
+  const finalConfirmText = confirmText || t('common.confirm');
+  const finalCancelText = cancelText || t('common.cancel');
 
   // Close on ESC key
   useEffect(() => {
@@ -147,14 +153,14 @@ export const ConfirmDialog = ({
               onClick={onClose}
               disabled={isLoading}
             >
-              {cancelText}
+              {finalCancelText}
             </Button>
             <Button
               variant={variant === 'danger' ? 'danger' : 'primary'}
               onClick={handleConfirm}
               disabled={isLoading}
             >
-              {isLoading ? 'Processing...' : confirmText}
+              {isLoading ? t('common.loading') : finalConfirmText}
             </Button>
           </div>
         </div>

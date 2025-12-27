@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { Unplug } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -27,6 +28,7 @@ export function PlatformConnectionCard({
   connection,
   showHealthStatus = false,
 }: PlatformConnectionCardProps) {
+  const { t } = useTranslation();
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const [imageError, setImageError] = useState(false);
   const disconnectMutation = useDisconnectPlatform();
@@ -112,7 +114,7 @@ export function PlatformConnectionCard({
                   {config.label}
                 </Badge>
                 <Badge variant={connection.isActive ? 'success' : 'danger'}>
-                  {connection.isActive ? 'Active' : 'Inactive'}
+                  {connection.isActive ? t('connection_card.active') : t('connection_card.inactive')}
                 </Badge>
               </div>
 
@@ -125,7 +127,7 @@ export function PlatformConnectionCard({
               />
 
               {/* Connected Date */}
-              <p className="text-xs text-neutral-400 mt-2">Connected {formattedDate}</p>
+              <p className="text-xs text-neutral-400 mt-2">{t('connection_card.connected_on', { date: formattedDate })}</p>
             </div>
           </div>
 
@@ -140,7 +142,7 @@ export function PlatformConnectionCard({
                 className="text-error hover:text-error hover:border-error"
               >
                 <Unplug className="w-4 h-4 mr-1" />
-                Disconnect
+                {t('connection_card.disconnect_button')}
               </Button>
             )}
           </div>
@@ -150,7 +152,7 @@ export function PlatformConnectionCard({
         {connection.parentPageId && connection.platform === 'instagram' && (
           <div className="mt-3 pt-3 border-t border-neutral-100">
             <p className="text-xs text-neutral-500">
-              Connected via Facebook Page ID: {connection.parentPageId}
+              {t('connection_card.instagram_parent_page', { pageId: connection.parentPageId })}
             </p>
           </div>
         )}
@@ -160,31 +162,31 @@ export function PlatformConnectionCard({
       <BaseModal
         isOpen={showDisconnectModal}
         onClose={() => setShowDisconnectModal(false)}
-        title="Disconnect Platform"
+        title={t('connection_card.disconnect_modal_title', { platform: config.label })}
         maxWidth="md"
         isLoading={disconnectMutation.isPending}
         closable={!disconnectMutation.isPending}
       >
         <div className="space-y-4">
           <p className="text-neutral-600">
-            Are you sure you want to disconnect{' '}
-            <strong>{connection.platformAccountName || connection.platformAccountId}</strong> from{' '}
-            <strong>{config.label}</strong>?
+            {t('connection_card.disconnect_modal_message', {
+              account: connection.platformAccountName || connection.platformAccountId,
+              platform: config.label
+            })}
           </p>
           <p className="text-sm text-neutral-500">
-            This will stop the agent from receiving messages from this platform. You can reconnect it
-            later.
+            {t('connection_card.disconnect_warning')}
           </p>
           <div className="flex justify-end gap-3 mt-6">
             <Button variant="secondary" onClick={() => setShowDisconnectModal(false)}>
-              Cancel
+              {t('connection_card.disconnect_cancel')}
             </Button>
             <Button
               variant="danger"
               onClick={handleDisconnect}
               disabled={disconnectMutation.isPending}
             >
-              {disconnectMutation.isPending ? 'Disconnecting...' : 'Disconnect'}
+              {disconnectMutation.isPending ? t('connection_card.disconnecting') : t('connection_card.disconnect_confirm')}
             </Button>
           </div>
         </div>

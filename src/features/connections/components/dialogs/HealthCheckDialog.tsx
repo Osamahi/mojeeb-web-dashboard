@@ -3,6 +3,7 @@
  * Displays connection health status for Meta platforms (Facebook/Instagram)
  */
 
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, AlertCircle, XCircle, Clock, Shield } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
@@ -26,10 +27,12 @@ export function HealthCheckDialog({
   isLoading = false,
   error = null,
 }: HealthCheckDialogProps) {
+  const { t } = useTranslation();
+
   if (!connection) return null;
 
   const platform = getPlatformById(connection.platform);
-  const accountName = connection.platformAccountName || connection.platformAccountHandle || 'Account';
+  const accountName = connection.platformAccountName || connection.platformAccountHandle || t('health_check.account_fallback');
 
   // Determine overall health status
   const isHealthy = healthStatus?.tokenValid && healthStatus?.webhookSubscriptionActive;
@@ -39,7 +42,7 @@ export function HealthCheckDialog({
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Connection Health Check"
+      title={t('health_check.title')}
       maxWidth="md"
       isLoading={isLoading}
     >
@@ -70,7 +73,7 @@ export function HealthCheckDialog({
           <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
             <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-red-900">Failed to check health</p>
+              <p className="text-sm font-medium text-red-900">{t('health_check.error_title')}</p>
               <p className="text-sm text-red-700 mt-1">{error.message}</p>
             </div>
           </div>
@@ -107,10 +110,10 @@ export function HealthCheckDialog({
                   }`}
                 >
                   {isHealthy
-                    ? 'Connection is healthy'
+                    ? t('health_check.status_healthy')
                     : hasWarning
-                    ? 'Action required soon'
-                    : 'Connection issues detected'}
+                    ? t('health_check.status_warning')
+                    : t('health_check.status_error')}
                 </p>
                 {healthStatus.error && (
                   <p className="text-sm text-red-700 mt-1">{healthStatus.error}</p>
@@ -120,7 +123,7 @@ export function HealthCheckDialog({
 
             {/* Token Status */}
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-neutral-900">Access Token</h4>
+              <h4 className="text-sm font-semibold text-neutral-900">{t('health_check.token_title')}</h4>
               <div className="flex items-start gap-3">
                 {healthStatus.tokenValid ? (
                   <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
@@ -129,15 +132,15 @@ export function HealthCheckDialog({
                 )}
                 <div className="flex-1">
                   <p className="text-sm text-neutral-900">
-                    {healthStatus.tokenValid ? 'Valid and active' : 'Invalid or expired'}
+                    {healthStatus.tokenValid ? t('health_check.token_valid') : t('health_check.token_invalid')}
                   </p>
                   {healthStatus.tokenExpiresAt && (
                     <div className="flex items-center gap-1.5 mt-1">
                       <Clock className="w-3.5 h-3.5 text-neutral-500" />
                       <p className="text-xs text-neutral-600">
                         {healthStatus.daysUntilExpiry !== null && healthStatus.daysUntilExpiry > 0
-                          ? `Expires in ${healthStatus.daysUntilExpiry} days`
-                          : 'Expired'}
+                          ? t('health_check.token_expires', { days: healthStatus.daysUntilExpiry })
+                          : t('health_check.token_expired')}
                       </p>
                     </div>
                   )}
@@ -147,7 +150,7 @@ export function HealthCheckDialog({
 
             {/* Webhook Status */}
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-neutral-900">Webhook Subscription</h4>
+              <h4 className="text-sm font-semibold text-neutral-900">{t('health_check.webhook_title')}</h4>
               <div className="flex items-start gap-3">
                 {healthStatus.webhookSubscriptionActive ? (
                   <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
@@ -157,8 +160,8 @@ export function HealthCheckDialog({
                 <div className="flex-1">
                   <p className="text-sm text-neutral-900">
                     {healthStatus.webhookSubscriptionActive
-                      ? 'Active and receiving messages'
-                      : 'Not subscribed or inactive'}
+                      ? t('health_check.webhook_active')
+                      : t('health_check.webhook_inactive')}
                   </p>
                 </div>
               </div>
@@ -167,7 +170,7 @@ export function HealthCheckDialog({
             {/* Permissions */}
             {healthStatus.permissions && healthStatus.permissions.length > 0 && (
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-neutral-900">Granted Permissions</h4>
+                <h4 className="text-sm font-semibold text-neutral-900">{t('health_check.permissions_title')}</h4>
                 <div className="flex items-start gap-3">
                   <Shield className="w-4 h-4 text-neutral-500 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
@@ -191,7 +194,7 @@ export function HealthCheckDialog({
         {/* Actions */}
         <div className="flex justify-end pt-4 border-t border-neutral-200">
           <Button onClick={onClose} variant="secondary">
-            Close
+            {t('common.close')}
           </Button>
         </div>
       </div>

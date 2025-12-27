@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { organizationService } from '../services/organizationService';
@@ -29,6 +30,7 @@ export default function AssignUserToOrgModal({
   onSuccess,
   organizationId
 }: AssignUserToOrgModalProps) {
+  const { t } = useTranslation();
   const { agent: globalAgent } = useAgentContext();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(null);
@@ -55,7 +57,7 @@ export default function AssignUserToOrgModal({
     // Check if all fields are filled
     // When organizationId prop is provided, agent selection is optional
     if (!targetOrganizationId || !selectedUser) {
-      toast.error('Please fill all fields');
+      toast.error(t('assign_user_to_org.validation_error'));
       return;
     }
 
@@ -81,8 +83,8 @@ export default function AssignUserToOrgModal({
         }
       );
 
-      toast.success('User assigned successfully', {
-        description: `${selectedUser.email} assigned to organization as ${selectedRole}`
+      toast.success(t('assign_user_to_org.success_title'), {
+        description: t('assign_user_to_org.success_description', { email: selectedUser.email, role: selectedRole })
       });
 
       // Reset and close
@@ -92,14 +94,14 @@ export default function AssignUserToOrgModal({
       console.error('Failed to assign user:', error);
 
       // Backend returns { error: "message" } in ErrorResponse
-      const errorMessage = error?.response?.data?.error || error?.response?.data?.message || error?.message || 'Failed to assign user';
+      const errorMessage = error?.response?.data?.error || error?.response?.data?.message || error?.message || t('assign_user_to_org.error_default');
 
       if (errorMessage.includes('already a member')) {
-        toast.error('User already in organization', {
+        toast.error(t('assign_user_to_org.error_already_member_title'), {
           description: errorMessage
         });
       } else {
-        toast.error('Failed to assign user', {
+        toast.error(t('assign_user_to_org.error_title'), {
           description: errorMessage
         });
       }
@@ -125,8 +127,8 @@ export default function AssignUserToOrgModal({
       <BaseModal
         isOpen={isOpen}
         onClose={handleClose}
-        title="Assign User to Organization"
-        subtitle="Select an agent, user, and role to complete the assignment"
+        title={t('assign_user_to_org.title')}
+        subtitle={t('assign_user_to_org.subtitle')}
         maxWidth="2xl"
         isLoading={isSubmitting}
         closable={!isSubmitting}
@@ -154,28 +156,28 @@ export default function AssignUserToOrgModal({
                 onChange={(e) => setSelectedRole(e.target.value as 'owner' | 'admin' | 'member')}
                 className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
               >
-                <option value="member">Member - Basic access to organization resources</option>
-                <option value="admin">Admin - Can manage organization settings and members</option>
-                <option value="owner">Owner - Full control over the organization</option>
+                <option value="member">{t('assign_user_to_org.role_member')}</option>
+                <option value="admin">{t('assign_user_to_org.role_admin')}</option>
+                <option value="owner">{t('assign_user_to_org.role_owner')}</option>
               </select>
 
               {/* Summary Preview */}
               {targetOrganizationId && selectedUser && (
                 <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
-                  <h4 className="font-medium text-neutral-900 mb-3">Assignment Summary</h4>
+                  <h4 className="font-medium text-neutral-900 mb-3">{t('assign_user_to_org.summary_title')}</h4>
                   <div className="space-y-2 text-sm">
                     {selectedAgent && (
                       <div className="flex justify-between">
-                        <span className="text-neutral-600">Agent:</span>
+                        <span className="text-neutral-600">{t('assign_user_to_org.summary_agent')}</span>
                         <span className="text-neutral-900 font-medium">{selectedAgent.name}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-neutral-600">User:</span>
+                      <span className="text-neutral-600">{t('assign_user_to_org.summary_user')}</span>
                       <span className="text-neutral-900 font-medium">{selectedUser.email}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-600">Role:</span>
+                      <span className="text-neutral-600">{t('assign_user_to_org.summary_role')}</span>
                       <span className="text-neutral-900 font-medium capitalize">{selectedRole}</span>
                     </div>
                   </div>
@@ -190,14 +192,14 @@ export default function AssignUserToOrgModal({
                 onClick={handleClose}
                 disabled={isSubmitting}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={handleAssign}
                 disabled={!canSubmit || isSubmitting}
                 className="bg-brand-cyan hover:bg-brand-cyan/90"
               >
-                {isSubmitting ? 'Assigning...' : 'Assign User'}
+                {isSubmitting ? t('assign_user_to_org.assigning') : t('assign_user_to_org.assign_button')}
               </Button>
             </div>
           </div>
@@ -207,7 +209,7 @@ export default function AssignUserToOrgModal({
       <BaseModal
         isOpen={showConfirmation}
         onClose={() => setShowConfirmation(false)}
-        title="User Already in Organization"
+        title={t('assign_user_to_org.confirm_title')}
         maxWidth="md"
         isLoading={isSubmitting}
         closable={!isSubmitting}
@@ -220,10 +222,10 @@ export default function AssignUserToOrgModal({
             </div>
             <div>
               <p className="text-neutral-700 mb-2">
-                This user is currently in <span className="font-medium">{selectedUser?.currentOrganization?.name}</span>.
+                {t('assign_user_to_org.confirm_message_1', { org: selectedUser?.currentOrganization?.name })}
               </p>
               <p className="text-neutral-700">
-                Do you want to remove them from their current organization and assign them to the selected organization?
+                {t('assign_user_to_org.confirm_message_2')}
               </p>
             </div>
           </div>
@@ -235,14 +237,14 @@ export default function AssignUserToOrgModal({
               onClick={() => setShowConfirmation(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={() => handleSubmit(true)}
               disabled={isSubmitting}
               className="bg-amber-600 hover:bg-amber-700"
             >
-              {isSubmitting ? 'Moving...' : 'Yes, Move User'}
+              {isSubmitting ? t('assign_user_to_org.moving') : t('assign_user_to_org.move_button')}
             </Button>
           </div>
         </div>

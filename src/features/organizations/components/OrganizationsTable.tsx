@@ -4,6 +4,7 @@
  */
 
 import { useMemo, useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Building2, Search } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 import { Avatar } from '@/components/ui/Avatar';
@@ -22,6 +23,8 @@ export default function OrganizationsTable({
   organizations,
   onEditOrganization,
 }: OrganizationsTableProps) {
+  const { t } = useTranslation();
+
   // Responsive breakpoint
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -118,7 +121,7 @@ export default function OrganizationsTable({
     () => [
       {
         key: 'name',
-        label: 'Organization',
+        label: t('organizations.table_organization'),
         sortable: true,
         render: (_, org) => (
           <div className="flex items-center gap-3">
@@ -137,7 +140,7 @@ export default function OrganizationsTable({
       },
       {
         key: 'contactEmail',
-        label: 'Contact Email',
+        label: t('organizations.table_contact_email'),
         sortable: true,
         render: (email) => (
           <div className="text-sm text-neutral-900">{email || '-'}</div>
@@ -145,7 +148,7 @@ export default function OrganizationsTable({
       },
       {
         key: 'createdAt',
-        label: 'Created',
+        label: t('organizations.table_created'),
         sortable: true,
         render: (date) => {
           const parsedDate = date ? new Date(date) : null;
@@ -161,7 +164,7 @@ export default function OrganizationsTable({
         },
       },
     ],
-    []
+    [t]
   );
 
   return (
@@ -171,7 +174,7 @@ export default function OrganizationsTable({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
         <Input
           type="text"
-          placeholder="Search organizations by name or email..."
+          placeholder={t('organizations.search_placeholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
@@ -181,8 +184,9 @@ export default function OrganizationsTable({
       {/* Results Count */}
       {searchQuery && (
         <div className="text-sm text-neutral-600">
-          Found {filteredOrganizations.length} organization
-          {filteredOrganizations.length !== 1 ? 's' : ''}
+          {filteredOrganizations.length === 1
+            ? t('organizations.found_count', { count: filteredOrganizations.length })
+            : t('organizations.found_count_plural', { count: filteredOrganizations.length })}
         </div>
       )}
 
@@ -203,11 +207,11 @@ export default function OrganizationsTable({
           emptyState={{
             icon: <Building2 className="w-12 h-12 text-neutral-400" />,
             title: searchQuery
-              ? 'No organizations found'
-              : 'No organizations yet',
+              ? t('organizations.no_orgs_search_title')
+              : t('organizations.no_orgs_title'),
             description: searchQuery
-              ? 'Try adjusting your search criteria'
-              : 'Organizations will appear here once created',
+              ? t('organizations.no_orgs_search_description')
+              : t('organizations.no_orgs_description'),
           }}
         />
       )}
@@ -216,20 +220,23 @@ export default function OrganizationsTable({
       {displayedOrganizations.length < filteredOrganizations.length && (
         <div className="text-center py-6 space-y-3">
           {isLoadingMore ? (
-            <div className="text-sm text-neutral-600">Loading more...</div>
+            <div className="text-sm text-neutral-600">{t('organizations.loading_more')}</div>
           ) : (
             <>
               <div className="text-sm text-neutral-600">
-                Showing {displayedOrganizations.length} of {filteredOrganizations.length} organizations
+                {t('organizations.showing_count', {
+                  showing: displayedOrganizations.length,
+                  total: filteredOrganizations.length
+                })}
               </div>
               <div className="text-xs text-neutral-500">
-                Scroll down to load more, or
+                {t('organizations.scroll_or_load')}
               </div>
               <button
                 onClick={handleLoadAll}
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium underline"
               >
-                Load all {filteredOrganizations.length} organizations
+                {t('organizations.load_all', { count: filteredOrganizations.length })}
               </button>
             </>
           )}
@@ -239,7 +246,7 @@ export default function OrganizationsTable({
       {/* All loaded message */}
       {displayedOrganizations.length === filteredOrganizations.length && filteredOrganizations.length > 50 && (
         <div className="text-center py-4 text-sm text-neutral-500">
-          All {filteredOrganizations.length} organizations loaded
+          {t('organizations.all_loaded', { count: filteredOrganizations.length })}
         </div>
       )}
     </div>

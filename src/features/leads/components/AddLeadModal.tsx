@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Input } from '@/components/ui/Input';
@@ -20,6 +21,7 @@ interface AddLeadModalProps {
 }
 
 export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
+  const { t } = useTranslation();
   const { agentId } = useAgentContext();
 
   // Form state
@@ -46,7 +48,7 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
     const validationErrors: LeadFormErrors = {};
 
     if (!name.trim()) {
-      validationErrors.name = 'Name is required';
+      validationErrors.name = t('leads.name_required');
     }
 
     // Validate custom required fields
@@ -55,7 +57,7 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
       const value = customFields[field.fieldKey];
       const isEmpty = value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
       if (field.isRequired && isEmpty) {
-        customFieldErrors[field.fieldKey] = `${field.fieldLabel} is required`;
+        customFieldErrors[field.fieldKey] = t('leads.field_required', { field: field.fieldLabel });
       }
     });
 
@@ -65,12 +67,12 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      toast.error('Please fix the validation errors');
+      toast.error(t('leads.validation_error'));
       return;
     }
 
     if (!agentId) {
-      toast.error('No agent selected');
+      toast.error(t('leads.no_agent_selected'));
       return;
     }
 
@@ -105,7 +107,7 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
   const handleClose = () => {
     if (createMutation.isPending) {
       // Show feedback to user why close is blocked
-      toast.info('Please wait while lead is being created...');
+      toast.info(t('leads.creating_lead'));
       return;
     }
     handleReset();
@@ -133,8 +135,8 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
     <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add Client"
-      subtitle="Create a new client for this agent"
+      title={t('leads.add_client_modal_title')}
+      subtitle={t('leads.add_client_modal_subtitle')}
       maxWidth="md"
       isLoading={createMutation.isPending}
       closable={!createMutation.isPending}
@@ -144,8 +146,8 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
           {/* Name (Required) */}
           <div>
           <Input
-            label="Name *"
-            placeholder="John Doe"
+            label={t('leads.name_label')}
+            placeholder={t('leads.name_placeholder')}
             value={name}
             onChange={(e) => {
               setName(e.target.value);
@@ -160,8 +162,8 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
         {/* Phone */}
         <div>
           <Input
-            label="Phone"
-            placeholder="+1 (555) 123-4567"
+            label={t('leads.phone_label')}
+            placeholder={t('leads.phone_placeholder')}
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
@@ -170,23 +172,23 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
         {/* Status */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Status
+            {t('leads.status_label_form')}
           </label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as LeadStatus)}
             className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
           >
-            <option value="new">New</option>
-            <option value="processing">Processing</option>
-            <option value="completed">Completed</option>
+            <option value="new">{t('leads.status_new')}</option>
+            <option value="processing">{t('leads.status_processing')}</option>
+            <option value="completed">{t('leads.status_completed')}</option>
           </select>
         </div>
 
         {/* Custom Fields */}
         {fieldDefinitions && fieldDefinitions.length > 0 && (
           <div className="border-t border-neutral-200 pt-4">
-            <h3 className="text-sm font-medium text-neutral-900 mb-3">Custom Fields</h3>
+            <h3 className="text-sm font-medium text-neutral-900 mb-3">{t('leads.custom_fields_title')}</h3>
             {fieldDefinitions.map((field) => (
               <div key={field.id} className="mb-3">
                 {field.fieldType === 'textarea' ? (
@@ -206,7 +208,7 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
                       onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
                       className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
                     >
-                      <option value="">Select...</option>
+                      <option value="">{t('leads.select_placeholder')}</option>
                       {field.options.map((option) => (
                         <option key={option} value={option}>
                           {option}
@@ -236,8 +238,8 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
         {/* Notes */}
         <div>
           <Textarea
-            label="Notes"
-            placeholder="Additional information about this lead..."
+            label={t('leads.notes_label')}
+            placeholder={t('leads.notes_placeholder')}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
@@ -253,10 +255,10 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
             onClick={handleClose}
             disabled={createMutation.isPending}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button type="submit" isLoading={createMutation.isPending}>
-            Create Lead
+            {t('leads.create_lead_button')}
           </Button>
         </div>
       </form>

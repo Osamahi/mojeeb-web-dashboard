@@ -5,6 +5,7 @@
  */
 
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FileText, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useDocumentJob } from '../hooks/useDocumentJobs';
 
@@ -22,6 +23,7 @@ export default function DocumentUploadProgressCard({
   onComplete,
   onError,
 }: DocumentUploadProgressCardProps) {
+  const { t } = useTranslation();
   const { data: job } = useDocumentJob(jobId);
 
   // Auto-handle completion/failure
@@ -55,13 +57,13 @@ export default function DocumentUploadProgressCard({
   const getStatusText = () => {
     switch (job.status) {
       case 'completed':
-        return 'Processing complete';
+        return t('document_upload_progress.status_completed');
       case 'failed':
-        return 'Processing failed';
+        return t('document_upload_progress.status_failed');
       case 'processing':
-        return job.currentStep || 'Processing document...';
+        return job.currentStep || t('document_upload_progress.status_processing');
       default:
-        return 'Queued for processing';
+        return t('document_upload_progress.status_queued');
     }
   };
 

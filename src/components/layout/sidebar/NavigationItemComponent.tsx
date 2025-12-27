@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import type { NavigationItem } from './types';
@@ -19,13 +20,18 @@ export const NavigationItemComponent = memo(({
   isCollapsed = false,
   isDisabled = false,
 }: NavigationItemProps) => {
+  const { t } = useTranslation();
+
+  // Get translated label or fall back to item.name
+  const label = item.translationKey ? t(item.translationKey) : item.name;
+
   // Disabled state rendering
   if (isDisabled) {
     return (
       <div
         role="button"
         aria-disabled="true"
-        aria-label={`${item.name} - ${item.requiresAgent ? 'Select an agent to access this feature' : 'Disabled'}`}
+        aria-label={`${label} - ${item.requiresAgent ? 'Select an agent to access this feature' : 'Disabled'}`}
         tabIndex={0}
         className="flex items-center rounded-md text-neutral-400 cursor-not-allowed opacity-50 focus:outline-none focus:ring-2 focus:ring-neutral-300"
         title={item.requiresAgent ? 'Select an agent to access this feature' : undefined}
@@ -42,7 +48,7 @@ export const NavigationItemComponent = memo(({
         </div>
         {/* Text label - conditionally rendered */}
         {!isCollapsed && (
-          <span className="text-sm pr-4 whitespace-nowrap">{item.name}</span>
+          <span className="text-sm pr-4 whitespace-nowrap">{label}</span>
         )}
       </div>
     );
@@ -58,8 +64,8 @@ export const NavigationItemComponent = memo(({
           'text-neutral-600 hover:text-neutral-950',
           isCollapsed && 'hover:bg-neutral-100'
         )}
-        title={isCollapsed ? item.name : undefined}
-        aria-label={item.name}
+        title={isCollapsed ? label : undefined}
+        aria-label={label}
       >
         {/* Fixed-width icon container - prevents shifting */}
         <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
@@ -73,7 +79,7 @@ export const NavigationItemComponent = memo(({
         </div>
         {/* Text label - conditionally rendered */}
         {!isCollapsed && (
-          <span className="text-sm pr-4 whitespace-nowrap">{item.name}</span>
+          <span className="text-sm pr-4 whitespace-nowrap">{label}</span>
         )}
       </button>
     );
@@ -93,8 +99,8 @@ export const NavigationItemComponent = memo(({
           isCollapsed && 'hover:bg-neutral-100'
         )
       }
-      title={isCollapsed ? item.name : undefined}
-      aria-label={item.name}
+      title={isCollapsed ? label : undefined}
+      aria-label={label}
     >
       {({ isActive }) => (
         <>
@@ -112,7 +118,7 @@ export const NavigationItemComponent = memo(({
           </div>
           {/* Text label - conditionally rendered */}
           {!isCollapsed && (
-            <span className="text-sm pr-4 whitespace-nowrap">{item.name}</span>
+            <span className="text-sm pr-4 whitespace-nowrap">{label}</span>
           )}
         </>
       )}

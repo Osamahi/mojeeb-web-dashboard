@@ -1,0 +1,15 @@
+# Environment variables (contains API keys)
+.env
+
+# Google OAuth credentials
+credentials.json
+
+# Node modules
+node_modules/
+
+# Authentication tokens
+.gtm-credentials.json
+
+# Logs
+*.log
+npm-debug.log*

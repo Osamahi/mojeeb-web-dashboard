@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import type { Agent } from '../types/agent.types';
 import { agentService } from '../services/agentService';
@@ -24,6 +25,7 @@ interface PromptEditorProps {
 }
 
 export default function PromptEditor({ agent, onSave, onCancel }: PromptEditorProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [editName, setEditName] = useState(agent.name || '');
   const [editPrompt, setEditPrompt] = useState(plainTextToHtml(agent.personaPrompt || ''));
@@ -73,7 +75,7 @@ export default function PromptEditor({ agent, onSave, onCancel }: PromptEditorPr
     },
     onError: (error) => {
       logger.error('Error saving agent', error);
-      toast.error('Failed to save agent');
+      toast.error(t('prompt_editor.error_save'));
     },
   });
 
@@ -91,7 +93,7 @@ export default function PromptEditor({ agent, onSave, onCancel }: PromptEditorPr
           type="text"
           value={editName || ''}
           onChange={(e) => setEditName(e.target.value)}
-          placeholder="Agent name..."
+          placeholder={t('prompt_editor.name_placeholder')}
           disabled={saveMutation.isPending}
           className={cn(
             'w-full px-3 py-2 rounded-lg text-sm',
@@ -105,7 +107,7 @@ export default function PromptEditor({ agent, onSave, onCancel }: PromptEditorPr
         <RichTextEditor
           value={editPrompt || '<p></p>'}
           onChange={(value) => setEditPrompt(value)}
-          placeholder="You are a helpful assistant who..."
+          placeholder={t('prompt_editor.instructions_placeholder')}
           minHeight={150}
           maxHeight={500}
           disabled={saveMutation.isPending}
@@ -126,7 +128,7 @@ export default function PromptEditor({ agent, onSave, onCancel }: PromptEditorPr
           }}
           disabled={saveMutation.isPending}
         >
-          Cancel
+          {t('prompt_editor.cancel_button')}
         </Button>
         <Button
           variant="primary"
@@ -134,7 +136,7 @@ export default function PromptEditor({ agent, onSave, onCancel }: PromptEditorPr
           onClick={handleSave}
           disabled={!isModified || saveMutation.isPending}
         >
-          {saveMutation.isPending ? 'Saving...' : 'Save'}
+          {saveMutation.isPending ? t('prompt_editor.saving_button') : t('prompt_editor.save_button')}
         </Button>
       </div>
 
@@ -142,7 +144,7 @@ export default function PromptEditor({ agent, onSave, onCancel }: PromptEditorPr
       {showSuccessMessage && (
         <div className="flex items-center gap-2 text-sm text-green-600">
           <Check className="w-4 h-4" />
-          Saved successfully
+          {t('prompt_editor.success_message')}
         </div>
       )}
     </div>

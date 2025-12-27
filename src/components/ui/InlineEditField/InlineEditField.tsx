@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Pencil, Check, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { formatPhoneNumber } from '@/features/leads/utils/formatting';
 
 interface InlineEditFieldProps {
@@ -21,6 +22,7 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
   isPhone = false,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || '');
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
     if (validationFn) {
       const validation = validationFn(trimmedValue);
       if (!validation.valid) {
-        setError(validation.error || 'Invalid value');
+        setError(validation.error || t('inline_edit.invalid_value'));
         return;
       }
     }
@@ -75,7 +77,7 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
       await onSave(trimmedValue);
       setIsEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : t('inline_edit.save_failed'));
     } finally {
       setIsSaving(false);
     }
@@ -109,7 +111,7 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
         {isEmpty ? (
           <>
             <span className="text-sm text-neutral-400">
-              Add {fieldName}
+              {t('inline_edit.add_field', { field: fieldName })}
             </span>
           </>
         ) : (
@@ -134,7 +136,7 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onClick={handleInputClick}
-          placeholder={placeholder || `Enter ${fieldName.toLowerCase()}`}
+          placeholder={placeholder || t('inline_edit.enter_field', { field: fieldName.toLowerCase() })}
           disabled={isSaving || isLoading}
           className="flex-1 px-2 py-1 text-sm text-neutral-900 bg-white border border-neutral-300 rounded focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:bg-neutral-50 disabled:cursor-not-allowed min-w-[150px]"
         />
@@ -143,7 +145,7 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
           onClick={handleSave}
           disabled={isSaving || isLoading}
           className="flex items-center justify-center w-7 h-7 bg-black text-white rounded hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Save"
+          title={t('inline_edit.save')}
         >
           {isSaving ? (
             <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -156,7 +158,7 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
           onClick={handleCancel}
           disabled={isSaving || isLoading}
           className="flex items-center justify-center w-7 h-7 border border-neutral-300 text-neutral-700 rounded hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          title="Cancel"
+          title={t('inline_edit.cancel')}
         >
           <X className="w-4 h-4" />
         </button>

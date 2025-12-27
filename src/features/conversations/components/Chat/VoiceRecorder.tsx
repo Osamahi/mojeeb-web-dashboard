@@ -7,6 +7,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { MINIMAL_COLORS } from '../../constants/chatBubbleColors';
 
@@ -21,6 +22,7 @@ export function VoiceRecorder({
   onCancel,
   className
 }: VoiceRecorderProps) {
+  const { t } = useTranslation();
   const [duration, setDuration] = useState(0);
 
   // Use ref for waveform to avoid state update delays
@@ -188,7 +190,7 @@ export function VoiceRecorder({
 
     } catch (error) {
       console.error('[VoiceRecorder] Failed to start recording:', error);
-      toast.error('Failed to access microphone. Please check permissions.');
+      toast.error(t('voice_recorder.microphone_error'));
       onCancel();
     }
   }, [animateWaveform, onRecordingComplete, onCancel]);

@@ -3,6 +3,8 @@
  * WhatsApp-style loading states with shimmer effect
  */
 
+import { useTranslation } from 'react-i18next';
+
 export function ConversationListSkeleton() {
   return (
     <div className="space-y-1 p-2">
@@ -52,6 +54,8 @@ export function ChatMessagesSkeleton() {
 }
 
 export function NoConversationsState() {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col items-center justify-center h-full p-8 text-center">
       <div className="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
@@ -69,9 +73,9 @@ export function NoConversationsState() {
           />
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-neutral-950 mb-2">No Conversations Yet</h3>
+      <h3 className="text-lg font-semibold text-neutral-950 mb-2">{t('conversations.no_conversations_title')}</h3>
       <p className="text-neutral-600 max-w-sm">
-        Conversations will appear here when customers start chatting with your AI agent.
+        {t('conversations.no_conversations_description')}
       </p>
     </div>
   );

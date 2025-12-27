@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react';
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { SubscriptionPlan } from '../types/subscription.types';
 import { PlanFeaturesList } from './PlanFeaturesList';
 
@@ -50,6 +51,7 @@ export const PlanCard = memo(({
   showCurrentBadge = true,
   allowSelectCurrent = false,
 }: PlanCardProps) => {
+  const { t } = useTranslation();
   const canChange = allowSelectCurrent || !isCurrent;
 
   const getPrice = () => {
@@ -98,7 +100,7 @@ export const PlanCard = memo(({
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1 rounded-full bg-green-500 px-3 py-1 text-xs font-medium text-white">
             <Check className="h-3 w-3" />
-            Current
+            {t('plan_card.current_badge')}
           </span>
         </div>
       )}
@@ -115,7 +117,7 @@ export const PlanCard = memo(({
             {price.toLocaleString()}
           </span>
           <span className="text-sm text-gray-500">
-            {displayCurrency}/{billingInterval === 'annual' ? 'year' : 'month'}
+            {displayCurrency}/{billingInterval === 'annual' ? t('plan_card.year') : t('plan_card.month')}
           </span>
         </div>
       </div>
@@ -144,12 +146,12 @@ export const PlanCard = memo(({
         }`}
       >
         {isCurrent
-          ? 'Current Plan'
+          ? t('plan_card.current_plan_button')
           : isUpgrade
-          ? 'Upgrade'
+          ? t('plan_card.upgrade_button')
           : isDowngrade
-          ? 'Downgrade'
-          : 'Select Plan'}
+          ? t('plan_card.downgrade_button')
+          : t('plan_card.select_plan_button')}
       </button>
     </div>
   );

@@ -5,10 +5,13 @@
  */
 
 import { MessageSquare } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 import { useUIStore } from '@/stores/uiStore';
 
 export const SidebarUsageIndicator = () => {
+  const { t } = useTranslation();
+
   // Read subscription and usage from global store (loaded once on app init)
   const subscription = useSubscriptionStore(state => state.subscription);
   const usage = useSubscriptionStore(state => state.usage);
@@ -76,7 +79,7 @@ export const SidebarUsageIndicator = () => {
               }}
               className="text-xs font-semibold text-green-600 hover:text-green-700 transition-colors"
             >
-              Upgrade
+              {t('sidebar.upgrade')}
             </button>
           )}
         </div>

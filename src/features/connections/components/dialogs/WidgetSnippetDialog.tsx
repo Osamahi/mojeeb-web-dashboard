@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Copy, Check, Code, ArrowLeft, Share2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
@@ -21,6 +22,7 @@ export interface WidgetSnippetDialogProps {
 type WizardStep = 'mode-selection' | 'installation';
 
 export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProps) {
+  const { t } = useTranslation();
   const { agent } = useAgentContext();
   const [currentStep, setCurrentStep] = useState<WizardStep>('mode-selection');
   const [selectedMode, setSelectedMode] = useState<WidgetMode | null>(null);
@@ -66,7 +68,7 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
       const snippetData = await widgetService.getWidgetSnippet(agent.id, mode);
       setSnippet(snippetData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load widget snippet');
+      setError(err instanceof Error ? err.message : t('widget_snippet.error_load'));
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +94,7 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
       setSnippet(snippetData);
       setCurrentStep('installation');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load widget snippet');
+      setError(err instanceof Error ? err.message : t('widget_snippet.error_load'));
     } finally {
       setIsLoading(false);
     }
@@ -120,7 +122,7 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
       setShareUrl(response.shareUrl);
     } catch (err) {
       console.error('[WidgetSnippetDialog] Share link generation failed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate share link');
+      setError(err instanceof Error ? err.message : t('widget_snippet.error_share_link'));
     } finally {
       setIsGeneratingLink(false);
     }
@@ -184,7 +186,7 @@ ${snippet}
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={currentStep === 'mode-selection' ? 'Choose Integration Type' : 'Install Widget Code'}
+      title={currentStep === 'mode-selection' ? t('widget_snippet.title_mode_selection') : t('widget_snippet.title_installation')}
       maxWidth="lg"
       isLoading={isLoading || isGeneratingLink}
       closable={!isLoading && !isGeneratingLink}
@@ -205,7 +207,7 @@ ${snippet}
           <>
             <div className="space-y-1">
               <p className="text-sm text-neutral-600">
-                Select how you want to integrate the chat widget into your website
+                {t('widget_snippet.mode_description')}
               </p>
             </div>
 
@@ -230,7 +232,7 @@ ${snippet}
                     // Show loading state INSIDE the selected card
                     <div className="flex-1 flex flex-col items-center justify-center py-4">
                       <Spinner size="md" />
-                      <p className="mt-3 text-sm text-neutral-600">Loading widget code...</p>
+                      <p className="mt-3 text-sm text-neutral-600">{t('widget_snippet.loading')}</p>
                     </div>
                   ) : (
                     // Show normal card content
@@ -273,7 +275,7 @@ ${snippet}
                   onClick={() => selectedMode && handleModeSelect(selectedMode)}
                   className="mt-3"
                 >
-                  Try Again
+                  {t('widget_snippet.try_again')}
                 </Button>
               </div>
             )}
@@ -296,7 +298,7 @@ ${snippet}
             {/* Installation Instructions - Conditional based on mode */}
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-neutral-900">
-                Installation Instructions
+                {t('widget_snippet.installation_title')}
               </h3>
 
               {selectedMode === 'default' ? (
@@ -309,7 +311,7 @@ ${snippet}
                         1
                       </span>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-neutral-900 mb-3">Copy the Widget Script</h4>
+                        <h4 className="font-semibold text-neutral-900 mb-3">{t('widget_snippet.step1_default_title')}</h4>
                         <div className="relative">
                           <button
                             onClick={() => handleCopy(snippet)}
@@ -318,12 +320,12 @@ ${snippet}
                             {isCopied && copiedSnippet === snippet ? (
                               <>
                                 <Check className="w-3.5 h-3.5" />
-                                Copied!
+                                {t('widget_snippet.copied')}
                               </>
                             ) : (
                               <>
                                 <Copy className="w-3.5 h-3.5" />
-                                Copy
+                                {t('widget_snippet.copy')}
                               </>
                             )}
                           </button>
@@ -343,8 +345,7 @@ ${snippet}
                       </span>
                       <div className="flex-1">
                         <h4 className="font-semibold text-neutral-900">
-                          Paste in Your HTML, right before the closing{' '}
-                          <code className="px-1 py-0.5 bg-neutral-100 rounded text-xs">&lt;/body&gt;</code> tag
+                          {t('widget_snippet.step2_default_title')}
                         </h4>
                       </div>
                     </div>
@@ -357,7 +358,7 @@ ${snippet}
                         3
                       </span>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-neutral-900">Save and Publish</h4>
+                        <h4 className="font-semibold text-neutral-900">{t('widget_snippet.step3_default_title')}</h4>
                       </div>
                     </div>
                   </div>
@@ -372,7 +373,7 @@ ${snippet}
                         1
                       </span>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-neutral-900 mb-3">Create Your Custom Button</h4>
+                        <h4 className="font-semibold text-neutral-900 mb-3">{t('widget_snippet.step1_headless_title')}</h4>
                         <div className="relative">
                           <button
                             onClick={() => handleCopy(customButtonSnippet)}
@@ -381,12 +382,12 @@ ${snippet}
                             {isCopied && copiedSnippet === customButtonSnippet ? (
                               <>
                                 <Check className="w-3.5 h-3.5" />
-                                Copied!
+                                {t('widget_snippet.copied')}
                               </>
                             ) : (
                               <>
                                 <Copy className="w-3.5 h-3.5" />
-                                Copy
+                                {t('widget_snippet.copy')}
                               </>
                             )}
                           </button>
@@ -408,7 +409,7 @@ ${snippet}
                         2
                       </span>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-neutral-900 mb-3">Add Script Before Closing &lt;/body&gt; Tag</h4>
+                        <h4 className="font-semibold text-neutral-900 mb-3">{t('widget_snippet.step2_headless_title')}</h4>
                         <div className="relative">
                           <button
                             onClick={() => handleCopy(snippet)}
@@ -417,12 +418,12 @@ ${snippet}
                             {isCopied && copiedSnippet === snippet ? (
                               <>
                                 <Check className="w-3.5 h-3.5" />
-                                Copied!
+                                {t('widget_snippet.copied')}
                               </>
                             ) : (
                               <>
                                 <Copy className="w-3.5 h-3.5" />
-                                Copy
+                                {t('widget_snippet.copy')}
                               </>
                             )}
                           </button>
@@ -444,7 +445,7 @@ ${snippet}
                         3
                       </span>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-neutral-900 mb-3">Attach Widget to Your Button</h4>
+                        <h4 className="font-semibold text-neutral-900 mb-3">{t('widget_snippet.step3_headless_title')}</h4>
                         <div className="relative">
                           <button
                             onClick={() => handleCopy(attachWidgetSnippet)}
@@ -453,12 +454,12 @@ ${snippet}
                             {isCopied && copiedSnippet === attachWidgetSnippet ? (
                               <>
                                 <Check className="w-3.5 h-3.5" />
-                                Copied!
+                                {t('widget_snippet.copied')}
                               </>
                             ) : (
                               <>
                                 <Copy className="w-3.5 h-3.5" />
-                                Copy
+                                {t('widget_snippet.copy')}
                               </>
                             )}
                           </button>
@@ -559,7 +560,7 @@ ${snippet}
             <>
               <Button variant="secondary" onClick={handleBack} className="flex items-center gap-2">
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                {t('widget_snippet.back')}
               </Button>
               <div className="flex items-center gap-3">
                 <Button
@@ -571,24 +572,24 @@ ${snippet}
                   {isGeneratingLink ? (
                     <>
                       <Spinner size="sm" />
-                      Generating...
+                      {t('widget_snippet.generating')}
                     </>
                   ) : (
                     <>
                       <Share2 className="w-4 h-4" />
-                      Share Link
+                      {t('widget_snippet.share_link')}
                     </>
                   )}
                 </Button>
                 <Button variant="primary" onClick={onClose}>
-                  Done
+                  {t('widget_snippet.done')}
                 </Button>
               </div>
             </>
           ) : (
             <div className="w-full flex justify-end">
               <Button variant="secondary" onClick={onClose}>
-                Cancel
+                {t('common.cancel')}
               </Button>
             </div>
           )}

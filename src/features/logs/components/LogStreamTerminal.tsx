@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Download, Trash2, Pause, Play, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 export interface LogEntry {
   id: string;
@@ -50,6 +51,7 @@ export function LogStreamTerminal({
   onDownload,
   maxLines = 500,
 }: LogStreamTerminalProps) {
+  const { t } = useTranslation();
   const terminalRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -102,7 +104,7 @@ export function LogStreamTerminal({
             <div className="w-3 h-3 rounded-full bg-green-500" />
           </div>
           <span className="text-sm font-mono text-neutral-400">
-            {isStreaming ? 'Live Stream' : 'Paused'} · {filteredLogs.length} logs
+            {isStreaming ? t('log_terminal.live_stream') : t('log_terminal.paused')} · {t('log_terminal.log_count', { count: filteredLogs.length })}
           </span>
         </div>
 
@@ -113,7 +115,7 @@ export function LogStreamTerminal({
             className={`p-2 rounded hover:bg-neutral-800 transition-colors ${
               isSearchOpen ? 'bg-neutral-800 text-white' : 'text-neutral-400'
             }`}
-            title="Search logs"
+            title={t('log_terminal.search_logs')}
           >
             <Search className="w-4 h-4" />
           </button>
@@ -122,7 +124,7 @@ export function LogStreamTerminal({
           <button
             onClick={onToggleStream}
             className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded transition-colors"
-            title={isStreaming ? 'Pause stream' : 'Resume stream'}
+            title={isStreaming ? t('log_terminal.pause_stream') : t('log_terminal.resume_stream')}
           >
             {isStreaming ? (
               <Pause className="w-4 h-4" />
@@ -135,7 +137,7 @@ export function LogStreamTerminal({
           <button
             onClick={onClear}
             className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded transition-colors"
-            title="Clear logs"
+            title={t('log_terminal.clear_logs')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -144,7 +146,7 @@ export function LogStreamTerminal({
           <button
             onClick={onDownload}
             className="p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded transition-colors"
-            title="Download logs"
+            title={t('log_terminal.download_logs')}
           >
             <Download className="w-4 h-4" />
           </button>
@@ -167,7 +169,7 @@ export function LogStreamTerminal({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search logs..."
+                  placeholder={t('log_terminal.search_placeholder')}
                   className="w-full pl-9 pr-8 py-1.5 bg-black border border-neutral-700 rounded text-sm text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-neutral-600"
                   autoFocus
                 />
@@ -199,10 +201,10 @@ export function LogStreamTerminal({
           <div className="flex items-center justify-center h-full">
             <p className="text-neutral-600 text-sm">
               {searchQuery
-                ? 'No logs match your search'
+                ? t('log_terminal.no_match')
                 : isStreaming
-                ? 'Waiting for logs...'
-                : 'Stream paused. Click play to resume.'}
+                ? t('log_terminal.waiting')
+                : t('log_terminal.paused_message')}
             </p>
           </div>
         ) : (
@@ -265,7 +267,7 @@ export function LogStreamTerminal({
             }}
             className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white text-xs rounded-full shadow-lg transition-colors"
           >
-            ↓ Jump to bottom
+            ↓ {t('log_terminal.jump_to_bottom')}
           </button>
         </motion.div>
       )}

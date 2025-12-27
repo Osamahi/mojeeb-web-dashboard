@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { plainTextToHtml } from '@/lib/textUtils';
 
 export default function MainInstructionCard() {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -74,7 +76,7 @@ export default function MainInstructionCard() {
 
         {/* Title */}
         <h3 className="flex-1 text-base font-semibold text-neutral-950">
-          Main Instructions
+          {t('studio.main_instructions_title')}
         </h3>
 
         {/* Hover Actions - GitHub Style (visible on hover or when expanded) */}
@@ -89,16 +91,16 @@ export default function MainInstructionCard() {
               setIsEditing(true);
             }}
             className="p-2 sm:p-1.5 hover:bg-neutral-100 rounded transition-colors text-neutral-600 hover:text-neutral-950 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-            title="Edit"
-            aria-label="Edit main instructions"
+            title={t('studio.edit_label')}
+            aria-label={t('studio.main_instructions_edit_label')}
           >
             <Edit2 className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
           <button
             disabled
             className="p-2 sm:p-1.5 rounded text-neutral-400 cursor-not-allowed min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-            title="Main Instructions cannot be deleted"
-            aria-label="Delete disabled"
+            title={t('studio.main_instructions_delete_disabled')}
+            aria-label={t('studio.delete_label')}
           >
             <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
@@ -120,17 +122,17 @@ export default function MainInstructionCard() {
                 {/* Agent Name Section */}
                 <div>
                   <h4 className="text-xs font-normal text-neutral-400 mb-1">
-                    Agent Name
+                    {t('studio.agent_name_label')}
                   </h4>
                   <p className="text-sm text-neutral-700 leading-relaxed">
-                    {agent.name || 'Untitled Agent'}
+                    {agent.name || t('studio.untitled_agent')}
                   </p>
                 </div>
 
                 {/* Instructions Section */}
                 <div>
                   <h4 className="text-xs font-normal text-neutral-400 mb-1">
-                    Instructions
+                    {t('studio.instructions_label')}
                   </h4>
                   <div
                     className="text-sm text-neutral-700 leading-relaxed prose prose-sm max-w-none"

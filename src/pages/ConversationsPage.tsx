@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useConversationStore } from '@/features/conversations/stores/conversationStore';
@@ -16,6 +17,7 @@ import ChatPanel from '@/features/conversations/components/Chat/ChatPanel';
 import ConversationEmptyState from '@/features/conversations/components/shared/ConversationEmptyState';
 
 export const ConversationsPage = () => {
+  const { t } = useTranslation();
   const isMobile = useIsMobile();
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const selectedConversation = useConversationStore((state) => state.selectedConversation);
@@ -34,8 +36,8 @@ export const ConversationsPage = () => {
     return (
       <div className="h-full flex items-center justify-center p-6">
         <NoAgentEmptyState
-          title="No Agent Selected"
-          message="Please select an agent from the dropdown above to view its conversations."
+          title={t('conversations.no_agent_title')}
+          message={t('conversations.no_agent_description')}
           showCreateButton={false}
         />
       </div>

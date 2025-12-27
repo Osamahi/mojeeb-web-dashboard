@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ChevronRight, Edit2, Trash2, Check, X } from 'lucide-react';
 import type { KnowledgeBase } from '../types/agent.types';
@@ -26,6 +27,7 @@ export default function KnowledgeBaseItem({
   knowledgeBase,
   onUpdate,
 }: KnowledgeBaseItemProps) {
+  const { t } = useTranslation();
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -66,7 +68,7 @@ export default function KnowledgeBaseItem({
     },
     onError: (error) => {
       logger.error('Error saving KB', error);
-      toast.error('Failed to save knowledge base');
+      toast.error(t('studio.save_failed'));
     },
   });
 
@@ -76,12 +78,12 @@ export default function KnowledgeBaseItem({
       await agentService.deleteKnowledgeBase(knowledgeBase.id);
     },
     onSuccess: () => {
-      toast.success('Knowledge base deleted');
+      toast.success(t('studio.delete_success'));
       onUpdate();
     },
     onError: (error) => {
       logger.error('Error deleting KB', error);
-      toast.error('Failed to delete knowledge base');
+      toast.error(t('studio.delete_failed'));
     },
   });
 
@@ -93,10 +95,10 @@ export default function KnowledgeBaseItem({
 
   const handleDelete = async () => {
     const confirmed = await confirm({
-      title: 'Delete Knowledge Base',
-      message: `Are you sure you want to delete "${knowledgeBase.name}"? This action cannot be undone.`,
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
+      title: t('studio.delete_confirm_title'),
+      message: t('studio.delete_confirm_message', { name: knowledgeBase.name }),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
       variant: 'danger',
     });
 

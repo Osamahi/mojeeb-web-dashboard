@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { UserPlus, Trash2, Mail, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -17,6 +18,7 @@ import { BaseHeader } from '@/components/ui/BaseHeader';
 import type { OrganizationMember } from '../types';
 
 export default function TeamManagementPage() {
+  const { t } = useTranslation();
   const { agent } = useAgentContext();
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
@@ -43,7 +45,7 @@ export default function TeamManagementPage() {
 
   const handleAssignSuccess = () => {
     refetch(); // Refresh the members list
-    toast.success('Member list updated');
+    toast.success(t('team.member_updated'));
   };
 
   const handleRemoveMember = (member: OrganizationMember & { user?: { name: string | null; email: string | null; phone?: string | null } }) => {
@@ -57,12 +59,12 @@ export default function TeamManagementPage() {
     setIsRemoving(true);
     try {
       await organizationService.removeUserFromOrganization(agent.organizationId, memberToRemove.userId);
-      toast.success('Member removed successfully');
+      toast.success(t('team.member_removed'));
       refetch();
       setIsConfirmDialogOpen(false);
       setMemberToRemove(null);
     } catch (error) {
-      toast.error('Failed to remove member');
+      toast.error(t('team.remove_failed'));
     } finally {
       setIsRemoving(false);
     }
@@ -79,7 +81,7 @@ export default function TeamManagementPage() {
     return (
       <div className="p-6">
         <div className="text-center py-12">
-          <p className="text-neutral-500">Please select an agent to view team members</p>
+          <p className="text-neutral-500">{t('team.no_agent_message')}</p>
         </div>
       </div>
     );
@@ -89,10 +91,10 @@ export default function TeamManagementPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <BaseHeader
-        title="Team"
-        subtitle="Manage your team"
+        title={t('team.title')}
+        subtitle={t('team.subtitle')}
         primaryAction={{
-          label: "Add",
+          label: t('team.add_button'),
           icon: UserPlus,
           onClick: handleOpenAssignModal
         }}
@@ -103,9 +105,8 @@ export default function TeamManagementPage() {
         <TeamTableSkeleton />
       ) : members.length === 0 ? (
         <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
-
           <div className="p-12 text-center">
-            <p className="text-neutral-500">No members found. Click "Add" to add team members.</p>
+            <p className="text-neutral-500">{t('team.no_members_message')}</p>
           </div>
         </div>
       ) : (
@@ -115,22 +116,22 @@ export default function TeamManagementPage() {
               <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    User
+                    {t('team.table_user')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Email
+                    {t('team.table_email')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Phone
+                    {t('team.table_phone')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Role
+                    {t('team.table_role')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Joined
+                    {t('team.table_joined')}
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Actions
+                    {t('team.table_actions')}
                   </th>
                 </tr>
               </thead>
@@ -174,7 +175,7 @@ export default function TeamManagementPage() {
                       <button
                         onClick={() => handleRemoveMember(member)}
                         className="text-red-600 hover:text-red-800 transition-colors p-2"
-                        title="Remove member"
+                        title={t('team.remove_button_title')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -199,10 +200,12 @@ export default function TeamManagementPage() {
         isOpen={isConfirmDialogOpen}
         onClose={handleCloseConfirmDialog}
         onConfirm={confirmRemoveMember}
-        title="Remove Member"
-        message={`Are you sure you want to remove ${memberToRemove?.user?.name || memberToRemove?.user?.email || 'this member'} from the organization?\n\nThis action cannot be undone.`}
-        confirmText="Remove"
-        cancelText="Cancel"
+        title={t('team.remove_dialog_title')}
+        message={t('team.remove_dialog_message', {
+          name: memberToRemove?.user?.name || memberToRemove?.user?.email || 'this member'
+        })}
+        confirmText={t('team.remove_confirm')}
+        cancelText={t('common.cancel')}
         variant="danger"
         isLoading={isRemoving}
       />

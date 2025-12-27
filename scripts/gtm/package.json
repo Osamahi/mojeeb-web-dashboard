@@ -1,0 +1,25 @@
+{
+  "name": "mojeeb-gtm-automation",
+  "version": "1.0.0",
+  "description": "Automated Google Tag Manager setup for Mojeeb analytics tracking",
+  "main": "setup-gtm.js",
+  "scripts": {
+    "auth": "node setup-gtm.js --auth",
+    "setup": "node setup-gtm.js --setup",
+    "publish": "node setup-gtm.js --publish",
+    "dry-run": "node setup-gtm.js --dry-run",
+    "status": "node setup-gtm.js --status"
+  },
+  "keywords": [
+    "gtm",
+    "google-tag-manager",
+    "analytics",
+    "automation"
+  ],
+  "author": "Mojeeb Team",
+  "license": "MIT",
+  "dependencies": {
+    "googleapis": "^128.0.0",
+    "dotenv": "^16.3.1"
+  }
+}

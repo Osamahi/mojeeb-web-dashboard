@@ -6,7 +6,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Settings, LogOut, ChevronDown, User } from 'lucide-react';
+import { Settings, LogOut, ChevronDown, User, Languages } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { performLogout } from '@/features/auth/services/logoutService';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ export const UserProfileDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const user = useAuthStore((state) => state.user);
+  const { t, i18n } = useTranslation();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -37,6 +39,16 @@ export const UserProfileDropdown = () => {
       callBackend: true,
       redirect: true,
     });
+  };
+
+  const toggleLanguage = () => {
+    const currentLang = i18n.language;
+    const newLang = currentLang.startsWith('ar') ? 'en' : 'ar-SA';
+    i18n.changeLanguage(newLang);
+  };
+
+  const getLanguageLabel = () => {
+    return i18n.language.startsWith('ar') ? 'English' : 'العربية';
   };
 
   return (
@@ -82,15 +94,23 @@ export const UserProfileDropdown = () => {
               onClick={() => setIsOpen(false)}
             >
               <Settings className="w-4 h-4" />
-              <span>Settings</span>
+              <span>{t('user_profile.settings')}</span>
             </Link>
+
+            <button
+              onClick={toggleLanguage}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+            >
+              <Languages className="w-4 h-4" />
+              <span>{getLanguageLabel()}</span>
+            </button>
 
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-neutral-700 hover:bg-error/10 hover:text-error transition-colors"
             >
               <LogOut className="w-4 h-4" />
-              <span>Logout</span>
+              <span>{t('user_profile.logout')}</span>
             </button>
           </div>
         </div>

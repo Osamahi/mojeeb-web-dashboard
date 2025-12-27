@@ -5,6 +5,7 @@
  */
 
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import TestChat from './TestChat';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,8 @@ export default function TestChatDrawer({
   isOpen,
   onClose,
 }: TestChatDrawerProps) {
+  const { t } = useTranslation();
+
   // ESC key to close
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -72,7 +75,7 @@ export default function TestChatDrawer({
               'border border-neutral-200 shadow-sm',
               'hover:bg-neutral-50 transition-colors'
             )}
-            title="Close (ESC)"
+            title={t('test_chat_drawer.close')}
           >
             <X className="w-5 h-5 text-neutral-600" />
           </button>

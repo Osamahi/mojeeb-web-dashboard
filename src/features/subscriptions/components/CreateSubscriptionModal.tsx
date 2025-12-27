@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { subscriptionService } from '../services/subscriptionService';
 import { PlanCode, Currency, BillingInterval } from '../types/subscription.types';
 import type { CreateSubscriptionRequest } from '../types/subscription.types';
@@ -16,6 +17,7 @@ export function CreateSubscriptionModal({
   onClose,
   onSuccess,
 }: CreateSubscriptionModalProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CreateSubscriptionRequest>({
     organizationId: '',
@@ -28,18 +30,18 @@ export function CreateSubscriptionModal({
     e.preventDefault();
 
     if (!formData.organizationId) {
-      toast.error('Organization ID is required');
+      toast.error(t('create_subscription.org_id_required'));
       return;
     }
 
     try {
       setLoading(true);
       await subscriptionService.createSubscription(formData);
-      toast.success('Subscription created successfully');
+      toast.success(t('create_subscription.success'));
       onSuccess();
     } catch (error) {
       console.error('Failed to create subscription:', error);
-      toast.error('Failed to create subscription');
+      toast.error(t('create_subscription.error'));
     } finally {
       setLoading(false);
     }
@@ -49,8 +51,8 @@ export function CreateSubscriptionModal({
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create Subscription"
-      subtitle="Create a new subscription for an organization"
+      title={t('create_subscription.title')}
+      subtitle={t('create_subscription.subtitle')}
       maxWidth="lg"
       isLoading={loading}
       closable={!loading}
@@ -59,7 +61,7 @@ export function CreateSubscriptionModal({
             {/* Organization ID */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Organization ID *
+                {t('create_subscription.org_id_label')}
               </label>
               <input
                 type="text"
@@ -68,18 +70,18 @@ export function CreateSubscriptionModal({
                 onChange={(e) =>
                   setFormData({ ...formData, organizationId: e.target.value })
                 }
-                placeholder="Enter organization UUID"
+                placeholder={t('create_subscription.org_id_placeholder')}
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
               />
               <p className="mt-1 text-xs text-gray-500">
-                UUID of the organization to create subscription for
+                {t('create_subscription.org_id_hint')}
               </p>
             </div>
 
             {/* Plan Code */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Plan *
+                {t('create_subscription.plan_label')}
               </label>
               <select
                 value={formData.planCode}
@@ -88,17 +90,17 @@ export function CreateSubscriptionModal({
                 }
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
               >
-                <option value={PlanCode.Free}>Free (300 msgs/mo, 1 agent)</option>
-                <option value={PlanCode.Starter}>Starter</option>
-                <option value={PlanCode.Professional}>Professional</option>
-                <option value={PlanCode.Enterprise}>Enterprise</option>
+                <option value={PlanCode.Free}>{t('create_subscription.plan_free')}</option>
+                <option value={PlanCode.Starter}>{t('create_subscription.plan_starter')}</option>
+                <option value={PlanCode.Professional}>{t('create_subscription.plan_professional')}</option>
+                <option value={PlanCode.Enterprise}>{t('create_subscription.plan_enterprise')}</option>
               </select>
             </div>
 
             {/* Currency */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Currency *
+                {t('create_subscription.currency_label')}
               </label>
               <select
                 value={formData.currency}
@@ -107,16 +109,16 @@ export function CreateSubscriptionModal({
                 }
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
               >
-                <option value={Currency.USD}>USD - US Dollar</option>
-                <option value={Currency.EGP}>EGP - Egyptian Pound</option>
-                <option value={Currency.SAR}>SAR - Saudi Riyal</option>
+                <option value={Currency.USD}>{t('create_subscription.currency_usd')}</option>
+                <option value={Currency.EGP}>{t('create_subscription.currency_egp')}</option>
+                <option value={Currency.SAR}>{t('create_subscription.currency_sar')}</option>
               </select>
             </div>
 
             {/* Billing Interval */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Billing Interval *
+                {t('create_subscription.interval_label')}
               </label>
               <select
                 value={formData.billingInterval}
@@ -128,8 +130,8 @@ export function CreateSubscriptionModal({
                 }
                 className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
               >
-                <option value={BillingInterval.Monthly}>Monthly</option>
-                <option value={BillingInterval.Annual}>Annual</option>
+                <option value={BillingInterval.Monthly}>{t('create_subscription.interval_monthly')}</option>
+                <option value={BillingInterval.Annual}>{t('create_subscription.interval_annual')}</option>
               </select>
             </div>
 
@@ -141,14 +143,14 @@ export function CreateSubscriptionModal({
             disabled={loading}
             className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             disabled={loading}
             className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
           >
-            {loading ? 'Creating...' : 'Create Subscription'}
+            {loading ? t('create_subscription.creating') : t('create_subscription.create_button')}
           </button>
         </div>
       </form>

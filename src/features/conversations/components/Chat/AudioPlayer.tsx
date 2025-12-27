@@ -6,6 +6,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { CHAT_BUBBLE_COLORS, MINIMAL_COLORS } from '../../constants/chatBubbleColors';
 
@@ -22,6 +23,7 @@ export function AudioPlayer({
   isAssistantMessage = false,
   className
 }: AudioPlayerProps) {
+  const { t } = useTranslation();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -223,7 +225,7 @@ export function AudioPlayer({
           onClick={togglePlayPause}
           disabled={isLoading || hasError}
           className="flex-shrink-0 flex items-center justify-center transition-all hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isPlaying ? t('audio_player.pause') : t('audio_player.play')}
         >
           {isLoading ? (
             <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" style={{ color: textColor }} />

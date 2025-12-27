@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { X, Minimize2, Maximize2, Check, Loader2 } from 'lucide-react';
@@ -24,6 +25,7 @@ export default function FloatingPromptEditor({
   agent,
   onClose,
 }: FloatingPromptEditorProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isMinimized, setIsMinimized] = useState(false);
   const [name, setName] = useState(agent.name);
@@ -51,11 +53,11 @@ export default function FloatingPromptEditor({
       queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
       setIsModified(false);
       setLastSaved(new Date());
-      toast.success('Agent updated');
+      toast.success(t('floating_prompt_editor.save_success'));
     },
     onError: (error) => {
       logger.error('Error saving agent', error);
-      toast.error('Failed to save');
+      toast.error(t('floating_prompt_editor.save_error'));
     },
   });
 
@@ -87,9 +89,9 @@ export default function FloatingPromptEditor({
   const formatLastSaved = () => {
     if (!lastSaved) return null;
     const seconds = Math.floor((Date.now() - lastSaved.getTime()) / 1000);
-    if (seconds < 60) return 'just now';
+    if (seconds < 60) return t('floating_prompt_editor.saved_just_now');
     const minutes = Math.floor(seconds / 60);
-    return `${minutes}m ago`;
+    return t('floating_prompt_editor.saved_minutes_ago', { minutes });
   };
 
   // Minimized view
@@ -105,7 +107,7 @@ export default function FloatingPromptEditor({
             'text-sm font-medium text-neutral-950'
           )}
         >
-          <span>Edit Prompt</span>
+          <span>{t('floating_prompt_editor.title')}</span>
           {isModified && (
             <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
           )}
@@ -122,17 +124,17 @@ export default function FloatingPromptEditor({
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 bg-neutral-50 rounded-t-lg">
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-semibold text-neutral-950">
-              Edit Prompt
+              {t('floating_prompt_editor.title')}
             </h3>
             {/* Save status */}
             <div className="text-xs">
               {saveMutation.isPending ? (
                 <span className="text-neutral-600 flex items-center gap-1">
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  Saving...
+                  {t('floating_prompt_editor.saving')}
                 </span>
               ) : isModified ? (
-                <span className="text-amber-600">Unsaved</span>
+                <span className="text-amber-600">{t('floating_prompt_editor.unsaved')}</span>
               ) : lastSaved ? (
                 <span className="text-green-600 flex items-center gap-1">
                   <Check className="w-3 h-3" />
@@ -147,14 +149,14 @@ export default function FloatingPromptEditor({
             <button
               onClick={() => setIsMinimized(true)}
               className="p-1.5 hover:bg-neutral-200 rounded transition-colors"
-              title="Minimize"
+              title={t('floating_prompt_editor.minimize')}
             >
               <Minimize2 className="w-4 h-4 text-neutral-600" />
             </button>
             <button
               onClick={onClose}
               className="p-1.5 hover:bg-neutral-200 rounded transition-colors"
-              title="Close"
+              title={t('common.close')}
             >
               <X className="w-4 h-4 text-neutral-600" />
             </button>
@@ -166,13 +168,13 @@ export default function FloatingPromptEditor({
           {/* Agent Name */}
           <div>
             <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-              Agent Name
+              {t('floating_prompt_editor.agent_name_label')}
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter agent name..."
+              placeholder={t('floating_prompt_editor.agent_name_placeholder')}
               disabled={saveMutation.isPending}
               className={cn(
                 'w-full px-3 py-2 rounded-md text-sm',
@@ -188,12 +190,12 @@ export default function FloatingPromptEditor({
           {/* Persona Prompt */}
           <div>
             <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-              Persona Prompt
+              {t('floating_prompt_editor.persona_prompt_label')}
             </label>
             <Textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="You are a helpful assistant who..."
+              placeholder={t('floating_prompt_editor.persona_prompt_placeholder')}
               showCharCount
               autoResize
               minHeight={200}
@@ -201,7 +203,7 @@ export default function FloatingPromptEditor({
               disabled={saveMutation.isPending}
             />
             <p className="text-xs text-neutral-500 mt-1.5">
-              Auto-saves after 2 seconds • Press ESC to close
+              {t('floating_prompt_editor.auto_save_hint')}
             </p>
           </div>
         </div>

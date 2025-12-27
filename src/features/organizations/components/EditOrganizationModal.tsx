@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { X, User as UserIcon, Bot, Search, Check, UserPlus, Trash2, Mail, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -31,6 +32,7 @@ export default function EditOrganizationModal({
   isOpen,
   onClose,
 }: EditOrganizationModalProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<UpdateOrganizationRequest>({
     name: '',
@@ -141,11 +143,11 @@ export default function EditOrganizationModal({
         queryClient.invalidateQueries({ queryKey: ['agents', 'organization', organization?.id] }),
       ]);
 
-      toast.success('Organization updated successfully');
+      toast.success(t('organizations.updated_success'));
       onClose();
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update organization');
+      toast.error(error.message || t('organizations.update_failed'));
     },
   });
 
@@ -211,12 +213,12 @@ export default function EditOrganizationModal({
     setIsRemoving(true);
     try {
       await organizationService.removeUserFromOrganization(organization.id, memberToRemove.userId);
-      toast.success('Member removed successfully');
+      toast.success(t('organizations.member_removed'));
       refetchMembers();
       setIsConfirmDialogOpen(false);
       setMemberToRemove(null);
     } catch (error) {
-      toast.error('Failed to remove member');
+      toast.error(t('organizations.remove_failed'));
     } finally {
       setIsRemoving(false);
     }
@@ -236,7 +238,7 @@ export default function EditOrganizationModal({
       <BaseModal
         isOpen={isOpen}
         onClose={onClose}
-        title="Edit Organization"
+        title={t('organizations.edit_title')}
         maxWidth="2xl"
         isLoading={updateMutation.isPending}
         closable={!updateMutation.isPending}
@@ -246,7 +248,7 @@ export default function EditOrganizationModal({
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Organization Name *
+              {t('organizations.name_label')} {t('common.required')}
             </label>
             <Input
               type="text"
@@ -254,28 +256,28 @@ export default function EditOrganizationModal({
               value={formData.name}
               onChange={handleChange}
               required
-              placeholder="Enter organization name"
+              placeholder={t('organizations.name_placeholder')}
             />
           </div>
 
           {/* Contact Email */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Contact Email
+              {t('organizations.email_label')}
             </label>
             <Input
               type="email"
               name="contactEmail"
               value={formData.contactEmail}
               onChange={handleChange}
-              placeholder="contact@organization.com"
+              placeholder={t('organizations.email_placeholder')}
             />
           </div>
 
           {/* Owner Selection */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Owner
+              {t('organizations.owner_label')}
             </label>
             <div className="relative">
               <div className="relative">
@@ -285,7 +287,7 @@ export default function EditOrganizationModal({
                   value={userSearchQuery}
                   onChange={handleUserSearchChange}
                   onFocus={handleUserSearchFocus}
-                  placeholder="Search by email, name, or phone..."
+                  placeholder={t('organizations.owner_search_placeholder')}
                   className="pl-10"
                 />
                 {selectedOwner && (
@@ -298,7 +300,7 @@ export default function EditOrganizationModal({
                 <div className="absolute z-[100] w-full mt-2 bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {isLoadingUsers ? (
                     <div className="p-4 text-center text-sm text-neutral-500">
-                      Loading users...
+                      {t('organizations.loading_users')}
                     </div>
                   ) : filteredUsers.length > 0 ? (
                     <div className="py-2">
@@ -337,14 +339,14 @@ export default function EditOrganizationModal({
                     </div>
                   ) : (
                     <div className="p-4 text-center text-sm text-neutral-500">
-                      No users found matching "{userSearchQuery}"
+                      {t('organizations.no_users_found')} "{userSearchQuery}"
                     </div>
                   )}
                 </div>
               )}
             </div>
             <p className="mt-2 text-xs text-neutral-500">
-              Search and select a user to change the organization owner
+              {t('organizations.owner_change_help')}
             </p>
           </div>
 
@@ -366,7 +368,7 @@ export default function EditOrganizationModal({
                   <div className="text-sm text-neutral-500">{selectedOwner.email}</div>
                   {selectedOwner.phone && (
                     <div className="text-sm text-neutral-500 mt-1">
-                      Phone: {selectedOwner.phone}
+                      {t('common.phone')}: {selectedOwner.phone}
                     </div>
                   )}
                 </div>
@@ -387,7 +389,7 @@ export default function EditOrganizationModal({
           {/* Agents List */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-neutral-700">
-              Agents ({agents.length})
+              {t('organizations.agents_count')} ({agents.length})
             </label>
             {isLoadingAgents ? (
               <div className="p-4 bg-neutral-50 rounded-lg animate-pulse">
@@ -424,7 +426,7 @@ export default function EditOrganizationModal({
               </div>
             ) : (
               <div className="p-4 bg-neutral-50 rounded-lg text-sm text-neutral-500 text-center">
-                No agents in this organization
+                {t('organizations.no_agents')}
               </div>
             )}
           </div>
@@ -433,7 +435,7 @@ export default function EditOrganizationModal({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="block text-sm font-medium text-neutral-700">
-                Team Members ({enrichedMembers.length})
+                {t('organizations.team_members_count')} ({enrichedMembers.length})
               </label>
               <button
                 type="button"
@@ -441,7 +443,7 @@ export default function EditOrganizationModal({
                 className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-brand-cyan hover:bg-brand-cyan/10 rounded-lg transition-colors"
               >
                 <UserPlus className="h-4 w-4" />
-                Add Member
+                {t('organizations.add_member')}
               </button>
             </div>
             {isLoadingMembers ? (
@@ -455,19 +457,19 @@ export default function EditOrganizationModal({
                   <thead className="bg-neutral-50 border-b border-neutral-200 sticky top-0">
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                        User
+                        {t('common.user')}
                       </th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                        Email
+                        {t('common.email')}
                       </th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                        Role
+                        {t('common.role')}
                       </th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                        Joined
+                        {t('common.joined')}
                       </th>
                       <th className="px-4 py-2 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                        Actions
+                        {t('common.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -523,7 +525,7 @@ export default function EditOrganizationModal({
               </div>
             ) : (
               <div className="p-4 bg-neutral-50 rounded-lg text-sm text-neutral-500 text-center">
-                No team members. Click "Add Member" to assign users.
+                {t('organizations.no_members')}
               </div>
             )}
           </div>
@@ -531,14 +533,14 @@ export default function EditOrganizationModal({
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
           <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
             disabled={updateMutation.isPending}
             isLoading={updateMutation.isPending}
           >
-            {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+            {updateMutation.isPending ? t('organizations.saving') : t('organizations.save_changes')}
           </Button>
         </div>
       </form>
@@ -557,10 +559,10 @@ export default function EditOrganizationModal({
         isOpen={isConfirmDialogOpen}
         onClose={handleCloseConfirmDialog}
         onConfirm={confirmRemoveMember}
-        title="Remove Member"
-        message={`Are you sure you want to remove ${memberToRemove?.user?.name || memberToRemove?.user?.email || 'this member'} from the organization?\n\nThis action cannot be undone.`}
-        confirmText="Remove"
-        cancelText="Cancel"
+        title={t('organizations.remove_member')}
+        message={t('organizations.remove_member_confirm', { name: memberToRemove?.user?.name || memberToRemove?.user?.email || 'this member' })}
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
         variant="danger"
         isLoading={isRemoving}
       />

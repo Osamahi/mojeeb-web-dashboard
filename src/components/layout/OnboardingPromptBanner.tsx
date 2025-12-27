@@ -5,10 +5,12 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useOnboardingStore } from '@/features/onboarding/stores/onboardingStore';
 
 export const OnboardingPromptBanner = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const agents = useAgentStore((state) => state.agents);
   const hasCompletedOnboarding = useOnboardingStore((state) => state.hasCompletedOnboarding);
@@ -59,9 +61,9 @@ export const OnboardingPromptBanner = () => {
               </svg>
             </div>
             <p className="text-sm text-white">
-              <span className="font-medium">Get started by creating your first agent.</span>
+              <span className="font-medium">{t('onboarding_banner.message_title')}</span>
               <span className="hidden sm:inline text-neutral-300 ml-2">
-                It only takes 2 minutes to set up.
+                {t('onboarding_banner.message_subtitle')}
               </span>
             </p>
           </div>
@@ -72,12 +74,12 @@ export const OnboardingPromptBanner = () => {
               onClick={handleStartOnboarding}
               className="px-4 py-1.5 bg-white text-neutral-900 text-sm font-medium rounded-md hover:bg-neutral-100 transition-colors"
             >
-              Create Agent
+              {t('onboarding_banner.create_agent_button')}
             </button>
             <button
               onClick={handleDismiss}
               className="px-3 py-1.5 text-neutral-300 hover:text-white text-sm transition-colors"
-              aria-label="Dismiss"
+              aria-label={t('onboarding_banner.dismiss_label')}
             >
               <svg
                 className="w-4 h-4"

@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Loader2, AlertTriangle, ExternalLink, Facebook, Instagram, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -32,6 +33,7 @@ type AuthorizationState = 'idle' | 'initiating' | 'authorizing' | 'error';
 export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthorizeStepProps) {
   console.log('⚡⚡⚡ OAuthAuthorizeStep RENDER - NEW CODE LOADED ⚡⚡⚡', { platform });
 
+  const { t } = useTranslation();
   const { agentId } = useAgentContext();
   const { initiateOAuthAsync, isInitiating, initiationData, resetAll } = useOAuthConnectionFlow();
 
@@ -77,7 +79,7 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
 
     if (!agentId) {
       console.error('❌ No agentId available');
-      setErrorMessage('No agent selected. Please select an agent first.');
+      setErrorMessage(t('oauth_authorize.error_no_agent'));
       setAuthState('error');
       return;
     }
@@ -112,7 +114,7 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
       // Validate authorization URL before proceeding
       if (!data.authorizationUrl || typeof data.authorizationUrl !== 'string') {
         logger.error('Invalid authorization URL received', { authUrl: data.authorizationUrl });
-        setErrorMessage('Invalid authorization URL received from server.');
+        setErrorMessage(t('oauth_authorize.error_invalid_url'));
         setAuthState('error');
         cleanupOAuthStorage();
         return;
@@ -126,7 +128,7 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
         }
       } catch {
         logger.error('Malformed authorization URL', { authUrl: data.authorizationUrl });
-        setErrorMessage('Received malformed authorization URL from server.');
+        setErrorMessage(t('oauth_authorize.error_malformed_url'));
         setAuthState('error');
         cleanupOAuthStorage();
         return;
@@ -176,11 +178,11 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
             setPopupBlocked(true);
             setAuthState('authorizing'); // Still show authorizing UI with manual option
           } else if (error.message === OAuthErrorTypes.POPUP_CLOSED) {
-            setErrorMessage('Authorization was cancelled. Please try again.');
+            setErrorMessage(t('oauth_authorize.error_cancelled'));
             setAuthState('error');
             cleanupOAuthStorage();
           } else if (error.message === OAuthErrorTypes.OAUTH_TIMEOUT) {
-            setErrorMessage('Authorization timed out. Please try again.');
+            setErrorMessage(t('oauth_authorize.error_timeout'));
             setAuthState('error');
             cleanupOAuthStorage();
           } else {
@@ -189,7 +191,7 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
             cleanupOAuthStorage();
           }
         } else {
-          setErrorMessage('An unexpected error occurred.');
+          setErrorMessage(t('oauth_authorize.error_unexpected'));
           setAuthState('error');
           cleanupOAuthStorage();
         }
@@ -200,11 +202,11 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
       // Check for network/server errors
       const errorMsg = error instanceof Error ? error.message : String(error);
       if (errorMsg.includes('Network') || errorMsg.includes('fetch') || errorMsg.includes('Failed to fetch')) {
-        setErrorMessage('Unable to connect to the server. Please ensure the backend is running.');
+        setErrorMessage(t('oauth_authorize.error_server_connection'));
       } else if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
-        setErrorMessage('Authentication failed. Please log in again.');
+        setErrorMessage(t('oauth_authorize.error_auth_failed'));
       } else if (errorMsg.includes('404')) {
-        setErrorMessage('OAuth endpoint not found. Please check backend configuration.');
+        setErrorMessage(t('oauth_authorize.error_endpoint_not_found'));
       } else {
         setErrorMessage(getOAuthErrorMessage(error));
       }
@@ -296,9 +298,9 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
             {/* Initiating state */}
             {(authState === 'idle' || authState === 'initiating' || isInitiating) && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-neutral-900">Preparing authorization</p>
+                <p className="text-sm font-medium text-neutral-900">{t('oauth_authorize.preparing')}</p>
                 <p className="text-xs text-neutral-600">
-                  You'll be redirected to {platformName} to authorize your account
+                  {t('oauth_authorize.redirect_message', { platform: platformName })}
                 </p>
               </div>
             )}
@@ -306,11 +308,11 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
             {/* Authorizing state - waiting for user */}
             {authState === 'authorizing' && !popupBlocked && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-neutral-900">Waiting for authorization</p>
+                <p className="text-sm font-medium text-neutral-900">{t('oauth_authorize.waiting')}</p>
                 <p className="text-xs text-neutral-600">
-                  Complete the authorization in the popup window
+                  {t('oauth_authorize.complete_in_popup')}
                   <br />
-                  This will update automatically
+                  {t('oauth_authorize.auto_update')}
                 </p>
               </div>
             )}
@@ -323,11 +325,11 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
                 </div>
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-neutral-900">Popup Blocked</p>
+                    <p className="text-sm font-medium text-neutral-900">{t('oauth_authorize.popup_blocked_title')}</p>
                     <p className="text-xs text-neutral-600">
-                      Your browser blocked the authorization popup
+                      {t('oauth_authorize.popup_blocked_message')}
                       <br />
-                      Click below to open it manually
+                      {t('oauth_authorize.popup_blocked_instruction')}
                     </p>
                   </div>
                   <Button
@@ -335,10 +337,10 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
                     className="flex items-center gap-2"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    Open {platformName} Authorization
+                    {t('oauth_authorize.open_authorization', { platform: platformName })}
                   </Button>
                   <p className="text-xs text-neutral-500">
-                    After authorizing, return to this page
+                    {t('oauth_authorize.return_message')}
                   </p>
                 </div>
               </>
@@ -348,7 +350,7 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
             {authState === 'error' && (
               <>
                 <ErrorState
-                  title="Authorization Failed"
+                  title={t('oauth_authorize.error_title')}
                   description={errorMessage}
                   onRetry={handleRetry}
                 />

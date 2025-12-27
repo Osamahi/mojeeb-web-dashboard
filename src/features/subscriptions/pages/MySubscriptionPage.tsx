@@ -1,11 +1,13 @@
 import { useState, useCallback } from 'react';
 import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { PlanChangeWizard } from '../components/PlanChangeWizard';
 import { format, differenceInDays } from 'date-fns';
 
 export default function MySubscriptionPage() {
+  const { t } = useTranslation();
   // Read subscription and usage from global store (loaded once on app init)
   const subscription = useSubscriptionStore(state => state.subscription);
   const usage = useSubscriptionStore(state => state.usage);
@@ -44,10 +46,10 @@ export default function MySubscriptionPage() {
     <div className="space-y-6 p-6">
       {/* Header - Always visible */}
       <BaseHeader
-        title="My Subscription"
-        subtitle="Manage your plan and view usage statistics"
+        title={t('subscriptions.my_title')}
+        subtitle={t('subscriptions.my_subtitle')}
         primaryAction={{
-          label: subscription?.planCode === 'free' ? "Upgrade Plan" : "Change Plan",
+          label: subscription?.planCode === 'free' ? t('subscriptions.upgrade_plan') : t('subscriptions.change_plan'),
           icon: Rocket,
           onClick: handleUpgradeClick
         }}
@@ -58,9 +60,9 @@ export default function MySubscriptionPage() {
         <div className="flex min-h-[400px] items-center justify-center">
           <div className="text-center">
             <AlertCircle className="mx-auto h-12 w-12 text-gray-300" />
-            <h3 className="mt-4 text-sm font-medium text-gray-900">No subscription found</h3>
+            <h3 className="mt-4 text-sm font-medium text-gray-900">{t('subscriptions.no_subscription_title')}</h3>
             <p className="mt-1 text-sm text-gray-500">
-              Contact your administrator to set up a subscription
+              {t('subscriptions.no_subscription_description')}
             </p>
           </div>
         </div>
@@ -79,8 +81,8 @@ export default function MySubscriptionPage() {
             <div className="ml-3">
               <p className="text-sm text-orange-700">
                 {subscription.isFlaggedNonPaying
-                  ? 'Your subscription has been flagged for non-payment. Please contact support.'
-                  : 'You are approaching your message limit. Consider upgrading your plan.'}
+                  ? t('subscriptions.warning_non_payment')
+                  : t('subscriptions.warning_approaching_limit')}
               </p>
             </div>
           </div>
@@ -90,7 +92,7 @@ export default function MySubscriptionPage() {
           {/* Subscription Details Card */}
           <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-              <h2 className="text-lg font-medium text-gray-900">Current Plan</h2>
+              <h2 className="text-lg font-medium text-gray-900">{t('subscriptions.current_plan')}</h2>
             </div>
             <div className="p-6">
               {loading ? (
@@ -109,7 +111,7 @@ export default function MySubscriptionPage() {
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                   {/* Plan Name */}
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Plan</p>
+                    <p className="text-sm font-medium text-gray-500">{t('subscriptions.plan_label')}</p>
                     <p className="mt-1 text-2xl font-semibold text-gray-900">
                       {subscription.planName}
                     </p>
@@ -118,12 +120,12 @@ export default function MySubscriptionPage() {
 
                   {/* Billing */}
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Billing</p>
+                    <p className="text-sm font-medium text-gray-500">{t('subscriptions.billing_label')}</p>
                     {subscription.amount === 0 ? (
                       <>
-                        <p className="mt-1 text-2xl font-semibold text-gray-900">Free</p>
+                        <p className="mt-1 text-2xl font-semibold text-gray-900">{t('subscriptions.billing_free')}</p>
                         <p className="mt-1 text-sm text-gray-500">
-                          {subscription.billingInterval === 'monthly' ? 'Monthly' : 'Annual'}
+                          {subscription.billingInterval === 'monthly' ? t('subscriptions.billing_monthly') : t('subscriptions.billing_annual')}
                         </p>
                       </>
                     ) : (
@@ -133,7 +135,7 @@ export default function MySubscriptionPage() {
                             {subscription.amount.toLocaleString()}
                           </span>
                           <span className="text-sm text-gray-500">
-                            {subscription.currency}/{subscription.billingInterval === 'monthly' ? 'month' : 'year'}
+                            {subscription.currency}/{subscription.billingInterval === 'monthly' ? t('subscriptions.billing_per_month') : t('subscriptions.billing_per_year')}
                           </span>
                         </div>
                       </>
@@ -142,7 +144,7 @@ export default function MySubscriptionPage() {
 
                   {/* Status */}
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Status</p>
+                    <p className="text-sm font-medium text-gray-500">{t('subscriptions.status_label')}</p>
                     <div className="mt-1">
                       <span
                         className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
@@ -163,12 +165,12 @@ export default function MySubscriptionPage() {
 
                   {/* Next Renewal */}
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Next Renewal</p>
+                    <p className="text-sm font-medium text-gray-500">{t('subscriptions.next_renewal_label')}</p>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
                       {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
                     </p>
                     <p className="mt-1 text-sm text-gray-500">
-                      {daysRemaining} days remaining
+                      {t('subscriptions.days_remaining', { days: daysRemaining })}
                     </p>
                   </div>
                 </div>
@@ -179,7 +181,7 @@ export default function MySubscriptionPage() {
           {/* Usage Statistics */}
           <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-              <h2 className="text-lg font-medium text-gray-900">Usage Statistics</h2>
+              <h2 className="text-lg font-medium text-gray-900">{t('subscriptions.usage_statistics')}</h2>
             </div>
             <div className="p-6">
               {loading ? (
@@ -213,8 +215,10 @@ export default function MySubscriptionPage() {
                   <div className="mb-6 flex items-center gap-2 text-sm text-gray-500">
                     <Calendar className="h-4 w-4" />
                     <span>
-                      Current period: {format(new Date(usage.periodStart), 'MMM d')} -{' '}
-                      {format(new Date(usage.periodEnd), 'MMM d, yyyy')}
+                      {t('subscriptions.current_period', {
+                        start: format(new Date(usage.periodStart), 'MMM d'),
+                        end: format(new Date(usage.periodEnd), 'MMM d, yyyy')
+                      })}
                     </span>
                   </div>
 
@@ -226,7 +230,7 @@ export default function MySubscriptionPage() {
                         <div className="flex items-center gap-2">
                           <MessageSquare className="h-5 w-5 text-gray-400" />
                           <span className="text-sm font-medium text-gray-700">
-                            Messages
+                            {t('subscriptions.messages_label')}
                           </span>
                         </div>
                         <span className="text-sm font-medium text-gray-900">
@@ -241,7 +245,7 @@ export default function MySubscriptionPage() {
                         />
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
-                        {(usage.messageUsagePercentage ?? 0).toFixed(1)}% used
+                        {t('subscriptions.usage_percentage', { percentage: (usage.messageUsagePercentage ?? 0).toFixed(1) })}
                       </p>
                     </div>
 
@@ -250,7 +254,7 @@ export default function MySubscriptionPage() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <Users className="h-5 w-5 text-gray-400" />
-                          <span className="text-sm font-medium text-gray-700">Agents</span>
+                          <span className="text-sm font-medium text-gray-700">{t('subscriptions.agents_label')}</span>
                         </div>
                         <span className="text-sm font-medium text-gray-900">
                           {usage.agentsUsed ?? 0} / {usage.agentsLimit ?? 0}
@@ -263,7 +267,7 @@ export default function MySubscriptionPage() {
                         />
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
-                        {agentPercentage.toFixed(1)}% used
+                        {t('subscriptions.usage_percentage', { percentage: agentPercentage.toFixed(1) })}
                       </p>
                     </div>
                   </div>
@@ -277,12 +281,11 @@ export default function MySubscriptionPage() {
                         </div>
                         <div className="ml-3">
                           <h3 className="text-sm font-medium text-green-800">
-                            Ready to scale?
+                            {t('subscriptions.ready_to_scale')}
                           </h3>
                           <div className="mt-2 text-sm text-green-700">
                             <p>
-                              You're using {messagePercentage.toFixed(0)}% of your message limit.
-                              Upgrade to get more capacity and unlock advanced features.
+                              {t('subscriptions.upgrade_prompt', { percentage: messagePercentage.toFixed(0) })}
                             </p>
                           </div>
                           <div className="mt-4">
@@ -290,7 +293,7 @@ export default function MySubscriptionPage() {
                               onClick={handleUpgradeClick}
                               className="rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700"
                             >
-                              View Upgrade Options
+                              {t('subscriptions.view_upgrade_options')}
                             </button>
                           </div>
                         </div>

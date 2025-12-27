@@ -101,8 +101,8 @@ export const DashboardLayout = () => {
         <Sidebar />
 
         {/* Main Content Area - Dynamic padding based on header visibility */}
-        <main className={`h-full overflow-y-auto md:pl-20 ${shouldHideHeader ? 'pt-0' : 'pt-16'}`}>
-          {/* md:pl-20 = 80px left padding on desktop for collapsed sidebar */}
+        <main className={`h-full overflow-y-auto md:ps-20 ${shouldHideHeader ? 'pt-0' : 'pt-16'}`}>
+          {/* md:ps-20 = 80px start padding on desktop for collapsed sidebar (auto RTL/LTR) */}
           {/* pt-16 = 64px top padding for fixed header (removed when header hidden) */}
 
           {/* Onboarding Prompt Banner - Shows when no agents exist */}

@@ -5,12 +5,14 @@
  */
 
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface DateSeparatorProps {
   date: Date | string;
 }
 
 const DateSeparator = memo(function DateSeparator({ date }: DateSeparatorProps) {
+  const { t, i18n } = useTranslation();
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   const today = new Date();
   const yesterday = new Date(today);
@@ -31,12 +33,12 @@ const DateSeparator = memo(function DateSeparator({ date }: DateSeparatorProps) 
   // Format date
   let displayDate: string;
   if (isToday) {
-    displayDate = 'Today';
+    displayDate = t('date_separator.today');
   } else if (isYesterday) {
-    displayDate = 'Yesterday';
+    displayDate = t('date_separator.yesterday');
   } else {
-    // Format as "Oct 14, 2024"
-    displayDate = dateObj.toLocaleDateString('en-US', {
+    // Format as "Oct 14, 2024" - use current locale
+    displayDate = dateObj.toLocaleDateString(i18n.language, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',

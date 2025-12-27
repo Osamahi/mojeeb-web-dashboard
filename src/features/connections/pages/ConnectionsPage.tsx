@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { Link2, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useConnections, useDisconnectPlatform, useConnectionHealth } from '../hooks/useConnections';
 import { ConnectedPlatformsSection } from '../components/sections/ConnectedPlatformsSection';
 import { AvailablePlatformsSection } from '../components/sections/AvailablePlatformsSection';
@@ -23,6 +24,7 @@ import NoAgentEmptyState from '@/features/agents/components/NoAgentEmptyState';
 import type { PlatformType, PlatformConnection } from '../types';
 
 export default function ConnectionsPage() {
+  const { t } = useTranslation();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | null>(null);
@@ -86,8 +88,8 @@ export default function ConnectionsPage() {
     return (
       <div className="h-full flex items-center justify-center p-6">
         <NoAgentEmptyState
-          title="No Agent Selected"
-          message="Please select an agent from the dropdown above to view its platform connections."
+          title={t('connections.no_agent_title')}
+          message={t('connections.no_agent_description')}
           showCreateButton={false}
         />
       </div>
@@ -98,8 +100,8 @@ export default function ConnectionsPage() {
     <div className="p-6 space-y-8">
       {/* Header */}
       <BaseHeader
-        title="Connections"
-        subtitle={`Platform connections for ${globalSelectedAgent.name}`}
+        title={t('connections.title')}
+        subtitle={t('connections.subtitle', { agentName: globalSelectedAgent.name })}
       />
 
       {/* Error State */}
@@ -111,11 +113,11 @@ export default function ConnectionsPage() {
           <Card>
             <EmptyState
               icon={<Link2 className="w-12 h-12 text-neutral-400" />}
-              title="Error Loading Connections"
+              title={t('connections.error_title')}
               description={
                 error instanceof Error
                   ? error.message
-                  : 'Failed to load platform connections. Please try again.'
+                  : t('connections.error_description')
               }
               action={
                 <Button
@@ -126,7 +128,7 @@ export default function ConnectionsPage() {
                   className="mt-4"
                 >
                   <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
-                  {isFetching ? 'Retrying...' : 'Retry'}
+                  {isFetching ? t('connections.retrying') : t('connections.retry')}
                 </Button>
               }
             />

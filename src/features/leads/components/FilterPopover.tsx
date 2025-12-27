@@ -7,6 +7,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Calendar, X } from 'lucide-react';
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import type { DatePreset } from '../types';
 
 interface FilterPopoverProps {
@@ -17,19 +18,20 @@ interface FilterPopoverProps {
   onClose: () => void;
 }
 
-const presets: Array<{ value: DatePreset; label: string }> = [
-  { value: 'today', label: 'Today' },
-  { value: 'last7days', label: 'Last 7 Days' },
-  { value: 'last30days', label: 'Last 30 Days' },
-  { value: 'thisMonth', label: 'This Month' },
-  { value: 'custom', label: 'Custom Range' },
-];
-
 export function FilterPopover({ activePreset, dateFrom, dateTo, onApply, onClose }: FilterPopoverProps) {
+  const { t } = useTranslation();
   const [selectedPreset, setSelectedPreset] = useState<DatePreset | null>(activePreset);
   const [customFrom, setCustomFrom] = useState(dateFrom || '');
   const [customTo, setCustomTo] = useState(dateTo || '');
   const popoverRef = useRef<HTMLDivElement>(null);
+
+  const presets: Array<{ value: DatePreset; label: string }> = [
+    { value: 'today', label: t('filter_popover.today') },
+    { value: 'last7days', label: t('filter_popover.last_7_days') },
+    { value: 'last30days', label: t('filter_popover.last_30_days') },
+    { value: 'thisMonth', label: t('filter_popover.this_month') },
+    { value: 'custom', label: t('filter_popover.custom_range') },
+  ];
 
   // Close on outside click
   useEffect(() => {
@@ -94,7 +96,7 @@ export function FilterPopover({ activePreset, dateFrom, dateTo, onApply, onClose
       <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-neutral-600" />
-          <span className="text-sm font-medium text-neutral-900">Date Range</span>
+          <span className="text-sm font-medium text-neutral-900">{t('filter_popover.date_range')}</span>
         </div>
         <button
           onClick={onClose}
@@ -129,7 +131,7 @@ export function FilterPopover({ activePreset, dateFrom, dateTo, onApply, onClose
         <div className="p-4 border-t border-neutral-200 space-y-3">
           <div>
             <label className="block text-xs font-medium text-neutral-700 mb-1">
-              From Date
+              {t('filter_popover.from_date')}
             </label>
             <input
               type="date"
@@ -140,7 +142,7 @@ export function FilterPopover({ activePreset, dateFrom, dateTo, onApply, onClose
           </div>
           <div>
             <label className="block text-xs font-medium text-neutral-700 mb-1">
-              To Date
+              {t('filter_popover.to_date')}
             </label>
             <input
               type="date"
@@ -154,7 +156,7 @@ export function FilterPopover({ activePreset, dateFrom, dateTo, onApply, onClose
             disabled={!customFrom && !customTo}
             className="w-full px-4 py-2 text-sm font-medium bg-black text-white rounded-md hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Apply Custom Range
+            {t('filter_popover.apply_custom')}
           </button>
         </div>
       )}

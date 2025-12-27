@@ -5,7 +5,8 @@
  */
 
 import { useState } from 'react';
-import { LogOut, Rocket, User as UserIcon, CreditCard } from 'lucide-react';
+import { LogOut, Rocket, User as UserIcon, CreditCard, Languages } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -24,6 +25,7 @@ interface ProfileDropdownProps {
 
 export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { t, i18n } = useTranslation();
 
   // Read subscription from global store
   const subscription = useSubscriptionStore(state => state.subscription);
@@ -49,6 +51,16 @@ export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
     setShowUpgradeWizard(true);
   };
 
+  const toggleLanguage = () => {
+    const currentLang = i18n.language;
+    const newLang = currentLang.startsWith('ar') ? 'en' : 'ar-SA';
+    i18n.changeLanguage(newLang);
+  };
+
+  const getLanguageLabel = () => {
+    return i18n.language.startsWith('ar') ? 'English' : 'العربية';
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -69,7 +81,7 @@ export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
         {/* User Info Header - Non-clickable */}
         <div className="px-2 py-2 border-b border-neutral-100">
           <p className="text-sm font-medium text-neutral-950 truncate">
-            {user?.name || 'User'}
+            {user?.name || t('profile.user_fallback')}
           </p>
           <p className="text-xs text-neutral-500 truncate mt-0.5">
             {user?.email || ''}
@@ -83,19 +95,28 @@ export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
               onClick={handleUpgrade}
               className="text-green-600 hover:text-green-700 hover:bg-green-50"
             >
-              <Rocket className="w-4 h-4 mr-2" />
-              <span className="font-medium">Upgrade Plan</span>
+              <Rocket className="w-4 h-4 me-2" />
+              <span className="font-medium">{t('profile.upgrade_plan')}</span>
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem
               onClick={() => window.location.href = '/my-subscription'}
               className="text-neutral-700 hover:text-neutral-900"
             >
-              <CreditCard className="w-4 h-4 mr-2" />
-              <span>Manage Subscription</span>
+              <CreditCard className="w-4 h-4 me-2" />
+              <span>{t('profile.manage_subscription')}</span>
             </DropdownMenuItem>
           )
         )}
+
+        {/* Language Switcher */}
+        <DropdownMenuItem
+          onClick={toggleLanguage}
+          className="text-neutral-700 hover:text-neutral-900"
+        >
+          <Languages className="w-4 h-4 me-2" />
+          <span>{getLanguageLabel()}</span>
+        </DropdownMenuItem>
 
         {/* Logout */}
         <DropdownMenuItem
@@ -106,8 +127,8 @@ export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
             isLoggingOut && 'opacity-50 cursor-not-allowed'
           )}
         >
-          <LogOut className={cn('w-4 h-4 mr-2', isLoggingOut && 'animate-spin')} />
-          <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+          <LogOut className={cn('w-4 h-4 me-2', isLoggingOut && 'animate-spin')} />
+          <span>{isLoggingOut ? t('profile.logging_out') : t('profile.logout')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

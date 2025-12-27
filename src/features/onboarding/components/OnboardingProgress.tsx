@@ -3,6 +3,7 @@
  * Thin horizontal progress bar for mobile-first onboarding
  */
 
+import { useTranslation } from 'react-i18next';
 import { OnboardingStep } from '../types/onboarding.types';
 
 interface OnboardingProgressProps {
@@ -14,6 +15,7 @@ export const OnboardingProgress = ({
   currentStep,
   totalSteps = 4,
 }: OnboardingProgressProps) => {
+  const { t } = useTranslation();
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
   return (
@@ -27,7 +29,7 @@ export const OnboardingProgress = ({
           aria-valuenow={currentStep + 1}
           aria-valuemin={1}
           aria-valuemax={totalSteps}
-          aria-label={`Step ${currentStep + 1} of ${totalSteps}`}
+          aria-label={t('onboarding_progress.aria_label', { current: currentStep + 1, total: totalSteps })}
         />
       </div>
     </div>

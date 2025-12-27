@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Search, User as UserIcon, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -26,6 +27,7 @@ export default function CreateOrganizationModal({
   isOpen,
   onClose,
 }: CreateOrganizationModalProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<CreateOrganizationRequest>({
     name: '',
@@ -82,11 +84,11 @@ export default function CreateOrganizationModal({
         type: 'active'
       });
 
-      toast.success('Organization created successfully');
+      toast.success(t('organizations.created_success'));
       onClose();
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create organization');
+      toast.error(error.message || t('organizations.create_failed'));
     },
   });
 
@@ -95,13 +97,13 @@ export default function CreateOrganizationModal({
 
     // Validate name
     if (!formData.name.trim()) {
-      toast.error('Organization name is required');
+      toast.error(t('organizations.name_required'));
       return;
     }
 
     // Validate email format if provided
     if (formData.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
-      toast.error('Please enter a valid email address');
+      toast.error(t('organizations.email_invalid'));
       return;
     }
 
@@ -143,7 +145,7 @@ export default function CreateOrganizationModal({
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create Organization"
+      title={t('organizations.create_title')}
       maxWidth="2xl"
       isLoading={createMutation.isPending}
       closable={!createMutation.isPending}
@@ -153,14 +155,14 @@ export default function CreateOrganizationModal({
           {/* Organization Name */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Organization Name <span className="text-red-500">*</span>
+              {t('organizations.name_label')} <span className="text-red-500">{t('common.required')}</span>
             </label>
             <Input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Enter organization name"
+              placeholder={t('organizations.name_placeholder')}
               required
               autoFocus
             />
@@ -169,21 +171,21 @@ export default function CreateOrganizationModal({
           {/* Contact Email */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Contact Email
+              {t('organizations.email_label')}
             </label>
             <Input
               type="email"
               name="contactEmail"
               value={formData.contactEmail}
               onChange={handleChange}
-              placeholder="contact@organization.com"
+              placeholder={t('organizations.email_placeholder')}
             />
           </div>
 
           {/* Owner Selection */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Owner
+              {t('organizations.owner_label')}
             </label>
             <div className="relative">
               <div className="relative">
@@ -193,7 +195,7 @@ export default function CreateOrganizationModal({
                   value={userSearchQuery}
                   onChange={handleUserSearchChange}
                   onFocus={handleUserSearchFocus}
-                  placeholder="Search by email, name, or phone..."
+                  placeholder={t('organizations.owner_search_placeholder')}
                   className="pl-10"
                 />
                 {selectedOwner && (
@@ -206,7 +208,7 @@ export default function CreateOrganizationModal({
                 <div className="absolute z-[100] w-full mt-2 bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {isLoadingUsers ? (
                     <div className="p-4 text-center text-sm text-neutral-500">
-                      Loading users...
+                      {t('organizations.loading_users')}
                     </div>
                   ) : filteredUsers.length > 0 ? (
                     <div className="py-2">
@@ -245,14 +247,14 @@ export default function CreateOrganizationModal({
                     </div>
                   ) : (
                     <div className="p-4 text-center text-sm text-neutral-500">
-                      No users found matching "{userSearchQuery}"
+                      {t('organizations.no_users_found')} "{userSearchQuery}"
                     </div>
                   )}
                 </div>
               )}
             </div>
             <p className="mt-2 text-xs text-neutral-500">
-              Search and select a user to assign as organization owner (optional)
+              {t('organizations.owner_search_help')}
             </p>
           </div>
 
@@ -274,7 +276,7 @@ export default function CreateOrganizationModal({
                   <div className="text-sm text-neutral-500">{selectedOwner.email}</div>
                   {selectedOwner.phone && (
                     <div className="text-sm text-neutral-500 mt-1">
-                      Phone: {selectedOwner.phone}
+                      {t('common.phone')}: {selectedOwner.phone}
                     </div>
                   )}
                 </div>
@@ -300,13 +302,13 @@ export default function CreateOrganizationModal({
             onClick={onClose}
             disabled={createMutation.isPending}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
             disabled={createMutation.isPending}
           >
-            {createMutation.isPending ? 'Creating...' : 'Create Organization'}
+            {createMutation.isPending ? t('organizations.creating') : t('organizations.create_organization')}
           </Button>
         </div>
       </form>

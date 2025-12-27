@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { Users, Shield, UserCog, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { userService } from '../services/userService';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import type { RoleStatistic } from '../types';
 
 export default function UserStatsCards() {
+  const { t } = useTranslation();
   const { data: roleStats, isLoading } = useQuery({
     queryKey: ['roleStatistics'],
     queryFn: () => userService.getRoleStatistics(),
@@ -50,28 +52,28 @@ export default function UserStatsCards() {
 
   const stats = [
     {
-      title: 'Total Users',
+      titleKey: 'user_stats.total_users',
       value: getTotalUsers(),
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
     {
-      title: 'Administrators',
+      titleKey: 'user_stats.administrators',
       value: getAdminCount(),
       icon: Shield,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
     },
     {
-      title: 'Customers',
+      titleKey: 'user_stats.customers',
       value: getCustomerCount(),
       icon: UserPlus,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
     },
     {
-      title: 'Agents',
+      titleKey: 'user_stats.agents',
       value: getAgentCount(),
       icon: UserCog,
       color: 'text-orange-600',
@@ -83,7 +85,7 @@ export default function UserStatsCards() {
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat, index) => (
         <motion.div
-          key={stat.title}
+          key={stat.titleKey}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
@@ -92,7 +94,7 @@ export default function UserStatsCards() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-neutral-600 font-medium mb-1">
-                  {stat.title}
+                  {t(stat.titleKey)}
                 </p>
                 <p className="text-3xl font-bold text-neutral-900">
                   {stat.value.toLocaleString()}

@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { AGENT_PURPOSES } from '../constants/agentPurposes';
 import type { AgentPurpose } from '../types/onboarding.types';
@@ -11,6 +12,7 @@ import { CheckmarkIcon } from '@/shared/components/icons';
 import { StepHeading, StepSubtitle } from './shared/StepHeading';
 
 export const StepPurpose = () => {
+  const { t } = useTranslation();
   const { data, togglePurpose, setSelectedPurposes } = useOnboardingStore();
   const selectedPurposes = data.selectedPurposes;
   const hasPreselected = useRef(false);
@@ -39,8 +41,8 @@ export const StepPurpose = () => {
 
   return (
     <div className="w-full">
-      <StepHeading>What will your agent do?</StepHeading>
-      <StepSubtitle>Choose the purpose of your agent</StepSubtitle>
+      <StepHeading>{t('onboarding.step_purpose_title')}</StepHeading>
+      <StepSubtitle>{t('onboarding.step_purpose_subtitle')}</StepSubtitle>
 
       {/* Vertical card list with checkboxes */}
       <div className="space-y-3 mb-20">
@@ -79,16 +81,16 @@ export const StepPurpose = () => {
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-lg">{purpose.icon}</span>
                   <span className="text-base font-semibold text-neutral-900">
-                    {purpose.label}
+                    {t(`onboarding.purpose_${purpose.id.replace(/-/g, '_')}`)}
                   </span>
                   {purpose.isPopular && (
                     <span className="px-2 py-0.5 text-xs font-medium bg-neutral-900 text-white rounded-full">
-                      Popular
+                      {t('onboarding.purpose_popular_badge')}
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-neutral-600 line-clamp-2">
-                  {purpose.description}
+                  {t(`onboarding.purpose_${purpose.id.replace(/-/g, '_')}_desc`)}
                 </p>
               </div>
             </button>

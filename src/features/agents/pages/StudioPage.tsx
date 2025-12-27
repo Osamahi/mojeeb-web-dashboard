@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
@@ -42,6 +43,7 @@ function mergeJobIds(optimisticIds: string[], backendJobs: Array<{ jobId: string
 }
 
 export default function StudioPage() {
+  const { t } = useTranslation();
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const isDesktop = useIsDesktop();
   const [isAddKBModalOpen, setIsAddKBModalOpen] = useState(false);
@@ -91,8 +93,8 @@ export default function StudioPage() {
     return (
       <div className="h-full flex items-center justify-center p-6">
         <NoAgentEmptyState
-          title="No Agent Selected"
-          message="Please select an agent from the dropdown above to open its studio."
+          title={t('studio.no_agent_title')}
+          message={t('studio.no_agent_message')}
           showCreateButton={false}
         />
       </div>
@@ -111,11 +113,11 @@ export default function StudioPage() {
     return (
       <div className="p-6">
         <EmptyState
-          title="Agent Not Found"
-          description="The agent you're looking for doesn't exist or you don't have access to it."
+          title={t('studio.agent_not_found_title')}
+          description={t('studio.agent_not_found_description')}
           action={
             <Link to="/agents">
-              <Button variant="primary">Back to Agents</Button>
+              <Button variant="primary">{t('studio.back_to_agents')}</Button>
             </Link>
           }
         />
@@ -137,10 +139,10 @@ export default function StudioPage() {
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-xl sm:text-2xl font-semibold text-neutral-950">
-                  Agent Knowledge
+                  {t('studio.page_title')}
                 </h1>
                 <p className="text-sm text-neutral-600 mt-1">
-                  Add knowledge & instructions here
+                  {t('studio.page_subtitle')}
                 </p>
               </div>
 
@@ -148,10 +150,10 @@ export default function StudioPage() {
               <button
                 onClick={() => setIsAddKBModalOpen(true)}
                 className="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors"
-                aria-label="Add knowledge base"
+                aria-label={t('studio.add_knowledge_label')}
               >
                 <Plus className="w-4 h-4 text-neutral-700" />
-                <span className="text-sm font-medium text-neutral-700">Add</span>
+                <span className="text-sm font-medium text-neutral-700">{t('common.add')}</span>
               </button>
             </div>
           </div>
@@ -179,7 +181,7 @@ export default function StudioPage() {
                 </>
               ) : (
                 <div className="text-center py-8 text-sm text-neutral-500">
-                  Add knowledge below to help your agent provide better answers.
+                  {t('studio.no_knowledge_message')}
                 </div>
               )}
 
@@ -208,7 +210,7 @@ export default function StudioPage() {
                   onClick={() => setIsAddKBModalOpen(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Knowledge
+                  {t('studio.add_knowledge')}
                 </Button>
               </div>
             </div>
@@ -234,9 +236,9 @@ export default function StudioPage() {
             'transition-all duration-200',
             'lg:hidden'
           )}
-          aria-label="Open test chat"
+          aria-label={t('studio.test_chat_label')}
         >
-          <span className="text-sm font-medium whitespace-nowrap">Test Agent</span>
+          <span className="text-sm font-medium whitespace-nowrap">{t('studio.test_agent')}</span>
         </button>
       )}
 

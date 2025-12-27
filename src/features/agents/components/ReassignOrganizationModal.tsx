@@ -5,6 +5,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -24,6 +25,7 @@ interface ReassignOrganizationModalProps {
 }
 
 export default function ReassignOrganizationModal({ isOpen, onClose, agent }: ReassignOrganizationModalProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const [selectedOrgId, setSelectedOrgId] = useState<string>(agent.organizationId);
@@ -47,15 +49,15 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
     mutationFn: (organizationId: string) =>
       agentService.reassignOrganization(agent.id, organizationId),
     onSuccess: (updatedAgent) => {
-      toast.success(`Agent "${agent.name}" reassigned to "${updatedAgent.organizationName}" successfully!`);
+      toast.success(t('reassign_org.success', { agentName: agent.name, orgName: updatedAgent.organizationName }));
       queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
       handleClose();
     },
     onError: (error: unknown) => {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to reassign agent');
+        toast.error(error.response?.data?.message || t('reassign_org.error'));
       } else {
-        toast.error('An unexpected error occurred');
+        toast.error(t('reassign_org.error_unexpected'));
       }
     },
   });
@@ -68,21 +70,25 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
 
   const handleReassign = async () => {
     if (selectedOrgId === agent.organizationId) {
-      toast.info('Agent is already in this organization');
+      toast.info(t('reassign_org.already_in_org'));
       return;
     }
 
     const selectedOrg = organizations.find(org => org.id === selectedOrgId);
     if (!selectedOrg) {
-      toast.error('Please select a valid organization');
+      toast.error(t('reassign_org.select_valid_org'));
       return;
     }
 
     // Show confirmation dialog
     const confirmed = await confirm({
-      title: 'Reassign Agent to Organization',
-      message: `Are you sure you want to reassign "${agent.name}" from "${agent.organizationName}" to "${selectedOrg.name}"? This will affect agent access and permissions.`,
-      confirmText: 'Confirm Reassignment',
+      title: t('reassign_org.confirm_title'),
+      message: t('reassign_org.confirm_message', {
+        agentName: agent.name,
+        fromOrg: agent.organizationName,
+        toOrg: selectedOrg.name
+      }),
+      confirmText: t('reassign_org.confirm_button'),
       variant: 'danger',
     });
 
@@ -99,8 +105,8 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
       <BaseModal
         isOpen={isOpen}
         onClose={handleClose}
-        title="Reassign to Organization"
-        subtitle={`Agent: ${agent.name}`}
+        title={t('reassign_org.title')}
+        subtitle={t('reassign_org.subtitle', { name: agent.name })}
         maxWidth="md"
         isLoading={reassignMutation.isPending}
         closable={!reassignMutation.isPending}
@@ -109,20 +115,20 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
         <div className="space-y-4">
             {/* Current Organization */}
             <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3">
-              <p className="text-xs text-neutral-600 mb-1">Current Organization</p>
+              <p className="text-xs text-neutral-600 mb-1">{t('reassign_org.current_org')}</p>
               <p className="text-sm font-medium text-neutral-950">{agent.organizationName}</p>
             </div>
 
             {/* Search */}
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Select New Organization
+                {t('reassign_org.select_new_org')}
               </label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                 <input
                   type="text"
-                  placeholder="Search organizations..."
+                  placeholder={t('reassign_org.search_placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-3 py-2 border border-neutral-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-cyan focus:border-transparent text-sm"
@@ -134,11 +140,11 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
             <div className="border border-neutral-200 rounded-lg max-h-60 overflow-y-auto">
               {isLoadingOrgs ? (
                 <div className="p-4 text-center text-sm text-neutral-500">
-                  Loading organizations...
+                  {t('reassign_org.loading')}
                 </div>
               ) : filteredOrganizations.length === 0 ? (
                 <div className="p-4 text-center text-sm text-neutral-500">
-                  {searchQuery ? 'No organizations found matching your search' : 'No organizations available'}
+                  {searchQuery ? t('reassign_org.no_results') : t('reassign_org.no_orgs')}
                 </div>
               ) : (
                 filteredOrganizations.map((org) => (
@@ -160,7 +166,7 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-neutral-950 truncate">{org.name}</p>
                       {org.id === agent.organizationId && (
-                        <p className="text-xs text-neutral-500">Current</p>
+                        <p className="text-xs text-neutral-500">{t('reassign_org.current_badge')}</p>
                       )}
                     </div>
                   </label>
@@ -171,7 +177,7 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
             {/* Selected Organization Preview */}
             {selectedOrg && selectedOrg.id !== agent.organizationId && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-xs text-green-700 mb-1">Will be assigned to</p>
+                <p className="text-xs text-green-700 mb-1">{t('reassign_org.will_assign_to')}</p>
                 <p className="text-sm font-medium text-green-900">{selectedOrg.name}</p>
               </div>
             )}
@@ -185,7 +191,7 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
               className="flex-1"
               disabled={reassignMutation.isPending}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
@@ -194,7 +200,7 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
               className="flex-1"
               disabled={reassignMutation.isPending || selectedOrgId === agent.organizationId}
             >
-              {reassignMutation.isPending ? 'Reassigning...' : 'Reassign'}
+              {reassignMutation.isPending ? t('reassign_org.reassigning') : t('reassign_org.reassign_button')}
             </Button>
           </div>
         </div>

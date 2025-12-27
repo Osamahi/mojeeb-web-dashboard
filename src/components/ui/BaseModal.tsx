@@ -17,6 +17,7 @@ import { useEffect, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export interface BaseModalProps {
@@ -65,6 +66,8 @@ export const BaseModal = ({
   className,
   contentClassName,
 }: BaseModalProps) => {
+  const { t } = useTranslation();
+
   // Close on ESC key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -159,7 +162,7 @@ export const BaseModal = ({
                       'p-2 hover:bg-neutral-100 rounded-lg transition-colors',
                       'disabled:opacity-50 disabled:pointer-events-none'
                     )}
-                    aria-label="Close modal"
+                    aria-label={t('common.close')}
                   >
                     <X className="w-5 h-5 text-neutral-600" />
                   </button>

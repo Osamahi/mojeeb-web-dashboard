@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { ModalActions } from '@/components/ui/ModalActions';
 import { ChevronDown } from 'lucide-react';
@@ -28,6 +29,7 @@ interface DemoCallModalProps extends BaseModalProps {
 }
 
 export const DemoCallModal = ({ isOpen, onClose, onSuccess }: DemoCallModalProps) => {
+  const { t } = useTranslation();
   const [countries, setCountries] = useState<Country[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
@@ -115,7 +117,7 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess }: DemoCallModalProps
       setSubmittedPhone(fullPhone);
       onSuccess?.(fullPhone);
     } else {
-      toast.error(result.message || 'Failed to submit request. Please try again.');
+      toast.error(result.message || t('demo_call_modal.submit_error'));
       setHasError(true);
     }
   };
@@ -141,8 +143,8 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess }: DemoCallModalProps
       isOpen={isOpen}
       onClose={handleClose}
       maxWidth="sm"
-      title={isSuccess ? 'Success' : 'Request Free Demo Call'}
-      subtitle={isSuccess ? undefined : 'Our team will call you within 24 hours'}
+      title={isSuccess ? t('demo_call_modal.success_title') : t('demo_call_modal.title')}
+      subtitle={isSuccess ? undefined : t('demo_call_modal.subtitle')}
       isLoading={isSubmitting}
       closable={!isSubmitting}
     >
@@ -154,19 +156,19 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess }: DemoCallModalProps
           </div>
 
           <h3 className="text-xl font-semibold text-neutral-900 mb-2">
-            Request Submitted!
+            {t('demo_call_modal.success_heading')}
           </h3>
           <p className="text-sm text-neutral-600 mb-6">
-            We'll call you at {formatPhoneForDisplay(submittedPhone)}
+            {t('demo_call_modal.success_message', { phone: formatPhoneForDisplay(submittedPhone) })}
           </p>
 
           <ModalActions
             primary={{
-              label: 'Done',
+              label: t('demo_call_modal.done_button'),
               onClick: handleClose,
             }}
             secondary={{
-              label: 'Edit number',
+              label: t('demo_call_modal.edit_button'),
               onClick: handleEditNumber,
               variant: 'secondary',
             }}
@@ -242,7 +244,7 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess }: DemoCallModalProps
             {/* Validation Message */}
             {hasError && (
               <p className="mt-2 text-sm text-red-600">
-                Please enter a valid phone number
+                {t('demo_call_modal.validation_error')}
               </p>
             )}
           </div>
@@ -253,7 +255,7 @@ export const DemoCallModal = ({ isOpen, onClose, onSuccess }: DemoCallModalProps
             disabled={!isValid || isSubmitting}
             variant="pill"
           >
-            {isSubmitting ? 'Submitting...' : 'Request Call'}
+            {isSubmitting ? t('demo_call_modal.submitting') : t('demo_call_modal.submit_button')}
           </PrimaryButton>
         </form>
       )}

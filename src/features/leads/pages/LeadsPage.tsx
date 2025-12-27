@@ -7,6 +7,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useLeads } from '../hooks/useLeads';
 import { useLeadsSubscription } from '../hooks/useLeadsSubscription';
@@ -25,6 +26,7 @@ import { useDeleteLead } from '../hooks/useLeads';
 import type { Lead, LeadFilters } from '../types';
 
 export default function LeadsPage() {
+  const { t } = useTranslation();
   const { isAgentSelected } = useAgentContext();
   const deleteMutation = useDeleteLead();
 
@@ -125,8 +127,8 @@ export default function LeadsPage() {
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <EmptyState
           icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
-          title="No Agent Selected"
-          description="Please select an agent to view and manage clients"
+          title={t('leads.no_agent_title')}
+          description={t('leads.no_agent_description')}
         />
       </div>
     );
@@ -136,13 +138,13 @@ export default function LeadsPage() {
     <div className="p-6 space-y-6">
       {/* Static Header with Filter Button - never re-renders */}
       <BaseHeader
-        title="Clients"
-        subtitle="Manage your clients"
+        title={t('leads.title')}
+        subtitle={t('leads.subtitle')}
         showFilterButton
         activeFilterCount={activeFilterCount}
         onFilterClick={handleFilterDrawerToggle}
         primaryAction={{
-          label: "Add",
+          label: t('leads.add_client'),
           icon: UserPlus,
           onClick: handleAddLeadClick
         }}
@@ -212,9 +214,9 @@ export default function LeadsPage() {
 
       <ConfirmDialog
         isOpen={!!leadToDelete}
-        title="Delete Client"
-        message="Are you sure you want to delete this client? This action cannot be undone."
-        confirmText="Delete"
+        title={t('leads.delete_confirm_title')}
+        message={t('leads.delete_confirm_message')}
+        confirmText={t('leads.delete_confirm_button')}
         onConfirm={handleConfirmDelete}
         onCancel={() => setLeadToDelete(null)}
         isLoading={deleteMutation.isPending}

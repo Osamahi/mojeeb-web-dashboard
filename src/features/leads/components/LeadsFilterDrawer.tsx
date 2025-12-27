@@ -5,6 +5,7 @@
  */
 
 import { memo, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
@@ -25,6 +26,8 @@ export const LeadsFilterDrawer = memo(({
   onClose,
   onApplyFilters,
 }: LeadsFilterDrawerProps) => {
+  const { t } = useTranslation();
+
   // Draft state (internal to drawer, not applied until "Apply" clicked)
   const [draftSearch, setDraftSearch] = useState(filters.search || '');
   const [draftStatus, setDraftStatus] = useState<LeadStatus | 'all'>(filters.status);
@@ -123,10 +126,10 @@ export const LeadsFilterDrawer = memo(({
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-neutral-200">
               <div>
-                <h2 className="text-lg font-semibold text-neutral-900">Filters</h2>
+                <h2 className="text-lg font-semibold text-neutral-900">{t('leads.filter_drawer_title')}</h2>
                 {draftFilterCount > 0 && (
                   <p className="text-sm text-neutral-600 mt-0.5">
-                    {draftFilterCount} filter{draftFilterCount > 1 ? 's' : ''} selected
+                    {draftFilterCount} {draftFilterCount > 1 ? t('leads.filter_count_plural') : t('leads.filter_count_singular')}
                   </p>
                 )}
               </div>
@@ -143,10 +146,10 @@ export const LeadsFilterDrawer = memo(({
               {/* Search Section */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-neutral-900">
-                  Search
+                  {t('leads.search_label')}
                 </label>
                 <Input
-                  placeholder="Search by name or phone..."
+                  placeholder={t('leads.search_placeholder')}
                   value={draftSearch}
                   onChange={(e) => setDraftSearch(e.target.value)}
                   onKeyPress={(e) => {
@@ -156,21 +159,21 @@ export const LeadsFilterDrawer = memo(({
                   }}
                 />
                 <p className="text-xs text-neutral-500">
-                  Press Enter or click "Apply Filters" to search
+                  {t('leads.search_hint')}
                 </p>
               </div>
 
               {/* Status Section */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-neutral-900">
-                  Status
+                  {t('leads.status_label')}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { value: 'all', label: 'All Status' },
-                    { value: 'new', label: 'New' },
-                    { value: 'processing', label: 'Processing' },
-                    { value: 'completed', label: 'Completed' },
+                    { value: 'all', label: t('leads.status_all') },
+                    { value: 'new', label: t('leads.status_new') },
+                    { value: 'processing', label: t('leads.status_processing') },
+                    { value: 'completed', label: t('leads.status_completed') },
                   ].map((option) => (
                     <button
                       key={option.value}
@@ -192,7 +195,7 @@ export const LeadsFilterDrawer = memo(({
               {/* Date Range Section */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-neutral-900">
-                  Date Range
+                  {t('leads.date_range_label')}
                 </label>
                 <div className="relative">
                   <button
@@ -210,16 +213,16 @@ export const LeadsFilterDrawer = memo(({
                       {draftDateFrom || draftDateTo
                         ? draftDatePreset && draftDatePreset !== 'custom'
                           ? draftDatePreset === 'last7days'
-                            ? 'Last 7 Days'
+                            ? t('leads.date_preset_last7days')
                             : draftDatePreset === 'last30days'
-                            ? 'Last 30 Days'
+                            ? t('leads.date_preset_last30days')
                             : draftDatePreset === 'thisMonth'
-                            ? 'This Month'
+                            ? t('leads.date_preset_thisMonth')
                             : draftDatePreset === 'today'
-                            ? 'Today'
-                            : 'Custom Range'
-                          : 'Custom Range'
-                        : 'Select Date Range'
+                            ? t('leads.date_preset_today')
+                            : t('leads.date_range_custom')
+                          : t('leads.date_range_custom')
+                        : t('leads.date_range_select')
                       }
                     </span>
                   </button>
@@ -241,12 +244,12 @@ export const LeadsFilterDrawer = memo(({
               {draftFilterCount > 0 && (
                 <div className="pt-4 border-t border-neutral-200">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-neutral-900">Selected Filters</span>
+                    <span className="text-sm font-medium text-neutral-900">{t('leads.selected_filters')}</span>
                     <button
                       onClick={handleClearAll}
                       className="text-xs text-neutral-600 hover:text-black transition-colors"
                     >
-                      Clear all
+                      {t('leads.clear_all')}
                     </button>
                   </div>
                   <div className="space-y-2">
@@ -255,13 +258,13 @@ export const LeadsFilterDrawer = memo(({
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <Search className="w-3.5 h-3.5 text-neutral-500 flex-shrink-0" />
                           <span className="text-sm text-neutral-700 truncate">
-                            Search: <span className="font-medium">{draftSearch}</span>
+                            {t('leads.search_label')}: <span className="font-medium">{draftSearch}</span>
                           </span>
                         </div>
                         <button
                           onClick={() => setDraftSearch('')}
                           className="p-1 hover:bg-neutral-200 rounded transition-colors ml-2 flex-shrink-0"
-                          title="Remove search filter"
+                          title={t('leads.remove_search_filter')}
                         >
                           <X className="w-3.5 h-3.5 text-neutral-600" />
                         </button>
@@ -270,12 +273,12 @@ export const LeadsFilterDrawer = memo(({
                     {draftStatus !== 'all' && (
                       <div className="flex items-center justify-between bg-neutral-50 px-3 py-2 rounded-lg group hover:bg-neutral-100 transition-colors">
                         <span className="text-sm text-neutral-700 flex-1">
-                          Status: <span className="font-medium">{draftStatus.charAt(0).toUpperCase() + draftStatus.slice(1)}</span>
+                          {t('leads.status_label')}: <span className="font-medium">{draftStatus.charAt(0).toUpperCase() + draftStatus.slice(1)}</span>
                         </span>
                         <button
                           onClick={() => setDraftStatus('all')}
                           className="p-1 hover:bg-neutral-200 rounded transition-colors ml-2 flex-shrink-0"
-                          title="Remove status filter"
+                          title={t('leads.remove_status_filter')}
                         >
                           <X className="w-3.5 h-3.5 text-neutral-600" />
                         </button>
@@ -296,7 +299,7 @@ export const LeadsFilterDrawer = memo(({
                             setDraftDatePreset(null);
                           }}
                           className="p-1 hover:bg-neutral-200 rounded transition-colors ml-2 flex-shrink-0"
-                          title="Remove date filter"
+                          title={t('leads.remove_date_filter')}
                         >
                           <X className="w-3.5 h-3.5 text-neutral-600" />
                         </button>
@@ -310,14 +313,14 @@ export const LeadsFilterDrawer = memo(({
             {/* Footer */}
             <div className="p-4 border-t border-neutral-200 space-y-2">
               <Button onClick={handleApply} className="w-full">
-                Apply Filters{draftFilterCount > 0 && ` (${draftFilterCount})`}
+                {t('leads.apply_filters')}{draftFilterCount > 0 && ` (${draftFilterCount})`}
               </Button>
               {draftFilterCount > 0 && (
                 <button
                   onClick={handleClearAll}
                   className="w-full px-4 py-2 text-sm text-neutral-600 hover:text-black transition-colors"
                 >
-                  Clear all filters
+                  {t('leads.clear_all_filters')}
                 </button>
               )}
             </div>

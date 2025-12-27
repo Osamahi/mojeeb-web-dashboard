@@ -4,6 +4,7 @@
  */
 
 import { useMemo, useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Users as UsersIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Avatar } from '@/components/ui/Avatar';
@@ -25,6 +26,8 @@ const ROLE_COLORS: Record<Role, 'success' | 'warning' | 'danger' | any> = {
 };
 
 export default function UsersTable({ users }: UsersTableProps) {
+  const { t } = useTranslation();
+
   // Infinite scroll state
   const [displayCount, setDisplayCount] = useState(50);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -64,22 +67,22 @@ export default function UsersTable({ users }: UsersTableProps) {
   const columns = useMemo<ColumnDef<User>[]>(() => [
     {
       key: 'name',
-      label: 'User',
+      label: t('users.table_user'),
       sortable: false,
       render: (_, user) => (
         <div className="flex items-center gap-3">
           <Avatar
             src={user.avatar_url || undefined}
-            name={user.name || 'Anonymous User'}
+            name={user.name || t('users.anonymous_user')}
             size="md"
           />
           <div>
             <div className="font-medium text-neutral-900">
-              {user.name || 'Anonymous User'}
+              {user.name || t('users.anonymous_user')}
             </div>
             {user.o_auth_provider && (
               <div className="text-xs text-neutral-500">
-                OAuth: {user.o_auth_provider}
+                {t('users.oauth_label')}: {user.o_auth_provider}
               </div>
             )}
           </div>
@@ -88,7 +91,7 @@ export default function UsersTable({ users }: UsersTableProps) {
     },
     {
       key: 'email',
-      label: 'Email',
+      label: t('users.table_email'),
       sortable: true,
       render: (email) => (
         <div className="text-sm text-neutral-900">{email || '-'}</div>
@@ -96,7 +99,7 @@ export default function UsersTable({ users }: UsersTableProps) {
     },
     {
       key: 'phone',
-      label: 'Phone Number',
+      label: t('users.table_phone'),
       sortable: false,
       render: (phone) => (
         <div className="text-sm text-neutral-900">{phone || '-'}</div>
@@ -104,7 +107,7 @@ export default function UsersTable({ users }: UsersTableProps) {
     },
     {
       key: 'role',
-      label: 'Role',
+      label: t('users.table_role'),
       sortable: true,
       render: (role) => (
         <Badge variant={ROLE_COLORS[role as Role]} size="sm">
@@ -114,7 +117,7 @@ export default function UsersTable({ users }: UsersTableProps) {
     },
     {
       key: 'created_at',
-      label: 'Created',
+      label: t('users.table_created'),
       sortable: true,
       render: (created_at) => {
         if (!created_at) return <div className="text-sm text-neutral-600">-</div>;
@@ -131,7 +134,7 @@ export default function UsersTable({ users }: UsersTableProps) {
         );
       },
     },
-  ], []);
+  ], [t]);
 
   return (
     <>
@@ -145,8 +148,8 @@ export default function UsersTable({ users }: UsersTableProps) {
         itemName="users"
         emptyState={{
           icon: <UsersIcon className="w-12 h-12 text-neutral-400" />,
-          title: 'No users found',
-          description: 'No users available in the system',
+          title: t('users.no_users_title'),
+          description: t('users.no_users_description'),
         }}
       />
 
@@ -154,7 +157,7 @@ export default function UsersTable({ users }: UsersTableProps) {
       {isLoadingMore && (
         <div className="flex justify-center items-center py-8 bg-white rounded-lg border border-neutral-200 mt-4">
           <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
-          <span className="ml-2 text-sm text-neutral-600">Loading more users...</span>
+          <span className="ml-2 text-sm text-neutral-600">{t('users.loading_more')}</span>
         </div>
       )}
 
@@ -162,7 +165,7 @@ export default function UsersTable({ users }: UsersTableProps) {
       {displayedUsers.length >= users.length && users.length > 50 && (
         <div className="flex justify-center items-center py-6 bg-white rounded-lg border border-neutral-200 mt-4">
           <span className="text-sm text-neutral-500">
-            All {users.length} users loaded
+            {t('users.all_loaded', { count: users.length })}
           </span>
         </div>
       )}

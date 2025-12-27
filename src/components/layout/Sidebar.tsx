@@ -183,7 +183,7 @@ const SidebarContent = () => {
           }}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          className="fixed left-0 h-[calc(100vh-64px)] bg-white border-r border-neutral-200 flex flex-col overflow-hidden"
+          className="fixed start-0 h-[calc(100vh-64px)] bg-white border-e border-neutral-200 flex flex-col overflow-hidden"
           style={{
             top: `${SIDEBAR_DIMENSIONS.HEADER_HEIGHT}px`,
             zIndex: SIDEBAR_Z_INDEX.DESKTOP,
@@ -216,15 +216,15 @@ const SidebarContent = () => {
               <motion.aside
                 ref={sidebarRef}
                 tabIndex={-1}
-                initial={{ x: -SIDEBAR_DIMENSIONS.MOBILE_WIDTH }}
+                initial={{ x: document.documentElement.dir === 'rtl' ? SIDEBAR_DIMENSIONS.MOBILE_WIDTH : -SIDEBAR_DIMENSIONS.MOBILE_WIDTH }}
                 animate={{ x: 0 }}
-                exit={{ x: -SIDEBAR_DIMENSIONS.MOBILE_WIDTH }}
+                exit={{ x: document.documentElement.dir === 'rtl' ? SIDEBAR_DIMENSIONS.MOBILE_WIDTH : -SIDEBAR_DIMENSIONS.MOBILE_WIDTH }}
                 transition={{
                   type: 'tween',
                   duration: SIDEBAR_ANIMATIONS.MOBILE_TRANSITION,
                   ease: SIDEBAR_ANIMATIONS.EASE_CURVE,
                 }}
-                className="fixed top-0 left-0 h-screen bg-white border-r border-neutral-200 flex flex-col overflow-y-auto"
+                className="fixed top-0 start-0 h-screen bg-white border-e border-neutral-200 flex flex-col overflow-y-auto"
                 style={{
                   width: `${SIDEBAR_DIMENSIONS.MOBILE_WIDTH}px`,
                   zIndex: SIDEBAR_Z_INDEX.MOBILE,

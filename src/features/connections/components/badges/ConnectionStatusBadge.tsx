@@ -4,6 +4,7 @@
  * States: connected, available, coming_soon
  */
 
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 export type BadgeStatus = 'connected' | 'available' | 'coming_soon';
@@ -14,35 +15,37 @@ export interface ConnectionStatusBadgeProps {
   showDot?: boolean;
 }
 
-const statusConfig = {
+const getStatusConfig = (t: (key: string) => string) => ({
   connected: {
-    label: 'Connected',
+    label: t('connections.status_connected'),
     bgColor: 'bg-green-50',
     textColor: 'text-green-700',
     borderColor: 'border-green-200',
     dotColor: 'bg-green-500',
   },
   available: {
-    label: 'Available',
+    label: t('connections.status_available'),
     bgColor: 'bg-neutral-50',
     textColor: 'text-neutral-700',
     borderColor: 'border-neutral-200',
     dotColor: 'bg-neutral-500',
   },
   coming_soon: {
-    label: 'Coming Soon',
+    label: t('connections.status_coming_soon'),
     bgColor: 'bg-neutral-100',
     textColor: 'text-neutral-600',
     borderColor: 'border-neutral-200',
     dotColor: 'bg-neutral-400',
   },
-};
+});
 
 export function ConnectionStatusBadge({
   status,
   className,
   showDot = true,
 }: ConnectionStatusBadgeProps) {
+  const { t } = useTranslation();
+  const statusConfig = getStatusConfig(t);
   const config = statusConfig[status];
 
   return (

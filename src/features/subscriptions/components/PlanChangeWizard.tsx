@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { subscriptionService } from '../services/subscriptionService';
 import type { SubscriptionPlan, SubscriptionDetails } from '../types/subscription.types';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { PlanSelectionGrid } from './PlanSelectionGrid';
 import { PlanFeaturesList } from './PlanFeaturesList';
 
@@ -24,6 +25,7 @@ export function PlanChangeWizard({
   currentSubscription,
   onSuccess,
 }: PlanChangeWizardProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<WizardStep>('select-plan');
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [upgrading, setUpgrading] = useState(false);
@@ -56,16 +58,16 @@ export function PlanChangeWizard({
   const handleConfirm = useCallback(async () => {
     // Validation: Ensure a plan is selected
     if (!selectedPlan) {
-      toast.error('No plan selected', {
-        description: 'Please select a plan before confirming.',
+      toast.error(t('plan_change_wizard.no_plan_selected'), {
+        description: t('plan_change_wizard.select_plan_first'),
       });
       return;
     }
 
     // Validation: Prevent changing to current plan (defense-in-depth)
     if (selectedPlan.code === currentSubscription.planCode) {
-      toast.error('Cannot change to current plan', {
-        description: 'You are already on this plan.',
+      toast.error(t('plan_change_wizard.cannot_change_current'), {
+        description: t('plan_change_wizard.already_on_plan'),
       });
       handleBack();
       return;
@@ -74,8 +76,8 @@ export function PlanChangeWizard({
     // Validation: Ensure plan has valid pricing for current currency
     const pricing = selectedPlan.pricing[currentSubscription.currency];
     if (!pricing || typeof pricing.monthly !== 'number') {
-      toast.error('Invalid plan pricing', {
-        description: `This plan is not available in ${currentSubscription.currency}.`,
+      toast.error(t('plan_change_wizard.invalid_pricing'), {
+        description: t('plan_change_wizard.plan_not_available', { currency: currentSubscription.currency }),
       });
       handleBack();
       return;
@@ -94,10 +96,13 @@ export function PlanChangeWizard({
 
       toast.success(
         isDowngrade
-          ? `Successfully downgraded to ${selectedPlan.name}`
-          : `Successfully upgraded to ${selectedPlan.name}!`,
+          ? t('plan_change_wizard.downgrade_success', { name: selectedPlan.name })
+          : t('plan_change_wizard.upgrade_success', { name: selectedPlan.name }),
         {
-          description: `New limits: ${selectedPlan.messageLimit.toLocaleString()} messages, ${selectedPlan.agentLimit} agents`,
+          description: t('plan_change_wizard.new_limits', {
+            messages: selectedPlan.messageLimit.toLocaleString(),
+            agents: selectedPlan.agentLimit
+          }),
         }
       );
 
@@ -105,13 +110,13 @@ export function PlanChangeWizard({
       onClose();
     } catch (error) {
       console.error('Failed to change plan:', error);
-      toast.error('Failed to change plan', {
-        description: 'Please try again or contact support if the issue persists.',
+      toast.error(t('plan_change_wizard.change_failed'), {
+        description: t('plan_change_wizard.try_again'),
       });
     } finally {
       setUpgrading(false);
     }
-  }, [selectedPlan, currentSubscription.planCode, currentSubscription.messageLimit, currentSubscription.currency, billingInterval, handleBack, onSuccess, onClose]);
+  }, [selectedPlan, currentSubscription.planCode, currentSubscription.messageLimit, currentSubscription.currency, billingInterval, handleBack, onSuccess, onClose, t]);
 
   const getPrice = (plan: SubscriptionPlan) => {
     const currency = currentSubscription.currency;
@@ -146,8 +151,8 @@ export function PlanChangeWizard({
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={step === 'select-plan' ? 'Change Your Plan' : (isDowngrade ? 'Confirm Downgrade' : 'Confirm Upgrade')}
-      subtitle={step === 'select-plan' ? 'Upgrade or downgrade to a plan that fits your needs' : undefined}
+      title={step === 'select-plan' ? t('plan_change_wizard.title') : (isDowngrade ? t('plan_change_wizard.confirm_downgrade') : t('plan_change_wizard.confirm_upgrade'))}
+      subtitle={step === 'select-plan' ? t('plan_change_wizard.subtitle') : undefined}
       maxWidth="2xl"
       isLoading={upgrading}
       closable={!upgrading}
@@ -201,9 +206,9 @@ export function PlanChangeWizard({
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">
-                        {isDowngrade ? 'Downgrading' : 'Upgrading'} to {selectedPlan.name}
+                        {isDowngrade ? t('plan_change_wizard.downgrading_to', { name: selectedPlan.name }) : t('plan_change_wizard.upgrading_to', { name: selectedPlan.name })}
                       </h3>
-                      <p className="text-sm text-gray-600">Your new limits will take effect immediately</p>
+                      <p className="text-sm text-gray-600">{t('plan_change_wizard.limits_take_effect')}</p>
                     </div>
                   </div>
                 </div>
@@ -233,7 +238,7 @@ export function PlanChangeWizard({
 
                   <div className="pt-4 border-t border-gray-200">
                     <p className="text-sm text-gray-600">
-                      Next billing: <span className="font-medium text-gray-900">
+                      {t('plan_change_wizard.next_billing')}: <span className="font-medium text-gray-900">
                         {format(new Date(currentSubscription.currentPeriodEnd), 'MMM d, yyyy')}
                       </span>
                     </p>
@@ -247,7 +252,7 @@ export function PlanChangeWizard({
                     disabled={upgrading}
                     className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Back
+                    {t('common.back')}
                   </button>
                   <button
                     onClick={handleConfirm}
@@ -259,8 +264,8 @@ export function PlanChangeWizard({
                     }`}
                   >
                     {upgrading
-                      ? (isDowngrade ? 'Downgrading...' : 'Upgrading...')
-                      : (isDowngrade ? 'Confirm Downgrade' : 'Confirm Upgrade')
+                      ? (isDowngrade ? t('plan_change_wizard.downgrading') : t('plan_change_wizard.upgrading'))
+                      : (isDowngrade ? t('plan_change_wizard.confirm_downgrade') : t('plan_change_wizard.confirm_upgrade'))
                     }
                   </button>
                 </div>

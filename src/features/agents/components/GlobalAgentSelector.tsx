@@ -7,6 +7,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, Check, Plus, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAgentStore } from '../stores/agentStore';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
@@ -15,6 +16,7 @@ import { BaseModal } from '@/components/ui/BaseModal';
 import { cn } from '@/lib/utils';
 
 export default function GlobalAgentSelector() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,7 +77,7 @@ export default function GlobalAgentSelector() {
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-neutral-50">
         <Spinner size="sm" />
-        <span className="text-sm text-neutral-600">Switching...</span>
+        <span className="text-sm text-neutral-600">{t('agent_selector.switching')}</span>
       </div>
     );
   }
@@ -88,7 +90,7 @@ export default function GlobalAgentSelector() {
         className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-neutral-50 transition-colors"
       >
         <Plus className="w-4 h-4 text-brand-cyan" />
-        <span className="text-sm font-medium text-brand-cyan">Create Agent</span>
+        <span className="text-sm font-medium text-brand-cyan">{t('agent_selector.create_agent')}</span>
       </button>
     );
   }
@@ -111,7 +113,7 @@ export default function GlobalAgentSelector() {
           </>
         ) : (
           <>
-            <span className="text-sm text-neutral-500">Select an agent</span>
+            <span className="text-sm text-neutral-500">{t('agent_selector.select_placeholder')}</span>
             <ChevronDown className="w-4 h-4 text-neutral-600 flex-shrink-0" />
           </>
         )}
@@ -121,20 +123,20 @@ export default function GlobalAgentSelector() {
       <BaseModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
-        title="Select Agent"
+        title={t('agent_selector.modal_title')}
         maxWidth="sm"
       >
         <div className="flex flex-col">
           {/* Search Input - Only for Super Admins */}
           {isSuperAdmin && (
             <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search agents..."
-                className="w-full pl-10 pr-4 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
+                placeholder={t('agent_selector.search_placeholder')}
+                className="w-full ps-10 pe-4 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
                 autoFocus
               />
             </div>
@@ -144,7 +146,7 @@ export default function GlobalAgentSelector() {
           <div className="max-h-[400px] overflow-y-auto space-y-1 mb-3">
             {filteredAgents.length === 0 && isSuperAdmin && searchQuery ? (
               <div className="text-center py-8 text-neutral-500">
-                <p className="text-sm">No agents found matching "{searchQuery}"</p>
+                <p className="text-sm">{t('agent_selector.no_results', { query: searchQuery })}</p>
               </div>
             ) : (
               filteredAgents.map((agent) => (
@@ -179,7 +181,7 @@ export default function GlobalAgentSelector() {
             className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg hover:bg-neutral-50 transition-colors"
           >
             <Plus className="w-4 h-4 text-brand-cyan" />
-            <span className="text-sm font-medium text-brand-cyan">Create New Agent</span>
+            <span className="text-sm font-medium text-brand-cyan">{t('agent_selector.create_new')}</span>
           </button>
         </div>
       </BaseModal>

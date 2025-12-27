@@ -5,6 +5,7 @@
  */
 
 import { useRef, UIEvent, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw, Loader2 } from 'lucide-react';
 import { useInfiniteConversations } from '../../hooks/useInfiniteConversations';
 import { useConversationSubscription } from '../../hooks/useConversationSubscription';
@@ -19,6 +20,8 @@ interface ConversationListProps {
 }
 
 export default function ConversationList({ agentId, onConversationSelect }: ConversationListProps) {
+  const { t } = useTranslation();
+
   // Fetch conversations with infinite scroll via React Query
   const {
     data,
@@ -75,7 +78,7 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
     return (
       <div className="h-full overflow-hidden bg-neutral-50">
         <div className="h-14 bg-white border-b border-neutral-200 flex items-center px-4">
-          <h2 className="text-lg font-semibold text-neutral-950">Conversations</h2>
+          <h2 className="text-lg font-semibold text-neutral-950">{t('conversations.title')}</h2>
         </div>
         <div className="overflow-y-auto h-[calc(100%-3.5rem)]">
           <ConversationListSkeleton />
@@ -89,12 +92,12 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
     return (
       <div className="h-full flex flex-col bg-neutral-50">
         <div className="h-14 bg-white border-b border-neutral-200 flex items-center justify-between px-4">
-          <h2 className="text-lg font-semibold text-neutral-950">Conversations</h2>
+          <h2 className="text-lg font-semibold text-neutral-950">{t('conversations.title')}</h2>
           <Button
             onClick={handleRefresh}
             className="p-2"
             variant="ghost"
-            title="Refresh"
+            title={t('conversations.refresh')}
             disabled={isRefetching}
           >
             <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
@@ -112,13 +115,13 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
       {/* Header */}
       <div className="h-14 bg-white border-b border-neutral-200 flex items-center justify-between px-4 flex-shrink-0">
         <h2 className="text-lg font-semibold text-neutral-950">
-          Conversations ({conversations.length})
+          {t('conversations.title_with_count', { count: conversations.length })}
         </h2>
         <Button
           onClick={handleRefresh}
           className="p-2"
           variant="ghost"
-          title="Refresh"
+          title={t('conversations.refresh')}
           disabled={isRefetching}
         >
           <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
@@ -144,14 +147,14 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
         {isFetchingNextPage && (
           <div className="flex items-center justify-center py-4">
             <Loader2 className="w-5 h-5 animate-spin text-neutral-500" />
-            <span className="ml-2 text-sm text-neutral-500">Loading more conversations...</span>
+            <span className="ml-2 text-sm text-neutral-500">{t('conversations.loading_more')}</span>
           </div>
         )}
 
         {/* End of list indicator */}
         {!hasNextPage && conversations.length > 0 && (
           <div className="text-center py-4 text-sm text-neutral-500">
-            No more conversations
+            {t('conversations.no_more')}
           </div>
         )}
       </div>
@@ -160,7 +163,7 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
       {error && (
         <div className="px-4 py-3 bg-red-50 border-t border-red-200">
           <p className="text-sm text-red-600">
-            {error instanceof Error ? error.message : 'Failed to load conversations'}
+            {error instanceof Error ? error.message : t('conversations.error_loading')}
           </p>
           <Button
             onClick={handleRefresh}
@@ -168,7 +171,7 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
             variant="ghost"
             size="sm"
           >
-            Retry
+            {t('conversations.retry')}
           </Button>
         </div>
       )}

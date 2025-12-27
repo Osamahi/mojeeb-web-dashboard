@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Building2, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { organizationService } from '../services/organizationService';
@@ -17,6 +18,7 @@ import { BaseHeader } from '@/components/ui/BaseHeader';
 import type { Organization } from '../types';
 
 export default function OrganizationsPage() {
+  const { t } = useTranslation();
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -52,10 +54,10 @@ export default function OrganizationsPage() {
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header */}
       <BaseHeader
-        title="Organizations"
-        subtitle="Manage and view all system organizations"
+        title={t('organizations.title')}
+        subtitle={t('organizations.subtitle')}
         primaryAction={{
-          label: "Create",
+          label: t('organizations.create_button'),
           icon: Plus,
           onClick: handleOpenCreateModal
         }}
@@ -72,11 +74,11 @@ export default function OrganizationsPage() {
         ) : error ? (
           <EmptyState
             icon={<Building2 className="w-12 h-12 text-neutral-400" />}
-            title="Error Loading Organizations"
+            title={t('organizations.error_title')}
             description={
               error instanceof Error
                 ? error.message
-                : 'Failed to load organizations. Please try again.'
+                : t('organizations.error_description')
             }
           />
         ) : organizations && organizations.length > 0 ? (
@@ -89,8 +91,8 @@ export default function OrganizationsPage() {
         ) : (
           <EmptyState
             icon={<Building2 className="w-12 h-12 text-neutral-400" />}
-            title="No Organizations Yet"
-            description="Organizations will appear here once created"
+            title={t('organizations.no_orgs_title')}
+            description={t('organizations.no_orgs_description')}
           />
         )}
       </motion.div>

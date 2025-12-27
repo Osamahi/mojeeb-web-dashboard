@@ -8,6 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { Plus, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAgentStore } from '../stores/agentStore';
 import AgentCard from '../components/AgentCard';
 import AgentFormModal from '../components/AgentFormModal';
@@ -21,6 +22,7 @@ import { Role } from '@/features/auth/types/auth.types';
 import { AgentListSkeleton } from '../components/AgentCardSkeleton';
 
 export default function AgentsPage() {
+  const { t } = useTranslation();
   // Read agents from store - DashboardLayout handles fetching and syncing
   const agents = useAgentStore((state) => state.agents);
   const isLoading = useAgentStore((state) => state.isLoading);
@@ -123,13 +125,13 @@ export default function AgentsPage() {
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header with Filter Button (SuperAdmin only) */}
       <BaseHeader
-        title="AI Agents"
-        subtitle="Manage your intelligent AI assistants"
+        title={t('agents.title')}
+        subtitle={t('agents.subtitle')}
         showFilterButton={isSuperAdmin}
         activeFilterCount={activeFilterCount}
         onFilterClick={handleFilterDrawerToggle}
         primaryAction={{
-          label: "Create",
+          label: t('common.create'),
           icon: Plus,
           onClick: () => setIsCreateModalOpen(true)
         }}
@@ -151,8 +153,8 @@ export default function AgentsPage() {
             // Has agents but no matches after filtering
             <EmptyState
               icon={<Search className="w-12 h-12 text-neutral-400" />}
-              title="No agents found"
-              description="No agents match your current filters. Try adjusting your search or filters."
+              title={t('agents.no_match_title')}
+              description={t('agents.no_match_description')}
               action={
                 <Button
                   variant="outline"
@@ -166,7 +168,7 @@ export default function AgentsPage() {
                     });
                   }}
                 >
-                  Clear Filters
+                  {t('common.clear_filters')}
                 </Button>
               }
             />
@@ -174,12 +176,12 @@ export default function AgentsPage() {
             // No agents at all
             <EmptyState
               icon={<Search className="w-12 h-12 text-neutral-400" />}
-              title="No agents yet"
-              description="Create your first AI agent to get started"
+              title={t('agents.no_agents_title')}
+              description={t('agents.no_agents_description')}
               action={
                 <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Agent
+                  {t('agents.create_agent')}
                 </Button>
               }
             />

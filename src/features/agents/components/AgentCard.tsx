@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { isAxiosError } from 'axios';
+import { useTranslation } from 'react-i18next';
 import type { Agent } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
@@ -25,6 +26,7 @@ interface AgentCardProps {
 }
 
 const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialogComponent } = useConfirm();
@@ -38,36 +40,36 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   const deleteMutation = useMutation({
     mutationFn: () => agentService.deleteAgent(agent.id),
     onSuccess: () => {
-      toast.success(`Agent "${agent.name}" deleted successfully`);
+      toast.success(t('agents.deleted_success', { name: agent.name }));
       queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
     },
     onError: (error: unknown) => {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to delete agent');
+        toast.error(error.response?.data?.message || t('agents.delete_failed'));
       } else {
-        toast.error('An unexpected error occurred');
+        toast.error(t('agents.delete_failed'));
       }
     },
   });
 
   const formatDate = (dateString: string | null | undefined): string => {
     if (!dateString) {
-      return 'No date';
+      return t('common.no_date');
     }
 
     // Check for default .NET DateTime ("0001-01-01")
     if (dateString.startsWith('0001-01-01')) {
-      return 'No date';
+      return t('common.no_date');
     }
 
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) {
-        return 'Invalid date';
+        return t('common.invalid_date');
       }
       return format(date, 'MMM d, yyyy');
     } catch (error) {
-      return 'Invalid date';
+      return t('common.invalid_date');
     }
   };
 
@@ -78,9 +80,9 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
     if (deleteMutation.isPending) return;
 
     const confirmed = await confirm({
-      title: 'Delete Agent',
-      message: `Are you sure you want to delete "${agent.name}"? This action cannot be undone.`,
-      confirmText: 'Delete',
+      title: t('agents.delete_confirm_title'),
+      message: t('agents.delete_confirm_message', { name: agent.name }),
+      confirmText: t('common.delete'),
       variant: 'danger',
     });
 

@@ -3,6 +3,7 @@
  * Confirms platform disconnection with user
  */
 
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
@@ -24,16 +25,18 @@ export function DisconnectConfirmationDialog({
   connection,
   isDisconnecting = false,
 }: DisconnectConfirmationDialogProps) {
+  const { t } = useTranslation();
+
   if (!connection) return null;
 
   const platform = getPlatformById(connection.platform);
-  const accountName = connection.platformAccountName || connection.platformAccountHandle || 'this account';
+  const accountName = connection.platformAccountName || connection.platformAccountHandle || t('disconnect_confirmation.account_fallback');
 
   return (
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Disconnect Platform"
+      title={t('disconnect_confirmation.title')}
       maxWidth="sm"
       isLoading={isDisconnecting}
       closable={!isDisconnecting}
@@ -49,10 +52,10 @@ export function DisconnectConfirmationDialog({
         {/* Message */}
         <div className="text-center space-y-2">
           <p className="text-sm text-neutral-700">
-            Are you sure you want to disconnect <span className="font-semibold">{accountName}</span>?
+            {t('disconnect_confirmation.message', { account: accountName })}
           </p>
           <p className="text-sm text-neutral-600">
-            You will no longer be able to receive or respond to messages from this {platform?.name || 'platform'}.
+            {t('disconnect_confirmation.warning', { platform: platform?.name || t('disconnect_confirmation.platform_fallback') })}
           </p>
         </div>
 
@@ -64,14 +67,14 @@ export function DisconnectConfirmationDialog({
             disabled={isDisconnecting}
             className="flex-1"
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={onConfirm}
             disabled={isDisconnecting}
             className="flex-1 bg-red-600 hover:bg-red-700 text-white"
           >
-            {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+            {isDisconnecting ? t('disconnect_confirmation.disconnecting') : t('disconnect_confirmation.disconnect_button')}
           </Button>
         </div>
       </div>

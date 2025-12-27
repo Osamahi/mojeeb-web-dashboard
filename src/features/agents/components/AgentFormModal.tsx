@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { isAxiosError } from 'axios';
+import { useTranslation } from 'react-i18next';
 import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
 import { BaseModal } from '@/components/ui/BaseModal';
@@ -23,6 +24,7 @@ interface AgentFormModalProps {
 }
 
 export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFormModalProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const isEditMode = mode === 'edit';
 
@@ -44,15 +46,15 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
   const createMutation = useMutation({
     mutationFn: (data: CreateAgentRequest) => agentService.createAgent(data),
     onSuccess: () => {
-      toast.success('Agent created successfully!');
+      toast.success(t('agent_form.success_created'));
       queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
       handleClose();
     },
     onError: (error: unknown) => {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to create agent');
+        toast.error(error.response?.data?.message || t('agent_form.error_create'));
       } else {
-        toast.error('An unexpected error occurred');
+        toast.error(t('agent_form.error_unexpected'));
       }
     },
   });
@@ -60,15 +62,15 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
   const updateMutation = useMutation({
     mutationFn: (data: UpdateAgentRequest) => agentService.updateAgent(agent!.id, data),
     onSuccess: () => {
-      toast.success('Agent updated successfully!');
+      toast.success(t('agent_form.success_updated'));
       queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
       handleClose();
     },
     onError: (error: unknown) => {
       if (isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'Failed to update agent');
+        toast.error(error.response?.data?.message || t('agent_form.error_update'));
       } else {
-        toast.error('An unexpected error occurred');
+        toast.error(t('agent_form.error_unexpected'));
       }
     },
   });
@@ -85,24 +87,24 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
 
     // Validation
     if (!formData.name.trim()) {
-      toast.error('Please enter an agent name');
+      toast.error(t('agent_form.validation_name_required'));
       return;
     }
 
     if (formData.name.trim().length < 2) {
-      toast.error('Agent name must be at least 2 characters');
+      toast.error(t('agent_form.validation_name_too_short'));
       return;
     }
 
     // Validate persona prompt is not empty
     if (!formData.personaPrompt?.trim()) {
-      toast.error('Please enter agent instructions');
+      toast.error(t('agent_form.validation_instructions_required'));
       return;
     }
 
     if (isEditMode) {
       if (!agent) {
-        toast.error('Cannot update: agent data is missing');
+        toast.error(t('agent_form.error_missing_data'));
         return;
       }
       updateMutation.mutate(formData);
@@ -115,8 +117,8 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
     <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
-      title={isEditMode ? 'Edit Agent' : 'Create Agent'}
-      subtitle={isEditMode ? 'Update your AI assistant' : 'Set up your new AI assistant'}
+      title={t(isEditMode ? 'agent_form.title_edit' : 'agent_form.title_create')}
+      subtitle={t(isEditMode ? 'agent_form.subtitle_edit' : 'agent_form.subtitle_create')}
       maxWidth="lg"
       isLoading={isPending}
       closable={!isPending}
@@ -126,12 +128,12 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
         {/* Agent Name */}
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-neutral-700 mb-1">
-            Agent Name
+            {t('agent_form.name_label')}
           </label>
           <Input
             id="name"
             type="text"
-            placeholder="My Agent"
+            placeholder={t('agent_form.name_placeholder')}
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
@@ -141,11 +143,11 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
         {/* Agent Instructions */}
         <div>
           <label htmlFor="instructions" className="block text-sm font-medium text-neutral-700 mb-1">
-            Instructions
+            {t('agent_form.instructions_label')}
           </label>
           <textarea
             id="instructions"
-            placeholder="Describe how the agent should behave and respond to customers. For example: 'You are a friendly customer support agent who helps users with product questions.'"
+            placeholder={t('agent_form.instructions_placeholder')}
             value={formData.personaPrompt || ''}
             onChange={(e) => setFormData({ ...formData, personaPrompt: e.target.value })}
             className="w-full px-4 py-2 border border-neutral-300 rounded-md bg-white text-neutral-950 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan transition-colors duration-200 min-h-[100px] resize-y text-base"
@@ -162,7 +164,7 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
             className="flex-1"
             disabled={isPending}
           >
-            Cancel
+            {t('agent_form.cancel_button')}
           </Button>
           <Button
             type="submit"
@@ -171,8 +173,8 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
             disabled={isPending}
           >
             {isPending
-              ? (isEditMode ? 'Saving...' : 'Creating...')
-              : (isEditMode ? 'Save' : 'Create')
+              ? t(isEditMode ? 'agent_form.saving_button' : 'agent_form.creating_button')
+              : t(isEditMode ? 'agent_form.save_button' : 'agent_form.create_button')
             }
           </Button>
         </div>

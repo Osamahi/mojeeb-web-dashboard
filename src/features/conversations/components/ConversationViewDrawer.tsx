@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { fetchConversationById } from '../services/conversationService';
 import ChatPanel from './Chat/ChatPanel';
@@ -23,6 +24,7 @@ export default function ConversationViewDrawer({
   isOpen,
   onClose,
 }: ConversationViewDrawerProps) {
+  const { t } = useTranslation();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,8 +46,8 @@ export default function ConversationViewDrawer({
       })
       .catch((err) => {
         console.error('Error loading conversation:', err);
-        setError('Failed to load conversation. You may not have access to it.');
-        toast.error('Failed to load conversation');
+        setError(t('conversation_drawer.failed_message'));
+        toast.error(t('conversation_drawer.failed_title'));
       })
       .finally(() => {
         setIsLoading(false);
@@ -88,7 +90,7 @@ export default function ConversationViewDrawer({
       {/* Drawer */}
       <div
         className={cn(
-          'fixed top-0 right-0 bottom-0 z-50',
+          'fixed top-0 end-0 bottom-0 z-50',
           'w-full sm:w-[600px] max-w-[90vw]',
           'bg-white shadow-2xl',
           'transform transition-transform duration-300 ease-out',
@@ -96,7 +98,7 @@ export default function ConversationViewDrawer({
         )}
       >
         {/* Close Button */}
-        <div className="absolute top-0 right-0 p-4 z-10">
+        <div className="absolute top-0 end-0 p-4 z-10">
           <button
             onClick={onClose}
             className={cn(
@@ -104,7 +106,7 @@ export default function ConversationViewDrawer({
               'border border-neutral-200 shadow-sm',
               'hover:bg-neutral-50 transition-colors'
             )}
-            title="Close (ESC)"
+            title={t('conversation_drawer.close_title')}
           >
             <X className="w-5 h-5 text-neutral-600" />
           </button>
@@ -115,20 +117,20 @@ export default function ConversationViewDrawer({
           {isLoading ? (
             <div className="h-full flex flex-col items-center justify-center p-6">
               <Loader2 className="w-12 h-12 animate-spin text-neutral-400 mb-4" />
-              <p className="text-sm text-neutral-600">Loading conversation...</p>
+              <p className="text-sm text-neutral-600">{t('conversation_drawer.loading')}</p>
             </div>
           ) : error ? (
             <div className="h-full flex flex-col items-center justify-center p-6 text-center">
               <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
                 <X className="w-8 h-8 text-red-500" />
               </div>
-              <p className="text-neutral-900 font-medium mb-2">Failed to Load Conversation</p>
+              <p className="text-neutral-900 font-medium mb-2">{t('conversation_drawer.failed_title')}</p>
               <p className="text-sm text-neutral-600 max-w-sm mb-4">{error}</p>
               <button
                 onClick={onClose}
                 className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
               >
-                Close
+                {t('conversation_drawer.close_button')}
               </button>
             </div>
           ) : conversation ? (

@@ -5,6 +5,7 @@
 
 import { useReducer, useEffect, useRef, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { logger } from '@/lib/logger';
 import { useConnections } from '../hooks/useConnections';
@@ -83,6 +84,7 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
 }
 
 export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConnectionModalProps) {
+  const { t } = useTranslation();
   const [state, dispatch] = useReducer(wizardReducer, initialState);
   const { data: connections = [] } = useConnections();
   const { mutate: connectPage, isPending: isConnecting } = useConnectPage();
@@ -205,9 +207,9 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
         state.platform === 'facebook' ? 'Facebook' :
         state.platform === 'instagram' ? 'Instagram' :
         'WhatsApp';
-      return `Connect ${platformName}`;
+      return t('connections.connect_platform', { platform: platformName });
     }
-    return 'Add Connection';
+    return t('connections.add_title');
   };
 
   return (
@@ -260,11 +262,13 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
             {state.step === 'complete' && (
               <div className="flex flex-col items-center justify-center py-12">
                 <CheckCircle2 className="h-16 w-16 text-green-500" />
-                <h3 className="mt-4 text-xl font-semibold text-neutral-900">Connection Successful!</h3>
+                <h3 className="mt-4 text-xl font-semibold text-neutral-900">{t('connections.success_title')}</h3>
                 <p className="mt-2 text-sm text-neutral-600">
-                  Your {state.platform === 'instagram' ? 'Instagram' : 'Facebook'} account has been connected.
+                  {t('connections.success_message', {
+                    platform: state.platform === 'instagram' ? 'Instagram' : 'Facebook'
+                  })}
                 </p>
-                <p className="mt-1 text-xs text-neutral-500">This dialog will close automatically...</p>
+                <p className="mt-1 text-xs text-neutral-500">{t('connections.auto_close')}</p>
               </div>
             )}
           </div>

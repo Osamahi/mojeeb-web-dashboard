@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import './styles/design-tokens.css'
 import './styles/globals.css'
+import './i18n/config' // Initialize i18n BEFORE app renders
 import App from './App.tsx'
 import { env } from './config/env'
 import { initializeSentry } from './lib/sentry'

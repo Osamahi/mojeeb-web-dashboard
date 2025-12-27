@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { StepHeading, StepSubtitle } from './shared/StepHeading';
 
@@ -12,6 +13,7 @@ interface StepKnowledgeProps {
 }
 
 export const StepKnowledge = ({ onNext }: StepKnowledgeProps) => {
+  const { t } = useTranslation();
   const { data, setKnowledgeContent } = useOnboardingStore();
   const [content, setContent] = useState(data.knowledgeContent);
 
@@ -23,8 +25,8 @@ export const StepKnowledge = ({ onNext }: StepKnowledgeProps) => {
 
   return (
     <div className="w-full">
-      <StepHeading>Add Knowledge</StepHeading>
-      <StepSubtitle>Provide information your agent needs to answer customers</StepSubtitle>
+      <StepHeading>{t('onboarding.step_knowledge_title')}</StepHeading>
+      <StepSubtitle>{t('onboarding.step_knowledge_subtitle')}</StepSubtitle>
 
       <div className="mb-20">
         <textarea
@@ -32,7 +34,7 @@ export const StepKnowledge = ({ onNext }: StepKnowledgeProps) => {
           value={content}
           onChange={handleContentChange}
           rows={8}
-          placeholder="FAQs, product info, opening hours, price...etc"
+          placeholder={t('onboarding.step_knowledge_placeholder')}
           className="w-full px-4 py-3 text-sm font-mono border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors resize-none"
         />
       </div>

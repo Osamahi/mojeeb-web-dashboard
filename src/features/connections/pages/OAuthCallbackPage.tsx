@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { logger } from '@/lib/logger';
 import {
   validateOAuthState,
@@ -21,6 +22,7 @@ import {
 type CallbackStatus = 'processing' | 'success' | 'error';
 
 export default function OAuthCallbackPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<CallbackStatus>('processing');
@@ -69,7 +71,7 @@ export default function OAuthCallbackPage() {
         // Validate state parameter for CSRF protection
         if (state && !validateOAuthState(state)) {
           logger.error('OAuth state validation failed');
-          setErrorMessage('Security validation failed. Please try again.');
+          setErrorMessage(t('oauth_callback.security_validation_failed'));
           setStatus('error');
 
           if (hasOpener && window.opener) {
@@ -87,7 +89,7 @@ export default function OAuthCallbackPage() {
         // Check for temp connection ID
         if (!tempConnectionId) {
           logger.error('No temporary connection ID in callback');
-          setErrorMessage('Authorization incomplete. No connection ID received.');
+          setErrorMessage(t('oauth_callback.no_connection_id'));
           setStatus('error');
 
           if (hasOpener && window.opener) {
@@ -128,7 +130,7 @@ export default function OAuthCallbackPage() {
         }
       } catch (err) {
         logger.error('Error processing OAuth callback', { error: err });
-        setErrorMessage('An unexpected error occurred. Please try again.');
+        setErrorMessage(t('oauth_callback.unexpected_error'));
         setStatus('error');
       }
     };
@@ -151,19 +153,19 @@ export default function OAuthCallbackPage() {
         {status === 'processing' && (
           <div className="text-center">
             <Loader2 className="mx-auto h-12 w-12 animate-spin text-neutral-400" />
-            <h2 className="mt-4 text-lg font-semibold text-neutral-900">Processing Authorization</h2>
-            <p className="mt-2 text-sm text-neutral-600">Please wait while we complete your authorization...</p>
+            <h2 className="mt-4 text-lg font-semibold text-neutral-900">{t('oauth_callback.processing_title')}</h2>
+            <p className="mt-2 text-sm text-neutral-600">{t('oauth_callback.processing_message')}</p>
           </div>
         )}
 
         {status === 'success' && (
           <div className="text-center">
             <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
-            <h2 className="mt-4 text-lg font-semibold text-neutral-900">Authorization Successful</h2>
+            <h2 className="mt-4 text-lg font-semibold text-neutral-900">{t('oauth_callback.success_title')}</h2>
             <p className="mt-2 text-sm text-neutral-600">
               {isPopup
-                ? 'This window will close automatically...'
-                : 'Redirecting you back to the dashboard...'}
+                ? t('oauth_callback.success_message_popup')
+                : t('oauth_callback.success_message_redirect')}
             </p>
           </div>
         )}
@@ -171,13 +173,13 @@ export default function OAuthCallbackPage() {
         {status === 'error' && (
           <div className="text-center">
             <XCircle className="mx-auto h-12 w-12 text-red-500" />
-            <h2 className="mt-4 text-lg font-semibold text-neutral-900">Authorization Failed</h2>
+            <h2 className="mt-4 text-lg font-semibold text-neutral-900">{t('oauth_callback.error_title')}</h2>
             <p className="mt-2 text-sm text-neutral-600">{errorMessage}</p>
             <button
               onClick={handleRetry}
               className="mt-4 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
             >
-              {isPopup ? 'Close Window' : 'Return to Connections'}
+              {isPopup ? t('oauth_callback.close_window') : t('oauth_callback.return_to_connections')}
             </button>
           </div>
         )}

@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AxiosError } from 'axios';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { authService } from '../services/authService';
@@ -17,17 +18,21 @@ import { toast } from 'sonner';
 import { AuthPageLayout } from '../components/AuthPageLayout';
 import { AuthFooterLink } from '../components/AuthFooterLink';
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginForm = {
+  email: string;
+  password: string;
+};
 
 export const LoginPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const loginSchema = z.object({
+    email: z.string().email(t('auth.email_invalid')),
+    password: z.string().min(6, t('auth.password_min_length', { min: 6 })),
+  });
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -43,7 +48,7 @@ export const LoginPage = () => {
       navigate('/conversations');
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string }>;
-      const errorMessage = axiosError.response?.data?.message || 'Login failed. Please check your credentials.';
+      const errorMessage = axiosError.response?.data?.message || t('auth.login_failed');
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -53,13 +58,13 @@ export const LoginPage = () => {
 
   return (
     <AuthPageLayout
-      title="Welcome back"
+      title={t('auth.login_title')}
       error={error}
       isLoading={isLoading}
       footerContent={
         <AuthFooterLink
-          text="Don't have an account?"
-          linkText="Sign up"
+          text={t('auth.dont_have_account')}
+          linkText={t('auth.sign_up_link')}
           linkTo="/signup"
         />
       }
@@ -69,7 +74,7 @@ export const LoginPage = () => {
         <Input
           {...register('email')}
           type="email"
-          placeholder="Email address"
+          placeholder={t('auth.email_placeholder')}
           error={errors.email?.message}
           disabled={isLoading}
         />
@@ -78,7 +83,7 @@ export const LoginPage = () => {
           <Input
             {...register('password')}
             type="password"
-            placeholder="Password"
+            placeholder={t('auth.password_placeholder')}
             error={errors.password?.message}
             disabled={isLoading}
           />
@@ -89,7 +94,7 @@ export const LoginPage = () => {
               className="text-sm text-brand-cyan hover:text-brand-cyan/80 transition-colors"
               disabled={isLoading}
             >
-              Forgot password?
+              {t('auth.forgot_password_link')}
             </button>
           </div>
         </div>
@@ -100,7 +105,7 @@ export const LoginPage = () => {
           isLoading={isLoading}
           disabled={isLoading}
         >
-          Sign In
+          {t('auth.login_button')}
         </Button>
       </form>
     </AuthPageLayout>

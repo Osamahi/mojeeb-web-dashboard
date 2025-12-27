@@ -88,9 +88,9 @@ export function DropdownMenuContent({
   if (!isOpen) return null;
 
   const alignmentClass = {
-    start: 'left-0',
-    center: 'left-1/2 -translate-x-1/2',
-    end: 'right-0',
+    start: 'start-0',
+    center: 'start-1/2 -translate-x-1/2',
+    end: 'end-0',
   };
 
   return (
@@ -133,7 +133,7 @@ export function DropdownMenuItem({
       onClick={handleClick}
       disabled={disabled}
       className={cn(
-        'relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors text-left',
+        'relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors text-start',
         'hover:bg-neutral-100 focus:bg-neutral-100',
         disabled && 'pointer-events-none opacity-50',
         className

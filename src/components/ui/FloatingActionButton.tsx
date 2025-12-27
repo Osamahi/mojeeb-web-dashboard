@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface FloatingActionButtonProps {
   onClick: () => void;
@@ -15,14 +16,16 @@ interface FloatingActionButtonProps {
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   onClick,
   disabled = false,
-  ariaLabel = 'Continue',
+  ariaLabel,
   icon,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      aria-label={ariaLabel}
+      aria-label={ariaLabel || t('fab.continue')}
       className={`
         fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-10
         w-14 h-14 sm:w-16 sm:h-16

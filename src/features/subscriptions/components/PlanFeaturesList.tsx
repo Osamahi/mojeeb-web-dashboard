@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react';
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface PlanFeaturesListProps {
   /** Number of messages per month */
@@ -28,39 +29,41 @@ export const PlanFeaturesList = memo(({
   agentLimit,
   features = [],
 }: PlanFeaturesListProps) => {
+  const { t } = useTranslation();
+
   return (
     <ul className="space-y-2 text-sm">
       {/* Message Limit */}
       <li className="flex items-center gap-2">
         <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-        <span>{messageLimit.toLocaleString()} messages/month</span>
+        <span>{t('plan_features.messages_per_month', { count: messageLimit.toLocaleString() })}</span>
       </li>
 
       {/* Agent Limit */}
       <li className="flex items-center gap-2">
         <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-        <span>{agentLimit} {agentLimit === 1 ? 'agent' : 'agents'}</span>
+        <span>{agentLimit === 1 ? t('plan_features.agent_singular', { count: agentLimit }) : t('plan_features.agent_plural', { count: agentLimit })}</span>
       </li>
 
       {/* Optional Features */}
       {features.includes('analytics') && (
         <li className="flex items-center gap-2">
           <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-          <span>Analytics</span>
+          <span>{t('plan_features.analytics')}</span>
         </li>
       )}
 
       {features.includes('priority_support') && (
         <li className="flex items-center gap-2">
           <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-          <span>Priority Support</span>
+          <span>{t('plan_features.priority_support')}</span>
         </li>
       )}
 
       {features.includes('api_access') && (
         <li className="flex items-center gap-2">
           <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-          <span>API Access</span>
+          <span>{t('plan_features.api_access')}</span>
         </li>
       )}
     </ul>

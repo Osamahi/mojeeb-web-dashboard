@@ -1,4 +1,5 @@
 import { type HTMLAttributes, type ReactNode, forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from './Button';
@@ -13,7 +14,10 @@ export interface ErrorStateProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export const ErrorState = forwardRef<HTMLDivElement, ErrorStateProps>(
-  ({ className, icon, title, description, onRetry, retryLabel = 'Try Again', action, ...props }, ref) => {
+  ({ className, icon, title, description, onRetry, retryLabel, action, ...props }, ref) => {
+    const { t } = useTranslation();
+    const defaultRetryLabel = retryLabel || t('common.try_again');
+
     return (
       <div
         ref={ref}
@@ -36,7 +40,7 @@ export const ErrorState = forwardRef<HTMLDivElement, ErrorStateProps>(
 
         {onRetry && (
           <Button onClick={onRetry} className="mt-4">
-            {retryLabel}
+            {defaultRetryLabel}
           </Button>
         )}
 

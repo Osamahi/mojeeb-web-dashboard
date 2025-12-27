@@ -6,6 +6,7 @@
 
 import { Bot, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 
 interface NoAgentEmptyStateProps {
@@ -15,10 +16,11 @@ interface NoAgentEmptyStateProps {
 }
 
 export default function NoAgentEmptyState({
-  title = 'No Agent Selected',
-  message = 'Please select an agent from the dropdown above to get started, or create your first agent.',
+  title,
+  message,
   showCreateButton = true,
 }: NoAgentEmptyStateProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleCreateAgent = () => {
@@ -35,12 +37,12 @@ export default function NoAgentEmptyState({
 
         {/* Title */}
         <h3 className="text-xl font-semibold text-neutral-950 mb-3">
-          {title}
+          {title || t('no_agent.title')}
         </h3>
 
         {/* Message */}
         <p className="text-neutral-600 mb-6">
-          {message}
+          {message || t('no_agent.message')}
         </p>
 
         {/* Create Agent Button */}
@@ -50,7 +52,7 @@ export default function NoAgentEmptyState({
             className="inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            Create Your First Agent
+            {t('no_agent.create_button')}
           </Button>
         )}
       </div>

@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { OnboardingStep } from '../types/onboarding.types';
 import { OnboardingProgress } from '../components/OnboardingProgress';
@@ -22,6 +23,7 @@ import { PhoneIcon, ArrowRightIcon, CheckCircleIcon } from '@/shared/components/
 import { PrimaryButton } from '../components/shared/PrimaryButton';
 
 export const OnboardingWizard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentStep, nextStep, data, completeOnboarding, resetOnboardingState } = useOnboardingStore();
@@ -171,14 +173,14 @@ export const OnboardingWizard = () => {
               onClick={handleOnboardingComplete}
               className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
             >
-              Go to dashboard
+              {t('onboarding.go_to_dashboard')}
             </button>
           ) : (
             <button
               onClick={handleSkipClick}
               className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
             >
-              Skip
+              {t('onboarding.skip')}
             </button>
           )}
         </div>
@@ -204,14 +206,14 @@ export const OnboardingWizard = () => {
               <div className="text-xs flex items-center gap-2 text-neutral-500">
                 <span className="flex items-center gap-1">
                   <CheckCircleIcon className="w-3 h-3" />
-                  Demo call requested
+                  {t('onboarding.demo_requested')}
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowDemoModal(true)}
                   className="text-neutral-500 hover:text-neutral-900 underline transition-colors"
                 >
-                  Edit
+                  {t('common.edit')}
                 </button>
               </div>
             ) : (
@@ -221,7 +223,7 @@ export const OnboardingWizard = () => {
                 className="text-sm text-neutral-600 hover:text-neutral-900 flex items-center gap-1.5 transition-colors underline"
               >
                 <PhoneIcon />
-                Request free demo phone call
+                {t('onboarding.request_demo')}
               </button>
             )}
 
@@ -232,14 +234,14 @@ export const OnboardingWizard = () => {
               disabled={!isSuccessReady}
               variant="rounded"
             >
-              Try your agent
+              {t('onboarding.try_your_agent')}
             </PrimaryButton>
           ) : (
             <PrimaryButton
               onClick={handleStepComplete}
               disabled={!canProceed}
               variant="fab"
-              aria-label="Continue to next step"
+              aria-label={t('onboarding.continue_to_next')}
             >
               <ArrowRightIcon />
             </PrimaryButton>
@@ -259,8 +261,8 @@ export const OnboardingWizard = () => {
       <SimpleConfirmModal
         isOpen={showSkipModal}
         onClose={handleSkipCancel}
-        title="Skip onboarding?"
-        confirmText="Yes, Skip"
+        title={t('onboarding.skip_title')}
+        confirmText={t('onboarding.skip_confirm')}
         onConfirm={handleSkipConfirm}
       />
 

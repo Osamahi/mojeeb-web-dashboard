@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { FileText, Upload } from 'lucide-react';
 import { agentService } from '../services/agentService';
 import { useUploadDocumentAsync } from '../hooks/useDocumentJobs';
@@ -44,6 +45,8 @@ export default function AddKnowledgeBaseModal({
   onSuccess,
   onUploadStart,
 }: AddKnowledgeBaseModalProps) {
+  const { t } = useTranslation();
+
   // Tab state
   const [activeTab, setActiveTab] = useState<Tab>('manual');
 
@@ -64,10 +67,10 @@ export default function AddKnowledgeBaseModal({
       // Validate
       const validationErrors: { name?: string; content?: string } = {};
       if (!name.trim()) {
-        validationErrors.name = 'Title is required';
+        validationErrors.name = t('knowledge_base.title_required');
       }
       if (!content.trim()) {
-        validationErrors.content = 'Content is required';
+        validationErrors.content = t('knowledge_base.content_required');
       }
 
       if (Object.keys(validationErrors).length > 0) {
@@ -87,7 +90,7 @@ export default function AddKnowledgeBaseModal({
       return kb;
     },
     onSuccess: () => {
-      toast.success('Knowledge created and linked');
+      toast.success(t('knowledge_base.success_created'));
       handleReset();
       onClose();
       onSuccess();
@@ -95,7 +98,7 @@ export default function AddKnowledgeBaseModal({
     onError: (error: Error) => {
       logger.error('Error creating KB', error);
       if (error.message !== 'Validation failed') {
-        toast.error('Failed to create knowledge');
+        toast.error(t('knowledge_base.error_create'));
       }
     },
   });
@@ -127,7 +130,7 @@ export default function AddKnowledgeBaseModal({
     try {
       const jobResponse = await uploadMutation.mutateAsync(selectedFile);
 
-      toast.success('Document upload started! Processing in background...');
+      toast.success(t('knowledge_base.upload_started'));
 
       // Notify parent for optimistic UI update
       if (onUploadStart) {
@@ -163,8 +166,8 @@ export default function AddKnowledgeBaseModal({
     <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add Knowledge"
-      subtitle="Create knowledge via manual entry or document upload"
+      title={t('knowledge_base.add_title')}
+      subtitle={t('knowledge_base.add_subtitle')}
       maxWidth="lg"
       isLoading={isLoading}
       closable={!isLoading}
@@ -178,7 +181,7 @@ export default function AddKnowledgeBaseModal({
         >
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Manual Entry
+            {t('knowledge_base.tab_manual')}
           </div>
         </button>
         <button
@@ -188,7 +191,7 @@ export default function AddKnowledgeBaseModal({
         >
           <div className="flex items-center gap-2">
             <Upload className="w-4 h-4" />
-            Upload Document
+            {t('knowledge_base.tab_document')}
           </div>
         </button>
       </div>
@@ -197,8 +200,8 @@ export default function AddKnowledgeBaseModal({
       {activeTab === 'manual' && (
         <form onSubmit={handleManualSubmit} className="space-y-4">
           <Input
-            label="Title"
-            placeholder="Enter knowledge title..."
+            label={t('knowledge_base.title_label')}
+            placeholder={t('knowledge_base.title_placeholder')}
             value={name}
             onChange={(e) => {
               setName(e.target.value);
@@ -210,8 +213,8 @@ export default function AddKnowledgeBaseModal({
           />
 
           <Textarea
-            label="Content"
-            placeholder="Enter the knowledge base content..."
+            label={t('knowledge_base.content_label')}
+            placeholder={t('knowledge_base.content_placeholder')}
             value={content}
             onChange={(e) => {
               setContent(e.target.value);
@@ -232,14 +235,14 @@ export default function AddKnowledgeBaseModal({
               onClick={handleClose}
               disabled={createMutation.isPending}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
               variant="primary"
               disabled={createMutation.isPending}
             >
-              {createMutation.isPending ? 'Creating...' : 'Add Knowledge'}
+              {createMutation.isPending ? t('knowledge_base.creating') : t('knowledge_base.add_button')}
             </Button>
           </div>
         </form>
@@ -251,7 +254,7 @@ export default function AddKnowledgeBaseModal({
           {/* File Input */}
           <div>
             <label className="block text-sm font-medium text-neutral-900 mb-2">
-              Select Document
+              {t('knowledge_base.select_document')}
             </label>
             <input
               type="file"
@@ -268,7 +271,10 @@ export default function AddKnowledgeBaseModal({
             />
             {selectedFile && (
               <p className="mt-2 text-sm text-neutral-600">
-                Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                {t('knowledge_base.file_selected', {
+                  name: selectedFile.name,
+                  size: (selectedFile.size / 1024).toFixed(2)
+                })}
               </p>
             )}
           </div>
@@ -281,7 +287,7 @@ export default function AddKnowledgeBaseModal({
               onClick={handleClose}
               disabled={uploadMutation.isPending}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
@@ -289,7 +295,7 @@ export default function AddKnowledgeBaseModal({
               onClick={handleDocumentUpload}
               disabled={!selectedFile || uploadMutation.isPending}
             >
-              {uploadMutation.isPending ? 'Uploading...' : 'Upload & Process'}
+              {uploadMutation.isPending ? t('knowledge_base.uploading') : t('knowledge_base.upload_button')}
             </Button>
           </div>
         </div>

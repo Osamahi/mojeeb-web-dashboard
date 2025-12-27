@@ -7,6 +7,7 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import TestChat from './TestChat';
 
 interface TestChatPanelProps {
@@ -16,6 +17,8 @@ interface TestChatPanelProps {
 }
 
 export default function TestChatPanel({ agentId, isOpen, onClose }: TestChatPanelProps) {
+  const { t } = useTranslation();
+
   // Close panel on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -66,18 +69,18 @@ export default function TestChatPanel({ agentId, isOpen, onClose }: TestChatPane
         )}
         role="dialog"
         aria-modal="true"
-        aria-label="Test Chat Panel"
+        aria-label={t('test_chat_panel.panel_label')}
       >
         {/* Panel Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 bg-white">
-          <h2 className="text-lg font-semibold text-neutral-950">Test Chat</h2>
+          <h2 className="text-lg font-semibold text-neutral-950">{t('test_chat_panel.title')}</h2>
           <button
             onClick={onClose}
             className={cn(
               'p-2 rounded-lg hover:bg-neutral-100 transition-colors',
               'min-w-[44px] min-h-[44px] flex items-center justify-center'
             )}
-            aria-label="Close test chat panel"
+            aria-label={t('test_chat_panel.close')}
           >
             <X className="w-5 h-5 text-neutral-600" />
           </button>

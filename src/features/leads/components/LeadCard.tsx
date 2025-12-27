@@ -5,6 +5,7 @@
  */
 
 import { Copy, MessageSquare, Pencil, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { formatPhoneNumber } from '../utils/formatting';
 import type { Lead, LeadStatus } from '../types';
 
@@ -29,6 +30,8 @@ export function LeadCard({
   onCopyPhone,
   isUpdating = false,
 }: LeadCardProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       className="bg-white border border-neutral-200 rounded-lg p-4 cursor-pointer hover:border-neutral-300 transition-colors"
@@ -38,7 +41,7 @@ export function LeadCard({
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           <h3 className="text-base font-semibold text-neutral-900 truncate mb-1">
-            {lead.name || 'Add Name'}
+            {lead.name || t('lead_card.add_name')}
           </h3>
           {lead.phone && (
             <div className="flex items-center gap-2">
@@ -52,7 +55,7 @@ export function LeadCard({
               <button
                 onClick={(e) => onCopyPhone(lead.phone!, e)}
                 className="p-1.5 hover:bg-neutral-100 rounded transition-all"
-                title="Copy phone number"
+                title={t('lead_card.copy_phone')}
               >
                 <Copy className="w-3.5 h-3.5 text-neutral-400 hover:text-neutral-700" />
               </button>
@@ -72,7 +75,7 @@ export function LeadCard({
                 onViewConversation(lead.conversationId!);
               }}
               className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-              title="View conversation"
+              title={t('lead_card.view_conversation')}
             >
               <MessageSquare className="w-4 h-4" />
             </button>
@@ -83,7 +86,7 @@ export function LeadCard({
               onEditClick(lead.id);
             }}
             className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-            title="Edit lead"
+            title={t('lead_card.edit_lead')}
           >
             <Pencil className="w-4 h-4" />
           </button>
@@ -93,7 +96,7 @@ export function LeadCard({
               onDeleteClick(lead.id);
             }}
             className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-            title="Delete lead"
+            title={t('lead_card.delete_lead')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -129,9 +132,9 @@ export function LeadCard({
               paddingRight: '2.5rem',
             }}
           >
-            <option value="new">New</option>
-            <option value="processing">Processing</option>
-            <option value="completed">Completed</option>
+            <option value="new">{t('lead_card.status_new')}</option>
+            <option value="processing">{t('lead_card.status_processing')}</option>
+            <option value="completed">{t('lead_card.status_completed')}</option>
           </select>
         </div>
 

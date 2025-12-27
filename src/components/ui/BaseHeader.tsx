@@ -30,6 +30,7 @@
 
 import { memo } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export interface BaseHeaderProps {
   // Title Section
@@ -101,7 +102,7 @@ export const BaseHeader = memo(({
             <button
               onClick={onFilterClick}
               className="relative w-10 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center justify-center"
-              title="Filters"
+              title={useTranslation().t('common.filters')}
             >
               <SlidersHorizontal className="w-4 h-4 text-neutral-700" />
               {activeFilterCount > 0 && (

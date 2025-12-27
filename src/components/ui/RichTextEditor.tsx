@@ -9,6 +9,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { Bold, Italic, List, ListOrdered } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface RichTextEditorProps {
   value: string;
@@ -23,12 +24,14 @@ export interface RichTextEditorProps {
 export const RichTextEditor = ({
   value,
   onChange,
-  placeholder = 'Start typing...',
+  placeholder,
   disabled = false,
   minHeight = 150,
   maxHeight = 500,
   className,
 }: RichTextEditorProps) => {
+  const { t } = useTranslation();
+  const defaultPlaceholder = placeholder || t('rich_text_editor.placeholder');
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -53,7 +56,7 @@ export const RichTextEditor = ({
           'text-neutral-950 placeholder:text-neutral-400',
           'px-4 py-3'
         ),
-        'data-placeholder': placeholder,
+        'data-placeholder': defaultPlaceholder,
       },
     },
   });
@@ -92,8 +95,8 @@ export const RichTextEditor = ({
             'flex items-center justify-center',
             editor.isActive('bold') ? 'bg-neutral-300' : 'bg-transparent'
           )}
-          title="Bold"
-          aria-label="Toggle bold"
+          title={t('rich_text_editor.bold')}
+          aria-label={t('rich_text_editor.toggle_bold')}
         >
           <Bold className="w-4 h-4 text-neutral-700" />
         </button>
@@ -109,8 +112,8 @@ export const RichTextEditor = ({
             'flex items-center justify-center',
             editor.isActive('italic') ? 'bg-neutral-300' : 'bg-transparent'
           )}
-          title="Italic"
-          aria-label="Toggle italic"
+          title={t('rich_text_editor.italic')}
+          aria-label={t('rich_text_editor.toggle_italic')}
         >
           <Italic className="w-4 h-4 text-neutral-700" />
         </button>
@@ -127,8 +130,8 @@ export const RichTextEditor = ({
             'flex items-center justify-center',
             editor.isActive('bulletList') ? 'bg-neutral-300' : 'bg-transparent'
           )}
-          title="Bullet List"
-          aria-label="Toggle bullet list"
+          title={t('rich_text_editor.bullet_list')}
+          aria-label={t('rich_text_editor.toggle_bullet_list')}
         >
           <List className="w-4 h-4 text-neutral-700" />
         </button>
@@ -144,8 +147,8 @@ export const RichTextEditor = ({
             'flex items-center justify-center',
             editor.isActive('orderedList') ? 'bg-neutral-300' : 'bg-transparent'
           )}
-          title="Numbered List"
-          aria-label="Toggle numbered list"
+          title={t('rich_text_editor.numbered_list')}
+          aria-label={t('rich_text_editor.toggle_numbered_list')}
         >
           <ListOrdered className="w-4 h-4 text-neutral-700" />
         </button>
@@ -165,7 +168,7 @@ export const RichTextEditor = ({
           maxHeight: `${maxHeight}px`,
         }}
       >
-        <EditorContent editor={editor} placeholder={placeholder} />
+        <EditorContent editor={editor} placeholder={defaultPlaceholder} />
       </div>
     </div>
   );

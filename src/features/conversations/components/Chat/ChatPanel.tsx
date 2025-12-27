@@ -5,6 +5,7 @@
  */
 
 import { useMemo, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, User, MoreVertical, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '../../types';
@@ -35,6 +36,7 @@ interface ChatPanelProps {
 }
 
 export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const globalSelectedAgent = useAgentStore((state) => state.globalSelectedAgent);
   const selectConversation = useConversationStore((state) => state.selectConversation);
@@ -122,9 +124,9 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   // Handle conversation deletion with confirmation
   const handleDelete = async () => {
     const confirmed = await confirm({
-      title: 'Delete Conversation',
-      message: `Are you sure you want to delete the conversation with "${conversation.customer_name}"? This action cannot be undone.`,
-      confirmText: 'Delete',
+      title: t('conversations.delete_confirm_title'),
+      message: t('conversations.delete_confirm_message', { name: conversation.customer_name }),
+      confirmText: t('conversations.delete_confirm_button'),
       variant: 'danger',
     });
 
@@ -157,7 +159,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
           <button
             onClick={onBack}
             className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-            aria-label="Go back to conversations list"
+            aria-label={t('conversations.go_back')}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -193,7 +195,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
           <DropdownMenuTrigger asChild>
             <button
               className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-              aria-label="More options"
+              aria-label={t('conversations.more_options')}
             >
               <MoreVertical className="w-5 h-5 text-neutral-600" />
             </button>
@@ -205,13 +207,13 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
               className="text-red-600 focus:text-red-600 cursor-pointer"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+              {deleteMutation.isPending ? t('conversations.deleting') : t('common.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     ),
-    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending]
+    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, t]
   );
 
   // Handle load more with Zustand store
@@ -241,8 +243,8 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
           onModeToggle={handleModeToggle}
           placeholder={
             conversation.is_ai
-              ? 'Type a message... (AI will respond)'
-              : 'Type a message... (You are responding)'
+              ? t('conversations.ai_mode_placeholder')
+              : t('conversations.human_mode_placeholder')
           }
           conversationId={conversation.id}
           agentId={conversation.agent_id

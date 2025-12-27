@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { VALIDATION_RULES } from '../constants/validationRules';
 import { CheckCircleIcon } from '@/shared/components/icons';
@@ -13,27 +14,28 @@ interface StepNameProps {
   onNext: () => void;
 }
 
-/**
- * Validate agent name against minimum length requirement
- * @param name - The agent name to validate
- * @returns Object with validation result and error message
- */
-const validateAgentName = (name: string): { isValid: boolean; error: string } => {
-  const trimmed = name.trim();
-  if (trimmed.length < VALIDATION_RULES.AGENT_NAME_MIN_LENGTH) {
-    return {
-      isValid: false,
-      error: `Agent name must be at least ${VALIDATION_RULES.AGENT_NAME_MIN_LENGTH} characters`,
-    };
-  }
-  return { isValid: true, error: '' };
-};
-
 export const StepName = ({ onNext }: StepNameProps) => {
+  const { t } = useTranslation();
   const { data, setAgentName } = useOnboardingStore();
   const [name, setName] = useState(data.agentName);
   const [error, setError] = useState('');
   const [isValid, setIsValid] = useState(false);
+
+  /**
+   * Validate agent name against minimum length requirement
+   * @param name - The agent name to validate
+   * @returns Object with validation result and error message
+   */
+  const validateAgentName = (name: string): { isValid: boolean; error: string } => {
+    const trimmed = name.trim();
+    if (trimmed.length < VALIDATION_RULES.AGENT_NAME_MIN_LENGTH) {
+      return {
+        isValid: false,
+        error: t('onboarding.step_name_min_error', { min: VALIDATION_RULES.AGENT_NAME_MIN_LENGTH }),
+      };
+    }
+    return { isValid: true, error: '' };
+  };
 
   // Update store when name changes
   useEffect(() => {
@@ -43,6 +45,7 @@ export const StepName = ({ onNext }: StepNameProps) => {
       setAgentName(name);
       setError('');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, setAgentName]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -58,8 +61,8 @@ export const StepName = ({ onNext }: StepNameProps) => {
 
   return (
     <div className="w-full">
-      <StepHeading>Name Your Agent</StepHeading>
-      <StepSubtitle>What's your business or brand name?</StepSubtitle>
+      <StepHeading>{t('onboarding.step_name_title')}</StepHeading>
+      <StepSubtitle>{t('onboarding.step_name_subtitle')}</StepSubtitle>
 
       {/* Form - FAB handles submission */}
       <form onSubmit={handleSubmit}>
@@ -69,7 +72,7 @@ export const StepName = ({ onNext }: StepNameProps) => {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Your Business Name"
+            placeholder={t('onboarding.step_name_placeholder')}
             autoFocus
             className="w-full px-4 py-3 text-base border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
           />

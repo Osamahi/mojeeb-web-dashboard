@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -31,6 +32,7 @@ export default function AgentsFilterDrawer({
   onClose,
   onApplyFilters,
 }: AgentsFilterDrawerProps) {
+  const { t } = useTranslation();
   // Draft state - changes only apply when user clicks "Apply"
   const [draftFilters, setDraftFilters] = useState<AgentFilters>(filters);
 
@@ -70,7 +72,7 @@ export default function AgentsFilterDrawer({
       <div className="fixed right-0 top-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-neutral-950">Filter Agents</h2>
+          <h2 className="text-lg font-semibold text-neutral-950">{t('agents_filter.title')}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
@@ -84,13 +86,13 @@ export default function AgentsFilterDrawer({
           {/* Search */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Search
+              {t('common.search')}
             </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               <input
                 type="text"
-                placeholder="Search by name, description, organization..."
+                placeholder={t('agents_filter.search_placeholder')}
                 value={draftFilters.search}
                 onChange={(e) =>
                   setDraftFilters({ ...draftFilters, search: e.target.value })
@@ -103,7 +105,7 @@ export default function AgentsFilterDrawer({
           {/* Status Filter */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Status
+              {t('common.status')}
             </label>
             <div className="space-y-2">
               {(['all', 'draft', 'active'] as const).map((status) => (
@@ -125,7 +127,7 @@ export default function AgentsFilterDrawer({
                     className="w-4 h-4 text-brand-cyan focus:ring-brand-cyan"
                   />
                   <span className="text-sm text-neutral-950 capitalize">
-                    {status === 'all' ? 'All Statuses' : status}
+                    {status === 'all' ? t('agents_filter.status_all') : t(`agents_filter.status_${status}`)}
                   </span>
                 </label>
               ))}
@@ -135,7 +137,7 @@ export default function AgentsFilterDrawer({
           {/* Model Provider Filter */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Model Provider
+              {t('agents_filter.model_provider_label')}
             </label>
             <div className="space-y-2">
               {(['all', 'gemini', 'openai', 'claude'] as const).map((provider) => (
@@ -157,7 +159,7 @@ export default function AgentsFilterDrawer({
                     className="w-4 h-4 text-brand-cyan focus:ring-brand-cyan"
                   />
                   <span className="text-sm text-neutral-950 capitalize">
-                    {provider === 'all' ? 'All Providers' : provider}
+                    {provider === 'all' ? t('agents_filter.provider_all') : provider}
                   </span>
                 </label>
               ))}
@@ -167,7 +169,7 @@ export default function AgentsFilterDrawer({
           {/* Platform Target Filter */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Platform Target
+              {t('agents_filter.platform_target_label')}
             </label>
             <div className="space-y-2">
               {(['all', 'mobile', 'web', 'both'] as const).map((platform) => (
@@ -189,7 +191,7 @@ export default function AgentsFilterDrawer({
                     className="w-4 h-4 text-brand-cyan focus:ring-brand-cyan"
                   />
                   <span className="text-sm text-neutral-950 capitalize">
-                    {platform === 'all' ? 'All Platforms' : platform}
+                    {platform === 'all' ? t('agents_filter.platform_all') : t(`agents_filter.platform_${platform}`)}
                   </span>
                 </label>
               ))}
@@ -199,13 +201,13 @@ export default function AgentsFilterDrawer({
           {/* Sort By */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Sort By
+              {t('agents_filter.sort_by_label')}
             </label>
             <div className="space-y-2">
               {[
-                { value: 'createdAt', label: 'Created Date (Newest First)' },
-                { value: 'updatedAt', label: 'Updated Date (Newest First)' },
-                { value: 'name', label: 'Name (A-Z)' },
+                { value: 'createdAt', label: t('agents_filter.sort_created') },
+                { value: 'updatedAt', label: t('agents_filter.sort_updated') },
+                { value: 'name', label: t('agents_filter.sort_name') },
               ].map((sort) => (
                 <label
                   key={sort.value}
@@ -239,7 +241,7 @@ export default function AgentsFilterDrawer({
             onClick={handleClearAll}
             className="flex-1"
           >
-            Clear All
+            {t('agents_filter.clear_all')}
           </Button>
           <Button
             type="button"
@@ -247,7 +249,7 @@ export default function AgentsFilterDrawer({
             onClick={handleApply}
             className="flex-1"
           >
-            Apply Filters
+            {t('agents_filter.apply_filters')}
           </Button>
         </div>
       </div>

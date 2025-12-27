@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download, Share2, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import type { MessageAttachment } from '../../types';
@@ -16,6 +17,7 @@ interface ImageModalProps {
 }
 
 export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [imageError, setImageError] = useState(false);
 
@@ -68,9 +70,9 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      chatToasts.success('Image downloaded successfully');
+      chatToasts.success(t('image_modal.download_success'));
     } catch (error) {
-      chatToasts.error('Failed to download image');
+      chatToasts.error(t('image_modal.download_error'));
     }
   };
 
@@ -79,8 +81,8 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Share Image',
-          text: currentImage.filename || 'Shared from Mojeeb',
+          title: t('image_modal.share_title'),
+          text: currentImage.filename || t('image_modal.share_text'),
           url: currentImage.url,
         });
       } catch (error) {
@@ -90,7 +92,7 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
     } else {
       // Fallback: copy URL to clipboard
       navigator.clipboard.writeText(currentImage.url);
-      chatToasts.success('Image URL copied to clipboard');
+      chatToasts.success(t('image_modal.url_copied'));
     }
   };
 
@@ -98,7 +100,7 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
     <BaseModal
       isOpen={true}
       onClose={onClose}
-      title={currentImage.filename || `Image ${currentIndex + 1}`}
+      title={currentImage.filename || t('image_modal.image_title', { number: currentIndex + 1 })}
       maxWidth="2xl"
       className="bg-black/90"
       contentClassName="!p-0"
@@ -120,7 +122,7 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
               handlePrevious();
             }}
             className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-            title="Previous (←)"
+            title={t('image_modal.previous')}
           >
             <ChevronLeft className="w-8 h-8 text-white" />
           </button>
@@ -134,7 +136,7 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
               handleNext();
             }}
             className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-            title="Next (→)"
+            title={t('image_modal.next')}
           >
             <ChevronRight className="w-8 h-8 text-white" />
           </button>
@@ -145,13 +147,13 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
           <div className="flex items-center justify-center bg-neutral-100 rounded-lg p-8 min-h-[400px]">
             <div className="text-center">
               <AlertCircle className="w-12 h-12 text-neutral-400 mx-auto mb-2" />
-              <p className="text-neutral-600">Failed to load image</p>
+              <p className="text-neutral-600">{t('image_modal.load_error')}</p>
             </div>
           </div>
         ) : (
           <img
             src={currentImage.url}
-            alt={currentImage.filename || `Image ${currentIndex + 1}`}
+            alt={currentImage.filename || t('image_modal.image_title', { number: currentIndex + 1 })}
             className="max-w-full max-h-[80vh] object-contain rounded-lg"
             onClick={(e) => e.stopPropagation()}
             onError={() => setImageError(true)}
@@ -168,7 +170,7 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
             className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-neutral-100 text-black rounded-lg transition-colors"
           >
             <Download className="w-4 h-4" />
-            <span className="text-sm font-medium">Download</span>
+            <span className="text-sm font-medium">{t('image_modal.download_button')}</span>
           </button>
 
           <button
@@ -179,7 +181,7 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
             className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-neutral-100 text-black rounded-lg transition-colors"
           >
             <Share2 className="w-4 h-4" />
-            <span className="text-sm font-medium">Share</span>
+            <span className="text-sm font-medium">{t('image_modal.share_button')}</span>
           </button>
         </div>
       </div>

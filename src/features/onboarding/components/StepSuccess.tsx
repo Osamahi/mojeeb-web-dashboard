@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useOnboardingStore } from '../stores/onboardingStore';
 import { useOnboardingAgentMutation } from '../hooks/useOnboardingAgentMutation';
 import { ANIMATION_TIMINGS } from '../constants/timings';
@@ -31,8 +32,8 @@ interface PhaseStatus {
 }
 
 // Type-safe error message extractor
-const getErrorMessage = (error: unknown): string => {
-  if (!error) return 'Failed to create agent';
+const getErrorMessage = (error: unknown, t: (key: string) => string): string => {
+  if (!error) return t('onboarding.step_success.error_default');
 
   // Check for axios-style error response
   if (typeof error === 'object' && error !== null) {
@@ -61,10 +62,11 @@ const getErrorMessage = (error: unknown): string => {
     }
   }
 
-  return 'Failed to create agent';
+  return t('onboarding.step_success.error_default');
 };
 
 export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowledgeContent }: StepSuccessProps) => {
+  const { t } = useTranslation();
   const { setCreatedAgentId } = useOnboardingStore();
   const hasTriggeredCreation = useRef(false);
   const isMountedRef = useRef(false); // Track component lifecycle - starts false, set to true after mount
@@ -248,14 +250,14 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
       {/* Content - same structure as other steps */}
       <div className="w-full">
         <StepHeading>
-          {phase === 'ready' ? "Congratulations!" : phase === 'error' ? 'Something went wrong' : 'Setting up your agent...'}
+          {phase === 'ready' ? t('onboarding.step_success.heading_ready') : phase === 'error' ? t('onboarding.step_success.heading_error') : t('onboarding.step_success.heading_creating')}
         </StepHeading>
         <StepSubtitle>
           {phase === 'ready'
-            ? 'Your agent is ready to help customers'
+            ? t('onboarding.step_success.subtitle_ready')
             : phase === 'error'
-            ? 'We encountered an error while creating your agent'
-            : `Creating ${agentName}...`
+            ? t('onboarding.step_success.subtitle_error')
+            : t('onboarding.step_success.subtitle_creating', { agentName })
           }
         </StepSubtitle>
 
@@ -266,7 +268,7 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
             <div className="flex items-center gap-3">
               <StatusIcon state={status.agent} stepNumber={1} />
               <span className={`text-sm transition-colors duration-300 ${status.agent === 'loading' ? 'text-neutral-900 font-medium' : status.agent === 'success' ? 'text-green-700' : status.agent === 'error' ? 'text-red-700' : 'text-neutral-500'}`}>
-                {status.agent === 'loading' ? 'Creating agent...' : status.agent === 'success' ? '✨ Your agent was created successfully' : status.agent === 'error' ? 'Failed to create agent' : 'Create agent'}
+                {status.agent === 'loading' ? t('onboarding.step_success.agent_creating') : status.agent === 'success' ? t('onboarding.step_success.agent_success') : status.agent === 'error' ? t('onboarding.step_success.agent_error') : t('onboarding.step_success.agent_pending')}
               </span>
             </div>
 
@@ -274,7 +276,7 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
             <div className="flex items-center gap-3">
               <StatusIcon state={status.knowledge} stepNumber={2} />
               <span className={`text-sm transition-colors duration-300 ${status.knowledge === 'loading' ? 'text-neutral-900 font-medium' : status.knowledge === 'success' ? 'text-green-700' : status.knowledge === 'error' ? 'text-yellow-700' : status.knowledge === 'skipped' ? 'text-green-700' : 'text-neutral-500'}`}>
-                {status.knowledge === 'loading' ? 'Adding knowledge base...' : status.knowledge === 'success' ? '📚 Your knowledge has been added' : status.knowledge === 'error' ? 'Knowledge base failed (can add later)' : status.knowledge === 'skipped' ? '📚 Knowledge to be added later' : 'Add knowledge base'}
+                {status.knowledge === 'loading' ? t('onboarding.step_success.kb_creating') : status.knowledge === 'success' ? t('onboarding.step_success.kb_success') : status.knowledge === 'error' ? t('onboarding.step_success.kb_error') : status.knowledge === 'skipped' ? t('onboarding.step_success.kb_skipped') : t('onboarding.step_success.kb_pending')}
               </span>
             </div>
 
@@ -300,8 +302,8 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
                 {status.agent === 'success' &&
                  status.knowledge !== 'pending' &&
                  status.knowledge !== 'loading'
-                  ? '🎉 Your agent is now fully ready'
-                  : 'Finishing up'}
+                  ? t('onboarding.step_success.ready_success')
+                  : t('onboarding.step_success.ready_pending')}
               </span>
             </div>
           </div>
@@ -309,27 +311,27 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
           {/* Next Steps - animate in sequentially when ready */}
           {phase === 'ready' && (
             <div className="mt-6">
-              <h3 className="text-sm font-semibold text-neutral-900 mb-4">Next Steps:</h3>
+              <h3 className="text-sm font-semibold text-neutral-900 mb-4">{t('onboarding.step_success.next_steps_title')}</h3>
               <ul className="space-y-3">
                 <NextStepItem
                   key={4}
                   stepNumber={4}
                   icon="💬"
-                  text="Try your agent now"
+                  text={t('onboarding.step_success.next_step_4')}
                   isVisible={showNextStep4}
                 />
                 <NextStepItem
                   key={5}
                   stepNumber={5}
                   icon="🎓"
-                  text="Add more knowledge anytime"
+                  text={t('onboarding.step_success.next_step_5')}
                   isVisible={showNextStep5}
                 />
                 <NextStepItem
                   key={6}
                   stepNumber={6}
                   icon="🔗"
-                  text="Connect it to Facebook, Instagram, your website & more"
+                  text={t('onboarding.step_success.next_step_6')}
                   isVisible={showNextStep6}
                 />
               </ul>
@@ -341,13 +343,13 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
         {mutation.isError && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-red-700">
-              {getErrorMessage(mutation.error)}
+              {getErrorMessage(mutation.error, t)}
             </p>
             <button
               onClick={handleRetry}
               className="mt-3 text-sm text-red-700 underline hover:text-red-900"
             >
-              Try Again
+              {t('common.try_again')}
             </button>
           </div>
         )}

@@ -12,6 +12,7 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { logger } from '@/lib/logger';
 import { useChatEngine } from '@/features/conversations/hooks/useChatEngine';
 import { useLocalChatStorage } from '@/features/conversations/hooks/useChatStorage';
@@ -26,18 +27,20 @@ interface TestChatProps {
   agentId: string;
 }
 
-// Helpful tips to display while initializing
-const LOADING_TIPS = [
-  'Test your agent\'s responses in real-time',
-  'Messages are not saved in test mode',
-  'Try different questions to refine your agent',
-  'Responses are generated using your current prompt',
-];
-
 export default function TestChat({ agentId }: TestChatProps) {
+  const { t } = useTranslation();
+
   // Get authenticated user for customer name
   const user = useAuthStore((state) => state.user);
   const customerName = user?.name || user?.email || 'studio_preview_user';
+
+  // Helpful tips to display while initializing (translated)
+  const LOADING_TIPS = [
+    t('test_chat.tip_1'),
+    t('test_chat.tip_2'),
+    t('test_chat.tip_3'),
+    t('test_chat.tip_4'),
+  ];
 
   // State
   const [conversation, setConversation] = useState<StudioConversation | null>(null);
@@ -166,7 +169,7 @@ export default function TestChat({ agentId }: TestChatProps) {
 
         {/* Main heading */}
         <h3 className="text-lg font-semibold text-neutral-900 mb-2 animate-slide-up">
-          Initializing test environment
+          {t('test_chat.initializing')}
         </h3>
 
         {/* Rotating tips */}
@@ -193,14 +196,14 @@ export default function TestChat({ agentId }: TestChatProps) {
         <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
           <AlertCircle className="w-8 h-8 text-red-500" aria-hidden="true" />
         </div>
-        <p className="text-neutral-950 font-medium mb-1">Failed to Initialize</p>
+        <p className="text-neutral-950 font-medium mb-1">{t('test_chat.failed_title')}</p>
         <p className="text-sm text-neutral-600 max-w-sm text-center mb-4">{error}</p>
         <button
           onClick={handleNewConversation}
           className="px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-neutral-800 transition-colors"
-          aria-label="Try initializing chat again"
+          aria-label={t('test_chat.try_again')}
         >
-          Try Again
+          {t('test_chat.try_again')}
         </button>
       </div>
     );
@@ -227,7 +230,7 @@ export default function TestChat({ agentId }: TestChatProps) {
             >
               <RefreshCw className="w-4 h-4 text-neutral-600" aria-hidden="true" />
               <span className="hidden sm:inline text-sm text-neutral-600 font-medium">
-                New conversation
+                {t('test_chat.new_conversation')}
               </span>
             </button>
           </div>
@@ -250,14 +253,13 @@ export default function TestChat({ agentId }: TestChatProps) {
               />
             </svg>
           </div>
-          <p className="text-neutral-950 font-medium mb-1">Start Testing</p>
+          <p className="text-neutral-950 font-medium mb-1">{t('test_chat.empty_title')}</p>
           <p className="text-sm text-neutral-600 max-w-full sm:max-w-sm">
-            Send a message below to test your agent's responses based on the current prompt and
-            knowledge bases.
+            {t('test_chat.empty_description')}
           </p>
         </div>
       }
-      placeholder="Type a message to test your agent..."
+      placeholder={t('test_chat.placeholder')}
       enableAIToggle={false} // AI-only mode in test
     />
   );

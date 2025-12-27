@@ -5,6 +5,7 @@
 
 import { useMemo } from 'react';
 import { Plug } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PlatformConnectionCard } from './PlatformConnectionCard';
@@ -23,6 +24,8 @@ export function ConnectionsList({
   showHealthStatus = false,
   filterPlatform = 'all',
 }: ConnectionsListProps) {
+  const { t } = useTranslation();
+
   // Filter and sort connections - memoized for performance
   const sortedConnections = useMemo(() => {
     // Filter connections by platform if specified
@@ -54,11 +57,11 @@ export function ConnectionsList({
     return (
       <EmptyState
         icon={<Plug className="w-12 h-12 text-neutral-400" />}
-        title="No connections yet"
+        title={t('connections.no_connections_title')}
         description={
           filterPlatform === 'all'
-            ? 'Let your agent respond to customers on Facebook, Instagram, WhatsApp, and your website. Connect a platform to get started.'
-            : `No ${filterPlatform} connections found for this agent.`
+            ? t('connections.no_connections_description')
+            : t('connections.no_platform_connections', { platform: filterPlatform })
         }
       />
     );

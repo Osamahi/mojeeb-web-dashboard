@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Loader2, Copy, MessageSquare, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -48,6 +49,7 @@ export function LeadsTableView({
   onAddNoteClick,
   onAddSummaryClick,
 }: LeadsTableViewProps) {
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const updateMutation = useUpdateLead();
   const isMobile = useIsMobile();
@@ -103,17 +105,17 @@ export function LeadsTableView({
         { leadId, request: { name: newName } },
         {
           onSuccess: () => {
-            toast.success('Lead name updated');
+            toast.success(t('leads.lead_name_updated'));
             resolve();
           },
           onError: (error) => {
-            toast.error('Failed to update name');
+            toast.error(t('leads.update_failed_name'));
             reject(error);
           },
         }
       );
     });
-  }, [updateMutation]);
+  }, [updateMutation, t]);
 
   const handlePhoneSave = useCallback(async (leadId: string, newPhone: string) => {
     return new Promise<void>((resolve, reject) => {
@@ -121,27 +123,27 @@ export function LeadsTableView({
         { leadId, request: { phone: newPhone } },
         {
           onSuccess: () => {
-            toast.success('Lead phone updated');
+            toast.success(t('leads.lead_phone_updated'));
             resolve();
           },
           onError: (error) => {
-            toast.error('Failed to update phone');
+            toast.error(t('leads.update_failed_phone'));
             reject(error);
           },
         }
       );
     });
-  }, [updateMutation]);
+  }, [updateMutation, t]);
 
   const handleCopyPhone = useCallback((phone: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const formattedPhone = formatPhoneNumber(phone);
     navigator.clipboard.writeText(formattedPhone).then(() => {
-      toast.success('Copied to clipboard');
+      toast.success(t('leads.copied_to_clipboard'));
     }).catch(() => {
-      toast.error('Failed to copy');
+      toast.error(t('leads.failed_to_copy'));
     });
-  }, []);
+  }, [t]);
 
   const handleCardClick = useCallback((lead: Lead) => {
     // Open the lead detail drawer by triggering edit
@@ -191,8 +193,8 @@ export function LeadsTableView({
       <div className="bg-white rounded-lg border border-neutral-200 p-12">
         <EmptyState
           icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
-          title="Error Loading Leads"
-          description="There was an error loading leads. Please try again."
+          title={t('leads.error_loading')}
+          description={t('leads.error_loading_description')}
         />
       </div>
     );
@@ -207,17 +209,17 @@ export function LeadsTableView({
       <div className="bg-white rounded-lg border border-neutral-200 p-12">
         <EmptyState
           icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
-          title={hasActiveFilters ? 'No clients found' : 'No clients yet'}
+          title={hasActiveFilters ? t('leads.no_clients_found') : t('leads.no_clients_yet')}
           description={
             hasActiveFilters
-              ? 'Try adjusting your filters or search query'
-              : 'Add your first client to get started tracking potential customers'
+              ? t('leads.no_clients_found_description')
+              : t('leads.no_clients_yet_description')
           }
           action={
             !hasActiveFilters ? (
               <Button onClick={onAddLeadClick}>
                 <UserPlus className="w-4 h-4 mr-2" />
-                Add Client
+                {t('leads.add_client')}
               </Button>
             ) : undefined
           }
@@ -256,7 +258,7 @@ export function LeadsTableView({
   const columns = [
     {
       key: 'name',
-      label: 'Name',
+      label: t('leads.table_name'),
       sortable: true,
       width: '25%',
       render: (_: unknown, lead: Lead) => {
@@ -283,7 +285,7 @@ export function LeadsTableView({
                   <button
                     onClick={(e) => handleCopyPhone(lead.phone!, e)}
                     className="p-1 hover:bg-neutral-100 rounded transition-all order-1"
-                    title="Copy phone number"
+                    title={t('leads.copy_phone_title')}
                   >
                     <Copy className="w-3.5 h-3.5 text-neutral-400 hover:text-neutral-700" />
                   </button>
@@ -308,7 +310,7 @@ export function LeadsTableView({
     },
     {
       key: 'summary',
-      label: 'Summary',
+      label: t('leads.table_summary'),
       sortable: false,
       width: '30%',
       cellClassName: 'w-[30%]',
@@ -329,7 +331,7 @@ export function LeadsTableView({
               >
                 <div className="text-sm text-neutral-700 leading-relaxed break-words whitespace-normal">
                   {displayText}
-                  {shouldTruncate && <span className="text-neutral-400 group-hover:text-neutral-900"> ...view more</span>}
+                  {shouldTruncate && <span className="text-neutral-400 group-hover:text-neutral-900"> ...{t('leads.view_more')}</span>}
                 </div>
               </button>
             ) : (
@@ -340,7 +342,7 @@ export function LeadsTableView({
                 }}
                 className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
               >
-                Add summary
+                {t('leads.add_summary')}
               </button>
             )}
           </div>
@@ -349,7 +351,7 @@ export function LeadsTableView({
     },
     {
       key: 'status',
-      label: 'Status',
+      label: t('leads.table_status'),
       sortable: true,
       width: '180px',
       cellClassName: 'w-[180px]',
@@ -369,15 +371,15 @@ export function LeadsTableView({
             paddingRight: '2.5rem'
           }}
         >
-          <option value="new">New</option>
-          <option value="processing">Processing</option>
-          <option value="completed">Completed</option>
+          <option value="new">{t('leads.status_new')}</option>
+          <option value="processing">{t('leads.status_processing')}</option>
+          <option value="completed">{t('leads.status_completed')}</option>
         </select>
       ),
     },
     {
       key: 'createdAt',
-      label: 'Created',
+      label: t('leads.table_created'),
       sortable: true,
       width: '14%',
       cellClassName: 'w-[14%]',
@@ -402,7 +404,7 @@ export function LeadsTableView({
     },
     {
       key: 'notes',
-      label: 'Notes',
+      label: t('leads.table_notes'),
       sortable: false,
       width: '18%',
       cellClassName: 'w-[18%]',
@@ -438,7 +440,7 @@ export function LeadsTableView({
                 }}
                 className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
               >
-                Add note
+                {t('leads.add_note')}
               </button>
             )}
           </div>
@@ -460,7 +462,7 @@ export function LeadsTableView({
                 onViewConversation(lead.conversationId!);
               }}
               className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-              title="View conversation"
+              title={t('leads.view_conversation_title')}
             >
               <MessageSquare className="w-4 h-4" />
             </button>
@@ -473,7 +475,7 @@ export function LeadsTableView({
               onEditClick(lead.id);
             }}
             className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-            title="Edit lead"
+            title={t('leads.edit_lead_title')}
           >
             <Pencil className="w-4 h-4" />
           </button>
@@ -483,7 +485,7 @@ export function LeadsTableView({
               onDeleteClick(lead.id);
             }}
             className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-            title="Delete lead"
+            title={t('leads.delete_lead_title')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -511,7 +513,7 @@ export function LeadsTableView({
               <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 rounded-lg flex items-center justify-center">
                 <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border border-neutral-200 shadow-sm">
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-neutral-600" />
-                  <span className="text-xs text-neutral-600 font-medium">Updating...</span>
+                  <span className="text-xs text-neutral-600 font-medium">{t('leads.updating')}</span>
                 </div>
               </div>
             )}
@@ -530,14 +532,14 @@ export function LeadsTableView({
       {isLoadingMore && (
         <div className="flex justify-center items-center py-8 bg-white rounded-lg border border-neutral-200 mt-4">
           <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
-          <span className="ml-2 text-sm text-neutral-600">Loading more leads...</span>
+          <span className="ml-2 text-sm text-neutral-600">{t('leads.loading_more')}</span>
         </div>
       )}
 
       {/* End of results indicator */}
       {displayedLeads && leads && displayedLeads.length >= leads.length && leads.length > 50 && (
         <div className="flex justify-center items-center py-6 bg-white rounded-lg border border-neutral-200 mt-4">
-          <span className="text-sm text-neutral-500">All {leads.length} leads loaded</span>
+          <span className="text-sm text-neutral-500">{t('leads.all_leads_loaded', { count: leads.length })}</span>
         </div>
       )}
     </>

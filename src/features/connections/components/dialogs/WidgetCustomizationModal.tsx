@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -31,6 +32,7 @@ export function WidgetCustomizationModal({
   onClose,
   agentId,
 }: WidgetCustomizationModalProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<SimpleFormData>({
     primaryColor: '#000000',
     initialMessage: '',
@@ -57,11 +59,11 @@ export function WidgetCustomizationModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['widget', agentId] });
       queryClient.invalidateQueries({ queryKey: ['widget-snippet', widgetConfig!.id] });
-      toast.success('Widget updated successfully!');
+      toast.success(t('widget_customization.update_success'));
       onClose(); // Auto-close modal on success
     },
     onError: () => {
-      toast.error('Failed to update widget. Please try again.');
+      toast.error(t('widget_customization.update_error'));
     },
   });
 
@@ -96,7 +98,7 @@ export function WidgetCustomizationModal({
       isOpen={isOpen}
       onClose={onClose}
       maxWidth="md"
-      title="Customize Widget"
+      title={t('widget_customization.title')}
       isLoading={updateMutation.isPending}
       closable={!updateMutation.isPending}
     >
@@ -108,9 +110,9 @@ export function WidgetCustomizationModal({
 
       {error && (
         <div className="p-6 text-center">
-          <p className="text-red-600">Failed to load widget configuration</p>
+          <p className="text-red-600">{t('widget_customization.load_error')}</p>
           <Button onClick={onClose} variant="secondary" className="mt-4">
-            Close
+            {t('common.close')}
           </Button>
         </div>
       )}
@@ -122,7 +124,7 @@ export function WidgetCustomizationModal({
             {/* Primary Color */}
             <div>
               <label className="block text-sm font-medium text-neutral-900 mb-2">
-                Primary Color
+                {t('widget_customization.primary_color_label')}
               </label>
               <div className="relative">
                 <input
@@ -139,23 +141,23 @@ export function WidgetCustomizationModal({
                 />
               </div>
               <p className="text-xs text-neutral-500 mt-1">
-                This color will be used for the chat button and UI accents
+                {t('widget_customization.primary_color_help')}
               </p>
             </div>
 
             {/* Initial Message */}
             <div>
               <label className="block text-sm font-medium text-neutral-900 mb-2">
-                Initial Message
+                {t('widget_customization.initial_message_label')}
               </label>
               <Textarea
                 value={formData.initialMessage}
                 onChange={(e) => handleInputChange('initialMessage', e.target.value)}
-                placeholder="Hi! Need any help?"
+                placeholder={t('widget_customization.initial_message_placeholder')}
                 rows={3}
               />
               <p className="text-xs text-neutral-500 mt-1">
-                Proactive message shown in notification bubble (optional)
+                {t('widget_customization.initial_message_help')}
               </p>
             </div>
           </div>
@@ -169,14 +171,14 @@ export function WidgetCustomizationModal({
                 disabled={updateMutation.isPending}
                 className="flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={handleSave}
                 disabled={updateMutation.isPending}
                 className="flex-1"
               >
-                {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {updateMutation.isPending ? t('widget_customization.saving') : t('widget_customization.save_button')}
               </Button>
             </div>
           </div>

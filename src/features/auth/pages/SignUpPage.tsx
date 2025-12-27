@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AxiosError } from 'axios';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { authService } from '../services/authService';
@@ -18,21 +19,27 @@ import { AuthFooterLink } from '../components/AuthFooterLink';
 import { logger } from '@/lib/logger';
 import { useAuthStore } from '../stores/authStore';
 import { useOnboardingStore } from '@/features/onboarding/stores/onboardingStore';
+import { trackSignupSuccess } from '@/utils/gtmTracking';
 
-const signUpSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters').max(100, 'Password cannot exceed 100 characters'),
-});
-
-type SignUpForm = z.infer<typeof signUpSchema>;
+type SignUpForm = {
+  name: string;
+  email: string;
+  password: string;
+};
 
 export const SignUpPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  const signUpSchema = z.object({
+    name: z.string().min(2, t('auth.name_min_length', { min: 2 })),
+    email: z.string().email(t('auth.email_invalid')),
+    password: z.string().min(8, t('auth.password_min_length', { min: 8 })).max(100, t('auth.password_max_length', { max: 100 })),
+  });
 
   const { register, handleSubmit, formState: { errors } } = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
@@ -57,12 +64,20 @@ export const SignUpPage = () => {
       // Register the user
       console.time('⏱️ SIGNUP-TOTAL');
       console.time('⏱️ SIGNUP-API');
-      await authService.register({
+      const authResponse = await authService.register({
         name: data.name,
         email: data.email,
         password: data.password,
       });
       console.timeEnd('⏱️ SIGNUP-API');
+
+      // Track signup success in Google Tag Manager
+      trackSignupSuccess(
+        authResponse.user.id,
+        authResponse.user.email,
+        authResponse.user.name,
+        'email'
+      );
 
       // Clear any stale onboarding state before starting fresh
       // Ensures new signups always begin onboarding from step 0 with clean form data
@@ -85,7 +100,7 @@ export const SignUpPage = () => {
         axiosError.response?.data?.error ||
         axiosError.response?.data?.errors?.[0]?.message ||
         axiosError.message ||
-        'Registration failed. Please try again.';
+        t('auth.signup_failed');
 
       setError(errorMessage);
       toast.error(errorMessage);
@@ -98,13 +113,13 @@ export const SignUpPage = () => {
 
   return (
     <AuthPageLayout
-      title="Create your account"
+      title={t('auth.signup_title')}
       error={error}
       isLoading={isLoading}
       footerContent={
         <AuthFooterLink
-          text="Already have an account?"
-          linkText="Sign in"
+          text={t('auth.already_have_account')}
+          linkText={t('auth.sign_in_link')}
           linkTo="/login"
         />
       }
@@ -114,7 +129,7 @@ export const SignUpPage = () => {
         <Input
           {...register('name')}
           type="text"
-          placeholder="Full name"
+          placeholder={t('auth.name_placeholder')}
           error={errors.name?.message}
           disabled={isLoading}
         />
@@ -122,7 +137,7 @@ export const SignUpPage = () => {
         <Input
           {...register('email')}
           type="email"
-          placeholder="Email address"
+          placeholder={t('auth.email_placeholder')}
           error={errors.email?.message}
           disabled={isLoading}
         />
@@ -130,7 +145,7 @@ export const SignUpPage = () => {
         <Input
           {...register('password')}
           type="password"
-          placeholder="Password"
+          placeholder={t('auth.password_placeholder')}
           error={errors.password?.message}
           disabled={isLoading}
         />
@@ -141,7 +156,7 @@ export const SignUpPage = () => {
           isLoading={isLoading}
           disabled={isLoading}
         >
-          Create Account
+          {t('auth.signup_button')}
         </Button>
       </form>
     </AuthPageLayout>

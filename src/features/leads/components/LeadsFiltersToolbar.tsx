@@ -6,6 +6,7 @@
 
 import { memo } from 'react';
 import { Search, Calendar } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { FilterBadge } from './FilterBadge';
 import { FilterPopover } from './FilterPopover';
@@ -49,6 +50,7 @@ export const LeadsFiltersToolbar = memo(({
   onRemoveStatusFilter,
   onRemoveDateFilter,
 }: LeadsFiltersToolbarProps) => {
+  const { t } = useTranslation();
   const hasActiveFilters = filters.search || filters.status !== 'all' || filters.dateFrom || filters.dateTo;
 
   return (
@@ -58,7 +60,7 @@ export const LeadsFiltersToolbar = memo(({
         {/* Search Input with Inline Button */}
         <div className="flex-1 min-w-[240px] relative">
           <Input
-            placeholder="Search by name or phone..."
+            placeholder={t('leads.search_placeholder')}
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
             onKeyPress={onSearchKeyPress}

@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import { Trash2, Edit2, Check, X } from 'lucide-react';
 import {
   useLeadNotes,
@@ -23,6 +24,7 @@ interface LeadNotesSectionProps {
 }
 
 export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps) {
+  const { t, i18n } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const { data: notes, isLoading } = useLeadNotes(leadId);
   const createMutation = useCreateLeadNote();
@@ -118,7 +120,7 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
           <textarea
             value={newNoteText}
             onChange={(e) => setNewNoteText(e.target.value)}
-            placeholder="Add a note..."
+            placeholder={t('lead_notes.add_placeholder')}
             rows={3}
             className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent resize-none text-sm"
           />
@@ -134,7 +136,7 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
               disabled={createMutation.isPending}
               className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {createMutation.isPending ? 'Adding...' : 'Add Note'}
+              {createMutation.isPending ? t('lead_notes.adding') : t('lead_notes.add_note')}
             </button>
           </div>
         </div>
@@ -149,7 +151,7 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
         <textarea
           value={newNoteText}
           onChange={(e) => setNewNoteText(e.target.value)}
-          placeholder="Add a note..."
+          placeholder={t('lead_notes.add_placeholder')}
           rows={3}
           className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent resize-none text-sm"
         />
@@ -165,14 +167,14 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
             disabled={createMutation.isPending}
             className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {createMutation.isPending ? 'Adding...' : 'Add Note'}
+            {createMutation.isPending ? t('lead_notes.adding') : t('lead_notes.add_note')}
           </button>
         </div>
       </div>
 
       {/* Notes Timeline */}
       <div className="space-y-3">
-        <p className="text-sm font-medium text-neutral-900">Activity Timeline</p>
+        <p className="text-sm font-medium text-neutral-900">{t('lead_notes.activity_timeline')}</p>
 
         {isLoading ? (
           <div className="space-y-3">
@@ -198,11 +200,11 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
                     </span>
                     {note.noteType === 'status_change' && (
                       <span className="text-xs text-[#00D084] font-normal">
-                        (status update)
+                        {t('lead_notes.status_update')}
                       </span>
                     )}
                     {note.isEdited && (
-                      <span className="text-xs text-neutral-400">(edited)</span>
+                      <span className="text-xs text-neutral-400">{t('lead_notes.edited')}</span>
                     )}
                   </div>
 
@@ -214,14 +216,14 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
                           <button
                             onClick={() => handleStartEdit(note)}
                             className="p-1 text-neutral-500 hover:text-neutral-900 transition-colors"
-                            title="Edit note"
+                            title={t('lead_notes.edit_note')}
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(note.id)}
                             className="p-1 text-neutral-500 hover:text-red-600 transition-colors"
-                            title="Delete note"
+                            title={t('lead_notes.delete_note')}
                             disabled={deleteMutation.isPending}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -249,14 +251,14 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
                         className="inline-flex items-center gap-1 px-3 py-1 bg-neutral-900 text-white text-xs font-medium rounded hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         <Check className="w-3 h-3" />
-                        Save
+                        {t('lead_notes.save')}
                       </button>
                       <button
                         onClick={handleCancelEdit}
                         className="inline-flex items-center gap-1 px-3 py-1 border border-neutral-300 text-neutral-700 text-xs font-medium rounded hover:bg-neutral-50 transition-colors"
                       >
                         <X className="w-3 h-3" />
-                        Cancel
+                        {t('lead_notes.cancel')}
                       </button>
                     </div>
                   </div>
@@ -266,7 +268,7 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
 
                 {/* Timestamp */}
                 <p className="text-xs text-neutral-400 mt-1">
-                  {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true, locale: i18n.language === 'ar-SA' || i18n.language === 'ar-EG' ? require('date-fns/locale/ar-SA') : undefined })}
                 </p>
               </div>
             ))}
@@ -279,9 +281,9 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
         isOpen={!!noteToDelete}
         onClose={() => setNoteToDelete(null)}
         onConfirm={handleConfirmDelete}
-        title="Delete Note"
-        message="Are you sure you want to delete this note? This action cannot be undone."
-        confirmText="Delete"
+        title={t('lead_notes.delete_note_title')}
+        message={t('lead_notes.delete_note_message')}
+        confirmText={t('lead_notes.delete')}
         variant="danger"
         isLoading={deleteMutation.isPending}
       />

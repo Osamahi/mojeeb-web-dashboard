@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { ModalActions } from '@/components/ui/ModalActions';
 import { ChevronDown } from 'lucide-react';
@@ -31,6 +32,7 @@ interface PhoneCollectionModalProps {
 }
 
 export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: PhoneCollectionModalProps) => {
+  const { t } = useTranslation();
   const [countries, setCountries] = useState<Country[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
@@ -119,11 +121,11 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
       // Clear all phone tracking (modal + banner)
       sessionHelper.clearPhoneTracking();
 
-      toast.success('Phone number added successfully');
+      toast.success(t('phone_collection.success'));
       onSuccess?.(fullPhone);
     } catch (error) {
       logger.error('Failed to update phone number', error instanceof Error ? error : new Error(String(error)));
-      toast.error('Failed to save phone number. Please try again.');
+      toast.error(t('phone_collection.error'));
       setHasError(true);
     } finally {
       setIsSubmitting(false);
@@ -157,7 +159,7 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
       isOpen={isOpen}
       onClose={handleClose}
       maxWidth="sm"
-      title={isSuccess ? 'Success' : 'Add Your Phone Number'}
+      title={isSuccess ? t('phone_collection.success_title') : t('phone_collection.title')}
       isLoading={isSubmitting}
       closable={!isSubmitting}
     >
@@ -169,19 +171,19 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
           </div>
 
           <h3 className="text-xl font-semibold text-neutral-900 mb-2">
-            Phone Number Added!
+            {t('phone_collection.success_heading')}
           </h3>
           <p className="text-sm text-neutral-600 mb-6">
-            We'll send important updates to {formatPhoneForDisplay(submittedPhone)}
+            {t('phone_collection.success_message', { phone: formatPhoneForDisplay(submittedPhone) })}
           </p>
 
           <ModalActions
             primary={{
-              label: 'Done',
+              label: t('phone_collection.done_button'),
               onClick: handleClose,
             }}
             secondary={{
-              label: 'Edit number',
+              label: t('phone_collection.edit_button'),
               onClick: handleEditNumber,
               variant: 'secondary',
             }}
@@ -257,7 +259,7 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
             {/* Validation Message */}
             {hasError && (
               <p className="mt-2 text-sm text-red-600">
-                Please enter a valid phone number
+                {t('phone_collection.validation_error')}
               </p>
             )}
           </div>
@@ -265,12 +267,12 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
           {/* Action Buttons */}
           <ModalActions
             primary={{
-              label: isSubmitting ? 'Saving...' : 'Save',
+              label: isSubmitting ? t('phone_collection.saving') : t('common.save'),
               onClick: handleSubmit,
               disabled: !isValid || isSubmitting,
             }}
             secondary={{
-              label: 'Skip',
+              label: t('phone_collection.skip_button'),
               onClick: handleSkip,
               variant: 'secondary',
             }}
