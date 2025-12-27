@@ -6,6 +6,7 @@
 
 import { useState, useMemo } from 'react';
 import { Search, Check } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { Input } from '@/components/ui/Input';
 import type { Agent } from '@/features/agents/types/agent.types';
@@ -19,12 +20,14 @@ interface AgentSearchDropdownProps {
 export default function AgentSearchDropdown({
   selectedAgent,
   onAgentSelect,
-  placeholder = 'Search agents by name...'
+  placeholder
 }: AgentSearchDropdownProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
 
   const { agents, isLoading } = useAgentStore();
+  const placeholderText = placeholder || t('agent_search_dropdown.placeholder');
 
   // Filter agents by search query
   const filteredAgents = useMemo(() => {
@@ -69,7 +72,7 @@ export default function AgentSearchDropdown({
           onChange={handleSearchChange}
           onFocus={handleSearchFocus}
           onBlur={handleBlur}
-          placeholder={placeholder}
+          placeholder={placeholderText}
           className="pl-10"
         />
         {selectedAgent && (
@@ -82,7 +85,7 @@ export default function AgentSearchDropdown({
         <div className="absolute z-[100] w-full mt-2 bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {isLoading ? (
             <div className="p-4 text-center text-sm text-neutral-500">
-              Loading agents...
+              {t('agent_search_dropdown.loading')}
             </div>
           ) : filteredAgents.length > 0 ? (
             <div className="py-2">
@@ -109,7 +112,7 @@ export default function AgentSearchDropdown({
             </div>
           ) : (
             <div className="p-4 text-center text-sm text-neutral-500">
-              No agents found matching "{searchQuery}"
+              {t('agent_search_dropdown.no_results', { query: searchQuery })}
             </div>
           )}
         </div>

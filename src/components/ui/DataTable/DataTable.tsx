@@ -4,6 +4,7 @@
  */
 
 import { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTableSort } from '@/hooks/useTableSort';
 import { useTablePagination } from '@/hooks/useTablePagination';
 import { useTableFilter } from '@/hooks/useTableFilter';
@@ -86,6 +87,7 @@ export function DataTable<T extends Record<string, any>>({
   actionsColumn,
   onRowClick,
 }: DataTableProps<T>) {
+  const { t } = useTranslation();
   // Filtering
   const {
     filteredData,
@@ -129,7 +131,7 @@ export function DataTable<T extends Record<string, any>>({
     return (
       <EmptyState
         icon={emptyState?.icon || <Search className="w-12 h-12 text-neutral-400" />}
-        title={emptyState?.title || `No ${itemName} found`}
+        title={emptyState?.title || t('data_table.no_items_found', { itemName })}
         description={emptyState?.description}
       />
     );
@@ -142,7 +144,7 @@ export function DataTable<T extends Record<string, any>>({
         <div className="mb-4">
           <input
             type="text"
-            placeholder={`Search ${itemName}...`}
+            placeholder={t('data_table.search_placeholder', { itemName })}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-cyan w-full max-w-md"
@@ -171,7 +173,7 @@ export function DataTable<T extends Record<string, any>>({
                 ))}
                 {actionsColumn && (
                   <TableHeader
-                    label="Actions"
+                    label={t('data_table.actions')}
                     sortable={false}
                     style={{ width: '120px' }}
                   />

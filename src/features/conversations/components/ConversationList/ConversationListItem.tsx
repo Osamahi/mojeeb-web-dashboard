@@ -5,6 +5,7 @@
 
 import { memo } from 'react';
 import { User, Bot } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Conversation } from '../../types';
 import { formatConversationTime } from '../../utils/timeFormatters';
 import { truncateText, getInitials } from '../../utils/textFormatters';
@@ -23,11 +24,13 @@ const ConversationListItem = memo(function ConversationListItem({
   isSelected,
   onSelect,
 }: ConversationListItemProps) {
+  const { t } = useTranslation();
+
   // Extract profile picture from metadata
   const profilePictureUrl = conversation.customer_metadata?.profile_picture;
 
   // Display topic if available, otherwise last message
-  const displayText = conversation.topic || conversation.last_message || 'No messages yet';
+  const displayText = conversation.topic || conversation.last_message || t('conversation_list_item.no_messages_yet');
 
   // Format timestamp
   const timestamp = conversation.last_message_at || conversation.created_at;
@@ -79,13 +82,13 @@ const ConversationListItem = memo(function ConversationListItem({
           {/* Urgent indicator */}
           {showUrgent && (
             <Badge variant="danger" className="text-xs">
-              Urgent
+              {t('conversation_list_item.urgent')}
             </Badge>
           )}
 
           {/* Needs attention indicator */}
           {showNeedsAttention && (
-            <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0" title="Needs attention" />
+            <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0" title={t('conversation_list_item.needs_attention')} />
           )}
         </div>
 

@@ -1067,5 +1067,62 @@
     "current": "الحالية",
     "direction": "الاتجاه",
     "select_language": "اختار اللغة"
+  },
+  "conversation_list_item": {
+    "no_messages_yet": "مفيش رسايل لسه",
+    "urgent": "مستعجل",
+    "needs_attention": "محتاج اهتمام"
+  },
+  "data_table": {
+    "no_items_found": "مفيش {{itemName}} اتلقت",
+    "search_placeholder": "دور في {{itemName}}...",
+    "actions": "الإجراءات"
+  },
+  "divider": {
+    "or_continue_with": "أو كمّل مع"
+  },
+  "use_confirm": {
+    "confirm": "تأكيد",
+    "cancel": "إلغاء"
+  },
+  "organization_card": {
+    "created": "اتعمل"
+  },
+  "organizations_mobile": {
+    "no_organizations_found": "مفيش منظمات اتلقت",
+    "no_organizations_yet": "مفيش منظمات لسه",
+    "adjust_search": "جرب تعدل شروط البحث",
+    "will_appear_here": "المنظمات هتظهر هنا لما تتعمل"
+  },
+  "leads_mobile": {
+    "error_loading_title": "مشكلة في تحميل العملاء المحتملين",
+    "error_loading_description": "في مشكلة حصلت وإحنا بنحمّل العملاء المحتملين. جرب تاني.",
+    "no_leads_found": "مفيش عملاء محتملين اتلقوا",
+    "no_leads_yet": "مفيش عملاء محتملين لسه",
+    "adjust_filters": "جرب تغيّر الفلاتر أو البحث بتاعك",
+    "add_first_lead": "ضيف أول عميل محتمل عشان تبدأ تتابع العملاء المحتملين",
+    "add_lead": "ضيف عميل محتمل",
+    "updating": "بنحدّث...",
+    "loading_more": "بنحمّل أكتر...",
+    "all_loaded": "كل العملاء المحتملين اتحمّلوا ({{count}})"
+  },
+  "social_login": {
+    "google_fetch_error": "مقدرناش نجيب معلومات المستخدم من جوجل",
+    "google_error": "الدخول بجوجل مانجحش. جرب تاني.",
+    "google_cancelled": "إلغيت الدخول بجوجل",
+    "signing_in": "بندخّل...",
+    "continue_with_google": "كمّل بجوجل"
+  },
+  "agent_search_dropdown": {
+    "placeholder": "دوّر على المساعدين بالاسم...",
+    "loading": "بنحمّل المساعدين...",
+    "no_results": "مفيش مساعدين لقيناهم بـ \"{{query}}\""
+  },
+  "user_search_dropdown": {
+    "placeholder": "دوّر بالإيميل...",
+    "loading": "بنحمّل المستخدمين...",
+    "currently_in": "دلوقتي في: {{orgName}}",
+    "min_chars": "اكتب حرفين على الأقل عشان تدوّر",
+    "no_results": "مفيش مستخدمين لقيناهم بـ \"{{query}}\""
   }
 }

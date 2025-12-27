@@ -23,6 +23,7 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export interface ConfirmOptions {
@@ -39,12 +40,14 @@ interface DialogState extends ConfirmOptions {
 }
 
 export const useConfirm = () => {
+  const { t } = useTranslation();
+
   const [dialogState, setDialogState] = useState<DialogState>({
     open: false,
     title: '',
     message: '',
-    confirmText: 'Confirm',
-    cancelText: 'Cancel',
+    confirmText: t('use_confirm.confirm'),
+    cancelText: t('use_confirm.cancel'),
     variant: 'danger',
     resolve: () => {},
   });

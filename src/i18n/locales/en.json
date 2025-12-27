@@ -1086,5 +1086,62 @@
     "current": "Current",
     "direction": "Direction",
     "select_language": "Select language"
+  },
+  "conversation_list_item": {
+    "no_messages_yet": "No messages yet",
+    "urgent": "Urgent",
+    "needs_attention": "Needs attention"
+  },
+  "data_table": {
+    "no_items_found": "No {{itemName}} found",
+    "search_placeholder": "Search {{itemName}}...",
+    "actions": "Actions"
+  },
+  "divider": {
+    "or_continue_with": "Or continue with"
+  },
+  "use_confirm": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "organization_card": {
+    "created": "Created"
+  },
+  "organizations_mobile": {
+    "no_organizations_found": "No organizations found",
+    "no_organizations_yet": "No organizations yet",
+    "adjust_search": "Try adjusting your search criteria",
+    "will_appear_here": "Organizations will appear here once created"
+  },
+  "leads_mobile": {
+    "error_loading_title": "Error Loading Leads",
+    "error_loading_description": "There was an error loading leads. Please try again.",
+    "no_leads_found": "No leads found",
+    "no_leads_yet": "No leads yet",
+    "adjust_filters": "Try adjusting your filters or search query",
+    "add_first_lead": "Add your first lead to get started tracking potential customers",
+    "add_lead": "Add Lead",
+    "updating": "Updating...",
+    "loading_more": "Loading more leads...",
+    "all_loaded": "All {{count}} leads loaded"
+  },
+  "social_login": {
+    "google_fetch_error": "Failed to fetch user info from Google",
+    "google_error": "Google sign-in failed. Please try again.",
+    "google_cancelled": "Google sign-in was cancelled",
+    "signing_in": "Signing in...",
+    "continue_with_google": "Continue with Google"
+  },
+  "agent_search_dropdown": {
+    "placeholder": "Search agents by name...",
+    "loading": "Loading agents...",
+    "no_results": "No agents found matching \"{{query}}\""
+  },
+  "user_search_dropdown": {
+    "placeholder": "Search by email...",
+    "loading": "Loading users...",
+    "currently_in": "Currently in: {{orgName}}",
+    "min_chars": "Type at least 2 characters to search",
+    "no_results": "No users found matching \"{{query}}\""
   }
 }

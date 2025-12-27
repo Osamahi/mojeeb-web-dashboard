@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
+import { useTranslation } from 'react-i18next';
 // import AppleSignin from 'react-apple-signin-auth'; // Temporarily disabled
 import { AxiosError } from 'axios';
 import { toast } from 'sonner';
@@ -20,6 +21,7 @@ interface SocialLoginButtonsProps {
 }
 
 export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   // const [isAppleLoading, setIsAppleLoading] = useState(false); // Temporarily disabled
@@ -34,7 +36,7 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
         });
 
         if (!userInfoResponse.ok) {
-          throw new Error('Failed to fetch user info from Google');
+          throw new Error(t('social_login.google_fetch_error'));
         }
 
         const userInfo = await userInfoResponse.json();
@@ -64,14 +66,14 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
       } catch (error) {
         const axiosError = error as AxiosError<{ message?: string }>;
         logger.error('Google sign-in error', error);
-        toast.error(axiosError?.response?.data?.message || 'Google sign-in failed. Please try again.');
+        toast.error(axiosError?.response?.data?.message || t('social_login.google_error'));
       } finally {
         setIsGoogleLoading(false);
       }
     },
     onError: () => {
       logger.warn('Google sign-in cancelled or failed');
-      toast.error('Google sign-in was cancelled');
+      toast.error(t('social_login.google_cancelled'));
     },
   });
 
@@ -126,7 +128,7 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
           />
         </svg>
         <span className="text-sm font-medium text-neutral-950">
-          {isGoogleLoading ? 'Signing in...' : 'Continue with Google'}
+          {isGoogleLoading ? t('social_login.signing_in') : t('social_login.continue_with_google')}
         </span>
       </button>
 

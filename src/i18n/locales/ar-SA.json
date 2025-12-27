@@ -1081,5 +1081,62 @@
     "current": "الحالية",
     "direction": "الاتجاه",
     "select_language": "اختر اللغة"
+  },
+  "conversation_list_item": {
+    "no_messages_yet": "لا توجد رسائل بعد",
+    "urgent": "عاجل",
+    "needs_attention": "يحتاج إلى اهتمام"
+  },
+  "data_table": {
+    "no_items_found": "لم يتم العثور على {{itemName}}",
+    "search_placeholder": "بحث في {{itemName}}...",
+    "actions": "الإجراءات"
+  },
+  "divider": {
+    "or_continue_with": "أو تابع مع"
+  },
+  "use_confirm": {
+    "confirm": "تأكيد",
+    "cancel": "إلغاء"
+  },
+  "organization_card": {
+    "created": "تم الإنشاء"
+  },
+  "organizations_mobile": {
+    "no_organizations_found": "لم يتم العثور على منظمات",
+    "no_organizations_yet": "لا توجد منظمات بعد",
+    "adjust_search": "حاول تعديل معايير البحث",
+    "will_appear_here": "ستظهر المنظمات هنا بمجرد إنشائها"
+  },
+  "leads_mobile": {
+    "error_loading_title": "خطأ في تحميل العملاء المحتملين",
+    "error_loading_description": "حدث خطأ أثناء تحميل العملاء المحتملين. يرجى المحاولة مرة أخرى.",
+    "no_leads_found": "لم يتم العثور على عملاء محتملين",
+    "no_leads_yet": "لا يوجد عملاء محتملون بعد",
+    "adjust_filters": "حاول تعديل الفلاتر أو البحث",
+    "add_first_lead": "أضف أول عميل محتمل لبدء تتبع العملاء المحتملين",
+    "add_lead": "إضافة عميل محتمل",
+    "updating": "جاري التحديث...",
+    "loading_more": "جاري تحميل المزيد...",
+    "all_loaded": "تم تحميل جميع العملاء المحتملين ({{count}})"
+  },
+  "social_login": {
+    "google_fetch_error": "فشل في الحصول على معلومات المستخدم من جوجل",
+    "google_error": "فشل تسجيل الدخول بجوجل. يرجى المحاولة مرة أخرى.",
+    "google_cancelled": "تم إلغاء تسجيل الدخول بجوجل",
+    "signing_in": "جاري تسجيل الدخول...",
+    "continue_with_google": "المتابعة باستخدام جوجل"
+  },
+  "agent_search_dropdown": {
+    "placeholder": "البحث عن المساعدين حسب الاسم...",
+    "loading": "جاري تحميل المساعدين...",
+    "no_results": "لم يتم العثور على مساعدين تطابق \"{{query}}\""
+  },
+  "user_search_dropdown": {
+    "placeholder": "البحث بالبريد الإلكتروني...",
+    "loading": "جاري تحميل المستخدمين...",
+    "currently_in": "حاليًا في: {{orgName}}",
+    "min_chars": "أدخل حرفين على الأقل للبحث",
+    "no_results": "لم يتم العثور على مستخدمين تطابق \"{{query}}\""
   }
 }

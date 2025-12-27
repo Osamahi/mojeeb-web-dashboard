@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Search, Check, User as UserIcon, AlertCircle, Loader2 } from 'lucide-react';
 import { userService } from '@/features/users/services/userService';
 import { organizationService } from '../services/organizationService';
@@ -24,11 +25,13 @@ interface UserSearchDropdownProps {
 export default function UserSearchDropdown({
   selectedUser,
   onUserSelect,
-  placeholder = 'Search by email...',
+  placeholder,
   excludeOrganizationId
 }: UserSearchDropdownProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
+  const placeholderText = placeholder || t('user_search_dropdown.placeholder');
 
   // Fetch all users upfront (following EditOrganizationModal pattern)
   const { data: allUsers = [], isLoading } = useQuery({
@@ -89,7 +92,7 @@ export default function UserSearchDropdown({
           onChange={handleSearchChange}
           onFocus={handleSearchFocus}
           onBlur={handleBlur}
-          placeholder={placeholder}
+          placeholder={placeholderText}
           className="pl-10"
         />
         {selectedUser && (
@@ -103,7 +106,7 @@ export default function UserSearchDropdown({
           {isLoading ? (
             <div className="p-4 text-center text-sm text-neutral-500 flex items-center justify-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Loading users...
+              {t('user_search_dropdown.loading')}
             </div>
           ) : searchResults.length > 0 ? (
             <div className="py-2">
@@ -131,7 +134,7 @@ export default function UserSearchDropdown({
                         <div className="flex items-center gap-1 mt-1">
                           <AlertCircle className="h-3 w-3 text-amber-500 flex-shrink-0" />
                           <span className="text-xs text-amber-600 truncate">
-                            Currently in: {user.currentOrganization.name}
+                            {t('user_search_dropdown.currently_in', { orgName: user.currentOrganization.name })}
                           </span>
                         </div>
                       )}
@@ -146,8 +149,8 @@ export default function UserSearchDropdown({
           ) : (
             <div className="p-4 text-center text-sm text-neutral-500">
               {searchQuery.length < 2
-                ? 'Type at least 2 characters to search'
-                : `No users found matching "${searchQuery}"`
+                ? t('user_search_dropdown.min_chars')
+                : t('user_search_dropdown.no_results', { query: searchQuery })
               }
             </div>
           )}
@@ -170,7 +173,7 @@ export default function UserSearchDropdown({
                 <div className="flex items-center gap-1 mt-1">
                   <AlertCircle className="h-3 w-3 text-amber-500 flex-shrink-0" />
                   <span className="text-xs text-amber-600">
-                    Currently in: {selectedUser.currentOrganization.name}
+                    {t('user_search_dropdown.currently_in', { orgName: selectedUser.currentOrganization.name })}
                   </span>
                 </div>
               )}

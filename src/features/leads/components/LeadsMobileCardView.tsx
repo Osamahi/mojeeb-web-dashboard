@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Loader2, UserPlus } from 'lucide-react';
 import { LeadCard } from './LeadCard';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -43,6 +44,8 @@ export function LeadsMobileCardView({
   onCopyPhone,
   isUpdating = false,
 }: LeadsMobileCardViewProps) {
+  const { t } = useTranslation();
+
   // Infinite scroll state
   const [displayCount, setDisplayCount] = useState(20);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -83,8 +86,8 @@ export function LeadsMobileCardView({
       <div className="bg-white rounded-lg border border-neutral-200 p-12">
         <EmptyState
           icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
-          title="Error Loading Leads"
-          description="There was an error loading leads. Please try again."
+          title={t('leads_mobile.error_loading_title')}
+          description={t('leads_mobile.error_loading_description')}
         />
       </div>
     );
@@ -100,17 +103,17 @@ export function LeadsMobileCardView({
       <div className="bg-white rounded-lg border border-neutral-200 p-12">
         <EmptyState
           icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
-          title={hasActiveFilters ? 'No leads found' : 'No leads yet'}
+          title={hasActiveFilters ? t('leads_mobile.no_leads_found') : t('leads_mobile.no_leads_yet')}
           description={
             hasActiveFilters
-              ? 'Try adjusting your filters or search query'
-              : 'Add your first lead to get started tracking potential customers'
+              ? t('leads_mobile.adjust_filters')
+              : t('leads_mobile.add_first_lead')
           }
           action={
             !hasActiveFilters ? (
               <Button onClick={onAddLeadClick}>
                 <UserPlus className="w-4 h-4 mr-2" />
-                Add Lead
+                {t('leads_mobile.add_lead')}
               </Button>
             ) : undefined
           }
@@ -136,7 +139,7 @@ export function LeadsMobileCardView({
             <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 rounded-lg flex items-center justify-center">
               <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border border-neutral-200 shadow-sm">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-neutral-600" />
-                <span className="text-xs text-neutral-600 font-medium">Updating...</span>
+                <span className="text-xs text-neutral-600 font-medium">{t('leads_mobile.updating')}</span>
               </div>
             </div>
           )}
@@ -169,14 +172,14 @@ export function LeadsMobileCardView({
       {isLoadingMore && (
         <div className="flex justify-center items-center py-8 bg-white rounded-lg border border-neutral-200 mt-4">
           <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
-          <span className="ml-2 text-sm text-neutral-600">Loading more leads...</span>
+          <span className="ml-2 text-sm text-neutral-600">{t('leads_mobile.loading_more')}</span>
         </div>
       )}
 
       {/* End of results indicator */}
       {displayedLeads && leads && displayedLeads.length >= leads.length && leads.length > 20 && (
         <div className="flex justify-center items-center py-6 bg-white rounded-lg border border-neutral-200 mt-4">
-          <span className="text-sm text-neutral-500">All {leads.length} leads loaded</span>
+          <span className="text-sm text-neutral-500">{t('leads_mobile.all_loaded', { count: leads.length })}</span>
         </div>
       )}
     </>

@@ -5,6 +5,7 @@
  */
 
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import { Building2, Mail, Calendar } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import type { Organization } from '../types';
@@ -15,6 +16,8 @@ interface OrganizationCardProps {
 }
 
 export function OrganizationCard({ organization, onClick }: OrganizationCardProps) {
+  const { t } = useTranslation();
+
   return (
     <button
       onClick={() => onClick(organization)}
@@ -54,7 +57,7 @@ export function OrganizationCard({ organization, onClick }: OrganizationCardProp
       <div className="pt-3 border-t border-neutral-100 flex items-center gap-2">
         <Calendar className="h-3.5 w-3.5 text-neutral-400" />
         <span className="text-xs text-neutral-500">
-          Created {organization.createdAt ? format(new Date(organization.createdAt), 'MMM dd, yyyy') : '-'}
+          {t('organization_card.created')} {organization.createdAt ? format(new Date(organization.createdAt), 'MMM dd, yyyy') : '-'}
         </span>
       </div>
     </button>

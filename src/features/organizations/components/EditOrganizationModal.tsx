@@ -513,7 +513,7 @@ export default function EditOrganizationModal({
                               handleRemoveMember(member);
                             }}
                             className="text-red-600 hover:text-red-800 transition-colors p-2"
-                            title="Remove member"
+                            title={t('organizations.remove_member')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

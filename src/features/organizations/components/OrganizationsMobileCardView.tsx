@@ -5,6 +5,7 @@
  */
 
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Building2 } from 'lucide-react';
 import { OrganizationCard } from './OrganizationCard';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -21,17 +22,19 @@ export function OrganizationsMobileCardView({
   onOrganizationClick,
   searchQuery
 }: OrganizationsMobileCardViewProps) {
+  const { t } = useTranslation();
+
   // Empty state
   if (!organizations || organizations.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-neutral-200 p-12">
         <EmptyState
           icon={<Building2 className="w-12 h-12 text-neutral-400" />}
-          title={searchQuery ? 'No organizations found' : 'No organizations yet'}
+          title={searchQuery ? t('organizations_mobile.no_organizations_found') : t('organizations_mobile.no_organizations_yet')}
           description={
             searchQuery
-              ? 'Try adjusting your search criteria'
-              : 'Organizations will appear here once created'
+              ? t('organizations_mobile.adjust_search')
+              : t('organizations_mobile.will_appear_here')
           }
         />
       </div>
