@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MoreVertical, Flag, Pause, Play, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { SubscriptionDetails } from '../types/subscription.types';
 import { format } from 'date-fns';
 
@@ -16,6 +17,7 @@ export function SubscriptionTable({
   onPause,
   onRenew,
 }: SubscriptionTableProps) {
+  const { t } = useTranslation();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const getStatusBadgeClasses = (status: string) => {
@@ -39,25 +41,25 @@ export function SubscriptionTable({
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Organization
+              {t('subscriptions.table_organization')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Plan
+              {t('subscriptions.table_plan')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Status
+              {t('subscriptions.table_status')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Billing
+              {t('subscriptions.table_billing_cycle')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Current Period
+              {t('subscriptions.table_current_period')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
               Limits
             </th>
             <th className="relative px-6 py-3">
-              <span className="sr-only">Actions</span>
+              <span className="sr-only">{t('subscriptions.table_actions')}</span>
             </th>
           </tr>
         </thead>
@@ -140,7 +142,7 @@ export function SubscriptionTable({
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <RefreshCw className="h-4 w-4" />
-                            Renew Subscription
+                            {t('subscriptions.view_details')}
                           </button>
 
                           <button
@@ -151,7 +153,7 @@ export function SubscriptionTable({
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <Flag className="h-4 w-4" />
-                            {subscription.isFlaggedNonPaying ? 'Unflag' : 'Flag for Non-Payment'}
+                            {subscription.isFlaggedNonPaying ? t('subscriptions.cancel_subscription') : t('subscriptions.cancel_subscription')}
                           </button>
 
                           <button
@@ -164,12 +166,12 @@ export function SubscriptionTable({
                             {subscription.status === 'paused' ? (
                               <>
                                 <Play className="h-4 w-4" />
-                                Resume Subscription
+                                {t('subscriptions.view_details')}
                               </>
                             ) : (
                               <>
                                 <Pause className="h-4 w-4" />
-                                Pause Subscription
+                                {t('subscriptions.cancel_subscription')}
                               </>
                             )}
                           </button>

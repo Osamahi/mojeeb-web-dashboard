@@ -3,6 +3,7 @@
  * Reusable table pagination controls
  */
 
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 interface TablePaginationProps {
@@ -36,10 +37,12 @@ export function TablePagination({
   canGoPrevious,
   canGoNext,
 }: TablePaginationProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="px-6 py-4 border-t border-neutral-200 flex items-center justify-between">
       <div className="flex items-center gap-2 text-sm text-neutral-600">
-        <span>Rows per page:</span>
+        <span>{t('table.rows_per_page')}</span>
         <select
           value={rowsPerPage}
           onChange={(e) => onRowsPerPageChange(Number(e.target.value))}
@@ -64,10 +67,10 @@ export function TablePagination({
               : 'border-neutral-300 text-neutral-700 hover:bg-neutral-50'
           )}
         >
-          Previous
+          {t('table.previous')}
         </button>
         <span className="text-sm text-neutral-600">
-          Page {currentPage} of {totalPages}
+          {t('table.showing_entries', { from: startIndex, to: endIndex, total: totalItems })}
         </span>
         <button
           onClick={onNextPage}
@@ -79,7 +82,7 @@ export function TablePagination({
               : 'border-neutral-300 text-neutral-700 hover:bg-neutral-50'
           )}
         >
-          Next
+          {t('table.next')}
         </button>
       </div>
     </div>

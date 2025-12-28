@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -28,6 +29,8 @@ export function AccountSelectStep({
   onBack,
   isConnecting,
 }: AccountSelectStepProps) {
+  const { t } = useTranslation();
+
   // Conditionally fetch data based on platform
   const facebookQuery = useFacebookPages(platform !== 'whatsapp' ? tempConnectionId : null);
   const whatsappQuery = useWhatsAppAccounts(platform === 'whatsapp' ? tempConnectionId : null);
@@ -113,8 +116,8 @@ export function AccountSelectStep({
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-neutral-900">Loading Pages...</h3>
-          <p className="mt-1 text-sm text-neutral-600">Fetching your available pages</p>
+          <h3 className="text-lg font-semibold text-neutral-900">{t('connections.loading_pages')}</h3>
+          <p className="mt-1 text-sm text-neutral-600">{t('connections.fetching_pages')}</p>
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
@@ -130,14 +133,14 @@ export function AccountSelectStep({
       <div className="space-y-6">
         <ErrorState
           icon={<AlertCircle className="h-12 w-12" />}
-          title="Failed to Load Pages"
-          description={error.message || 'Unable to fetch your pages. Please try again.'}
+          title={t('connections.failed_load_pages')}
+          description={error.message || t('connections.unable_fetch_pages')}
           onRetry={() => refetch()}
-          retryLabel="Retry"
+          retryLabel={t('connections.retry')}
         />
         <div className="flex justify-start">
           <Button variant="ghost" onClick={onBack}>
-            Back
+            {t('connections.back')}
           </Button>
         </div>
       </div>
@@ -152,12 +155,12 @@ export function AccountSelectStep({
   if (isEmpty) {
     const emptyMessage = platform === 'whatsapp'
       ? {
-          title: 'No WhatsApp Business Accounts Found',
-          description: 'We couldn\'t find any WhatsApp Business accounts. Make sure you have a WhatsApp Business Account set up in Meta Business Suite.',
+          title: t('connections.no_whatsapp_accounts'),
+          description: t('connections.no_whatsapp_accounts_desc'),
         }
       : {
-          title: 'No Pages Found',
-          description: 'We couldn\'t find any Facebook pages you have admin access to. Make sure you\'re an admin of the page you want to connect.',
+          title: t('connections.no_pages_found'),
+          description: t('connections.no_pages_found_desc'),
         };
 
     return (
@@ -171,7 +174,7 @@ export function AccountSelectStep({
         </div>
         <div className="flex justify-start">
           <Button variant="ghost" onClick={onBack}>
-            Back
+            {t('connections.back')}
           </Button>
         </div>
       </div>
@@ -182,7 +185,7 @@ export function AccountSelectStep({
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-lg font-semibold text-neutral-900">
-          {platform === 'whatsapp' ? 'Select WhatsApp Number' : 'Select Page to Connect'}
+          {platform === 'whatsapp' ? t('connections.select_whatsapp_number') : t('connections.select_page')}
         </h3>
       </div>
 
@@ -348,7 +351,7 @@ export function AccountSelectStep({
       {/* Action buttons */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" onClick={onBack} disabled={isConnecting}>
-          Back
+          {t('connections.back')}
         </Button>
         <Button
           onClick={handleConnect}
@@ -360,10 +363,12 @@ export function AccountSelectStep({
           isLoading={isConnecting}
         >
           {isConnecting
-            ? 'Connecting...'
+            ? t('connections.connecting')
             : platform === 'whatsapp'
-            ? 'Connect WhatsApp'
-            : `Connect ${platform === 'instagram' && selectedInstagram ? 'Instagram' : 'Facebook'}`}
+            ? t('connections.connect_whatsapp')
+            : t('connections.connect_platform', {
+                platform: platform === 'instagram' && selectedInstagram ? 'Instagram' : 'Facebook'
+              })}
         </Button>
       </div>
 
@@ -371,8 +376,7 @@ export function AccountSelectStep({
       {platform === 'instagram' && selectedPage && selectedPage.instagramAccounts.length === 0 && (
         <div className="rounded-lg bg-yellow-50 p-3">
           <p className="text-xs text-yellow-700">
-            <strong>No Instagram account linked.</strong> This Facebook page doesn't have a linked Instagram
-            Business account. Please link one in Facebook's Business Suite first.
+            <strong>{t('connections.no_instagram_linked')}</strong> {t('connections.no_instagram_linked_desc')}
           </p>
         </div>
       )}

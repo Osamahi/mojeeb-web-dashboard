@@ -69,7 +69,7 @@ export function ConnectedPlatformCard({
 }: ConnectedPlatformCardProps) {
   const { t } = useTranslation();
   const platform = getPlatformById(connection.platform);
-  const displayName = connection.platformAccountName || connection.platformAccountHandle || platform?.name || 'Connected';
+  const displayName = connection.platformAccountName || connection.platformAccountHandle || platform?.name || t('connections.status_connected');
 
   // Extract metadata
   const followerCount = connection.platformMetadata?.follower_count as number | undefined;
@@ -155,24 +155,24 @@ export function ConnectedPlatformCard({
           {/* Mobile: Brief format */}
           <span className="whitespace-nowrap sm:hidden">
             {daysSinceConnection === 0
-              ? 'Today'
+              ? t('connections.today')
               : daysSinceConnection === 1
-              ? '1d'
-              : `${daysSinceConnection}d`}
+              ? t('connections.day_ago')
+              : t('connections.days_ago', { days: daysSinceConnection })}
           </span>
           {/* Desktop: Full format */}
           <span className="whitespace-nowrap hidden sm:inline">
             {daysSinceConnection === 0
-              ? 'Connected Today'
+              ? t('connections.connected_today')
               : daysSinceConnection === 1
-              ? 'Connected 1 Day Ago'
-              : `Connected ${daysSinceConnection} Days Ago`}
+              ? t('connections.connected_day_ago')
+              : t('connections.connected_days_ago', { days: daysSinceConnection })}
           </span>
 
           {connection.isActive && (
             <>
               <span>•</span>
-              <span className="whitespace-nowrap text-green-600 font-medium">Connected</span>
+              <span className="whitespace-nowrap text-green-600 font-medium">{t('connections.status_connected')}</span>
             </>
           )}
         </div>
@@ -193,7 +193,7 @@ export function ConnectedPlatformCard({
           <DropdownMenuContent align="end">
             {onViewHealth && (
               <DropdownMenuItem onClick={handleViewHealth}>
-                Health Check
+                {t('connections.health_check')}
               </DropdownMenuItem>
             )}
             {onDisconnect && (
@@ -201,7 +201,7 @@ export function ConnectedPlatformCard({
                 onClick={handleDisconnect}
                 className="text-red-600 focus:text-red-600"
               >
-                Disconnect
+                {t('connections.disconnect')}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -212,7 +212,7 @@ export function ConnectedPlatformCard({
       {!connection.isActive && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
           <span className="text-xs font-medium text-neutral-600 bg-white px-2.5 py-1 rounded-md border border-neutral-300">
-            Inactive
+            {t('connections.inactive')}
           </span>
         </div>
       )}

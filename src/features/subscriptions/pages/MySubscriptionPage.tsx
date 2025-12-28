@@ -1,9 +1,18 @@
 import { useState, useCallback } from 'react';
-import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket } from 'lucide-react';
+import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, Receipt, CreditCard, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { PlanChangeWizard } from '../components/PlanChangeWizard';
+import { ViewInvoicesModal } from '../components/ViewInvoicesModal';
+import { PaymentMethodModal } from '../components/PaymentMethodModal';
+import { CancelSubscriptionModal } from '@/features/billing/components/CancelSubscriptionModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { format, differenceInDays } from 'date-fns';
 
 export default function MySubscriptionPage() {
@@ -13,6 +22,9 @@ export default function MySubscriptionPage() {
   const usage = useSubscriptionStore(state => state.usage);
   const loading = useSubscriptionStore(state => state.isLoading);
   const [showWizard, setShowWizard] = useState(false);
+  const [showInvoicesModal, setShowInvoicesModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const handleUpgradeClick = useCallback(() => {
     setShowWizard(true);
@@ -48,6 +60,33 @@ export default function MySubscriptionPage() {
       <BaseHeader
         title={t('subscriptions.my_title')}
         subtitle={t('subscriptions.my_subtitle')}
+        additionalActions={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                <Settings className="h-4 w-4" />
+                {t('subscriptions.settings')}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => setShowPaymentModal(true)}>
+                <CreditCard className="mr-2 h-4 w-4" />
+                {t('billing.payment_method')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowInvoicesModal(true)}>
+                <Receipt className="mr-2 h-4 w-4" />
+                {t('billing.view_invoices')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setShowCancelModal(true)}
+                className="text-red-600 focus:text-red-600"
+              >
+                <X className="mr-2 h-4 w-4" />
+                {t('billing.cancel_subscription')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
         primaryAction={{
           label: subscription?.planCode === 'free' ? t('subscriptions.upgrade_plan') : t('subscriptions.change_plan'),
           icon: Rocket,
@@ -316,6 +355,20 @@ export default function MySubscriptionPage() {
           onSuccess={handleWizardSuccess}
         />
       )}
+
+      {/* Billing Modals */}
+      <ViewInvoicesModal
+        isOpen={showInvoicesModal}
+        onClose={() => setShowInvoicesModal(false)}
+      />
+      <PaymentMethodModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+      />
+      <CancelSubscriptionModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+      />
     </div>
   );
 }

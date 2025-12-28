@@ -4,30 +4,37 @@
  */
 
 import { memo, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 
 export type WizardStep = 'platform' | 'authorize' | 'select' | 'complete';
-
-const STEPS: { key: WizardStep; label: string }[] = [
-  { key: 'platform', label: 'Platform' },
-  { key: 'authorize', label: 'Authorize' },
-  { key: 'select', label: 'Select' },
-  { key: 'complete', label: 'Done' },
-];
 
 type StepIndicatorProps = {
   currentStep: WizardStep;
 };
 
 export const StepIndicator = memo(function StepIndicator({ currentStep }: StepIndicatorProps) {
-  const currentIndex = useMemo(() => STEPS.findIndex(s => s.key === currentStep), [currentStep]);
+  const { t } = useTranslation();
+
+  const STEPS: { key: WizardStep; labelKey: string }[] = useMemo(
+    () => [
+      { key: 'platform', labelKey: 'connections.step_platform' },
+      { key: 'authorize', labelKey: 'connections.step_authorize' },
+      { key: 'select', labelKey: 'connections.step_select' },
+      { key: 'complete', labelKey: 'connections.step_done' },
+    ],
+    []
+  );
+
+  const currentIndex = useMemo(() => STEPS.findIndex(s => s.key === currentStep), [currentStep, STEPS]);
 
   return (
-    <nav className="flex items-center justify-center space-x-1 sm:space-x-2" aria-label="Connection wizard progress">
+    <nav className="flex items-center justify-center space-x-1 sm:space-x-2" aria-label={t('connections.wizard_progress_aria')}>
       {STEPS.map((step, index) => {
         const isCompleted = index < currentIndex;
         const isCurrent = index === currentIndex;
+        const stepLabel = t(step.labelKey);
 
         return (
           <div
@@ -39,7 +46,7 @@ export const StepIndicator = memo(function StepIndicator({ currentStep }: StepIn
             {/* Step dot/indicator */}
             <div className="flex flex-col items-center">
               <div
-                aria-label={`Step ${index + 1}: ${step.label}${isCompleted ? ' (completed)' : isCurrent ? ' (current)' : ''}`}
+                aria-label={`Step ${index + 1}: ${stepLabel}${isCompleted ? ' (completed)' : isCurrent ? ' (current)' : ''}`}
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors',
                   isCompleted && 'bg-neutral-900 text-white',
@@ -56,7 +63,7 @@ export const StepIndicator = memo(function StepIndicator({ currentStep }: StepIn
                   !isCurrent && 'text-neutral-500'
                 )}
               >
-                {step.label}
+                {stepLabel}
               </span>
             </div>
 

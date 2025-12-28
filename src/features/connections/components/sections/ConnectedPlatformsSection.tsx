@@ -3,6 +3,7 @@
  * Displays grid of connected platforms
  */
 
+import { useTranslation } from 'react-i18next';
 import { Plug } from 'lucide-react';
 import { ConnectedPlatformCard } from '../cards/ConnectedPlatformCard';
 import type { PlatformConnection } from '../../types';
@@ -22,13 +23,15 @@ export function ConnectedPlatformsSection({
   onDisconnect,
   onViewHealth,
 }: ConnectedPlatformsSectionProps) {
+  const { t } = useTranslation();
+
   // Show empty state if no connections
   if (!isLoading && connections.length === 0) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-neutral-900">
-            Connected Platforms
+            {t('connections.connected_platforms')}
           </h2>
         </div>
 
@@ -37,10 +40,10 @@ export function ConnectedPlatformsSection({
             <Plug className="w-6 h-6 text-neutral-400" />
           </div>
           <p className="text-sm font-medium text-neutral-900 mb-1">
-            No connections yet
+            {t('connections.no_connections_msg')}
           </p>
           <p className="text-sm text-neutral-600 text-center max-w-sm">
-            Connect a platform below to start managing conversations with your customers
+            {t('connections.no_connections_detail')}
           </p>
         </div>
       </div>
@@ -52,7 +55,7 @@ export function ConnectedPlatformsSection({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-neutral-900">
-          Connected Platforms
+          {t('connections.connected_platforms')}
         </h2>
       </div>
 

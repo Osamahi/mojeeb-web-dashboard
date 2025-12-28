@@ -3,6 +3,7 @@
  * Displays list of available integrations (both available and coming soon)
  */
 
+import { useTranslation } from 'react-i18next';
 import { AvailablePlatformRow } from '../cards/AvailablePlatformRow';
 import { PLATFORMS } from '../../constants/platforms';
 import type { PlatformType, PlatformConnection } from '../../types';
@@ -22,6 +23,8 @@ export function AvailablePlatformsSection({
   userRole,
   isLoading = false,
 }: AvailablePlatformsSectionProps) {
+  const { t } = useTranslation();
+
   // Get IDs of already connected platforms
   const connectedPlatformIds = new Set(
     connections.filter((c) => c.isActive).map((c) => c.platform)
@@ -39,7 +42,7 @@ export function AvailablePlatformsSection({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-neutral-900">
-          Add Connections
+          {t('connections.add_connections')}
         </h2>
       </div>
 

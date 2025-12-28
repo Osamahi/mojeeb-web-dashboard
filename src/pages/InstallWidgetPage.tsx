@@ -7,10 +7,12 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Copy, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { installationLinkService } from '@/features/connections/services/installationLinkService';
 import type { InstallationData } from '@/features/connections/services/installationLinkService';
 
 export function InstallWidgetPage() {
+  const { t } = useTranslation();
   const { token } = useParams<{ token: string }>();
   const [data, setData] = useState<InstallationData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,7 +80,7 @@ export function InstallWidgetPage() {
       <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-8 h-8 text-[#00D084] animate-spin mx-auto mb-4" />
-          <p className="text-neutral-600 text-sm">Loading installation instructions...</p>
+          <p className="text-neutral-600 text-sm">{t('widget_install.loading_widget')}</p>
         </div>
       </div>
     );
@@ -136,10 +138,10 @@ export function InstallWidgetPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-neutral-900">Install</h1>
+            <h1 className="text-2xl font-bold text-neutral-900">{t('widget_install.page_title')}</h1>
           </div>
           <p className="text-neutral-600">
-            Add this chat widget to your website in just a few steps
+            {t('widget_install.page_subtitle')}
           </p>
 
           {/* Expiration warning */}
@@ -160,9 +162,9 @@ export function InstallWidgetPage() {
             // Mode Selection Screen
             <div className="p-8 space-y-6">
               <div className="space-y-1 mb-6">
-                <h2 className="text-lg font-semibold text-neutral-900">Choose Integration Type</h2>
+                <h2 className="text-lg font-semibold text-neutral-900">{t('widget_install.step1_title')}</h2>
                 <p className="text-sm text-neutral-600">
-                  Select how you want to integrate the chat widget into your website
+                  {t('widget_install.step1_subtitle')}
                 </p>
               </div>
 
@@ -227,12 +229,12 @@ export function InstallWidgetPage() {
                         {isCopied ? (
                           <>
                             <Check className="w-4 h-4" />
-                            Copied!
+                            {t('widget_install.code_copied')}
                           </>
                         ) : (
                           <>
                             <Copy className="w-4 h-4" />
-                            Copy Code
+                            {t('widget_install.copy_code')}
                           </>
                         )}
                       </button>
@@ -319,12 +321,12 @@ export function InstallWidgetPage() {
                         {isCopied ? (
                           <>
                             <Check className="w-4 h-4" />
-                            Copied!
+                            {t('widget_install.code_copied')}
                           </>
                         ) : (
                           <>
                             <Copy className="w-4 h-4" />
-                            Copy Code
+                            {t('widget_install.copy_code')}
                           </>
                         )}
                       </button>
@@ -356,12 +358,12 @@ export function InstallWidgetPage() {
                         {isHeadlessCopied ? (
                           <>
                             <Check className="w-4 h-4" />
-                            Copied!
+                            {t('widget_install.code_copied')}
                           </>
                         ) : (
                           <>
                             <Copy className="w-4 h-4" />
-                            Copy Code
+                            {t('widget_install.copy_code')}
                           </>
                         )}
                       </button>

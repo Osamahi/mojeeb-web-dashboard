@@ -73,11 +73,11 @@ export function PlanChangeWizard({
       return;
     }
 
-    // Validation: Ensure plan has valid pricing for current currency
-    const pricing = selectedPlan.pricing[currentSubscription.currency];
-    if (!pricing || typeof pricing.monthly !== 'number') {
+    // Validation: Ensure plan has valid pricing (try current currency, fallback to first available)
+    const { price, currency: actualCurrency } = getPriceAndCurrency(selectedPlan);
+    if (!price || price === 0) {
       toast.error(t('plan_change_wizard.invalid_pricing'), {
-        description: t('plan_change_wizard.plan_not_available', { currency: currentSubscription.currency }),
+        description: t('plan_change_wizard.no_pricing_available'),
       });
       handleBack();
       return;
@@ -88,9 +88,10 @@ export function PlanChangeWizard({
     try {
       setUpgrading(true);
 
+      // Use the actual currency that has pricing available
       await subscriptionService.changePlan(
         selectedPlan.code,
-        currentSubscription.currency,
+        actualCurrency,
         billingInterval
       );
 
@@ -118,11 +119,34 @@ export function PlanChangeWizard({
     }
   }, [selectedPlan, currentSubscription.planCode, currentSubscription.messageLimit, currentSubscription.currency, billingInterval, handleBack, onSuccess, onClose, t]);
 
-  const getPrice = (plan: SubscriptionPlan) => {
+  const getPriceAndCurrency = (plan: SubscriptionPlan): { price: number; currency: string } => {
+    console.log('[PlanChangeWizard] getPrice called for plan:', plan.code);
+    console.log('[PlanChangeWizard] Current subscription currency:', currentSubscription.currency);
+    console.log('[PlanChangeWizard] Plan pricing object:', plan.pricing);
+    console.log('[PlanChangeWizard] Available currency keys:', Object.keys(plan.pricing));
+
+    // Original logic - try current subscription currency
     const currency = currentSubscription.currency;
-    const pricing = plan.pricing[currency];
-    if (!pricing) return 0;
-    return pricing.monthly || 0;
+    const pricingByCurrency = plan.pricing[currency];
+    console.log('[PlanChangeWizard] Pricing for', currency, ':', pricingByCurrency);
+
+    // Fallback - try first available currency
+    const availableCurrencyKey = Object.keys(plan.pricing)[0];
+    const pricingByFirstKey = plan.pricing[availableCurrencyKey];
+    console.log('[PlanChangeWizard] Pricing for first key', availableCurrencyKey, ':', pricingByFirstKey);
+
+    // Use whichever works
+    const pricing = pricingByCurrency || pricingByFirstKey;
+    const actualCurrency = pricingByCurrency ? currency : availableCurrencyKey;
+
+    if (!pricing) {
+      console.error('[PlanChangeWizard] No pricing found for plan', plan.code);
+      return { price: 0, currency: currentSubscription.currency };
+    }
+
+    const price = pricing.monthly || 0;
+    console.log('[PlanChangeWizard] Final price:', price, 'Currency:', actualCurrency);
+    return { price, currency: actualCurrency };
   };
 
   const isDowngrade = selectedPlan
@@ -222,7 +246,10 @@ export function PlanChangeWizard({
                   <div className="mb-4">
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold text-gray-900">
-                        {currentSubscription.currency} {getPrice(selectedPlan)}
+                        {(() => {
+                          const { price, currency } = getPriceAndCurrency(selectedPlan);
+                          return `${currency} ${price}`;
+                        })()}
                       </span>
                       <span className="text-sm text-gray-500">/mo</span>
                     </div>

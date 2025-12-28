@@ -208,28 +208,28 @@ export default memo(function MessageComposer({
     // Check if any images are still uploading
     const hasUploadingImages = uploadedImages.some(img => img.isUploading);
     if (hasUploadingImages) {
-      toast.error('Please wait for images to finish uploading');
+      toast.error(t('conversations.wait_images_uploading'));
       return;
     }
 
     // Check if any audio is still uploading
     const hasUploadingAudio = uploadedAudio.some(aud => aud.isUploading);
     if (hasUploadingAudio) {
-      toast.error('Please wait for audio to finish uploading');
+      toast.error(t('conversations.wait_audio_uploading'));
       return;
     }
 
     // Check if any images failed to upload
     const hasFailedImages = uploadedImages.some(img => img.error);
     if (hasFailedImages) {
-      toast.error('Some images failed to upload. Please remove them and try again.');
+      toast.error(t('conversations.images_upload_failed'));
       return;
     }
 
     // Check if any audio failed to upload
     const hasFailedAudio = uploadedAudio.some(aud => aud.error);
     if (hasFailedAudio) {
-      toast.error('Some audio failed to upload. Please remove them and try again.');
+      toast.error(t('conversations.audio_upload_failed'));
       return;
     }
 
@@ -646,12 +646,12 @@ export default memo(function MessageComposer({
       await onSendMessage('', attachmentsJson);
 
       logger.info('Voice message sent successfully');
-      toast.success('Voice message sent');
+      toast.success(t('conversations.voice_message_sent'));
 
     } catch (error) {
       // Upload failed
       logger.error('Voice recording upload failed', error, { fileName });
-      toast.error('Failed to send voice recording');
+      toast.error(t('conversations.voice_send_failed'));
     }
   };
 
@@ -761,7 +761,7 @@ export default memo(function MessageComposer({
                   uploadedImage.isUploading && 'opacity-50 cursor-not-allowed'
                 )}
                 aria-label={`Remove image ${index + 1}`}
-                title={uploadedImage.error ? 'Remove failed image' : 'Remove image'}
+                title={uploadedImage.error ? t('conversations.remove_failed_image') : t('conversations.remove_image')}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -808,7 +808,7 @@ export default memo(function MessageComposer({
               {uploadedAudioFile.error && (
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <AlertCircle className="w-4 h-4 text-red-600" />
-                  <span className="text-xs text-red-600">Failed</span>
+                  <span className="text-xs text-red-600">{t('conversations.upload_failed')}</span>
                 </div>
               )}
 
@@ -824,7 +824,7 @@ export default memo(function MessageComposer({
                   uploadedAudioFile.isUploading && "opacity-50 cursor-not-allowed"
                 )}
                 aria-label={`Remove audio ${index + 1}`}
-                title={uploadedAudioFile.error ? 'Remove failed audio' : 'Remove audio'}
+                title={uploadedAudioFile.error ? t('conversations.remove_failed_audio') : t('conversations.remove_audio')}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -917,8 +917,8 @@ export default memo(function MessageComposer({
                 'transition-all duration-150',
                 showEmojiPicker && 'bg-neutral-100 text-neutral-700'
               )}
-              aria-label="Add emoji"
-              title="Add emoji"
+              aria-label={t('conversations.add_emoji')}
+              title={t('conversations.add_emoji')}
             >
               <Smile className="w-5 h-5" />
             </button>
@@ -936,7 +936,7 @@ export default memo(function MessageComposer({
                   onEmojiClick={handleEmojiClick}
                   width={EMOJI_PICKER_WIDTH}
                   height={EMOJI_PICKER_HEIGHT}
-                  searchPlaceHolder="Search emoji..."
+                  searchPlaceHolder={t('conversations.search_emoji')}
                 />
               </div>
             )}

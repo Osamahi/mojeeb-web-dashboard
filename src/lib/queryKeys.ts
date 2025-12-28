@@ -202,6 +202,21 @@ export const queryKeys = {
    * @returns {readonly ['user-role-stats']} Query key tuple
    */
   userRoleStats: () => ['user-role-stats'] as const,
+
+  // ==================== Billing & Stripe Queries ====================
+
+  /**
+   * Query key for fetching invoice history
+   * @param {number | undefined} limit - Optional limit for pagination
+   * @returns {readonly ['billing', 'invoices', number | undefined]} Query key tuple
+   */
+  invoices: (limit?: number) => ['billing', 'invoices', limit] as const,
+
+  /**
+   * Query key for fetching current subscription details
+   * @returns {readonly ['subscription', 'me']} Query key tuple
+   */
+  mySubscription: () => ['subscription', 'me'] as const,
 } as const;
 
 /**
