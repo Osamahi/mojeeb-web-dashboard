@@ -306,6 +306,7 @@
     "status_connected_label": "متصل",
     "edit_button": "عدّل",
     "connect_button_short": "وصّل",
+    "connect_button": "وصّل",
     "fetching_pages": "بنجيب الصفحات...",
     "failed_load_pages_title": "مش قادرين نجيب الصفحات",
     "retry_label": "حاول تاني",

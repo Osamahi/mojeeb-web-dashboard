@@ -306,6 +306,7 @@
     "status_connected_label": "متصل",
     "edit_button": "تعديل",
     "connect_button_short": "اتصال",
+    "connect_button": "ربط",
     "fetching_pages": "جاري جلب الصفحات المتاحة",
     "failed_load_pages_title": "فشل تحميل الصفحات",
     "retry_label": "إعادة المحاولة",
