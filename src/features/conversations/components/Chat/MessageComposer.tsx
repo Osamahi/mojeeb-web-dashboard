@@ -355,7 +355,7 @@ export default memo(function MessageComposer({
 
     // Validate file count
     if (uploadedImages.length + files.length > MAX_IMAGES) {
-      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+      toast.error(t('message_composer.max_images_error', { max: MAX_IMAGES }));
       return;
     }
 
@@ -364,13 +364,13 @@ export default memo(function MessageComposer({
     for (const file of files) {
       // Check file type
       if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        toast.error(`Invalid file type: ${file.name}. Only JPEG and PNG are supported.`);
+        toast.error(t('message_composer.invalid_image_type_error', { filename: file.name }));
         continue;
       }
 
       // Check file size
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        toast.error(`File too large: ${file.name}. Maximum ${MAX_FILE_SIZE_MB}MB allowed.`);
+        toast.error(t('message_composer.image_too_large_error', { filename: file.name, maxSize: MAX_FILE_SIZE_MB }));
         continue;
       }
 
@@ -466,7 +466,7 @@ export default memo(function MessageComposer({
           )
         );
 
-        toast.error(`Failed to upload ${uploadedImage.file.name}`);
+        toast.error(t('message_composer.image_upload_failed', { filename: uploadedImage.file.name }));
       }
     });
 
@@ -494,7 +494,7 @@ export default memo(function MessageComposer({
 
     // Validate file count
     if (uploadedAudio.length + files.length > MAX_AUDIO) {
-      toast.error(`Maximum ${MAX_AUDIO} audio files allowed`);
+      toast.error(t('message_composer.max_audio_error', { max: MAX_AUDIO }));
       return;
     }
 
@@ -503,13 +503,13 @@ export default memo(function MessageComposer({
     for (const file of files) {
       // Check file type
       if (!ALLOWED_AUDIO_TYPES.includes(file.type)) {
-        toast.error(`Invalid file type: ${file.name}. Only MP3, M4A, OGG, WebM, WAV, AAC, FLAC are supported.`);
+        toast.error(t('message_composer.invalid_audio_type_error', { filename: file.name }));
         continue;
       }
 
       // Check file size (5MB for audio)
       if (file.size > MAX_AUDIO_SIZE_BYTES) {
-        toast.error(`File too large: ${file.name}. Maximum ${MAX_AUDIO_SIZE_MB}MB allowed.`);
+        toast.error(t('message_composer.audio_too_large_error', { filename: file.name, maxSize: MAX_AUDIO_SIZE_MB }));
         continue;
       }
 
@@ -582,7 +582,7 @@ export default memo(function MessageComposer({
           )
         );
 
-        toast.error(`Failed to upload ${uploadedAudioFile.file.name}`);
+        toast.error(t('message_composer.audio_upload_failed', { filename: uploadedAudioFile.file.name }));
       }
     });
 
@@ -760,7 +760,7 @@ export default memo(function MessageComposer({
                   'transition-colors',
                   uploadedImage.isUploading && 'opacity-50 cursor-not-allowed'
                 )}
-                aria-label={`Remove image ${index + 1}`}
+                aria-label={t('message_composer.remove_image_aria', { index: index + 1 })}
                 title={uploadedImage.error ? t('conversations.remove_failed_image') : t('conversations.remove_image')}
               >
                 <X className="w-3 h-3" />
@@ -823,7 +823,7 @@ export default memo(function MessageComposer({
                   "transition-colors",
                   uploadedAudioFile.isUploading && "opacity-50 cursor-not-allowed"
                 )}
-                aria-label={`Remove audio ${index + 1}`}
+                aria-label={t('message_composer.remove_audio_aria', { index: index + 1 })}
                 title={uploadedAudioFile.error ? t('conversations.remove_failed_audio') : t('conversations.remove_audio')}
               >
                 <X className="w-4 h-4" />
@@ -842,7 +842,7 @@ export default memo(function MessageComposer({
         onPaste={handlePaste}
         placeholder={
           uploadedImages.some(img => img.isUploading)
-            ? `Uploading ${uploadedImages.filter(img => img.isUploading).length} image(s)...`
+            ? t('message_composer.uploading_images_placeholder', { count: uploadedImages.filter(img => img.isUploading).length })
             : placeholder
         }
         disabled={isSending || isLocalSending}
@@ -970,8 +970,8 @@ export default memo(function MessageComposer({
                 )}
                 role="switch"
                 aria-checked={!isAIMode}
-                aria-label={`Toggle mode. Currently ${isAIMode ? 'AI' : 'Human'} mode`}
-                title={`Click to switch to ${isAIMode ? 'Human' : 'AI'} mode`}
+                aria-label={t('message_composer.toggle_mode_aria', { mode: isAIMode ? 'AI' : 'Human' })}
+                title={t('message_composer.switch_mode_title', { mode: isAIMode ? 'Human' : 'AI' })}
               >
                 <span
                   className={cn(

@@ -81,6 +81,8 @@ export const BaseHeader = memo(({
   primaryAction,
   additionalActions,
 }: BaseHeaderProps) => {
+  const { t } = useTranslation();
+
   return (
     <div className="flex items-start justify-between gap-4">
       {/* Title Section */}
@@ -102,7 +104,7 @@ export const BaseHeader = memo(({
             <button
               onClick={onFilterClick}
               className="relative w-10 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center justify-center"
-              title={useTranslation().t('common.filters')}
+              title={t('common.filters')}
             >
               <SlidersHorizontal className="w-4 h-4 text-neutral-700" />
               {activeFilterCount > 0 && (

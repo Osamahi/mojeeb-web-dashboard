@@ -362,6 +362,7 @@
     "connect_instagram": "ربط إنستغرام",
     "connect_facebook": "ربط فيسبوك",
     "no_instagram_linked": "لا يوجد حساب إنستغرام مرتبط.",
+    "no_instagram_linked_desc": "يرجى ربط حساب إنستغرام بصفحة الفيسبوك الخاصة بك للمتابعة.",
     "no_instagram_desc": "هذه الصفحة لا تحتوي على حساب إنستغرام مرتبط. الرجاء ربط حساب إنستغرام في إعدادات أعمال فيسبوك أولاً.",
     "step_platform": "المنصة",
     "step_authorize": "الترخيص",
@@ -1370,6 +1371,7 @@
     "no_results": "لم يتم العثور على مستخدمين تطابق \"{{query}}\""
   },
   "logs": {
+    "page_title": "{{agentName}} | سجل الأحداث",
     "no_agent_description": "يرجى اختيار وكيل لعرض سجلات التطبيق",
     "page_subtitle": "سجلات التطبيق والتشخيصات في الوقت الفعلي",
     "status_live": "مباشر",
@@ -1408,7 +1410,20 @@
     "sending": "جارٍ الإرسال...",
     "wait_for_uploads": "انتظر حتى يكتمل التحميل",
     "send_message_hint": "إرسال رسالة (Enter)",
-    "attach_audio_hint": "إرفاق صوت"
+    "attach_audio_hint": "إرفاق صوت",
+    "max_images_error": "الحد الأقصى {{max}} صور",
+    "invalid_image_type_error": "نوع الملف غير صالح: {{filename}}. الصور المدعومة JPEG و PNG فقط.",
+    "image_too_large_error": "حجم الملف كبير جداً: {{filename}}. الحد الأقصى {{maxSize}} ميجابايت.",
+    "image_upload_failed": "فشل رفع {{filename}}",
+    "max_audio_error": "الحد الأقصى {{max}} ملفات صوتية",
+    "invalid_audio_type_error": "نوع الملف غير صالح: {{filename}}. الملفات الصوتية المدعومة MP3, M4A, OGG, WebM, WAV, AAC, FLAC فقط.",
+    "audio_too_large_error": "حجم الملف كبير جداً: {{filename}}. الحد الأقصى {{maxSize}} ميجابايت.",
+    "audio_upload_failed": "فشل رفع {{filename}}",
+    "remove_image_aria": "إزالة الصورة {{index}}",
+    "remove_audio_aria": "إزالة الصوت {{index}}",
+    "uploading_images_placeholder": "جارٍ رفع {{count}} صورة...",
+    "toggle_mode_aria": "تبديل الوضع. حالياً وضع {{mode}}",
+    "switch_mode_title": "انقر للتبديل إلى وضع {{mode}}"
   },
   "voice_recorder": {
     "cancel_recording_aria": "إلغاء التسجيل",

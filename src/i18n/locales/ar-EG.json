@@ -362,6 +362,7 @@
     "connect_instagram": "وصّل إنستجرام",
     "connect_facebook": "وصّل فيسبوك",
     "no_instagram_linked": "مفيش حساب إنستجرام متوصل.",
+    "no_instagram_linked_desc": "من فضلك اربط حساب إنستجرام بصفحة الفيسبوك بتاعتك عشان تكمل.",
     "no_instagram_desc": "الصفحة دي مفيهاش حساب إنستجرام متوصل. روح وصّل حساب إنستجرام في إعدادات البيزنس بتاع فيسبوك الأول.",
     "step_platform": "المنصة",
     "step_authorize": "الترخيص",
@@ -1374,6 +1375,7 @@
     "no_results": "مفيش مستخدمين لقيناهم بـ \"{{query}}\""
   },
   "logs": {
+    "page_title": "{{agentName}} | سجل الأحداث",
     "no_agent_description": "اختار إيجنت عشان تشوف سجلات التطبيق",
     "page_subtitle": "سجلات التطبيق والتشخيصات لايف",
     "status_live": "لايف",
@@ -1412,7 +1414,20 @@
     "sending": "بيبعت...",
     "wait_for_uploads": "استنى لحد ما الملفات تتحمل",
     "send_message_hint": "ابعت رسالة (Enter)",
-    "attach_audio_hint": "ضيف صوت"
+    "attach_audio_hint": "ضيف صوت",
+    "max_images_error": "الحد الأقصى {{max}} صور",
+    "invalid_image_type_error": "نوع الملف غلط: {{filename}}. الصور بس JPEG و PNG.",
+    "image_too_large_error": "الملف كبير أوي: {{filename}}. الحد الأقصى {{maxSize}} ميجابايت.",
+    "image_upload_failed": "فشل رفع {{filename}}",
+    "max_audio_error": "الحد الأقصى {{max}} ملفات صوت",
+    "invalid_audio_type_error": "نوع الملف غلط: {{filename}}. الأصوات بس MP3, M4A, OGG, WebM, WAV, AAC, FLAC.",
+    "audio_too_large_error": "الملف كبير أوي: {{filename}}. الحد الأقصى {{maxSize}} ميجابايت.",
+    "audio_upload_failed": "فشل رفع {{filename}}",
+    "remove_image_aria": "امسح الصورة {{index}}",
+    "remove_audio_aria": "امسح الصوت {{index}}",
+    "uploading_images_placeholder": "بيرفع {{count}} صورة...",
+    "toggle_mode_aria": "غيّر الوضع. دلوقتي وضع {{mode}}",
+    "switch_mode_title": "اضغط عشان تغيّر لوضع {{mode}}"
   },
   "voice_recorder": {
     "start_recording_aria": "ابدأ التسجيل",

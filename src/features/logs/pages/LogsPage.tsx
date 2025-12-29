@@ -59,7 +59,7 @@ export default function LogsPage() {
     >
       {/* Header */}
       <BaseHeader
-        title={`${currentAgent?.name || 'Agent'} | Log Stream`}
+        title={t('logs.page_title', { agentName: currentAgent?.name || 'Agent' })}
         subtitle={t('logs.page_subtitle')}
         badge={
           isConnected && (

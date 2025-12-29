@@ -362,6 +362,7 @@
     "connect_instagram": "Connect Instagram",
     "connect_facebook": "Connect Facebook",
     "no_instagram_linked": "No Instagram account linked.",
+    "no_instagram_linked_desc": "Please link an Instagram account to your Facebook page to continue.",
     "no_instagram_desc": "This Facebook page doesn't have an Instagram account linked. Please link an Instagram account in your Facebook Business settings first.",
     "step_platform": "Platform",
     "step_authorize": "Authorize",
@@ -1374,6 +1375,7 @@
     "no_results": "No users found matching \"{{query}}\""
   },
   "logs": {
+    "page_title": "{{agentName}} | Log Stream",
     "no_agent_description": "Please select an agent to view application logs",
     "page_subtitle": "Real-time application logs and diagnostics",
     "status_live": "Live",
@@ -1412,7 +1414,20 @@
     "sending": "Sending...",
     "wait_for_uploads": "Wait for uploads to complete",
     "send_message_hint": "Send message (Enter)",
-    "attach_audio_hint": "Attach audio"
+    "attach_audio_hint": "Attach audio",
+    "max_images_error": "Maximum {{max}} images allowed",
+    "invalid_image_type_error": "Invalid file type: {{filename}}. Only JPEG and PNG are supported.",
+    "image_too_large_error": "File too large: {{filename}}. Maximum {{maxSize}}MB allowed.",
+    "image_upload_failed": "Failed to upload {{filename}}",
+    "max_audio_error": "Maximum {{max}} audio files allowed",
+    "invalid_audio_type_error": "Invalid file type: {{filename}}. Only MP3, M4A, OGG, WebM, WAV, AAC, FLAC are supported.",
+    "audio_too_large_error": "File too large: {{filename}}. Maximum {{maxSize}}MB allowed.",
+    "audio_upload_failed": "Failed to upload {{filename}}",
+    "remove_image_aria": "Remove image {{index}}",
+    "remove_audio_aria": "Remove audio {{index}}",
+    "uploading_images_placeholder": "Uploading {{count}} image(s)...",
+    "toggle_mode_aria": "Toggle mode. Currently {{mode}} mode",
+    "switch_mode_title": "Click to switch to {{mode}} mode"
   },
   "voice_recorder": {
     "cancel_recording_aria": "Cancel recording",
