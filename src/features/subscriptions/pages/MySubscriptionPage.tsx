@@ -72,18 +72,18 @@ export default function MySubscriptionPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={() => setShowPaymentModal(true)}>
-                  <CreditCard className="mr-2 h-4 w-4" />
+                  <CreditCard className="me-2 h-4 w-4" />
                   {t('billing.payment_method')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShowInvoicesModal(true)}>
-                  <Receipt className="mr-2 h-4 w-4" />
+                  <Receipt className="me-2 h-4 w-4" />
                   {t('billing.view_invoices')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setShowCancelModal(true)}
                   className="text-red-600 focus:text-red-600"
                 >
-                  <X className="mr-2 h-4 w-4" />
+                  <X className="me-2 h-4 w-4" />
                   {t('billing.cancel_subscription')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
