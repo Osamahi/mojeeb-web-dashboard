@@ -89,9 +89,18 @@ export const StepPurpose = () => {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-neutral-600 line-clamp-2">
-                  {t(`onboarding.purpose_${purpose.id.replace(/-/g, '_')}_desc`)}
-                </p>
+
+                {/* Animated description - only show when selected */}
+                <div
+                  className={`
+                    overflow-hidden transition-all duration-300 ease-in-out
+                    ${selected ? 'max-h-20 opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'}
+                  `}
+                >
+                  <p className="text-sm text-neutral-600 text-start">
+                    {t(`onboarding.purpose_${purpose.id.replace(/-/g, '_')}_desc`)}
+                  </p>
+                </div>
               </div>
             </button>
           );

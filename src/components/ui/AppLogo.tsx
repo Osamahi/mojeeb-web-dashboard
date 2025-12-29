@@ -33,11 +33,17 @@ export const AppLogo = memo(({
   const { t, i18n } = useTranslation();
   const isMobile = useIsMobile();
 
-  const sizeClass = size === 'large' ? 'h-6' : 'h-5';
-  const combinedClassName = className ? `${sizeClass} ${className}` : sizeClass;
-
   // Determine which logo to show
   const shouldShowMark = variant === 'mark' || (variant === 'auto' && isMobile);
+
+  // Different sizes for mark vs full logo
+  // Mark: h-7 (28px) for better visibility on mobile
+  // Full logo: h-5 (20px) to keep it compact and proportional
+  const sizeClass = shouldShowMark
+    ? (size === 'large' ? 'h-8' : 'h-7')  // Mark sizes
+    : (size === 'large' ? 'h-6' : 'h-5'); // Full logo sizes
+
+  const combinedClassName = className ? `${sizeClass} ${className}` : sizeClass;
 
   // Determine logo source
   let logoSrc: string;

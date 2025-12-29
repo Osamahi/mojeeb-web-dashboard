@@ -158,28 +158,27 @@ export const OnboardingWizard = () => {
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">
-      {/* Header - AuthHeader with skip button overlay */}
-      <div className="relative">
-        <AuthHeader />
-        {/* Skip / Go to dashboard button - positioned absolutely in header */}
-        <div className="absolute top-0 end-0 h-16 flex items-center px-4">
-          {currentStep === OnboardingStep.Success && isSuccessReady ? (
+      {/* Header - AuthHeader with skip/dashboard button */}
+      <AuthHeader
+        showLanguageSwitcher={false}
+        actionButton={
+          currentStep === OnboardingStep.Success && isSuccessReady ? (
             <button
               onClick={handleOnboardingComplete}
-              className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
             >
               {t('onboarding.go_to_dashboard')}
             </button>
           ) : (
             <button
               onClick={handleSkipClick}
-              className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
             >
               {t('onboarding.skip')}
             </button>
-          )}
-        </div>
-      </div>
+          )
+        }
+      />
 
       {/* Progress Bar - Below header */}
       {currentStep < OnboardingStep.Success && (

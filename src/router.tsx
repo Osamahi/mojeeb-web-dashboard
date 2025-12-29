@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { useAuthStore } from './features/auth/stores/authStore';
 import { Role } from './features/auth/types/auth.types';
 import { AuthInitializer } from './features/auth/components/AuthInitializer';
+import { AuthLayout } from './components/layout/AuthLayout';
 import { PageSkeleton } from './components/ui/PageSkeleton';
 
 // Lazy load all page components for code splitting
@@ -180,20 +181,34 @@ export const router = createBrowserRouter([
     element: <Navigate to="/conversations" replace />,
   },
   {
-    path: '/login',
-    element: (
-      <PublicRoute>
-        <LoginPage />
-      </PublicRoute>
-    ),
-  },
-  {
-    path: '/signup',
-    element: (
-      <PublicRoute allowAuthenticatedAccess={true}>
-        <SignUpPage />
-      </PublicRoute>
-    ),
+    // Auth Layout - Shared header for all authentication pages
+    element: <AuthLayout />,
+    children: [
+      {
+        path: '/login',
+        element: (
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: '/signup',
+        element: (
+          <PublicRoute allowAuthenticatedAccess={true}>
+            <SignUpPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: '/forgot-password',
+        element: (
+          <PublicRoute>
+            <ForgotPasswordPage />
+          </PublicRoute>
+        ),
+      },
+    ],
   },
   {
     path: '/onboarding',
@@ -201,14 +216,6 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <OnboardingWizard />
       </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/forgot-password',
-    element: (
-      <PublicRoute>
-        <ForgotPasswordPage />
-      </PublicRoute>
     ),
   },
   {

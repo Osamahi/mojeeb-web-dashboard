@@ -1,14 +1,13 @@
 /**
  * Minimal Auth Page Layout Component
  * Reusable layout for all authentication pages (Login, SignUp, ForgotPassword)
- * Uses AuthHeader for consistent branding
+ * Renders within AuthLayout (via Outlet) which provides the header
  * Features smooth page transitions with Framer Motion
  */
 
 import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { AuthHeader } from '@/components/layout/AuthHeader';
 import { SupportButton } from '@/components/SupportButton';
 import { ErrorAlert } from './ErrorAlert';
 import { Divider } from './Divider';
@@ -68,53 +67,46 @@ export const AuthPageLayout = ({
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
-      <AuthHeader />
-
-      {/* Main Content - Account for fixed header */}
-      <div className="flex-1 flex items-center justify-center p-4 pt-20">
-        <div className="w-full max-w-md">
-          {/* Minimal Card Container with Page Transition Animation */}
-          <motion.div
-            key={location.pathname}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={pageTransition}
-            className="bg-white rounded-xl border border-neutral-200 p-8"
-          >
-            {/* Header - Clean & Centered */}
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-neutral-950">
-                {title}
-              </h1>
-            </div>
-
-            {/* Error Alert */}
-            {error && <ErrorAlert message={error} />}
-
-            {/* Form Content */}
-            {children}
-
-            {/* Social Login Section */}
-            {showSocialLogin && (
-              <>
-                <Divider />
-                <SocialLoginButtons disabled={isLoading} />
-              </>
-            )}
-
-            {/* Footer Content */}
-            {footerContent}
-          </motion.div>
-
-          {/* Support Button - Below Card */}
-          <div className="mt-4">
-            <SupportButton variant="subtle" className="w-full justify-center" />
-          </div>
+    <>
+      {/* Animated Card Container - Only this remounts on navigation */}
+      <motion.div
+        key={location.pathname}
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={pageTransition}
+        className="bg-white rounded-xl border border-neutral-200 p-8"
+      >
+        {/* Header - Clean & Centered */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-neutral-950">
+            {title}
+          </h1>
         </div>
+
+        {/* Error Alert */}
+        {error && <ErrorAlert message={error} />}
+
+        {/* Form Content */}
+        {children}
+
+        {/* Social Login Section */}
+        {showSocialLogin && (
+          <>
+            <Divider />
+            <SocialLoginButtons disabled={isLoading} />
+          </>
+        )}
+
+        {/* Footer Content */}
+        {footerContent}
+      </motion.div>
+
+      {/* Support Button - Below Card */}
+      <div className="mt-4">
+        <SupportButton variant="subtle" className="w-full justify-center" />
       </div>
-    </div>
+    </>
   );
 };
