@@ -6,6 +6,7 @@
 
 import { ReactNode } from 'react';
 import { AuthHeader } from '@/components/layout/AuthHeader';
+import { SupportButton } from '@/components/SupportButton';
 import { ErrorAlert } from './ErrorAlert';
 import { Divider } from './Divider';
 import { SocialLoginButtons } from './SocialLoginButtons';
@@ -65,6 +66,11 @@ export const AuthPageLayout = ({
 
             {/* Footer Content */}
             {footerContent}
+          </div>
+
+          {/* Support Button - Below Card */}
+          <div className="mt-4">
+            <SupportButton variant="subtle" className="w-full justify-center" />
           </div>
         </div>
       </div>
