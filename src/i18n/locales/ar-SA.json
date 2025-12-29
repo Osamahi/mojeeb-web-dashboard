@@ -329,6 +329,7 @@
     "account_error": "فشل تحميل الحسابات. الرجاء المحاولة مرة أخرى.",
     "account_retry": "إعادة المحاولة",
     "account_card_followers": "{{count}} متابع",
+    "followers_label": "متابع",
     "account_card_select": "اختر الحساب",
     "account_search_placeholder": "البحث عن الحسابات...",
     "account_select_confirm": "اربط هذا الحساب",

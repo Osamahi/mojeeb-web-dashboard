@@ -329,6 +329,7 @@
     "account_error": "Failed to load accounts. Please try again.",
     "account_retry": "Retry",
     "account_card_followers": "{{count}} followers",
+    "followers_label": "followers",
     "account_card_select": "Select Account",
     "account_search_placeholder": "Search accounts...",
     "account_select_confirm": "Connect This Account",

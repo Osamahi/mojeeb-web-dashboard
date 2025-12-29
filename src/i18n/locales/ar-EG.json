@@ -329,6 +329,7 @@
     "account_error": "مش قادرين نحمّل الحسابات. جرّب تاني.",
     "account_retry": "حاول تاني",
     "account_card_followers": "{{count}} متابع",
+    "followers_label": "متابع",
     "account_card_select": "اختار الحساب",
     "account_search_placeholder": "دوّر في الحسابات...",
     "account_select_confirm": "وصّل الحساب ده",
