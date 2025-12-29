@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BaseModal } from '@/components/ui/BaseModal';
-import { TrendingUp, TrendingDown, CreditCard } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useDateLocale } from '@/lib/dateConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { subscriptionService } from '../services/subscriptionService';
@@ -281,23 +281,6 @@ export function PlanChangeWizard({
                   </div>
                 </div>
 
-                {/* Payment information for upgrades */}
-                {needsPayment && (
-                  <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-                    <div className="flex gap-3">
-                      <CreditCard className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="text-sm font-medium text-blue-900 mb-1">
-                          {t('plan_change_wizard.payment_required')}
-                        </h4>
-                        <p className="text-sm text-blue-700">
-                          {t('plan_change_wizard.payment_required_description')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Action Buttons */}
                 <div className="flex gap-3">
                   <button
@@ -318,7 +301,7 @@ export function PlanChangeWizard({
                           return currency as BillingCurrency;
                         })()}
                         billingInterval={billingInterval as BillingInterval}
-                        label={t('plan_change_wizard.pay_with_stripe') || 'Pay with Stripe'}
+                        label={t('plan_change_wizard.pay_with_stripe') || 'Next'}
                         className="w-full bg-neutral-950 hover:bg-neutral-900 text-white"
                       />
                     </div>

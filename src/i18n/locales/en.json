@@ -1138,7 +1138,7 @@
     "api_access": "API Access"
   },
   "plan_change_wizard": {
-    "pay_with_stripe": "Pay with Stripe",
+    "pay_with_stripe": "Next",
     "title": "Change Your Plan",
     "subtitle": "Upgrade or downgrade to a plan that fits your needs",
     "confirm_upgrade": "Confirm Upgrade",
