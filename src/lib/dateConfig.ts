@@ -36,6 +36,8 @@ function convertFormatToIntlOptions(formatStr: string): Intl.DateTimeFormatOptio
     'PPP': { year: 'numeric', month: 'long', day: 'numeric' }, // date-fns long format
     'PP': { year: 'numeric', month: 'short', day: 'numeric' }, // date-fns medium format
     'P': { year: 'numeric', month: 'numeric', day: 'numeric' }, // date-fns short format
+    'short-date': { year: 'numeric', month: 'numeric', day: 'numeric' }, // e.g., 12/29/2025
+    'short-time': { hour: '2-digit', minute: '2-digit' }, // e.g., 11:27 AM
   };
 
   return patterns[formatStr] || { year: 'numeric', month: 'short', day: 'numeric' };
@@ -89,6 +91,53 @@ function formatWithIntl(date: Date | number, formatStr: string, language: string
 }
 
 /**
+ * Formats a date to localized short date string (e.g., 12/29/2025 or ١٢/٢٩/٢٠٢٥)
+ * Uses Intl.DateTimeFormat with Arabic-Indic numerals for Arabic locales
+ */
+function formatLocaleDateString(date: Date, language: string): string {
+  const isArabic = language.startsWith('ar');
+  const formatter = new Intl.DateTimeFormat(language, {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    calendar: 'gregory',
+    numberingSystem: isArabic ? 'arab' : 'latn',
+  });
+
+  let formatted = formatter.format(date);
+
+  // Fallback conversion
+  if (isArabic && /[0-9]/.test(formatted)) {
+    formatted = toArabicNumerals(formatted);
+  }
+
+  return formatted;
+}
+
+/**
+ * Formats a date to localized short time string (e.g., 11:27 AM or ١١:٢٧ ص)
+ * Uses Intl.DateTimeFormat with Arabic-Indic numerals for Arabic locales
+ */
+function formatLocaleTimeString(date: Date, language: string): string {
+  const isArabic = language.startsWith('ar');
+  const formatter = new Intl.DateTimeFormat(language, {
+    hour: '2-digit',
+    minute: '2-digit',
+    calendar: 'gregory',
+    numberingSystem: isArabic ? 'arab' : 'latn',
+  });
+
+  let formatted = formatter.format(date);
+
+  // Fallback conversion
+  if (isArabic && /[0-9]/.test(formatted)) {
+    formatted = toArabicNumerals(formatted);
+  }
+
+  return formatted;
+}
+
+/**
  * React hook that returns locale-aware date formatting functions
  *
  * For Arabic locales: Uses Intl.DateTimeFormat with Arabic-Indic numerals (٠-٩)
@@ -112,6 +161,22 @@ export function useDateLocale() {
         return formatWithIntl(date, formatStr, i18n.language);
       }
       return dateFns.format(date, formatStr, { locale });
+    },
+
+    /**
+     * Format as localized short date (12/29/2025 or ١٢/٢٩/٢٠٢٥)
+     */
+    toLocaleDateString: (date: Date | number) => {
+      const dateObj = typeof date === 'number' ? new Date(date) : date;
+      return formatLocaleDateString(dateObj, i18n.language);
+    },
+
+    /**
+     * Format as localized short time (11:27 AM or ١١:٢٧ ص)
+     */
+    toLocaleTimeString: (date: Date | number) => {
+      const dateObj = typeof date === 'number' ? new Date(date) : date;
+      return formatLocaleTimeString(dateObj, i18n.language);
     },
 
     // Relative date formatting - always uses date-fns for consistent relative phrases

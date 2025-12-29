@@ -20,6 +20,7 @@ import { validateName, validatePhone } from '../utils/validation';
 import { formatPhoneNumber, getNoteAuthorName, formatNoteDate } from '../utils/formatting';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useDateLocale } from '@/lib/dateConfig';
 import type { Lead, LeadStatus, LeadFilters } from '../types';
 
 interface LeadsTableViewProps {
@@ -53,6 +54,7 @@ export function LeadsTableView({
   const user = useAuthStore((state) => state.user);
   const updateMutation = useUpdateLead();
   const isMobile = useIsMobile();
+  const { toLocaleDateString, toLocaleTimeString } = useDateLocale();
 
   // Infinite scroll state
   const [displayCount, setDisplayCount] = useState(50);
@@ -391,10 +393,8 @@ export function LeadsTableView({
 
           return (
             <div className="flex flex-col gap-0.5">
-              <span className="text-[13px] text-neutral-900">{date.toLocaleDateString()}</span>
-              <span className="text-[12px] text-neutral-500">
-                {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
+              <span className="text-[13px] text-neutral-900">{toLocaleDateString(date)}</span>
+              <span className="text-[12px] text-neutral-500">{toLocaleTimeString(date)}</span>
             </div>
           );
         } catch {
