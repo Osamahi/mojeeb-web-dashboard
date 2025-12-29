@@ -233,7 +233,7 @@ const SidebarContent = () => {
               >
                 {/* Logo Section - Mobile Only */}
                 <div className="p-6 bg-white border-b border-neutral-200">
-                  <AppLogo size="large" />
+                  <AppLogo size="large" variant="full" />
                 </div>
 
                 {/* Navigation - Mobile */}
