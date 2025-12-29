@@ -28,7 +28,8 @@
     "back": "Back",
     "logo_alt": "Mojeeb",
     "saving": "Saving...",
-    "close_dialog_aria": "Close dialog"
+    "close_dialog_aria": "Close dialog",
+    "you": "You"
   },
   "agents": {
     "title": "AI Agents",
@@ -1223,6 +1224,7 @@
     "add_note": "Add Note",
     "activity_timeline": "Activity Timeline",
     "status_update": "(status update)",
+    "status_changed": "Status changed from '{{oldStatus}}' to '{{newStatus}}'",
     "edited": "(edited)",
     "edit_note": "Edit note",
     "delete_note": "Delete note",

@@ -112,6 +112,18 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
     return user?.id === note.userId;
   };
 
+  // Get translated note text
+  const getTranslatedNoteText = (note: LeadNote): string => {
+    if (note.noteType === 'status_change' && note.metadata?.statusChange) {
+      const { oldStatus, newStatus } = note.metadata.statusChange;
+      return t('lead_notes.status_changed', {
+        oldStatus: t(`leads.status_${oldStatus}`),
+        newStatus: t(`leads.status_${newStatus}`)
+      });
+    }
+    return note.text;
+  };
+
   // Empty state
   if (!isLoading && (!notes || notes.length === 0)) {
     return (
@@ -181,7 +193,7 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-neutral-900">
-                      {getNoteAuthorName(note.userName, note.userId, user?.id)}
+                      {getNoteAuthorName(note.userName, note.userId, user?.id, t('common.you'))}
                     </span>
                     {note.noteType === 'status_change' && (
                       <span className="text-xs text-[#00D084] font-normal">
@@ -248,7 +260,7 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-neutral-700 whitespace-pre-wrap">{note.text}</p>
+                  <p className="text-sm text-neutral-700 whitespace-pre-wrap">{getTranslatedNoteText(note)}</p>
                 )}
 
                 {/* Timestamp */}

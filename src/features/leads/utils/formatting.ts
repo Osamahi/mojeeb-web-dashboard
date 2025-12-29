@@ -42,12 +42,17 @@ export function extractNameFromEmail(emailOrName: string): string {
  * - If current user: "You"
  * - If other user: First name only (e.g., "John Doe" -> "John")
  */
-export function getNoteAuthorName(userName: string, userId: string, currentUserId?: string): string {
+export function getNoteAuthorName(
+  userName: string,
+  userId: string,
+  currentUserId?: string,
+  youLabel: string = 'You'
+): string {
   if (!userName) return 'Unknown';
 
-  // If it's the current user, show "You"
+  // If it's the current user, use the provided label (translated)
   if (currentUserId && userId === currentUserId) {
-    return 'You';
+    return youLabel;
   }
 
   // Extract full name first

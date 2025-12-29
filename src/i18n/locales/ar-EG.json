@@ -28,7 +28,8 @@
     "back": "رجوع",
     "logo_alt": "مجيب",
     "saving": "بيحفظ...",
-    "close_dialog_aria": "اقفل الشباك"
+    "close_dialog_aria": "اقفل الشباك",
+    "you": "أنت"
   },
   "agents": {
     "title": "الوكلاء الذكيون",
@@ -1219,6 +1220,7 @@
     "add_note": "ضيف ملاحظة",
     "activity_timeline": "تايم لاين النشاط",
     "status_update": "(تحديث الحالة)",
+    "status_changed": "تم تغيير الحالة من '{{oldStatus}}' إلى '{{newStatus}}'",
     "edited": "(متعدّل)",
     "edit_note": "عدّل الملاحظة",
     "delete_note": "امسح الملاحظة",

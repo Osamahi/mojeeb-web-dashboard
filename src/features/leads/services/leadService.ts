@@ -38,6 +38,16 @@ class LeadService {
    * Transform note API response (snake_case) to frontend model (camelCase)
    */
   private transformNote(apiNote: ApiLeadNoteResponse): LeadNote {
+    // Parse metadata if it's a JSON string
+    let parsedMetadata = apiNote.metadata;
+    if (typeof apiNote.metadata === 'string' && apiNote.metadata) {
+      try {
+        parsedMetadata = JSON.parse(apiNote.metadata);
+      } catch (e) {
+        console.error('[leadService] Failed to parse metadata:', apiNote.metadata, e);
+      }
+    }
+
     return {
       id: apiNote.id,
       userId: apiNote.user_id,
@@ -46,6 +56,7 @@ class LeadService {
       noteType: apiNote.note_type,
       isEdited: apiNote.is_edited,
       isDeleted: apiNote.is_deleted,
+      metadata: parsedMetadata,
       createdAt: apiNote.created_at,
       updatedAt: apiNote.updated_at,
     };
@@ -95,33 +106,33 @@ class LeadService {
    * Get all leads for an agent with optional filters
    */
   async getLeads(agentId: string, filters?: Partial<LeadFilters>): Promise<Lead[]> {
-    // Build query parameters
-    const params = new URLSearchParams();
-    params.append('agentId', agentId);
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append('agentId', agentId);
 
-    if (filters) {
-      if (filters.status && filters.status !== 'all') {
-        params.append('status', filters.status);
+      if (filters) {
+        if (filters.status && filters.status !== 'all') {
+          params.append('status', filters.status);
+        }
+        if (filters.dateFrom) {
+          params.append('dateFrom', filters.dateFrom);
+        }
+        if (filters.dateTo) {
+          params.append('dateTo', filters.dateTo);
+        }
+        if (filters.search && filters.search.trim()) {
+          params.append('search', filters.search.trim());
+        }
       }
-      if (filters.dateFrom) {
-        params.append('dateFrom', filters.dateFrom);
-      }
-      if (filters.dateTo) {
-        params.append('dateTo', filters.dateTo);
-      }
-      if (filters.search && filters.search.trim()) {
-        params.append('search', filters.search.trim());
-      }
+
+      const url = `/api/lead?${params.toString()}`;
+      const { data } = await api.get<ApiResponse<ApiLeadResponse[]>>(url);
+      return data.data.map(lead => this.transformLead(lead));
+    } catch (error) {
+      console.error('[LeadService] Error fetching leads:', error);
+      throw error;
     }
-
-    const url = `/api/lead?${params.toString()}`;
-    console.log('[LeadService] Fetching leads with URL:', url);
-    console.log('[LeadService] Filters:', filters);
-
-    const { data } = await api.get<ApiResponse<ApiLeadResponse[]>>(url);
-    console.log('[LeadService] Received', data.data.length, 'leads from backend');
-
-    return data.data.map(lead => this.transformLead(lead));
   }
 
   /**

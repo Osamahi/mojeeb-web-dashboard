@@ -27,6 +27,12 @@ export interface LeadNote {
   noteType: NoteType;
   isEdited: boolean;
   isDeleted: boolean;
+  metadata?: {
+    statusChange?: {
+      oldStatus: string;
+      newStatus: string;
+    };
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -60,6 +66,12 @@ export interface ApiLeadNoteResponse {
   note_type: NoteType;
   is_edited: boolean;
   is_deleted: boolean;
+  metadata?: string | {  // Can be JSON string from backend or parsed object
+    statusChange?: {
+      oldStatus: string;
+      newStatus: string;
+    };
+  };
   created_at: string;
   updated_at: string;
 }
