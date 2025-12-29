@@ -3,12 +3,14 @@
  * Language-aware Mojeeb logo with size variants and responsive mark/full logo
  * - Mobile (< 768px): Shows compact mark (icon only)
  * - Desktop (≥ 768px): Shows full logo with language detection
+ * - Smooth animations on language switch and screen resize
  * Single source of truth for branding across all contexts
  */
 
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface AppLogoProps {
@@ -50,12 +52,43 @@ export const AppLogo = memo(({
       : '/mojeeb-logo-en.svg';
   }
 
+  // Animation variants for smooth transitions
+  const logoVariants = {
+    initial: {
+      opacity: 0,
+      scale: 0.95,
+    },
+    animate: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.2,
+        ease: 'easeOut',
+      },
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.95,
+      transition: {
+        duration: 0.15,
+        ease: 'easeIn',
+      },
+    },
+  };
+
   const logoImage = (
-    <img
-      src={logoSrc}
-      alt={t('header.logo_alt')}
-      className={combinedClassName}
-    />
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.img
+        key={logoSrc} // Key changes when logo changes, triggering animation
+        src={logoSrc}
+        alt={t('header.logo_alt')}
+        className={combinedClassName}
+        variants={logoVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      />
+    </AnimatePresence>
   );
 
   // Wrap in Link if clickable
