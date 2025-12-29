@@ -701,6 +701,7 @@
     "all_loaded": "تم تحميل جميع {{count}} مستخدم"
   },
   "subscriptions": {
+    "settings": "الإعدادات",
     "admin_title": "الاشتراكات",
     "admin_subtitle": "إدارة اشتراكات المنظمات والفواتير",
     "create_subscription": "إنشاء اشتراك",
@@ -772,6 +773,8 @@
     "user_menu_aria": "قايمة حساب المستخدم"
   },
   "billing": {
+    "payment_method": "طريقة الدفع",
+    "view_invoices": "شوف الفواتير",
     "title": "الفواتير",
     "subtitle": "تحكم في اشتراكك وطرق الدفع والفواتير",
     "manage_subscription": "إدارة الاشتراك",
@@ -824,6 +827,18 @@
     "showing_invoices": "بيعرض {{count}} من {{total}} فاتورة",
     "checkout": "الدفع",
     "redirecting": "بيحوّل...",
+    "go_to_subscription": "روح لاشتراكي",
+    "return_to_subscription": "ارجع للاشتراك",
+    "payment_successful": "الدفع نجح!",
+    "payment_successful_message": "اشتراكك اتفعّل بنجاح.",
+    "subscription_activated": "الاشتراك اتفعّل",
+    "session_id": "رقم الجلسة: {{id}}",
+    "finalizing_subscription": "بنخلّص الاشتراك...",
+    "redirecting_countdown": "هيحوّل في {{seconds}} ثانية...",
+    "checkout_canceled": "الدفع اتلغى",
+    "checkout_canceled_message": "لغيت عملية الدفع. مفيش فلوس اتخصمت من حسابك.",
+    "checkout_issues_support": "لو واجهت أي مشاكل، اتصل بفريق الدعم.",
+    "checkout_try_again": "تقدر تحاول تاني أي وقت من صفحة الاشتراك.",
     "invoice_history_title": "سجل الفواتير",
     "invoice_history_subtitle": "شوف وحمّل فواتيرك القديمة",
     "payment_method_title": "طريقة الدفع",
@@ -846,7 +861,11 @@
     "new_conversation_aria": "ابدأ محادثة تجريبية جديدة",
     "send_failed": "فشل إرسال الرسالة",
     "init_failed": "فشل تهيئة بيئة الاختبار",
-    "new_conversation_failed": "فشل إنشاء محادثة جديدة"
+    "new_conversation_failed": "فشل إنشاء محادثة جديدة",
+    "fallback_error": "حصل غلط مش متوقع",
+    "api_error": "غلط في API",
+    "network_error": "مشكلة في النت. اتأكد من الاتصال.",
+    "timeout_error": "الطلب خد وقت كتير. جرّب تاني."
   },
   "no_agent": {
     "title": "لم يتم اختيار وكيل",
@@ -1114,6 +1133,7 @@
     "api_access": "الوصول لل API"
   },
   "plan_change_wizard": {
+    "pay_with_stripe": "التالي",
     "title": "غيّر خطتك",
     "subtitle": "رقّي أو قلّل لخطة تناسب احتياجاتك",
     "confirm_upgrade": "أكد الترقية",
@@ -1433,11 +1453,5 @@
     "fullpage_badge": "صفحة كاملة",
     "loading_widget": "بيحمّل إعدادات الويدجت...",
     "widget_not_found": "الإعدادات مش موجودة"
-  },
-  "test_chat": {
-    "fallback_error": "حصل غلط مش متوقع",
-    "api_error": "غلط في API",
-    "network_error": "مشكلة في النت. اتأكد من الاتصال.",
-    "timeout_error": "الطلب خد وقت كتير. جرّب تاني."
   }
 }

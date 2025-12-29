@@ -7,7 +7,7 @@
 import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Crown, Wrench, Building2, Pencil } from 'lucide-react';
-import { format } from 'date-fns';
+import { useDateLocale } from '@/lib/dateConfig';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { isAxiosError } from 'axios';
@@ -27,6 +27,7 @@ interface AgentCardProps {
 
 const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   const { t } = useTranslation();
+  const { format } = useDateLocale();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialogComponent } = useConfirm();

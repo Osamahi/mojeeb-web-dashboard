@@ -701,6 +701,7 @@
     "all_loaded": "All {{count}} users loaded"
   },
   "subscriptions": {
+    "settings": "Settings",
     "admin_title": "Subscriptions",
     "admin_subtitle": "Manage organization subscriptions and billing",
     "create_subscription": "Create Subscription",
@@ -773,6 +774,8 @@
     "user_menu_aria": "User menu"
   },
   "billing": {
+    "payment_method": "Payment Method",
+    "view_invoices": "View Invoices",
     "title": "Billing",
     "subtitle": "Manage your subscription, payment methods, and invoices",
     "manage_subscription": "Manage Subscription",
@@ -831,6 +834,7 @@
     "return_to_subscription": "Return to Subscription",
     "payment_successful": "Payment Successful!",
     "payment_successful_message": "Your subscription has been activated successfully.",
+    "subscription_activated": "Subscription Activated",
     "session_id": "Session ID: {{id}}",
     "finalizing_subscription": "Finalizing your subscription...",
     "redirecting_countdown": "Redirecting in {{seconds}} seconds...",
@@ -861,7 +865,11 @@
     "new_conversation_aria": "Start a new conversation",
     "send_failed": "Failed to send message",
     "init_failed": "Failed to initialize chat",
-    "new_conversation_failed": "Failed to start new conversation"
+    "new_conversation_failed": "Failed to start new conversation",
+    "fallback_error": "An unexpected error occurred",
+    "api_error": "API Error",
+    "network_error": "Network error. Please check your connection.",
+    "timeout_error": "Request timed out. Please try again."
   },
   "no_agent": {
     "title": "No Agent Selected",
@@ -1129,6 +1137,7 @@
     "api_access": "API Access"
   },
   "plan_change_wizard": {
+    "pay_with_stripe": "Pay with Stripe",
     "title": "Change Your Plan",
     "subtitle": "Upgrade or downgrade to a plan that fits your needs",
     "confirm_upgrade": "Confirm Upgrade",
@@ -1447,11 +1456,5 @@
     "fullpage_badge": "Full-Page",
     "loading_widget": "Loading widget configuration...",
     "widget_not_found": "Widget configuration not found"
-  },
-  "test_chat": {
-    "fallback_error": "An unexpected error occurred",
-    "api_error": "API Error",
-    "network_error": "Network error. Please check your connection.",
-    "timeout_error": "Request timed out. Please try again."
   }
 }

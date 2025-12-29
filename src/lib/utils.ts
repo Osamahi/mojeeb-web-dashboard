@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { format, formatDistance, formatRelative } from 'date-fns';
+import { getDateFns } from './dateConfig';
+import i18n from '@/i18n/config';
 
 /**
  * Merge Tailwind CSS classes with clsx
@@ -10,26 +11,29 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format date to readable string
+ * Format date to readable string with automatic locale detection
  */
 export function formatDate(date: Date | string | number, formatStr: string = 'MMM dd, yyyy'): string {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
+  const { format } = getDateFns(i18n.language);
   return format(dateObj, formatStr);
 }
 
 /**
- * Format relative time (e.g., "2 hours ago")
+ * Format relative time (e.g., "2 hours ago") with automatic locale detection
  */
 export function formatRelativeTime(date: Date | string | number): string {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
+  const { formatDistance } = getDateFns(i18n.language);
   return formatDistance(dateObj, new Date(), { addSuffix: true });
 }
 
 /**
- * Format relative date (e.g., "yesterday at 5:30 PM")
+ * Format relative date (e.g., "yesterday at 5:30 PM") with automatic locale detection
  */
 export function formatRelativeDate(date: Date | string | number): string {
   const dateObj = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
+  const { formatRelative } = getDateFns(i18n.language);
   return formatRelative(dateObj, new Date());
 }
 

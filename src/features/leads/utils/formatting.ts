@@ -1,8 +1,9 @@
 /**
- * Formatting utilities for leads
+ * Formatting utilities for leads with automatic locale detection
  */
 
-import { format, formatDistanceToNow, isToday, isThisYear } from 'date-fns';
+import { getDateFns } from '@/lib/dateConfig';
+import i18n from '@/i18n/config';
 
 /**
  * Extract name from email address
@@ -141,6 +142,8 @@ export function formatNoteDate(date: Date | string, compact = false): string {
   const dateObj = new Date(dateStr);
   const now = new Date();
   const diffInMinutes = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60));
+
+  const { format, isToday, isThisYear } = getDateFns(i18n.language);
 
   // Last 5 minutes
   if (diffInMinutes < 5) {

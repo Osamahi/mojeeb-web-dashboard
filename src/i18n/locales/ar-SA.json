@@ -701,6 +701,7 @@
     "all_loaded": "تم تحميل جميع {{count}} مستخدم"
   },
   "subscriptions": {
+    "settings": "الإعدادات",
     "admin_title": "الاشتراكات",
     "admin_subtitle": "إدارة اشتراكات المنظمات والفواتير",
     "create_subscription": "إنشاء اشتراك",
@@ -772,6 +773,8 @@
     "user_menu_aria": "قائمة المستخدم"
   },
   "billing": {
+    "payment_method": "طريقة الدفع",
+    "view_invoices": "عرض الفواتير",
     "title": "الفواتير",
     "subtitle": "إدارة اشتراكك وطرق الدفع والفواتير",
     "manage_subscription": "إدارة الاشتراك",
@@ -824,6 +827,18 @@
     "showing_invoices": "عرض {{count}} من {{total}} فاتورة",
     "checkout": "الدفع",
     "redirecting": "جارٍ التوجيه...",
+    "go_to_subscription": "الانتقال إلى اشتراكي",
+    "return_to_subscription": "العودة إلى الاشتراك",
+    "payment_successful": "نجح الدفع!",
+    "payment_successful_message": "تم تفعيل اشتراكك بنجاح.",
+    "subscription_activated": "تم تفعيل الاشتراك",
+    "session_id": "رقم الجلسة: {{id}}",
+    "finalizing_subscription": "جارٍ إتمام الاشتراك...",
+    "redirecting_countdown": "سيتم التوجيه خلال {{seconds}} ثانية...",
+    "checkout_canceled": "تم إلغاء الدفع",
+    "checkout_canceled_message": "قمت بإلغاء عملية الدفع. لم يتم خصم أي مبلغ من حسابك.",
+    "checkout_issues_support": "إذا واجهت أي مشاكل، يرجى التواصل مع فريق الدعم.",
+    "checkout_try_again": "يمكنك المحاولة مرة أخرى في أي وقت من صفحة الاشتراك.",
     "invoice_history_title": "سجل الفواتير",
     "invoice_history_subtitle": "عرض وتنزيل فواتيرك السابقة",
     "payment_method_title": "طريقة الدفع",
@@ -846,7 +861,11 @@
     "new_conversation_aria": "بدء محادثة جديدة",
     "send_failed": "فشل إرسال الرسالة",
     "init_failed": "فشل تهيئة المحادثة",
-    "new_conversation_failed": "فشل بدء محادثة جديدة"
+    "new_conversation_failed": "فشل بدء محادثة جديدة",
+    "fallback_error": "حدث خطأ غير متوقع",
+    "api_error": "خطأ في API",
+    "network_error": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
+    "timeout_error": "انتهت مهلة الطلب. يرجى المحاولة مرة أخرى."
   },
   "no_agent": {
     "title": "لم يتم اختيار وكيل",
@@ -1114,6 +1133,7 @@
     "api_access": "الوصول إلى API"
   },
   "plan_change_wizard": {
+    "pay_with_stripe": "التالي",
     "title": "تغيير خطتك",
     "subtitle": "قم بالترقية أو التخفيض إلى خطة تناسب احتياجاتك",
     "confirm_upgrade": "تأكيد الترقية",
@@ -1432,11 +1452,5 @@
     "fullpage_badge": "صفحة كاملة",
     "loading_widget": "جاري تحميل إعدادات الأداة...",
     "widget_not_found": "لم يتم العثور على إعدادات الأداة"
-  },
-  "test_chat": {
-    "fallback_error": "حدث خطأ غير متوقع",
-    "api_error": "خطأ في API",
-    "network_error": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
-    "timeout_error": "انتهت مهلة الطلب. يرجى المحاولة مرة أخرى."
   }
 }

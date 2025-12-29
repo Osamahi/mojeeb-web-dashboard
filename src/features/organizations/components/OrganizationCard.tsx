@@ -4,10 +4,10 @@
  * Clean vertical layout following minimal design system
  */
 
-import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { Building2, Mail, Calendar } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
+import { useDateLocale } from '@/lib/dateConfig';
 import type { Organization } from '../types';
 
 interface OrganizationCardProps {
@@ -17,6 +17,7 @@ interface OrganizationCardProps {
 
 export function OrganizationCard({ organization, onClick }: OrganizationCardProps) {
   const { t } = useTranslation();
+  const { format } = useDateLocale();
 
   return (
     <button

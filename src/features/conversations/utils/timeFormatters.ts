@@ -1,9 +1,11 @@
 /**
  * Time Formatting Utilities
- * WhatsApp-style timestamp formatting
+ * WhatsApp-style timestamp formatting with automatic locale detection
  */
 
-import { format, formatDistanceToNow, isToday, isYesterday, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
+import { differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
+import { getDateFns } from '@/lib/dateConfig';
+import i18n from '@/i18n/config';
 
 /**
  * Format conversation timestamp (for list items)
@@ -12,6 +14,7 @@ import { format, formatDistanceToNow, isToday, isYesterday, differenceInMinutes,
 export const formatConversationTime = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
+  const { format, isYesterday } = getDateFns(i18n.language);
 
   const minutesAgo = differenceInMinutes(now, date);
   const hoursAgo = differenceInHours(now, date);
@@ -47,6 +50,7 @@ export const formatConversationTime = (dateString: string): string => {
  */
 export const formatMessageTime = (dateString: string): string => {
   const date = new Date(dateString);
+  const { format, isToday, isYesterday } = getDateFns(i18n.language);
 
   if (isToday(date)) {
     return format(date, 'h:mm a');
@@ -66,6 +70,7 @@ export const formatMessageTime = (dateString: string): string => {
  */
 export const formatFullDateTime = (dateString: string): string => {
   const date = new Date(dateString);
+  const { format } = getDateFns(i18n.language);
   return format(date, "MMMM d, yyyy 'at' h:mm a");
 };
 
@@ -75,6 +80,7 @@ export const formatFullDateTime = (dateString: string): string => {
  */
 export const getRelativeTime = (dateString: string): string => {
   const date = new Date(dateString);
+  const { formatDistanceToNow } = getDateFns(i18n.language);
   return formatDistanceToNow(date, { addSuffix: true });
 };
 

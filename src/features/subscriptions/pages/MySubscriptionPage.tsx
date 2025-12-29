@@ -13,10 +13,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { format, differenceInDays } from 'date-fns';
+import { differenceInDays } from 'date-fns';
+import { useDateLocale } from '@/lib/dateConfig';
 
 export default function MySubscriptionPage() {
   const { t } = useTranslation();
+  const { format } = useDateLocale();
   // Read subscription and usage from global store (loaded once on app init)
   const subscription = useSubscriptionStore(state => state.subscription);
   const usage = useSubscriptionStore(state => state.usage);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BaseModal } from '@/components/ui/BaseModal';
-import { TrendingUp, TrendingDown } from 'lucide-react';
-import { format } from 'date-fns';
+import { TrendingUp, TrendingDown, CreditCard } from 'lucide-react';
+import { useDateLocale } from '@/lib/dateConfig';
 import { motion, AnimatePresence } from 'framer-motion';
 import { subscriptionService } from '../services/subscriptionService';
 import type { SubscriptionPlan, SubscriptionDetails } from '../types/subscription.types';
@@ -9,6 +9,9 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { PlanSelectionGrid } from './PlanSelectionGrid';
 import { PlanFeaturesList } from './PlanFeaturesList';
+import { StripeCheckoutButton } from '@/features/billing/components/StripeCheckoutButton';
+import { BillingCurrency, BillingInterval } from '@/features/billing/types/billing.types';
+import { requiresPayment } from '../utils/planComparison';
 
 interface PlanChangeWizardProps {
   isOpen: boolean;
@@ -26,6 +29,7 @@ export function PlanChangeWizard({
   onSuccess,
 }: PlanChangeWizardProps) {
   const { t } = useTranslation();
+  const { format } = useDateLocale();
   const [step, setStep] = useState<WizardStep>('select-plan');
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [upgrading, setUpgrading] = useState(false);
@@ -153,6 +157,11 @@ export function PlanChangeWizard({
     ? selectedPlan.messageLimit < currentSubscription.messageLimit
     : false;
 
+  // Check if plan change requires Stripe payment
+  const needsPayment = selectedPlan
+    ? requiresPayment(currentSubscription.planCode, selectedPlan.code)
+    : false;
+
   // Slide transition variants
   const slideVariants = {
     enter: (direction: number) => ({
@@ -272,6 +281,23 @@ export function PlanChangeWizard({
                   </div>
                 </div>
 
+                {/* Payment information for upgrades */}
+                {needsPayment && (
+                  <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                    <div className="flex gap-3">
+                      <CreditCard className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-medium text-blue-900 mb-1">
+                          {t('plan_change_wizard.payment_required')}
+                        </h4>
+                        <p className="text-sm text-blue-700">
+                          {t('plan_change_wizard.payment_required_description')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="flex gap-3">
                   <button
@@ -281,20 +307,38 @@ export function PlanChangeWizard({
                   >
                     {t('common.back')}
                   </button>
-                  <button
-                    onClick={handleConfirm}
-                    disabled={upgrading}
-                    className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed ${
-                      isDowngrade
-                        ? 'bg-orange-600 hover:bg-orange-700'
-                        : 'bg-neutral-950 hover:bg-neutral-900'
-                    }`}
-                  >
-                    {upgrading
-                      ? (isDowngrade ? t('plan_change_wizard.downgrading') : t('plan_change_wizard.upgrading'))
-                      : (isDowngrade ? t('plan_change_wizard.confirm_downgrade') : t('plan_change_wizard.confirm_upgrade'))
-                    }
-                  </button>
+
+                  {needsPayment ? (
+                    /* Stripe checkout button for upgrades */
+                    <div className="flex-1">
+                      <StripeCheckoutButton
+                        planId={selectedPlan.id}
+                        currency={(() => {
+                          const { currency } = getPriceAndCurrency(selectedPlan);
+                          return currency as BillingCurrency;
+                        })()}
+                        billingInterval={billingInterval as BillingInterval}
+                        label={t('plan_change_wizard.pay_with_stripe') || 'Pay with Stripe'}
+                        className="w-full bg-neutral-950 hover:bg-neutral-900 text-white"
+                      />
+                    </div>
+                  ) : (
+                    /* Direct plan change button for downgrades/lateral moves */
+                    <button
+                      onClick={handleConfirm}
+                      disabled={upgrading}
+                      className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                        isDowngrade
+                          ? 'bg-orange-600 hover:bg-orange-700'
+                          : 'bg-neutral-950 hover:bg-neutral-900'
+                      }`}
+                    >
+                      {upgrading
+                        ? (isDowngrade ? t('plan_change_wizard.downgrading') : t('plan_change_wizard.changing'))
+                        : (isDowngrade ? t('plan_change_wizard.confirm_downgrade') : t('plan_change_wizard.confirm_change'))
+                      }
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>

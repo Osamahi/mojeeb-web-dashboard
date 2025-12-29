@@ -4,12 +4,12 @@ import { XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 /**
- * Checkout cancel page
+ * Subscription cancel page
  *
  * Displayed when user cancels Stripe checkout.
  * Provides options to return to my subscription or try again.
  */
-export default function CheckoutCancelPage() {
+export default function SubscriptionCancelPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 

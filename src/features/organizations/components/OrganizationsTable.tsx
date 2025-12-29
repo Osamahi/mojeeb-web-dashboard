@@ -6,7 +6,8 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Building2, Search } from 'lucide-react';
-import { format, isValid } from 'date-fns';
+import { isValid } from 'date-fns';
+import { useDateLocale } from '@/lib/dateConfig';
 import { Avatar } from '@/components/ui/Avatar';
 import { DataTable, type ColumnDef } from '@/components/ui/DataTable';
 import { Input } from '@/components/ui/Input';
@@ -24,6 +25,7 @@ export default function OrganizationsTable({
   onEditOrganization,
 }: OrganizationsTableProps) {
   const { t } = useTranslation();
+  const { format } = useDateLocale();
 
   // Responsive breakpoint
   const isMobile = useMediaQuery('(max-width: 768px)');

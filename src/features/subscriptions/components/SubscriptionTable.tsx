@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { MoreVertical, Flag, Pause, Play, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SubscriptionDetails } from '../types/subscription.types';
-import { format } from 'date-fns';
+import { useDateLocale } from '@/lib/dateConfig';
 
 interface SubscriptionTableProps {
   subscriptions: SubscriptionDetails[];
@@ -18,6 +18,7 @@ export function SubscriptionTable({
   onRenew,
 }: SubscriptionTableProps) {
   const { t } = useTranslation();
+  const { format } = useDateLocale();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   const getStatusBadgeClasses = (status: string) => {

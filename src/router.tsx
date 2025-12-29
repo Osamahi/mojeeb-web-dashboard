@@ -24,8 +24,8 @@ const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 const InstallWidgetPage = lazy(() => import('./pages/InstallWidgetPage').then(m => ({ default: m.InstallWidgetPage })));
 const AdminSubscriptionsPage = lazy(() => import('./features/subscriptions/pages/AdminSubscriptionsPage'));
 const MySubscriptionPage = lazy(() => import('./features/subscriptions/pages/MySubscriptionPage'));
-const CheckoutSuccessPage = lazy(() => import('./features/billing/pages/CheckoutSuccessPage'));
-const CheckoutCancelPage = lazy(() => import('./features/billing/pages/CheckoutCancelPage'));
+const SubscriptionSuccessPage = lazy(() => import('./features/billing/pages/SubscriptionSuccessPage'));
+const SubscriptionCancelPage = lazy(() => import('./features/billing/pages/SubscriptionCancelPage'));
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -294,18 +294,18 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/billing/success',
+    path: '/subscription/success',
     element: (
       <ProtectedRoute>
-        <CheckoutSuccessPage />
+        <SubscriptionSuccessPage />
       </ProtectedRoute>
     ),
   },
   {
-    path: '/billing/cancel',
+    path: '/subscription/cancel',
     element: (
       <ProtectedRoute>
-        <CheckoutCancelPage />
+        <SubscriptionCancelPage />
       </ProtectedRoute>
     ),
   },

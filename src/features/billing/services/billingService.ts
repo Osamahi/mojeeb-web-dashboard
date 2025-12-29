@@ -139,9 +139,16 @@ class BillingService {
     });
 
     try {
+      // Transform camelCase to snake_case for C# backend (Newtonsoft.Json SnakeCaseNamingStrategy)
+      const backendRequest = {
+        plan_id: request.planId,
+        currency: request.currency,
+        billing_interval: request.billingInterval,
+      };
+
       const response = await api.post<ApiResponse<ApiCheckoutSessionResponse>>(
         `${this.baseUrl}/checkout`,
-        request
+        backendRequest
       );
 
       const session = this.transformCheckoutSession(response.data.data);

@@ -6,8 +6,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Calendar, X } from 'lucide-react';
-import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { useDateLocale } from '@/lib/dateConfig';
 import type { DatePreset } from '../types';
 
 interface FilterPopoverProps {
@@ -20,6 +20,7 @@ interface FilterPopoverProps {
 
 export function FilterPopover({ activePreset, dateFrom, dateTo, onApply, onClose }: FilterPopoverProps) {
   const { t } = useTranslation();
+  const { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth } = useDateLocale();
   const [selectedPreset, setSelectedPreset] = useState<DatePreset | null>(activePreset);
   const [customFrom, setCustomFrom] = useState(dateFrom || '');
   const [customTo, setCustomTo] = useState(dateTo || '');

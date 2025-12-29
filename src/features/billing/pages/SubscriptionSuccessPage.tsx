@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/queryKeys';
+import { useVerifyCheckoutSession } from '../hooks/useVerifyCheckoutSession';
+import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 
 /**
- * Checkout success page
+ * Subscription success page
  *
  * Displayed after successful Stripe checkout redirect.
  * Parses session_id from URL and waits for webhook to process.
@@ -19,20 +19,26 @@ import { queryKeys } from '@/lib/queryKeys';
  * 4. We poll/wait for subscription to be created
  * 5. Show success message and redirect to my subscription
  */
-export default function CheckoutSuccessPage() {
+export default function SubscriptionSuccessPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const queryClient = useQueryClient();
   const [countdown, setCountdown] = useState(5);
 
   const sessionId = searchParams.get('session_id');
 
+  // Verify checkout session (optional - for better UX)
+  const { data: sessionData, isLoading: isVerifying } = useVerifyCheckoutSession(sessionId);
+
+  // Get current subscription from store
+  const subscription = useSubscriptionStore((state) => state.subscription);
+  const refreshSubscription = useSubscriptionStore((state) => state.refreshSubscription);
+  const isLoadingSubscription = useSubscriptionStore((state) => state.isLoading);
+
   useEffect(() => {
-    // Invalidate subscription queries immediately
+    // Refresh subscription immediately
     // (webhook might have already processed)
-    queryClient.invalidateQueries({ queryKey: queryKeys.mySubscription() });
-    queryClient.invalidateQueries({ queryKey: ['billing', 'invoices'] });
+    refreshSubscription();
 
     // Start countdown to redirect
     const timer = setInterval(() => {
@@ -46,7 +52,11 @@ export default function CheckoutSuccessPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [navigate, queryClient]);
+  }, [navigate, refreshSubscription]);
+
+  // Determine if subscription was successfully created
+  const isSubscriptionCreated = subscription && subscription.status === 'active';
+  const isProcessing = isVerifying || isLoadingSubscription;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
@@ -69,11 +79,23 @@ export default function CheckoutSuccessPage() {
           </div>
         )}
 
-        {/* Processing message */}
-        <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-6">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>{t('billing.finalizing_subscription')}</span>
-        </div>
+        {/* Subscription status */}
+        {isSubscriptionCreated ? (
+          <div className="flex items-center justify-center gap-2 text-sm text-green-600 mb-6 p-3 bg-green-50 rounded">
+            <CheckCircle className="w-4 h-4" />
+            <span>{t('billing.subscription_activated')}</span>
+          </div>
+        ) : isProcessing ? (
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-6">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>{t('billing.finalizing_subscription')}</span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-2 text-sm text-amber-600 mb-6 p-3 bg-amber-50 rounded">
+            <AlertCircle className="w-4 h-4" />
+            <span>{t('billing.subscription_processing')}</span>
+          </div>
+        )}
 
         {/* Redirect countdown */}
         <p className="text-sm text-gray-600 mb-6">

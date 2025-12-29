@@ -185,7 +185,7 @@ export function AccountSelectStep({
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-lg font-semibold text-neutral-900">
-          {platform === 'whatsapp' ? t('connections.select_whatsapp_number') : t('connections.select_page')}
+          {platform === 'whatsapp' ? t('connections.select_whatsapp_number') : t('connections.select_page_connect')}
         </h3>
       </div>
 

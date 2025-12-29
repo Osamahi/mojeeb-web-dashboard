@@ -6,7 +6,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users as UsersIcon, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { useDateLocale } from '@/lib/dateConfig';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { DataTable, type ColumnDef } from '@/components/ui/DataTable';
@@ -27,6 +27,7 @@ const ROLE_COLORS: Record<Role, 'success' | 'warning' | 'danger' | any> = {
 
 export default function UsersTable({ users }: UsersTableProps) {
   const { t } = useTranslation();
+  const { format } = useDateLocale();
 
   // Infinite scroll state
   const [displayCount, setDisplayCount] = useState(50);

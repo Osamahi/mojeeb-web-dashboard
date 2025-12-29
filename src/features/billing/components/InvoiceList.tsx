@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Download, ExternalLink, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useInvoicesQuery } from '../hooks/useInvoicesQuery';
+import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 import {
   formatCurrency,
   formatDate,
@@ -23,12 +24,35 @@ interface InvoiceListProps {
  * - Cursor-based pagination (load more)
  * - Empty state for no invoices
  * - Loading state
+ * - Only fetches invoices if payment method is "stripe"
  */
 export function InvoiceList({ limit = 10 }: InvoiceListProps) {
   const { t } = useTranslation();
   const [startingAfter, setStartingAfter] = useState<string | undefined>(undefined);
 
-  const { data, isLoading, error } = useInvoicesQuery({ limit, startingAfter });
+  // Get current subscription to check payment method
+  const subscription = useSubscriptionStore((state) => state.subscription);
+  const isStripeSubscription = subscription?.paymentMethod?.toLowerCase() === 'stripe';
+
+  const { data, isLoading, error } = useInvoicesQuery(
+    { limit, startingAfter },
+    { enabled: isStripeSubscription } // Only fetch if using Stripe
+  );
+
+  // Show message if not using Stripe payment method
+  if (!isStripeSubscription) {
+    return (
+      <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+        <div className="text-gray-400 mb-2">
+          <Download className="w-12 h-12 mx-auto" />
+        </div>
+        <p className="text-gray-600 font-medium">{t('billing.no_invoices_yet')}</p>
+        <p className="text-sm text-gray-500 mt-1">
+          {t('billing.stripe_invoices_only', 'Invoice history is only available for Stripe subscriptions')}
+        </p>
+      </div>
+    );
+  }
 
   if (isLoading && !data) {
     return (

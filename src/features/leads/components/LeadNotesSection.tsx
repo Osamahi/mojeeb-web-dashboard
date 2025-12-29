@@ -4,9 +4,8 @@
  */
 
 import { useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
-import { arSA } from 'date-fns/locale/ar-SA';
 import { useTranslation } from 'react-i18next';
+import { useDateLocale } from '@/lib/dateConfig';
 import { Trash2, Edit2, Check, X } from 'lucide-react';
 import {
   useLeadNotes,
@@ -25,7 +24,8 @@ interface LeadNotesSectionProps {
 }
 
 export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const { formatDistanceToNow } = useDateLocale();
   const user = useAuthStore((state) => state.user);
   const { data: notes, isLoading } = useLeadNotes(leadId);
   const createMutation = useCreateLeadNote();
@@ -270,8 +270,7 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
                 {/* Timestamp */}
                 <p className="text-xs text-neutral-400 mt-1">
                   {formatDistanceToNow(new Date(note.createdAt), {
-                    addSuffix: true,
-                    locale: i18n.language.startsWith('ar') ? arSA : undefined
+                    addSuffix: true
                   })}
                 </p>
               </div>

@@ -1,4 +1,6 @@
-import { format, differenceInDays } from 'date-fns';
+import { differenceInDays } from 'date-fns';
+import { getDateFns } from '@/lib/dateConfig';
+import i18n from '@/i18n/config';
 import { BillingCurrency, InvoiceStatus } from '../types/billing.types';
 
 /**
@@ -47,6 +49,7 @@ export const formatCurrency = (amountInCents: number, currency: string): string 
 export const formatBillingPeriod = (startDate: string, endDate: string): string => {
   const start = new Date(startDate);
   const end = new Date(endDate);
+  const { format } = getDateFns(i18n.language);
 
   // Same month and year
   if (
@@ -197,6 +200,7 @@ export const calculateAnnualSavings = (monthlyPrice: number, annualPrice: number
  */
 export const formatDate = (dateString: string, formatString = 'MMM dd, yyyy'): string => {
   try {
+    const { format } = getDateFns(i18n.language);
     return format(new Date(dateString), formatString);
   } catch {
     return dateString;
