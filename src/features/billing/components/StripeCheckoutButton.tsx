@@ -34,7 +34,7 @@ export function StripeCheckoutButton({
   planId,
   currency,
   billingInterval,
-  label = 'Checkout',
+  label,
   variant = 'primary',
   size = 'md',
   disabled = false,
@@ -62,7 +62,7 @@ export function StripeCheckoutButton({
       isLoading={mutation.isPending}
       className={className}
     >
-      {!mutation.isPending && label}
+      {!mutation.isPending && (label || t('billing.checkout'))}
     </Button>
   );
 }

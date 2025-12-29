@@ -69,7 +69,7 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
     authState
   });
 
-  const platformName = platform === 'facebook' ? 'Facebook' : platform === 'instagram' ? 'Instagram' : 'WhatsApp';
+  const platformName = platform === 'facebook' ? t('connections.platform_facebook_name') : platform === 'instagram' ? t('connections.platform_instagram_name') : t('connections.platform_whatsapp_name');
   const platformMetadata = getPlatformById(platform);
   const PlatformIcon = platform === 'facebook' ? Facebook : platform === 'instagram' ? Instagram : MessageCircle;
 

@@ -1215,7 +1215,11 @@
     "no_match": "مافيش سجلات تطابق بحثك",
     "waiting": "مستنيين السجلات...",
     "paused_message": "البث واقف. اضغط تشغيل عشان تكمّل.",
-    "jump_to_bottom": "روح تحت"
+    "jump_to_bottom": "روح تحت",
+    "stream_active": "شغال",
+    "stream_paused": "واقف",
+    "connection_connected": "متصل",
+    "connection_disconnected": "مش متصل"
   },
   "filter_badge": {
     "remove_filter": "شيل فلتر {{label}}"

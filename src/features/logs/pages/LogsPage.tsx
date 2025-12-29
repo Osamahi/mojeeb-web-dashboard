@@ -161,8 +161,8 @@ export default function LogsPage() {
       {/* Footer Info */}
       <div className="flex items-center justify-between text-xs text-neutral-500">
         <div className="flex items-center gap-4">
-          <span>Stream: {isStreaming ? 'Active' : 'Paused'}</span>
-          <span>Connection: {isConnected ? 'Connected' : 'Disconnected'}</span>
+          <span>Stream: {isStreaming ? t('log_terminal.stream_active') : t('log_terminal.stream_paused')}</span>
+          <span>Connection: {isConnected ? t('log_terminal.connection_connected') : t('log_terminal.connection_disconnected')}</span>
           <span>Buffer: {logs.length} / 1000 logs</span>
         </div>
         <span className="text-neutral-400">

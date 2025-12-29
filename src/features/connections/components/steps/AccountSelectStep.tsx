@@ -367,7 +367,7 @@ export function AccountSelectStep({
             : platform === 'whatsapp'
             ? t('connections.connect_whatsapp')
             : t('connections.connect_platform', {
-                platform: platform === 'instagram' && selectedInstagram ? 'Instagram' : 'Facebook'
+                platform: platform === 'instagram' && selectedInstagram ? t('connections.platform_instagram_name') : t('connections.platform_facebook_name')
               })}
         </Button>
       </div>

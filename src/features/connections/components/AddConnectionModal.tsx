@@ -204,9 +204,9 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
   const getModalTitle = () => {
     if (state.platform) {
       const platformName =
-        state.platform === 'facebook' ? 'Facebook' :
-        state.platform === 'instagram' ? 'Instagram' :
-        'WhatsApp';
+        state.platform === 'facebook' ? t('connections.platform_facebook_name') :
+        state.platform === 'instagram' ? t('connections.platform_instagram_name') :
+        t('connections.platform_whatsapp_name');
       return t('connections.connect_platform', { platform: platformName });
     }
     return t('connections.add_title');
@@ -265,7 +265,7 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
                 <h3 className="mt-4 text-xl font-semibold text-neutral-900">{t('connections.success_title')}</h3>
                 <p className="mt-2 text-sm text-neutral-600">
                   {t('connections.success_message', {
-                    platform: state.platform === 'instagram' ? 'Instagram' : 'Facebook'
+                    platform: state.platform === 'instagram' ? t('connections.platform_instagram_name') : t('connections.platform_facebook_name')
                   })}
                 </p>
                 <p className="mt-1 text-xs text-neutral-500">{t('connections.auto_close')}</p>
