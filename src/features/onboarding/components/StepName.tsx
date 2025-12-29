@@ -77,7 +77,7 @@ export const StepName = ({ onNext }: StepNameProps) => {
             className="w-full px-4 py-3 text-base border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors"
           />
           {isValid && !error && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+            <div className="absolute end-4 top-1/2 -translate-y-1/2 pointer-events-none">
               <CheckCircleIcon />
             </div>
           )}

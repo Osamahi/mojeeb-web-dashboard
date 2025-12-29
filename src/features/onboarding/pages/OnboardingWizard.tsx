@@ -187,7 +187,7 @@ export const OnboardingWizard = () => {
       )}
 
       {/* Main Content - Mobile-first left-aligned */}
-      <main className="flex-1 px-4 py-6 sm:px-6 sm:py-12">
+      <main className="flex-1 px-4 pt-20 pb-6 sm:px-6 sm:pt-24 sm:pb-12">
         <div className="max-w-3xl mx-auto">
           {renderStep()}
         </div>
