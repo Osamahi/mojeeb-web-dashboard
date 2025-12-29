@@ -30,7 +30,8 @@
     "navigate_home": "الانتقال إلى الصفحة الرئيسية",
     "saving": "جاري الحفظ...",
     "close_dialog_aria": "إغلاق النافذة",
-    "you": "أنت"
+    "you": "أنت",
+    "to": "إلى"
   },
   "agents": {
     "title": "الوكلاء الذكيون",
@@ -176,7 +177,7 @@
   },
   "disconnect_confirmation": {
     "title": "قطع اتصال المنصة",
-    "message": "هل أنت متأكد من قطع اتصال <1>{{account}}</1>؟",
+    "message": "هل أنت متأكد من قطع اتصال {{account}}؟",
     "warning": "لن تتمكن من تلقي أو الرد على الرسائل من هذه {{platform}}.",
     "disconnect_button": "قطع الاتصال",
     "disconnecting": "جاري قطع الاتصال...",
@@ -534,7 +535,11 @@
     "add_emoji": "إضافة رمز تعبيري",
     "search_emoji": "البحث عن رمز تعبيري...",
     "retry_sending": "إعادة محاولة إرسال الرسالة",
-    "start_new_conversation": "بدء محادثة جديدة"
+    "start_new_conversation": "بدء محادثة جديدة",
+    "message_deleted": "تم حذف هذه الرسالة",
+    "message_sending": "جارٍ الإرسال...",
+    "copy_message": "نسخ الرسالة",
+    "copied": "تم النسخ"
   },
   "auth": {
     "login_title": "مرحباً بعودتك",
@@ -784,7 +789,13 @@
     "usage_percentage": "{{percentage}}% مستخدم",
     "ready_to_scale": "جاهز للتوسع؟",
     "upgrade_prompt": "أنت تستخدم {{percentage}}% من حد الرسائل. قم بالترقية للحصول على المزيد من السعة وفتح الميزات المتقدمة.",
-    "view_upgrade_options": "عرض خيارات الترقية"
+    "view_upgrade_options": "عرض خيارات الترقية",
+    "table_limits": "الحدود",
+    "non_paying": "غير دافع",
+    "messages_count": "{{count}} رسالة",
+    "messages_count_plural": "{{count}} رسالة",
+    "agents_count": "{{count}} وكيل",
+    "agents_count_plural": "{{count}} وكيل"
   },
   "profile": {
     "user_fallback": "مستخدم",
@@ -837,7 +848,6 @@
     "add_payment_method": "إضافة طريقة دفع",
     "payment_method_desc": "إدارة طريقة الدفع الخاصة بك",
     "update": "تحديث",
-    "expires": "تنتهي",
     "expiring_soon": "تنتهي قريباً",
     "invoices_failed_load": "فشل تحميل الفواتير",
     "no_invoices_yet": "لا توجد فواتير بعد",
@@ -865,7 +875,10 @@
     "payment_method_title": "طريقة الدفع",
     "payment_method_subtitle": "إدارة معلومات الدفع الخاصة بك",
     "download_pdf_title": "تنزيل PDF",
-    "view_invoice_title": "عرض الفاتورة"
+    "view_invoice_title": "عرض الفاتورة",
+    "per_month_abbr": "/شهر",
+    "card_format": "{{brand}} •••• {{last4}}",
+    "expires": "تنتهي في {{month}}/{{year}}"
   },
   "test_chat": {
     "tip_1": "اختبر استجابات الوكيل في الوقت الفعلي",
@@ -1391,7 +1404,11 @@
     "human_mode_badge": "بشري",
     "send_message_aria": "إرسال رسالة",
     "attach_audio_aria": "إرفاق صوت",
-    "voice_send_failed": "فشل إرسال التسجيل الصوتي"
+    "voice_send_failed": "فشل إرسال التسجيل الصوتي",
+    "sending": "جارٍ الإرسال...",
+    "wait_for_uploads": "انتظر حتى يكتمل التحميل",
+    "send_message_hint": "إرسال رسالة (Enter)",
+    "attach_audio_hint": "إرفاق صوت"
   },
   "voice_recorder": {
     "cancel_recording_aria": "إلغاء التسجيل",

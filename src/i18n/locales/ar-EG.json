@@ -30,7 +30,8 @@
     "navigate_home": "روح للصفحة الرئيسية",
     "saving": "بيحفظ...",
     "close_dialog_aria": "اقفل الشباك",
-    "you": "أنت"
+    "you": "أنت",
+    "to": "إلى"
   },
   "agents": {
     "title": "الوكلاء الذكيون",
@@ -176,7 +177,7 @@
   },
   "disconnect_confirmation": {
     "title": "قطع الاتصال من المنصة",
-    "message": "متأكد إنك عايز تقطع اتصال <1>{{account}}</1>؟",
+    "message": "متأكد إنك عايز تقطع اتصال {{account}}؟",
     "warning": "مش هتقدر تستقبل أو ترد على الرسائل من {{platform}} دي.",
     "disconnect_button": "اقطع الاتصال",
     "disconnecting": "بيقطع الاتصال...",
@@ -534,7 +535,11 @@
     "add_emoji": "ضيف إيموجي",
     "search_emoji": "دور على إيموجي...",
     "retry_sending": "حاول تبعت الرسالة تاني",
-    "start_new_conversation": "ابدأ محادثة جديدة"
+    "start_new_conversation": "ابدأ محادثة جديدة",
+    "message_deleted": "الرسالة دي اتمسحت",
+    "message_sending": "بيبعت...",
+    "copy_message": "انسخ الرسالة",
+    "copied": "اتنسخت!"
   },
   "auth": {
     "login_title": "مرحباً بعودتك",
@@ -784,7 +789,13 @@
     "usage_percentage": "{{percentage}}% مستخدم",
     "ready_to_scale": "جاهز للتوسع؟",
     "upgrade_prompt": "أنت تستخدم {{percentage}}% من حد الرسائل. قم بالترقية للحصول على المزيد من السعة وفتح الميزات المتقدمة.",
-    "view_upgrade_options": "عرض خيارات الترقية"
+    "view_upgrade_options": "عرض خيارات الترقية",
+    "table_limits": "الحدود",
+    "non_paying": "مش بيدفع",
+    "messages_count": "{{count}} رسالة",
+    "messages_count_plural": "{{count}} رسالة",
+    "agents_count": "{{count}} وكيل",
+    "agents_count_plural": "{{count}} وكيل"
   },
   "profile": {
     "user_fallback": "مستخدم",
@@ -837,7 +848,6 @@
     "add_payment_method": "ضيف طريقة دفع",
     "payment_method_desc": "تحكم في طريقة الدفع بتاعتك",
     "update": "حدّث",
-    "expires": "بتنتهي",
     "expiring_soon": "هتنتهي قريب",
     "invoices_failed_load": "فشل تحميل الفواتير",
     "no_invoices_yet": "مفيش فواتير لسه",
@@ -865,7 +875,10 @@
     "payment_method_title": "طريقة الدفع",
     "payment_method_subtitle": "تحكم في بيانات الدفع بتاعتك",
     "download_pdf_title": "حمّل PDF",
-    "view_invoice_title": "شوف الفاتورة"
+    "view_invoice_title": "شوف الفاتورة",
+    "per_month_abbr": "/شهر",
+    "card_format": "{{brand}} •••• {{last4}}",
+    "expires": "تنتهي {{month}}/{{year}}"
   },
   "test_chat": {
     "tip_1": "اختبر استجابات الوكيل في الوقت الفعلي",
@@ -1395,7 +1408,11 @@
     "attach_audio_title": "ضيف ملفات صوتية",
     "record_voice_aria": "سجّل رسالة صوتية",
     "record_voice_title": "سجّل صوت",
-    "send_message_aria": "ابعت رسالة"
+    "send_message_aria": "ابعت رسالة",
+    "sending": "بيبعت...",
+    "wait_for_uploads": "استنى لحد ما الملفات تتحمل",
+    "send_message_hint": "ابعت رسالة (Enter)",
+    "attach_audio_hint": "ضيف صوت"
   },
   "voice_recorder": {
     "start_recording_aria": "ابدأ التسجيل",

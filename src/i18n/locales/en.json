@@ -177,7 +177,7 @@
   },
   "disconnect_confirmation": {
     "title": "Disconnect Platform",
-    "message": "Are you sure you want to disconnect <1>{{account}}</1>?",
+    "message": "Are you sure you want to disconnect {{account}}?",
     "warning": "You will no longer be able to receive or respond to messages from this {{platform}}.",
     "disconnect_button": "Disconnect",
     "disconnecting": "Disconnecting...",
@@ -538,7 +538,8 @@
     "start_new_conversation": "Start a new conversation",
     "message_deleted": "This message was deleted",
     "message_sending": "Sending...",
-    "copy_message": "Copy message"
+    "copy_message": "Copy message",
+    "copied": "Copied!"
   },
   "auth": {
     "login_title": "Welcome back",
@@ -850,7 +851,6 @@
     "add_payment_method": "Add Payment Method",
     "payment_method_desc": "Manage your payment method",
     "update": "Update",
-    "expires": "Expires",
     "expiring_soon": "Expiring soon",
     "invoices_failed_load": "Failed to load invoices",
     "no_invoices_yet": "No invoices yet",
