@@ -1,6 +1,7 @@
 /**
  * Arrow Right Icon Component
  * Used for navigation and continue buttons
+ * Automatically flips to point left in RTL layouts
  */
 
 interface ArrowRightIconProps {
@@ -11,7 +12,7 @@ interface ArrowRightIconProps {
 export const ArrowRightIcon = ({ className = 'w-5 h-5', size }: ArrowRightIconProps) => {
   return (
     <svg
-      className={className}
+      className={`${className} rtl:rotate-180`}
       width={size}
       height={size}
       fill="none"
