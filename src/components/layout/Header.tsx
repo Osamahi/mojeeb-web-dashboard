@@ -9,8 +9,10 @@ import { useTranslation } from 'react-i18next';
 import { useUIStore } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { AppLogo } from '@/components/ui/AppLogo';
 import GlobalAgentSelector from '@/features/agents/components/GlobalAgentSelector';
 import { ProfileDropdown } from './ProfileDropdown';
+import { HeaderContainer } from './HeaderContainer';
 
 export const Header = () => {
   const { t } = useTranslation();
@@ -20,7 +22,7 @@ export const Header = () => {
   const logout = useAuthStore(state => state.logout);
 
   return (
-    <header className="fixed top-0 start-0 end-0 h-16 bg-white border-b border-neutral-200 flex items-center justify-between px-4 z-30">
+    <HeaderContainer className="justify-between">
       {/* Hamburger / Close Button - Mobile Only */}
       {isMobile && (
         <button
@@ -39,11 +41,7 @@ export const Header = () => {
 
       {/* Mojeeb Logo */}
       <div className={`flex items-center ${isMobile ? 'ms-4' : ''}`}>
-        <img
-          src="/mojeeb-logo.png"
-          alt={t('header.logo_alt')}
-          className="h-5"
-        />
+        <AppLogo />
       </div>
 
       {/* End Side: Agent Selector + Profile */}
@@ -51,6 +49,6 @@ export const Header = () => {
         <GlobalAgentSelector />
         <ProfileDropdown user={user} onLogout={logout} />
       </div>
-    </header>
+    </HeaderContainer>
   );
 };

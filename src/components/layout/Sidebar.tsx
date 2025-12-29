@@ -17,6 +17,7 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
+import { AppLogo } from '@/components/ui/AppLogo';
 import { NavigationList } from './sidebar/NavigationList';
 import { SidebarUsageIndicator } from './sidebar/SidebarUsageIndicator';
 import { PlanChangeWizard } from '@/features/subscriptions/components/PlanChangeWizard';
@@ -232,7 +233,7 @@ const SidebarContent = () => {
               >
                 {/* Logo Section - Mobile Only */}
                 <div className="p-6 bg-white border-b border-neutral-200">
-                  <img src="/mojeeb-logo.png" alt="Mojeeb" className="h-6" />
+                  <AppLogo size="large" />
                 </div>
 
                 {/* Navigation - Mobile */}

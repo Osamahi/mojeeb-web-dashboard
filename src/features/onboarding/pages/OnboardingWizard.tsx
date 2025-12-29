@@ -17,6 +17,7 @@ import { StepSuccess } from '../components/StepSuccess';
 import { ExitIntentModal } from '../components/ExitIntentModal';
 import { SimpleConfirmModal } from '../components/SimpleConfirmModal';
 import { DemoCallModal } from '../components/DemoCallModal';
+import { AuthHeader } from '@/components/layout/AuthHeader';
 import { queryKeys } from '@/lib/queryKeys';
 import { VALIDATION_RULES } from '../constants/validationRules';
 import { PhoneIcon, ArrowRightIcon, CheckCircleIcon } from '@/shared/components/icons';
@@ -157,17 +158,11 @@ export const OnboardingWizard = () => {
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">
-      {/* Header - Minimal mobile-optimized */}
-      <header className="bg-white border-b border-neutral-200 px-4 py-3 sm:px-6 sm:py-4">
-        <div className="flex items-center justify-between max-w-3xl mx-auto">
-          {/* Logo */}
-          <img
-            src="/mojeeb-logo.png"
-            alt="Mojeeb"
-            className="h-5"
-          />
-
-          {/* Skip / Go to dashboard button */}
+      {/* Header - AuthHeader with skip button overlay */}
+      <div className="relative">
+        <AuthHeader />
+        {/* Skip / Go to dashboard button - positioned absolutely in header */}
+        <div className="absolute top-0 end-0 h-16 flex items-center px-4">
           {currentStep === OnboardingStep.Success && isSuccessReady ? (
             <button
               onClick={handleOnboardingComplete}
@@ -184,7 +179,7 @@ export const OnboardingWizard = () => {
             </button>
           )}
         </div>
-      </header>
+      </div>
 
       {/* Progress Bar - Below header */}
       {currentStep < OnboardingStep.Success && (
