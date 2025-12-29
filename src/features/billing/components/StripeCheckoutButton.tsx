@@ -59,9 +59,10 @@ export function StripeCheckoutButton({
       size={size}
       onClick={handleClick}
       disabled={disabled || mutation.isPending}
+      isLoading={mutation.isPending}
       className={className}
     >
-      {mutation.isPending ? t('billing.redirecting') : label}
+      {!mutation.isPending && label}
     </Button>
   );
 }

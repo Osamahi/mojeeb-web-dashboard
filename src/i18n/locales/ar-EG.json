@@ -827,7 +827,6 @@
     "load_more": "حمّل أكتر",
     "showing_invoices": "بيعرض {{count}} من {{total}} فاتورة",
     "checkout": "الدفع",
-    "redirecting": "بيحوّل...",
     "go_to_subscription": "روح لاشتراكي",
     "return_to_subscription": "ارجع للاشتراك",
     "payment_successful": "الدفع نجح!",

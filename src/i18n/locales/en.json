@@ -830,7 +830,6 @@
     "load_more": "Load more",
     "showing_invoices": "Showing {{count}} of {{total}} invoices",
     "checkout": "Checkout",
-    "redirecting": "Redirecting...",
     "go_to_subscription": "Go to My Subscription",
     "return_to_subscription": "Return to Subscription",
     "payment_successful": "Payment Successful!",
