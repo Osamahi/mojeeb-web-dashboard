@@ -63,37 +63,40 @@ export default function MySubscriptionPage() {
         title={t('subscriptions.my_title')}
         subtitle={t('subscriptions.my_subtitle')}
         additionalActions={
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                <Settings className="h-4 w-4" />
-                {t('subscriptions.settings')}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => setShowPaymentModal(true)}>
-                <CreditCard className="mr-2 h-4 w-4" />
-                {t('billing.payment_method')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowInvoicesModal(true)}>
-                <Receipt className="mr-2 h-4 w-4" />
-                {t('billing.view_invoices')}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setShowCancelModal(true)}
-                className="text-red-600 focus:text-red-600"
-              >
-                <X className="mr-2 h-4 w-4" />
-                {t('billing.cancel_subscription')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white p-2 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                  <Settings className="h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setShowPaymentModal(true)}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  {t('billing.payment_method')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowInvoicesModal(true)}>
+                  <Receipt className="mr-2 h-4 w-4" />
+                  {t('billing.view_invoices')}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setShowCancelModal(true)}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  {t('billing.cancel_subscription')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <button
+              onClick={handleUpgradeClick}
+              className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+              <Rocket className="h-4 w-4" />
+              {subscription?.planCode === 'free' ? t('subscriptions.upgrade_plan') : t('subscriptions.change_plan')}
+            </button>
+          </>
         }
-        primaryAction={{
-          label: subscription?.planCode === 'free' ? t('subscriptions.upgrade_plan') : t('subscriptions.change_plan'),
-          icon: Rocket,
-          onClick: handleUpgradeClick
-        }}
       />
 
       {/* Error State */}
