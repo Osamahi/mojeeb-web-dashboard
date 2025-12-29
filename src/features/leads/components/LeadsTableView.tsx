@@ -327,9 +327,9 @@ export function LeadsTableView({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAddSummaryClick(lead.id, lead.name || 'Unnamed Lead', lead.summary || '');
+                  onAddSummaryClick(lead.id, lead.name || '', lead.summary || '');
                 }}
-                className="text-left w-full group hover:text-neutral-900 transition-colors min-w-0"
+                className="ltr:text-left rtl:text-right w-full group hover:text-neutral-900 transition-colors min-w-0"
               >
                 <div className="text-sm text-neutral-700 leading-relaxed break-words whitespace-normal">
                   {displayText}
@@ -340,9 +340,9 @@ export function LeadsTableView({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAddSummaryClick(lead.id, lead.name || 'Unnamed Lead', '');
+                  onAddSummaryClick(lead.id, lead.name || '', '');
                 }}
-                className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
+                className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors ltr:text-left rtl:text-right w-full"
               >
                 {t('leads.add_summary')}
               </button>
@@ -421,9 +421,9 @@ export function LeadsTableView({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAddNoteClick(lead.id, lead.name || 'Unnamed Lead');
+                  onAddNoteClick(lead.id, lead.name || '');
                 }}
-                className="text-left w-full hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
+                className="ltr:text-left rtl:text-right w-full hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
               >
                 <div className="flex flex-col gap-0.5">
                   <span className="text-[13px] text-neutral-900 truncate">{latestNote.text}</span>
@@ -436,9 +436,9 @@ export function LeadsTableView({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAddNoteClick(lead.id, lead.name || 'Unnamed Lead');
+                  onAddNoteClick(lead.id, lead.name || '');
                 }}
-                className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
+                className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors ltr:text-left rtl:text-right w-full"
               >
                 {t('leads.add_note')}
               </button>
