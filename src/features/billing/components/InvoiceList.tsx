@@ -129,7 +129,7 @@ export function InvoiceList({ limit = 10 }: InvoiceListProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Download PDF"
+                  title={t('billing.download_pdf')}
                 >
                   <Download className="w-5 h-5" />
                 </a>
@@ -140,7 +140,7 @@ export function InvoiceList({ limit = 10 }: InvoiceListProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="View invoice"
+                  title={t('billing.view_invoice')}
                 >
                   <ExternalLink className="w-5 h-5" />
                 </a>

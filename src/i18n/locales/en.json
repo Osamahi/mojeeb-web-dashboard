@@ -30,7 +30,8 @@
     "navigate_home": "Navigate to home page",
     "saving": "Saving...",
     "close_dialog_aria": "Close dialog",
-    "you": "You"
+    "you": "You",
+    "to": "to"
   },
   "agents": {
     "title": "AI Agents",
@@ -350,6 +351,7 @@
     "no_whatsapp_accounts": "No WhatsApp Business Accounts Found",
     "no_whatsapp_desc": "We couldn't find any WhatsApp Business accounts linked to your Facebook Business Manager.",
     "no_pages_found": "No Pages Found",
+    "no_pages_found_desc": "We couldn't find any Facebook pages associated with your account.",
     "no_pages_desc": "We couldn't find any Facebook pages associated with your account.",
     "select_whatsapp_number": "Select WhatsApp Number",
     "select_page_connect": "Select Page to Connect",
@@ -533,7 +535,10 @@
     "add_emoji": "Add emoji",
     "search_emoji": "Search emoji...",
     "retry_sending": "Retry sending message",
-    "start_new_conversation": "Start a new conversation"
+    "start_new_conversation": "Start a new conversation",
+    "message_deleted": "This message was deleted",
+    "message_sending": "Sending...",
+    "copy_message": "Copy message"
   },
   "auth": {
     "login_title": "Welcome back",
@@ -784,7 +789,13 @@
     "ready_to_scale": "Ready to scale?",
     "upgrade_prompt": "You're using {{percentage}}% of your message limit. Upgrade to get more capacity and unlock advanced features.",
     "view_upgrade_options": "View Upgrade Options",
-    "settings": "Settings"
+    "settings": "Settings",
+    "table_limits": "Limits",
+    "non_paying": "Non-paying",
+    "messages_count": "{{count}} messages",
+    "messages_count_plural": "{{count}} messages",
+    "agents_count": "{{count}} agents",
+    "agents_count_plural": "{{count}} agents"
   },
   "profile": {
     "user_fallback": "User",
@@ -868,7 +879,10 @@
     "payment_method_title": "Payment Method",
     "payment_method_subtitle": "Manage your payment information",
     "download_pdf_title": "Download PDF",
-    "view_invoice_title": "View invoice"
+    "view_invoice_title": "View invoice",
+    "per_month_abbr": "/mo",
+    "card_format": "{{brand}} •••• {{last4}}",
+    "expires": "Expires {{month}}/{{year}}"
   },
   "test_chat": {
     "tip_1": "Test your agent's responses in real-time",
@@ -1394,7 +1408,11 @@
     "human_mode_badge": "Human",
     "send_message_aria": "Send message",
     "attach_audio_aria": "Attach audio",
-    "voice_send_failed": "Failed to send voice recording"
+    "voice_send_failed": "Failed to send voice recording",
+    "sending": "Sending...",
+    "wait_for_uploads": "Wait for uploads to complete",
+    "send_message_hint": "Send message (Enter)",
+    "attach_audio_hint": "Attach audio"
   },
   "voice_recorder": {
     "cancel_recording_aria": "Cancel recording",

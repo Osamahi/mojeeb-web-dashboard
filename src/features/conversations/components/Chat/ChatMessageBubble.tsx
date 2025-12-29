@@ -184,7 +184,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
           >
           {isDeleted ? (
             <div className="italic opacity-60 text-sm">
-              This message was deleted
+              {t('conversations.message_deleted')}
             </div>
           ) : (
             <>
@@ -217,7 +217,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
             <div className="flex items-center gap-1">
               <Loader2 className="w-3 h-3 animate-spin text-neutral-500" />
               <span className="text-xs text-neutral-500">
-                Sending...
+                {t('conversations.message_sending')}
               </span>
             </div>
           )}
@@ -231,10 +231,10 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                 <button
                   onClick={onRetry}
                   className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 font-medium underline"
-                  title="Retry sending message"
+                  title={t('conversations.retry_sending')}
                 >
                   <RefreshCw className="w-3 h-3" />
-                  Retry
+                  {t('conversations.retry')}
                 </button>
               )}
             </div>
@@ -255,7 +255,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                 "p-1 rounded transition-all",
                 isCopied ? "bg-green-100" : "hover:bg-neutral-100"
               )}
-              title={isCopied ? "Copied!" : "Copy message"}
+              title={isCopied ? t('conversations.copied') : t('conversations.copy_message')}
             >
               {isCopied ? (
                 <Check className="w-3 h-3 text-green-600" />

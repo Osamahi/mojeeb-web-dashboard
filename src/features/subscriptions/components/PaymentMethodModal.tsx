@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { PaymentMethodCard } from '@/features/billing/components/PaymentMethodCard';
 
@@ -13,12 +14,14 @@ interface PaymentMethodModalProps {
  * Wraps the PaymentMethodCard component from billing feature.
  */
 export function PaymentMethodModal({ isOpen, onClose }: PaymentMethodModalProps) {
+  const { t } = useTranslation();
+
   return (
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Payment Method"
-      subtitle="Manage your payment information"
+      title={t('subscriptions.payment_method')}
+      subtitle={t('subscriptions.payment_method_subtitle')}
       maxWidth="md"
     >
       <div className="mt-4">

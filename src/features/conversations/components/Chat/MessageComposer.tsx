@@ -1000,11 +1000,11 @@ export default memo(function MessageComposer({
           title={
             message.trim()
               ? isSending || isLocalSending
-                ? 'Sending...'
+                ? t('message_composer.sending')
                 : uploadedImages.some(img => img.isUploading) || uploadedAudio.some(aud => aud.isUploading)
-                ? 'Wait for uploads to complete'
-                : 'Send message (Enter)'
-              : 'Attach audio'
+                ? t('message_composer.wait_for_uploads')
+                : t('message_composer.send_message_hint')
+              : t('message_composer.attach_audio_hint')
           }
           aria-label={message.trim() ? t('message_composer.send_message_aria') : t('message_composer.attach_audio_aria')}
         >

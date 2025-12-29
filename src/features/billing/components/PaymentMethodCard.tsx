@@ -81,11 +81,13 @@ export function PaymentMethodCard({ paymentMethod, isLoading }: PaymentMethodCar
         </div>
         <div className="flex-1">
           <div className="font-medium text-gray-900">
-            {cardInfo.name} •••• {paymentMethod.last4}
+            {t('billing.card_format', { brand: cardInfo.name, last4: paymentMethod.last4 })}
           </div>
           <div className="text-sm text-gray-600">
-            Expires {paymentMethod.expiryMonth.toString().padStart(2, '0')}/
-            {paymentMethod.expiryYear}
+            {t('billing.expires', {
+              month: paymentMethod.expiryMonth.toString().padStart(2, '0'),
+              year: paymentMethod.expiryYear
+            })}
           </div>
         </div>
         {isExpiring && (

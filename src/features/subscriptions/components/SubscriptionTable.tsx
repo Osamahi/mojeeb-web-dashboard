@@ -57,7 +57,7 @@ export function SubscriptionTable({
               {t('subscriptions.table_current_period')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              Limits
+              {t('subscriptions.table_limits')}
             </th>
             <th className="relative px-6 py-3">
               <span className="sr-only">{t('subscriptions.table_actions')}</span>
@@ -93,7 +93,7 @@ export function SubscriptionTable({
                   {subscription.isFlaggedNonPaying && (
                     <span className="inline-flex items-center gap-1 text-xs text-orange-600">
                       <Flag className="h-3 w-3" />
-                      Non-paying
+                      {t('subscriptions.non_paying')}
                     </span>
                   )}
                 </div>
@@ -109,12 +109,12 @@ export function SubscriptionTable({
               <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                 <div>{format(new Date(subscription.currentPeriodStart), 'MMM d, yyyy')}</div>
                 <div className="text-xs">
-                  to {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
+                  {t('common.to')} {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
                 </div>
               </td>
               <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                <div>{subscription.messageLimit} messages</div>
-                <div>{subscription.agentLimit} agents</div>
+                <div>{t('subscriptions.messages_count', { count: subscription.messageLimit })}</div>
+                <div>{t('subscriptions.agents_count', { count: subscription.agentLimit })}</div>
               </td>
               <td className="relative whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                 <div className="relative">

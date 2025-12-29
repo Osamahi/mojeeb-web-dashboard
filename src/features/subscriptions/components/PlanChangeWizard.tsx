@@ -260,7 +260,7 @@ export function PlanChangeWizard({
                           return `${currency} ${price}`;
                         })()}
                       </span>
-                      <span className="text-sm text-gray-500">/mo</span>
+                      <span className="text-sm text-gray-500">{t('billing.per_month_abbr')}</span>
                     </div>
                   </div>
 
