@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Pencil, Check, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { formatPhoneNumber } from '@/features/leads/utils/formatting';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 
 interface InlineEditFieldProps {
   value: string | null;
@@ -99,7 +99,6 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
   // Display Mode
   if (!isEditing) {
     const isEmpty = !value || value.trim() === '';
-    const displayValue = isPhone && value ? formatPhoneNumber(value) : value;
 
     return (
       <div
@@ -116,9 +115,11 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
           </>
         ) : (
           <>
-            <span className="text-sm text-neutral-900">
-              {displayValue}
-            </span>
+            {isPhone ? (
+              <PhoneNumber value={value} className="text-sm text-neutral-900" />
+            ) : (
+              <span className="text-sm text-neutral-900">{value}</span>
+            )}
           </>
         )}
       </div>

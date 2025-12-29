@@ -13,6 +13,7 @@ import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { organizationService } from '../services/organizationService';
 import { userService } from '@/features/users/services/userService';
 import type { CreateOrganizationRequest } from '../types';
@@ -235,7 +236,7 @@ export default function CreateOrganizationModal({
                             </div>
                             {user.phone && (
                               <div className="text-xs text-neutral-400 truncate">
-                                {user.phone}
+                                <PhoneNumber value={user.phone} />
                               </div>
                             )}
                           </div>
@@ -276,7 +277,7 @@ export default function CreateOrganizationModal({
                   <div className="text-sm text-neutral-500">{selectedOwner.email}</div>
                   {selectedOwner.phone && (
                     <div className="text-sm text-neutral-500 mt-1">
-                      {t('common.phone')}: {selectedOwner.phone}
+                      {t('common.phone')}: <PhoneNumber value={selectedOwner.phone} />
                     </div>
                   )}
                 </div>

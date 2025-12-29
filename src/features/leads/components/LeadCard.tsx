@@ -7,6 +7,7 @@
 import { Copy, MessageSquare, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatPhoneNumber } from '../utils/formatting';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import type { Lead, LeadStatus } from '../types';
 
 interface LeadCardProps {
@@ -50,7 +51,7 @@ export function LeadCard({
                 onClick={(e) => e.stopPropagation()}
                 className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
               >
-                {formatPhoneNumber(lead.phone)}
+                <PhoneNumber value={lead.phone} />
               </a>
               <button
                 onClick={(e) => onCopyPhone(lead.phone!, e)}

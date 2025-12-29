@@ -37,7 +37,7 @@ export const parseFormattedText = (text: string, textColor: string = '#000000'):
   const phoneRegex = /\b(01[0-9]{9})\b/g;
   formatted = formatted.replace(
     phoneRegex,
-    `<a href="tel:$1" style="color: ${textColor}; text-decoration: underline;">$1</a>`
+    `<a href="tel:$1" dir="ltr" style="color: ${textColor}; text-decoration: underline;">$1</a>`
   );
 
   // WhatsApp numbers: "واتساب: 01234567890" or "WhatsApp: 01234567890"
@@ -45,7 +45,7 @@ export const parseFormattedText = (text: string, textColor: string = '#000000'):
   formatted = formatted.replace(
     whatsappRegex,
     (match, prefix, number) =>
-      `${prefix}: <a href="https://wa.me/2${number}" target="_blank" rel="noopener noreferrer" style="color: ${textColor}; text-decoration: underline;">${number}</a>`
+      `${prefix}: <a href="https://wa.me/2${number}" target="_blank" rel="noopener noreferrer" dir="ltr" style="color: ${textColor}; text-decoration: underline;">${number}</a>`
   );
 
   // Parse markdown with marked (handles bold, italic, links safely)

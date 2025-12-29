@@ -15,6 +15,7 @@ import AssignUserToOrgModal from '../components/AssignUserToOrgModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TeamTableSkeleton } from '../components/TeamTableSkeleton';
 import { BaseHeader } from '@/components/ui/BaseHeader';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import type { OrganizationMember } from '../types';
 
 export default function TeamManagementPage() {
@@ -151,7 +152,7 @@ export default function TeamManagementPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-neutral-600">
-                        {member.user?.phone || '-'}
+                        {member.user?.phone ? <PhoneNumber value={member.user.phone} /> : '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

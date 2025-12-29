@@ -18,6 +18,7 @@ import { LeadsTableSkeleton } from './LeadsTableSkeleton';
 import { LeadsMobileCardView } from './LeadsMobileCardView';
 import { validateName, validatePhone } from '../utils/validation';
 import { formatPhoneNumber, getNoteAuthorName, formatNoteDate } from '../utils/formatting';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useDateLocale } from '@/lib/dateConfig';
@@ -282,7 +283,7 @@ export function LeadsTableView({
                     onClick={(e) => e.stopPropagation()}
                     className="text-[13px] text-neutral-600 hover:text-neutral-900 transition-colors order-0"
                   >
-                    {formatPhoneNumber(lead.phone)}
+                    <PhoneNumber value={lead.phone} />
                   </a>
                   <button
                     onClick={(e) => handleCopyPhone(lead.phone!, e)}

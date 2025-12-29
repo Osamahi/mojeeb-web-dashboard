@@ -9,6 +9,7 @@ import { Users as UsersIcon, Loader2 } from 'lucide-react';
 import { useDateLocale } from '@/lib/dateConfig';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { DataTable, type ColumnDef } from '@/components/ui/DataTable';
 import type { User, Role } from '../types';
 
@@ -103,7 +104,9 @@ export default function UsersTable({ users }: UsersTableProps) {
       label: t('users.table_phone'),
       sortable: false,
       render: (phone) => (
-        <div className="text-sm text-neutral-900">{phone || '-'}</div>
+        <div className="text-sm text-neutral-900">
+          {phone ? <PhoneNumber value={phone} /> : '-'}
+        </div>
       ),
     },
     {

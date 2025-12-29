@@ -20,6 +20,12 @@
     scroll-behavior: smooth;
   }
 
+  /* Phone numbers always display LTR with Western numerals (even in RTL/Arabic) */
+  input[type="tel"],
+  a[href^="tel:"] {
+    direction: ltr;
+  }
+
   /* Minimal custom scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
