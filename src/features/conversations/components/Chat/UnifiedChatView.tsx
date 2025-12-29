@@ -55,7 +55,7 @@ function DefaultEmptyState() {
       </div>
       <p className="text-neutral-950 font-medium mb-1">{t('conversations.no_messages_yet')}</p>
       <p className="text-sm text-neutral-600 max-w-sm">
-        Start the conversation by sending a message below.
+        {t('conversations.start_conversation_hint')}
       </p>
     </div>
   );
@@ -65,6 +65,7 @@ function DefaultEmptyState() {
  * Loading state during initialization
  */
 function LoadingState() {
+  const { t } = useTranslation();
   return (
     <div
       className="h-full flex flex-col items-center justify-center bg-white p-6"
@@ -72,7 +73,7 @@ function LoadingState() {
       aria-live="polite"
     >
       <Loader2 className="w-12 h-12 animate-spin text-neutral-400 mb-4" aria-hidden="true" />
-      <p className="text-sm text-neutral-600">Loading messages...</p>
+      <p className="text-sm text-neutral-600">{t('conversations.loading_messages')}</p>
     </div>
   );
 }

@@ -83,10 +83,10 @@ export const LeadsFiltersToolbar = memo(({
           onChange={(e) => onStatusChange(e.target.value as LeadStatus | 'all')}
           className="px-3 h-9 text-sm border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black bg-white hover:bg-neutral-50 transition-colors cursor-pointer"
         >
-          <option value="all">All Status</option>
-          <option value="new">New</option>
-          <option value="processing">Processing</option>
-          <option value="completed">Completed</option>
+          <option value="all">{t('common.status_all')}</option>
+          <option value="new">{t('lead_stats.new_leads')}</option>
+          <option value="processing">{t('lead_stats.processing')}</option>
+          <option value="completed">{t('lead_stats.completed')}</option>
         </select>
 
         {/* Add Filter Button */}
@@ -133,31 +133,31 @@ export const LeadsFiltersToolbar = memo(({
         <div className="flex flex-wrap gap-2">
           {filters.search && (
             <FilterBadge
-              label="Search"
+              label={t('common.search')}
               value={filters.search}
               onRemove={onRemoveSearchFilter}
             />
           )}
           {filters.status !== 'all' && (
             <FilterBadge
-              label="Status"
+              label={t('common.status')}
               value={filters.status.charAt(0).toUpperCase() + filters.status.slice(1)}
               onRemove={onRemoveStatusFilter}
             />
           )}
           {(filters.dateFrom || filters.dateTo) && (
             <FilterBadge
-              label="Date"
+              label={t('filter_popover.date_range')}
               value={
                 activeDatePreset && activeDatePreset !== 'custom'
                   ? activeDatePreset === 'last7days'
-                    ? 'Last 7 Days'
+                    ? t('filter_popover.last_7_days')
                     : activeDatePreset === 'last30days'
-                    ? 'Last 30 Days'
+                    ? t('filter_popover.last_30_days')
                     : activeDatePreset === 'thisMonth'
-                    ? 'This Month'
+                    ? t('filter_popover.this_month')
                     : activeDatePreset === 'today'
-                    ? 'Today'
+                    ? t('filter_popover.today')
                     : `${filters.dateFrom || '...'} to ${filters.dateTo || '...'}`
                   : `${filters.dateFrom || '...'} to ${filters.dateTo || '...'}`
               }

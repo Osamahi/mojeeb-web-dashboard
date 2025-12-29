@@ -514,6 +514,8 @@
     "more_options": "المزيد من الخيارات",
     "go_back": "العودة لقائمة المحادثات",
     "no_messages_yet": "مفيش رسايل لسه",
+    "start_conversation_hint": "ابدأ المحادثة بإرسال رسالة بالأسفل",
+    "loading_messages": "جاري تحميل الرسائل...",
     "message_send_failed": "فشل إرسال الرسالة",
     "chat_messages_aria": "رسايل الشات",
     "ai_typing_aria": "الذكاء الاصطناعي بيكتب...",

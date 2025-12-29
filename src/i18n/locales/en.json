@@ -514,6 +514,8 @@
     "more_options": "More options",
     "go_back": "Go back to conversations list",
     "no_messages_yet": "No messages yet",
+    "start_conversation_hint": "Start the conversation by sending a message below.",
+    "loading_messages": "Loading messages...",
     "message_send_failed": "Failed to send",
     "chat_messages_aria": "Chat messages",
     "ai_typing_aria": "AI is typing",

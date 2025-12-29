@@ -171,9 +171,9 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
 
               {/* Metadata - Stacked on mobile, inline on desktop */}
               <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-neutral-500 flex-wrap">
-                <span className="whitespace-nowrap">Created: {formatDate(agent.createdAt)}</span>
+                <span className="whitespace-nowrap">{t('common.created_label')}: {formatDate(agent.createdAt)}</span>
                 <span className="hidden sm:inline">•</span>
-                <span className="whitespace-nowrap">Updated: {formatDate(agent.updatedAt)}</span>
+                <span className="whitespace-nowrap">{t('common.updated_label')}: {formatDate(agent.updatedAt)}</span>
               </div>
 
               {/* Organization Display - SuperAdmin only */}
