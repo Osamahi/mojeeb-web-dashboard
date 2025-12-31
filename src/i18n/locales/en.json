@@ -31,7 +31,8 @@
     "saving": "Saving...",
     "close_dialog_aria": "Close dialog",
     "you": "You",
-    "to": "to"
+    "to": "to",
+    "try_again": "Try Again"
   },
   "agents": {
     "title": "AI Agents",
