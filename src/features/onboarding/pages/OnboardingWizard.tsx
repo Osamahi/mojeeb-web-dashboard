@@ -22,9 +22,11 @@ import { queryKeys } from '@/lib/queryKeys';
 import { VALIDATION_RULES } from '../constants/validationRules';
 import { PhoneIcon, ArrowRightIcon, CheckCircleIcon } from '@/shared/components/icons';
 import { PrimaryButton } from '../components/shared/PrimaryButton';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export const OnboardingWizard = () => {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_onboarding');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentStep, nextStep, data, completeOnboarding, resetOnboardingState } = useOnboardingStore();

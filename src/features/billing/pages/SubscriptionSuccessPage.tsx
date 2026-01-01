@@ -5,6 +5,7 @@ import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useVerifyCheckoutSession } from '../hooks/useVerifyCheckoutSession';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 /**
  * Subscription success page
@@ -21,6 +22,7 @@ import { useSubscriptionStore } from '@/features/subscriptions/stores/subscripti
  */
 export default function SubscriptionSuccessPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_subscription_success');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [countdown, setCountdown] = useState(5);

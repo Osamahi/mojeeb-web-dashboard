@@ -22,9 +22,11 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import NoAgentEmptyState from '@/features/agents/components/NoAgentEmptyState';
 import type { PlatformType, PlatformConnection } from '../types';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function ConnectionsPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_connections');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | null>(null);

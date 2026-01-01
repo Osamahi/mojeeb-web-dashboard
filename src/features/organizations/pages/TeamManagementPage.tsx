@@ -17,9 +17,11 @@ import { TeamTableSkeleton } from '../components/TeamTableSkeleton';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import type { OrganizationMember } from '../types';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function TeamManagementPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_team_management');
   const { agent } = useAgentContext();
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);

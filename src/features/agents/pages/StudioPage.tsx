@@ -29,6 +29,7 @@ import DocumentUploadProgressCard from '../components/DocumentUploadProgressCard
 import TestChat from '../components/TestChat';
 import TestChatPanel from '../components/TestChatPanel';
 import { logger } from '@/lib/logger';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 /**
  * Merge optimistic job IDs with backend jobs, removing duplicates
@@ -44,6 +45,7 @@ function mergeJobIds(optimisticIds: string[], backendJobs: Array<{ jobId: string
 
 export default function StudioPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_studio');
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const isDesktop = useIsDesktop();
   const [isAddKBModalOpen, setIsAddKBModalOpen] = useState(false);

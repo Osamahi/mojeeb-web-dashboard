@@ -9,9 +9,11 @@ import { useTranslation } from 'react-i18next';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Card } from '@/components/ui/Card';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export const SettingsPage = () => {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_settings');
 
   return (
     <div className="p-6 space-y-8">

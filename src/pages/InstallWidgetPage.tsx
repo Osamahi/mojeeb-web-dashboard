@@ -10,9 +10,11 @@ import { Copy, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { installationLinkService } from '@/features/connections/services/installationLinkService';
 import type { InstallationData } from '@/features/connections/services/installationLinkService';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export function InstallWidgetPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_install_widget');
   const { token } = useParams<{ token: string }>();
   const [data, setData] = useState<InstallationData | null>(null);
   const [isLoading, setIsLoading] = useState(true);

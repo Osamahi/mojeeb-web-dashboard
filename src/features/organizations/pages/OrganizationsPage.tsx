@@ -16,9 +16,11 @@ import CreateOrganizationModal from '../components/CreateOrganizationModal';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import type { Organization } from '../types';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function OrganizationsPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_organizations');
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

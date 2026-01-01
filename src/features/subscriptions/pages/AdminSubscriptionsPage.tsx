@@ -7,9 +7,11 @@ import { CreateSubscriptionModal } from '../components/CreateSubscriptionModal';
 import { SubscriptionTable } from '../components/SubscriptionTable';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { toast } from 'sonner';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function AdminSubscriptionsPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_subscriptions');
   const [subscriptions, setSubscriptions] = useState<SubscriptionDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);

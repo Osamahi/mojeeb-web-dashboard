@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { authService } from '../services/authService';
 import { toast } from 'sonner';
 import { AuthPageLayout } from '../components/AuthPageLayout';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 type ForgotPasswordForm = {
   email: string;
@@ -18,6 +19,7 @@ type ForgotPasswordForm = {
 
 export const ForgotPasswordPage = () => {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_forgot_password');
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);

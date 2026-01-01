@@ -15,9 +15,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { differenceInDays } from 'date-fns';
 import { useDateLocale } from '@/lib/dateConfig';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function MySubscriptionPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_my_subscription');
   const { format } = useDateLocale();
   // Read subscription and usage from global store (loaded once on app init)
   const subscription = useSubscriptionStore(state => state.subscription);

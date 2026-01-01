@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { logger } from '@/lib/logger';
 import {
   validateOAuthState,
@@ -23,6 +24,7 @@ type CallbackStatus = 'processing' | 'success' | 'error';
 
 export default function OAuthCallbackPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_oauth_callback');
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<CallbackStatus>('processing');

@@ -38,7 +38,6 @@ export const trackAgentCreated = (agentId: string, agentName: string): void => {
  *
  * @param userId - Unique identifier of the signed-up user
  * @param userEmail - Email address of the user (hashed for privacy)
- * @param userName - Full name of the user
  * @param signupMethod - Method used for signup ('email' or 'google')
  *
  * @example
@@ -46,7 +45,6 @@ export const trackAgentCreated = (agentId: string, agentName: string): void => {
  * trackSignupCompleted(
  *   '123e4567-e89b-12d3-a456-426614174000',
  *   'user@example.com',
- *   'John Doe',
  *   'email'
  * );
  * ```
@@ -54,7 +52,6 @@ export const trackAgentCreated = (agentId: string, agentName: string): void => {
 export const trackSignupCompleted = (
   userId: string,
   userEmail: string,
-  userName: string,
   signupMethod: 'email' | 'google'
 ): void => {
   if (typeof window !== 'undefined' && window.fbq) {

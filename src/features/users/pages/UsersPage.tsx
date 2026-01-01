@@ -6,9 +6,11 @@ import UsersTable from '../components/UsersTable';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BaseHeader } from '@/components/ui/BaseHeader';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function UsersPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_users');
   const {
     data: users,
     isLoading,

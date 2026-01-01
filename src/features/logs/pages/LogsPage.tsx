@@ -14,9 +14,11 @@ import { useLogStream } from '../hooks/useLogStream';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import type { LogEntry } from '../components/LogStreamTerminal';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function LogsPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_logs');
   const { currentAgent, isAgentSelected } = useAgentContext();
   const [logLevel, setLogLevel] = useState<'all' | 'critical' | 'error' | 'warning' | 'information' | 'debug'>('all');
   const [showApplicationLogs, setShowApplicationLogs] = useState(true);

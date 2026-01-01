@@ -20,6 +20,7 @@ import { logger } from '@/lib/logger';
 import { useAuthStore } from '../stores/authStore';
 import { useOnboardingStore } from '@/features/onboarding/stores/onboardingStore';
 import { trackSignupSuccess } from '@/utils/gtmTracking';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 type SignUpForm = {
   name: string;
@@ -29,6 +30,7 @@ type SignUpForm = {
 
 export const SignUpPage = () => {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_signup');
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -17,6 +17,7 @@ import { authService } from '../services/authService';
 import { toast } from 'sonner';
 import { AuthPageLayout } from '../components/AuthPageLayout';
 import { AuthFooterLink } from '../components/AuthFooterLink';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 type LoginForm = {
   email: string;
@@ -25,6 +26,7 @@ type LoginForm = {
 
 export const LoginPage = () => {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_login');
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

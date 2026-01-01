@@ -20,9 +20,11 @@ import type { Agent } from '../types/agent.types';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
 import { AgentListSkeleton } from '../components/AgentCardSkeleton';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function AgentsPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_agents');
   // Read agents from store - DashboardLayout handles fetching and syncing
   const agents = useAgentStore((state) => state.agents);
   const isLoading = useAgentStore((state) => state.isLoading);

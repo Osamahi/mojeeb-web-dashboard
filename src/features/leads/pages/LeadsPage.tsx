@@ -24,9 +24,11 @@ import { AddSummaryModal } from '../components/AddSummaryModal';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import { useDeleteLead } from '../hooks/useLeads';
 import type { Lead, LeadFilters } from '../types';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function LeadsPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_leads');
   const { isAgentSelected } = useAgentContext();
   const deleteMutation = useDeleteLead();
 

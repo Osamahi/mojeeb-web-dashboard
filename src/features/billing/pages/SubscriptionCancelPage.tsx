@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 /**
  * Subscription cancel page
@@ -11,6 +12,7 @@ import { Button } from '@/components/ui/Button';
  */
 export default function SubscriptionCancelPage() {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_subscription_cancel');
   const navigate = useNavigate();
 
   return (

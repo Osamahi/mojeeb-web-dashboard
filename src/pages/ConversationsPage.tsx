@@ -15,9 +15,11 @@ import NoAgentEmptyState from '@/features/agents/components/NoAgentEmptyState';
 import ConversationList from '@/features/conversations/components/ConversationList/ConversationList';
 import ChatPanel from '@/features/conversations/components/Chat/ChatPanel';
 import ConversationEmptyState from '@/features/conversations/components/shared/ConversationEmptyState';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export const ConversationsPage = () => {
   const { t } = useTranslation();
+  useDocumentTitle('pages.title_conversations');
   const isMobile = useIsMobile();
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const selectedConversation = useConversationStore((state) => state.selectedConversation);
