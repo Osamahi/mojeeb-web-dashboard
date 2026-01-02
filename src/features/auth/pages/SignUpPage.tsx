@@ -21,6 +21,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useOnboardingStore } from '@/features/onboarding/stores/onboardingStore';
 import { useAnalytics } from '@/lib/analytics';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useLanguageFromUrl } from '@/hooks/useLanguageFromUrl';
 
 type SignUpForm = {
   name: string;
@@ -31,6 +32,7 @@ type SignUpForm = {
 export const SignUpPage = () => {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_signup');
+  useLanguageFromUrl(); // Apply language from URL parameter (from landing page)
   const navigate = useNavigate();
   const { track } = useAnalytics();
   const [isLoading, setIsLoading] = useState(false);
