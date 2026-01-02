@@ -23,7 +23,8 @@ export const analyticsConfig: AnalyticsConfig = {
   }),
 
   // Debug mode - logs all events to console
-  debug: import.meta.env.DEV,
+  // TODO: Revert to import.meta.env.DEV after production testing
+  debug: true, // Temporarily enabled for production debugging
 
   // Google Tag Manager
   gtm: {

@@ -19,12 +19,29 @@ export class GTMProvider implements AnalyticsProvider {
   }
 
   initialize(): void {
-    if (!this.isEnabled) return;
+    console.log('[GTM] 🔍 Initializing...');
+    console.log('[GTM] isEnabled (from config):', this.isEnabled);
+
+    if (!this.isEnabled) {
+      console.log('[GTM] ⏭️ Provider disabled in config - skipping initialization');
+      return;
+    }
 
     // GTM is initialized in index.html, so we just verify it exists
+    console.log('[GTM] 🔍 Checking for window.dataLayer...');
+    console.log('[GTM] typeof window:', typeof window);
+    console.log('[GTM] typeof window.dataLayer:', typeof window !== 'undefined' ? typeof window.dataLayer : 'window undefined');
+
     if (typeof window !== 'undefined' && !window.dataLayer) {
-      console.warn('[GTM] dataLayer not found. GTM script may not be loaded.');
+      console.error('[GTM] ❌ window.dataLayer NOT FOUND - GTM script not loaded!');
+      console.error('[GTM] ❌ DISABLING PROVIDER PERMANENTLY');
       this.isEnabled = false;
+      return;
+    }
+
+    if (typeof window !== 'undefined' && window.dataLayer) {
+      console.log('[GTM] ✅ window.dataLayer found - GTM is ready!');
+      console.log('[GTM] Container ID: GTM-PQZD9VM8');
     }
   }
 
@@ -32,7 +49,18 @@ export class GTMProvider implements AnalyticsProvider {
     eventName: T,
     payload: AnalyticsEventPayload<T>
   ): void {
-    if (!this.isEnabled || typeof window === 'undefined') return;
+    console.log(`[GTM] 🎯 track() called: "${eventName}"`);
+    console.log(`[GTM] isEnabled: ${this.isEnabled}`);
+
+    if (!this.isEnabled) {
+      console.error(`[GTM] ⚠️ Provider is DISABLED - cannot track "${eventName}"`);
+      return;
+    }
+
+    if (typeof window === 'undefined') {
+      console.error(`[GTM] ⚠️ window is undefined - cannot track "${eventName}"`);
+      return;
+    }
 
     const eventData = {
       event: eventName,
@@ -40,11 +68,10 @@ export class GTMProvider implements AnalyticsProvider {
       ...payload,
     };
 
+    console.log(`[GTM] 📦 Event data:`, eventData);
+    console.log(`[GTM] 📤 Pushing to dataLayer...`);
     window.dataLayer.push(eventData);
-
-    if (analyticsConfig.debug) {
-      console.log('[GTM]', eventName, eventData);
-    }
+    console.log(`[GTM] ✅ Event "${eventName}" pushed to dataLayer successfully!`);
   }
 
   identify(userId: string, traits?: Record<string, unknown>): void {

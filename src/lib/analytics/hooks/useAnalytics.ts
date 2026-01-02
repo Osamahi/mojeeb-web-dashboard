@@ -38,7 +38,11 @@ export const useAnalytics = () => {
       eventName: T,
       payload: AnalyticsEventPayload<T>
     ) => {
+      console.log(`[useAnalytics] 🎯 track() hook called: "${eventName}"`);
+      console.log(`[useAnalytics] Payload keys (${Object.keys(payload).length}):`, Object.keys(payload));
+      console.log(`[useAnalytics] Forwarding to analytics.track()...`);
       analytics.track(eventName, payload);
+      console.log(`[useAnalytics] ✅ analytics.track() returned`);
     },
     []
   );

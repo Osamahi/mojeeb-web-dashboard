@@ -13,11 +13,13 @@ import { initializeClarity } from './lib/clarity'
 import { startStorageMonitoring } from './lib/storageMonitor'
 import { initializeLogoutListener } from './features/auth/services/logoutService'
 import { analytics } from './lib/analytics'
+import { initializeVerificationHelpers } from './lib/analytics/utils/verifyAnalytics'
 
 // Initialize error tracking and analytics
 initializeSentry(); // Error tracking (only in production if DSN provided)
 initializeClarity(); // Session recording and UX analytics (only in production if Project ID provided)
 analytics.initialize(); // Unified analytics (GTM, Meta Pixel, etc.)
+initializeVerificationHelpers(); // Add browser console helpers for debugging
 
 // Initialize multi-tab logout propagation
 initializeLogoutListener(); // Listen for logout events from other tabs

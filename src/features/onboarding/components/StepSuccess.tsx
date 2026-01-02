@@ -123,17 +123,33 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
       }
     },
     onSuccess: (data) => {
+      console.log('[Onboarding] 🎉 Agent created successfully!');
+      console.log('[Onboarding] Agent data:', {
+        id: data.agent.id,
+        name: agentName,
+        organizationId: data.agent.organization_id,
+      });
+
       // Status is already set by onProgress - just handle final "ready" state
       setCreatedAgentId(data.agent.id);
       setPhase('ready');
       onReadyChange(true);
 
       // Track agent creation - sends to all analytics providers
+      console.log('[Onboarding] 🎯 Preparing to track agent_created event...');
+      console.log('[Onboarding] Event payload:', {
+        agentId: data.agent.id,
+        agentName: agentName,
+        userId: data.agent.organization_id,
+      });
+
       track('agent_created', {
         agentId: data.agent.id,
         agentName: agentName,
         userId: data.agent.organization_id, // Organization ID as user context
       });
+
+      console.log('[Onboarding] ✅ track() call completed - check analytics logs above');
 
       // Visual effects only (can safely be canceled on unmount)
       setShowConfetti(true);

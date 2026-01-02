@@ -22,12 +22,15 @@ class AnalyticsService {
    * Initialize all enabled providers
    */
   initialize(): void {
+    console.log('[Analytics] 🚀 Initializing service...');
+
     if (this.isInitialized) {
-      console.warn('[Analytics] Service already initialized');
+      console.warn('[Analytics] ⚠️ Service already initialized - skipping');
       return;
     }
 
     // Register all providers
+    console.log('[Analytics] 📦 Registering providers: GTM, Meta Pixel, Console');
     this.providers = [
       new GTMProvider(),
       new MetaPixelProvider(),
@@ -35,27 +38,35 @@ class AnalyticsService {
     ];
 
     // Initialize each enabled provider
+    console.log('[Analytics] 🔧 Initializing providers...');
     this.providers.forEach(provider => {
       if (provider.isEnabled) {
         try {
+          console.log(`[Analytics] → Initializing ${provider.name}...`);
           provider.initialize();
-          if (analyticsConfig.debug) {
-            console.log(`[Analytics] ${provider.name} initialized`);
-          }
+          console.log(`[Analytics] ✅ ${provider.name} initialized successfully`);
         } catch (error) {
-          console.error(`[Analytics] Failed to initialize ${provider.name}:`, error);
+          console.error(`[Analytics] ❌ Failed to initialize ${provider.name}:`, error);
           provider.isEnabled = false;
         }
+      } else {
+        console.log(`[Analytics] ⏭️ ${provider.name} is disabled - skipping`);
       }
     });
 
     this.isInitialized = true;
 
-    if (analyticsConfig.debug) {
-      const enabledProviders = this.providers
-        .filter(p => p.isEnabled)
-        .map(p => p.name);
-      console.log('[Analytics] Service initialized with providers:', enabledProviders);
+    const enabledProviders = this.providers
+      .filter(p => p.isEnabled)
+      .map(p => p.name);
+    const disabledProviders = this.providers
+      .filter(p => !p.isEnabled)
+      .map(p => p.name);
+
+    console.log('[Analytics] ✅ Service initialized successfully');
+    console.log(`[Analytics] 📊 Enabled providers (${enabledProviders.length}):`, enabledProviders);
+    if (disabledProviders.length > 0) {
+      console.log(`[Analytics] ⚠️ Disabled providers (${disabledProviders.length}):`, disabledProviders);
     }
   }
 
@@ -66,10 +77,16 @@ class AnalyticsService {
     eventName: T,
     payload: AnalyticsEventPayload<T>
   ): void {
+    console.log(`[AnalyticsService] 🎯 track() called: "${eventName}"`);
+    console.log(`[AnalyticsService] Payload keys:`, Object.keys(payload));
+
     if (!this.isInitialized) {
-      console.warn('[Analytics] Service not initialized. Call initialize() first.');
+      console.error('[AnalyticsService] ❌ Service NOT INITIALIZED - event will be dropped!');
+      console.error('[AnalyticsService] Event:', eventName, '| Payload:', payload);
       return;
     }
+
+    console.log(`[AnalyticsService] ✅ Service initialized, proceeding...`);
 
     // Add user ID to payload if available
     const enrichedPayload = {
@@ -77,16 +94,30 @@ class AnalyticsService {
       ...(this.currentUserId && { userId: this.currentUserId }),
     } as AnalyticsEventPayload<T>;
 
+    if (this.currentUserId) {
+      console.log(`[AnalyticsService] 👤 Enriched with userId: ${this.currentUserId}`);
+    }
+
+    // Count enabled providers
+    const enabledProviders = this.providers.filter(p => p.isEnabled);
+    console.log(`[AnalyticsService] 📤 Sending to ${enabledProviders.length} enabled provider(s)...`);
+
     // Send to all enabled providers
     this.providers.forEach(provider => {
       if (provider.isEnabled) {
         try {
+          console.log(`[AnalyticsService] → Sending to ${provider.name}...`);
           provider.track(eventName, enrichedPayload);
+          console.log(`[AnalyticsService] ✅ ${provider.name} completed`);
         } catch (error) {
-          console.error(`[Analytics] ${provider.name} failed to track ${eventName}:`, error);
+          console.error(`[AnalyticsService] ❌ ${provider.name} failed to track ${eventName}:`, error);
         }
+      } else {
+        console.log(`[AnalyticsService] ⏭️ ${provider.name} is disabled - skipping`);
       }
     });
+
+    console.log(`[AnalyticsService] ✅ track() completed for "${eventName}"`);
   }
 
   /**
@@ -154,6 +185,24 @@ class AnalyticsService {
    */
   getCurrentUserId(): string | null {
     return this.currentUserId;
+  }
+
+  /**
+   * Get comprehensive analytics status (for debugging)
+   */
+  getStatus(): {
+    isInitialized: boolean;
+    currentUserId: string | null;
+    providers: Array<{ name: string; enabled: boolean }>;
+  } {
+    return {
+      isInitialized: this.isInitialized,
+      currentUserId: this.currentUserId,
+      providers: this.providers.map(p => ({
+        name: p.name,
+        enabled: p.isEnabled,
+      })),
+    };
   }
 }
 
