@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { authService } from '../services/authService';
 // import { env } from '@/config/env'; // Temporarily disabled for Apple
 import { logger } from '@/lib/logger';
-import { trackSignupSuccess } from '@/utils/gtmTracking';
+import { useAnalytics } from '@/lib/analytics';
 
 interface SocialLoginButtonsProps {
   disabled?: boolean;
@@ -23,6 +23,7 @@ interface SocialLoginButtonsProps {
 export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { track } = useAnalytics();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   // const [isAppleLoading, setIsAppleLoading] = useState(false); // Temporarily disabled
 
@@ -54,13 +55,13 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
           userInfo.picture || ''
         );
 
-        // Track signup/login success in Google Tag Manager
-        trackSignupSuccess(
-          authResponse.user.id,
-          authResponse.user.email,
-          authResponse.user.name,
-          'google'
-        );
+        // Track signup/login completion - sends to all analytics providers
+        track('signup_completed', {
+          userId: authResponse.user.id,
+          email: authResponse.user.email,
+          name: authResponse.user.name,
+          signupMethod: 'google',
+        });
 
         navigate('/conversations');
       } catch (error) {

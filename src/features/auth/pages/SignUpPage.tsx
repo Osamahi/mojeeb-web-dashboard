@@ -19,7 +19,7 @@ import { AuthFooterLink } from '../components/AuthFooterLink';
 import { logger } from '@/lib/logger';
 import { useAuthStore } from '../stores/authStore';
 import { useOnboardingStore } from '@/features/onboarding/stores/onboardingStore';
-import { trackSignupSuccess } from '@/utils/gtmTracking';
+import { useAnalytics } from '@/lib/analytics';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 type SignUpForm = {
@@ -32,6 +32,7 @@ export const SignUpPage = () => {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_signup');
   const navigate = useNavigate();
+  const { track } = useAnalytics();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -73,13 +74,13 @@ export const SignUpPage = () => {
       });
       console.timeEnd('⏱️ SIGNUP-API');
 
-      // Track signup success in Google Tag Manager
-      trackSignupSuccess(
-        authResponse.user.id,
-        authResponse.user.email,
-        authResponse.user.name,
-        'email'
-      );
+      // Track signup completion - sends to all analytics providers
+      track('signup_completed', {
+        userId: authResponse.user.id,
+        email: authResponse.user.email,
+        name: authResponse.user.name,
+        signupMethod: 'email',
+      });
 
       // Clear any stale onboarding state before starting fresh
       // Ensures new signups always begin onboarding from step 0 with clean form data

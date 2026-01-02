@@ -5,6 +5,8 @@ import { billingService } from '../services/billingService';
 import type { CreateCheckoutRequest, CheckoutSession } from '../types/billing.types';
 import { getErrorMessage } from '@/lib/errors';
 import { logger } from '@/lib/logger';
+import { analytics } from '@/lib/analytics';
+import { usePlanStore } from '@/features/subscriptions/stores/planStore';
 
 /**
  * Options for create checkout mutation
@@ -44,10 +46,31 @@ export interface UseCreateCheckoutMutationOptions
  */
 export const useCreateCheckoutMutation = (options?: UseCreateCheckoutMutationOptions) => {
   const { autoRedirect = true, ...restOptions } = options || {};
+  const plans = usePlanStore((state) => state.plans);
 
   return useMutation<CheckoutSession, Error, CreateCheckoutRequest>({
     mutationFn: async (request: CreateCheckoutRequest) => {
       logger.info('[useCreateCheckoutMutation]', 'Creating checkout session', request);
+
+      // Track checkout initiation - sends to all analytics providers
+      const plan = plans.find((p) => p.id === request.planId);
+      if (plan) {
+        const pricing = plan.pricing[request.currency];
+        const price = request.billingInterval === 'monthly' ? pricing?.monthly : pricing?.annual;
+
+        if (price) {
+          analytics.track('checkout_initiated', {
+            planId: plan.id,
+            planName: plan.name,
+            planCode: plan.code,
+            amount: price,
+            currency: request.currency,
+            billingInterval: request.billingInterval,
+            userId: '', // Will be enriched by AnalyticsService if user is identified
+          });
+        }
+      }
+
       return billingService.createCheckoutSession(request);
     },
     onSuccess: (data, variables, context) => {

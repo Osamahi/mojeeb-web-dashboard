@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Loader2, AlertCircle } from 'lucide-react';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { useVerifyCheckoutSession } from '../hooks/useVerifyCheckoutSession';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useAnalytics } from '@/lib/analytics';
 
 /**
  * Subscription success page
@@ -24,10 +25,12 @@ export default function SubscriptionSuccessPage() {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_subscription_success');
   const navigate = useNavigate();
+  const { track } = useAnalytics();
   const [searchParams] = useSearchParams();
   const [countdown, setCountdown] = useState(5);
 
   const sessionId = searchParams.get('session_id');
+  const hasTrackedPurchase = useRef(false);
 
   // Verify checkout session (optional - for better UX)
   const { data: sessionData, isLoading: isVerifying } = useVerifyCheckoutSession(sessionId);
@@ -55,6 +58,25 @@ export default function SubscriptionSuccessPage() {
 
     return () => clearInterval(timer);
   }, [navigate, refreshSubscription]);
+
+  // Track subscription purchase when subscription becomes active
+  useEffect(() => {
+    if (subscription && subscription.status === 'active' && !hasTrackedPurchase.current) {
+      hasTrackedPurchase.current = true;
+
+      // Track purchase - sends to all analytics providers
+      track('subscription_purchased', {
+        subscriptionId: subscription.id,
+        planName: subscription.planName,
+        planCode: subscription.planCode,
+        amount: subscription.amount,
+        currency: subscription.currency,
+        billingInterval: subscription.billingInterval,
+        paymentMethod: 'stripe',
+        userId: subscription.customerId, // Customer ID as user context
+      });
+    }
+  }, [subscription, track]);
 
   // Determine if subscription was successfully created
   const isSubscriptionCreated = subscription && subscription.status === 'active';

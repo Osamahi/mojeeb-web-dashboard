@@ -7,6 +7,7 @@ import { logger } from '@/lib/logger';
 import { useOnAppResume } from '@/contexts/AppLifecycleContext';
 import { SubscriptionInitializer } from '@/features/subscriptions/components/SubscriptionInitializer';
 import { PlanInitializer } from '@/features/subscriptions/components/PlanInitializer';
+import { useAnalytics } from '@/lib/analytics';
 
 interface AuthInitializerProps {
   children: ReactNode;
@@ -37,7 +38,8 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, user, logout } = useAuthStore();
+  const { identify, reset } = useAnalytics();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -294,6 +296,29 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
       }
     }
   });
+
+  // Identify user for analytics when authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Identify user with analytics providers (adds userId to all subsequent events)
+      identify(user.id, {
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      });
+
+      if (import.meta.env.DEV) {
+        console.log(`   📊 [Analytics] User identified: ${user.id}`);
+      }
+    } else {
+      // Reset analytics session on logout
+      reset();
+
+      if (import.meta.env.DEV) {
+        console.log(`   📊 [Analytics] Session reset`);
+      }
+    }
+  }, [isAuthenticated, user, identify, reset]);
 
   // Show loading spinner during initialization
   if (isInitializing) {

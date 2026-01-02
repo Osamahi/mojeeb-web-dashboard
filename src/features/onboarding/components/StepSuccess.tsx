@@ -15,7 +15,7 @@ import { StepHeading, StepSubtitle } from './shared/StepHeading';
 import { StepNumberBadge } from './shared/StepNumberBadge';
 import { NextStepItem } from './shared/NextStepItem';
 import { Card } from './shared/Card';
-import { trackAgentCreated } from '@/utils/gtmTracking';
+import { useAnalytics } from '@/lib/analytics';
 
 interface StepSuccessProps {
   onReadyChange: (isReady: boolean) => void;
@@ -67,6 +67,7 @@ const getErrorMessage = (error: unknown, t: (key: string) => string): string => 
 
 export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowledgeContent }: StepSuccessProps) => {
   const { t } = useTranslation();
+  const { track } = useAnalytics();
   const { setCreatedAgentId } = useOnboardingStore();
   const hasTriggeredCreation = useRef(false);
   const isMountedRef = useRef(false); // Track component lifecycle - starts false, set to true after mount
@@ -127,8 +128,12 @@ export const StepSuccess = ({ onReadyChange, agentName, selectedPurposes, knowle
       setPhase('ready');
       onReadyChange(true);
 
-      // Track agent creation success in Google Tag Manager
-      trackAgentCreated(data.agent.id, agentName);
+      // Track agent creation - sends to all analytics providers
+      track('agent_created', {
+        agentId: data.agent.id,
+        agentName: agentName,
+        userId: data.agent.organization_id, // Organization ID as user context
+      });
 
       // Visual effects only (can safely be canceled on unmount)
       setShowConfetti(true);
