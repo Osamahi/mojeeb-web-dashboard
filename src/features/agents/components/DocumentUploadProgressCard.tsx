@@ -61,7 +61,12 @@ export default function DocumentUploadProgressCard({
       case 'failed':
         return t('document_upload_progress.status_failed');
       case 'processing':
-        return job.currentStep || t('document_upload_progress.status_processing');
+        // Translate the current step if available
+        if (job.currentStep) {
+          const stepKey = `document_upload_progress.step_${job.currentStep}`;
+          return t(stepKey);
+        }
+        return t('document_upload_progress.status_processing');
       default:
         return t('document_upload_progress.status_queued');
     }

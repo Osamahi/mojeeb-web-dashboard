@@ -1112,7 +1112,11 @@
     "status_completed": "Processing complete",
     "status_failed": "Processing failed",
     "status_processing": "Processing document...",
-    "status_queued": "Queued for processing"
+    "status_queued": "Queued for processing",
+    "step_validating": "Validating document...",
+    "step_parsing": "Parsing content...",
+    "step_ai_processing": "AI processing...",
+    "step_completed": "Complete"
   },
   "connection_health": {
     "loading": "Loading health status",

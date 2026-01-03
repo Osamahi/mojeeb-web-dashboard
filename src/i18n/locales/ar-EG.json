@@ -1108,7 +1108,11 @@
     "status_completed": "المعالجة خلصت",
     "status_failed": "المعالجة فشلت",
     "status_processing": "بنعالج الملف...",
-    "status_queued": "في الانتظار للمعالجة"
+    "status_queued": "في الانتظار للمعالجة",
+    "step_validating": "بنتحقق من الملف...",
+    "step_parsing": "بنحلل المحتوى...",
+    "step_ai_processing": "معالجة بالذكاء الاصطناعي...",
+    "step_completed": "خلص"
   },
   "oauth_authorize": {
     "error_no_agent": "ماختارتش إيجنت. اختار إيجنت الأول.",

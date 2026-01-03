@@ -1108,7 +1108,11 @@
     "status_completed": "اكتملت المعالجة",
     "status_failed": "فشلت المعالجة",
     "status_processing": "جارٍ معالجة المستند...",
-    "status_queued": "في قائمة الانتظار للمعالجة"
+    "status_queued": "في قائمة الانتظار للمعالجة",
+    "step_validating": "جارٍ التحقق من المستند...",
+    "step_parsing": "جارٍ تحليل المحتوى...",
+    "step_ai_processing": "جارٍ المعالجة بالذكاء الاصطناعي...",
+    "step_completed": "مكتمل"
   },
   "connection_health": {
     "loading": "جارٍ تحميل حالة الاتصال",
