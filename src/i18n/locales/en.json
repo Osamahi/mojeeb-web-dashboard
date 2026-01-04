@@ -746,7 +746,11 @@
     "no_users_title": "No users found",
     "no_users_description": "No users available in the system",
     "loading_more": "Loading more users...",
-    "all_loaded": "All {{count}} users loaded"
+    "all_loaded": "All {{count}} users loaded",
+    "copy_phone": "Copy phone number",
+    "copied_to_clipboard": "Copied to clipboard",
+    "failed_to_copy": "Failed to copy",
+    "created": "Created"
   },
   "subscriptions": {
     "settings": "Settings",

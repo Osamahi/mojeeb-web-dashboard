@@ -3,36 +3,42 @@
  * Displays system users with sorting and infinite scroll
  */
 
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Users as UsersIcon, Loader2 } from 'lucide-react';
 import { useDateLocale } from '@/lib/dateConfig';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@/components/ui/Badge';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { DataTable, type ColumnDef } from '@/components/ui/DataTable';
-import type { User, Role } from '../types';
+import { formatPhoneNumber } from '@/features/leads/utils/formatting';
+import { UsersMobileCardView } from './UsersMobileCardView';
+import type { User } from '../types';
 
 interface UsersTableProps {
   users: User[];
 }
 
-const ROLE_COLORS: Record<Role, 'success' | 'warning' | 'danger' | any> = {
-  SuperAdmin: 'danger',
-  Admin: 'warning',
-  Customer: 'success',
-  AiAgent: 'default',
-  HumanAgent: 'default',
-  System: 'default',
-};
-
 export default function UsersTable({ users }: UsersTableProps) {
   const { t } = useTranslation();
   const { format } = useDateLocale();
+  const isMobile = useIsMobile();
 
   // Infinite scroll state
   const [displayCount, setDisplayCount] = useState(50);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Phone copy handler (mobile only)
+  const handleCopyPhone = useCallback((phone: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const formattedPhone = formatPhoneNumber(phone);
+    navigator.clipboard.writeText(formattedPhone).then(() => {
+      toast.success(t('users.copied_to_clipboard'));
+    }).catch(() => {
+      toast.error(t('users.failed_to_copy'));
+    });
+  }, [t]);
 
   // Displayed users with infinite scroll
   const displayedUsers = useMemo(() => {
@@ -110,16 +116,6 @@ export default function UsersTable({ users }: UsersTableProps) {
       ),
     },
     {
-      key: 'role',
-      label: t('users.table_role'),
-      sortable: true,
-      render: (role) => (
-        <Badge variant={ROLE_COLORS[role as Role]} size="sm">
-          {role}
-        </Badge>
-      ),
-    },
-    {
       key: 'created_at',
       label: t('users.table_created'),
       sortable: true,
@@ -138,8 +134,19 @@ export default function UsersTable({ users }: UsersTableProps) {
         );
       },
     },
-  ], [t]);
+  ], [t, format]);
 
+  // Render mobile card view
+  if (isMobile) {
+    return (
+      <UsersMobileCardView
+        users={users}
+        onCopyPhone={handleCopyPhone}
+      />
+    );
+  }
+
+  // Render desktop table view
   return (
     <>
       <DataTable

@@ -746,7 +746,11 @@
     "no_users_title": "لا يوجد مستخدمين",
     "no_users_description": "لا يوجد مستخدمين متاحين في النظام",
     "loading_more": "جاري تحميل المزيد من المستخدمين...",
-    "all_loaded": "تم تحميل جميع {{count}} مستخدم"
+    "all_loaded": "تم تحميل جميع {{count}} مستخدم",
+    "copy_phone": "نسخ رقم الهاتف",
+    "copied_to_clipboard": "تم النسخ إلى الحافظة",
+    "failed_to_copy": "فشل النسخ",
+    "created": "تاريخ الإنشاء"
   },
   "subscriptions": {
     "settings": "الإعدادات",
