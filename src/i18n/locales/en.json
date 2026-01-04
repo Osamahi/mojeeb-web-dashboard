@@ -1168,6 +1168,29 @@
     "contact_support_link": "contact support",
     "contact_support_suffix": "."
   },
+  "error_pages": {
+    "not_found": {
+      "title": "Page Not Found",
+      "description": "The page you're looking for doesn't exist or has been moved."
+    },
+    "server_error": {
+      "title": "Server Error",
+      "description": "Something went wrong on our end. Please try again later."
+    },
+    "unauthorized": {
+      "title": "Access Denied",
+      "description": "You don't have permission to access this resource."
+    },
+    "network_error": {
+      "title": "Connection Lost",
+      "description": "Please check your internet connection and try again."
+    },
+    "actions": {
+      "go_back": "Go Back",
+      "go_home": "Go to Home",
+      "retry": "Try Again"
+    }
+  },
   "onboarding_banner": {
     "message_title": "Get started by creating your first agent.",
     "message_subtitle": "It only takes 2 minutes to set up.",

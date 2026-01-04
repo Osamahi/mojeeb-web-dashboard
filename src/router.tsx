@@ -27,6 +27,9 @@ const AdminSubscriptionsPage = lazy(() => import('./features/subscriptions/pages
 const MySubscriptionPage = lazy(() => import('./features/subscriptions/pages/MySubscriptionPage'));
 const SubscriptionSuccessPage = lazy(() => import('./features/billing/pages/SubscriptionSuccessPage'));
 const SubscriptionCancelPage = lazy(() => import('./features/billing/pages/SubscriptionCancelPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage').then(m => ({ default: m.ServerErrorPage })));
+const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage').then(m => ({ default: m.UnauthorizedPage })));
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -241,6 +244,11 @@ export const router = createBrowserRouter([
         <DashboardLayout />
       </ProtectedRoute>
     ),
+    errorElement: (
+      <Suspense fallback={<PageSkeleton />}>
+        <ServerErrorPage />
+      </Suspense>
+    ),
     children: [
       {
         path: 'agents',
@@ -314,6 +322,22 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <SubscriptionCancelPage />
       </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/unauthorized',
+    element: (
+      <Suspense fallback={<PageSkeleton />}>
+        <UnauthorizedPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '*',
+    element: (
+      <Suspense fallback={<PageSkeleton />}>
+        <NotFoundPage />
+      </Suspense>
     ),
   },
 ]);

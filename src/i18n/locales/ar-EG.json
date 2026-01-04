@@ -1164,6 +1164,29 @@
     "contact_support_link": "اتصل بالدعم",
     "contact_support_suffix": "."
   },
+  "error_pages": {
+    "not_found": {
+      "title": "الصفحة مش موجودة",
+      "description": "الصفحة اللي بتدور عليها مش موجودة أو اتنقلت."
+    },
+    "server_error": {
+      "title": "خطأ في السيرفر",
+      "description": "في مشكلة حصلت عندنا. جرّب تاني بعد شوية."
+    },
+    "unauthorized": {
+      "title": "مش مسموح",
+      "description": "معندكش صلاحية تدخل على المصدر ده."
+    },
+    "network_error": {
+      "title": "الاتصال راح",
+      "description": "لو سمحت شوف الإنترنت وجرّب تاني."
+    },
+    "actions": {
+      "go_back": "ارجع",
+      "go_home": "روح للصفحة الرئيسية",
+      "retry": "حاول تاني"
+    }
+  },
   "onboarding_banner": {
     "message_title": "ابدأ بإنشاء أول وكيل ليك.",
     "message_subtitle": "الإعداد بياخد دقيقتين بس.",

@@ -1164,6 +1164,29 @@
     "contact_support_link": "الاتصال بالدعم",
     "contact_support_suffix": "."
   },
+  "error_pages": {
+    "not_found": {
+      "title": "الصفحة غير موجودة",
+      "description": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها."
+    },
+    "server_error": {
+      "title": "خطأ في الخادم",
+      "description": "حدثت مشكلة من جانبنا. يرجى المحاولة مرة أخرى لاحقاً."
+    },
+    "unauthorized": {
+      "title": "الوصول مرفوض",
+      "description": "ليس لديك صلاحية للوصول إلى هذا المورد."
+    },
+    "network_error": {
+      "title": "انقطع الاتصال",
+      "description": "يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى."
+    },
+    "actions": {
+      "go_back": "العودة",
+      "go_home": "الذهاب للصفحة الرئيسية",
+      "retry": "إعادة المحاولة"
+    }
+  },
   "onboarding_banner": {
     "message_title": "ابدأ بإنشاء أول وكيل لك.",
     "message_subtitle": "يستغرق الإعداد دقيقتين فقط.",
