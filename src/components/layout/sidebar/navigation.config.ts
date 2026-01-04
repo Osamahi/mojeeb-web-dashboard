@@ -15,6 +15,7 @@ import {
   UserPlus,
   Receipt,
   CreditCard,
+  DollarSign,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -74,6 +75,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.subscriptions',
     href: '/subscriptions',
     icon: Receipt,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Pricing',
+    translationKey: 'navigation.pricing',
+    href: '/pricing',
+    icon: DollarSign,
     requireSuperAdmin: true,
   },
   {

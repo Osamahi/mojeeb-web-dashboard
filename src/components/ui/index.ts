@@ -6,3 +6,4 @@ export { Avatar, type AvatarProps } from './Avatar';
 export { Spinner, PageSpinner, type SpinnerProps } from './Spinner';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { Modal, type ModalProps } from './Modal';
+export { Switch, type SwitchProps } from './Switch';

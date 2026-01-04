@@ -24,6 +24,7 @@ const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthC
 const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 const InstallWidgetPage = lazy(() => import('./pages/InstallWidgetPage').then(m => ({ default: m.InstallWidgetPage })));
 const AdminSubscriptionsPage = lazy(() => import('./features/subscriptions/pages/AdminSubscriptionsPage'));
+const AdminPricingPage = lazy(() => import('./features/pricing/pages/AdminPricingPage'));
 const MySubscriptionPage = lazy(() => import('./features/subscriptions/pages/MySubscriptionPage'));
 const SubscriptionSuccessPage = lazy(() => import('./features/billing/pages/SubscriptionSuccessPage'));
 const SubscriptionCancelPage = lazy(() => import('./features/billing/pages/SubscriptionCancelPage'));
@@ -299,6 +300,14 @@ export const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <AdminSubscriptionsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'pricing',
+        element: (
+          <SuperAdminRoute>
+            <AdminPricingPage />
           </SuperAdminRoute>
         ),
       },
