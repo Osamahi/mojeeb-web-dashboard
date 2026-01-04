@@ -700,6 +700,7 @@
     "organizations": "Organizations",
     "subscriptions": "Subscriptions",
     "pricing": "Pricing",
+    "stripe_products": "Stripe Products",
     "my_subscription": "My Subscription",
     "billing": "Billing",
     "team": "Team",

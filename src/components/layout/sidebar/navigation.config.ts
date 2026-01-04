@@ -16,6 +16,7 @@ import {
   Receipt,
   CreditCard,
   DollarSign,
+  Package,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -78,10 +79,10 @@ export const navigation: NavigationItem[] = [
     requireSuperAdmin: true,
   },
   {
-    name: 'Pricing',
-    translationKey: 'navigation.pricing',
+    name: 'Stripe Products',
+    translationKey: 'navigation.stripe_products',
     href: '/pricing',
-    icon: DollarSign,
+    icon: Package,
     requireSuperAdmin: true,
   },
   {
