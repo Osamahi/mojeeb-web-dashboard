@@ -32,7 +32,9 @@
     "close_dialog_aria": "Close dialog",
     "you": "You",
     "to": "to",
-    "try_again": "Try Again"
+    "try_again": "Try Again",
+    "created_label": "Created",
+    "updated_label": "Updated"
   },
   "agents": {
     "title": "AI Agents",

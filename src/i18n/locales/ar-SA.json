@@ -32,7 +32,9 @@
     "close_dialog_aria": "إغلاق النافذة",
     "you": "أنت",
     "to": "إلى",
-    "try_again": "حاول مرة أخرى"
+    "try_again": "حاول مرة أخرى",
+    "created_label": "تاريخ الإنشاء",
+    "updated_label": "تاريخ التحديث"
   },
   "agents": {
     "title": "الوكلاء الذكيون",
