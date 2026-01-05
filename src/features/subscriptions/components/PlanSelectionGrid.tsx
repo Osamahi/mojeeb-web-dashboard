@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { usePlanStore } from '../stores/planStore';
 import type { SubscriptionPlan } from '../types/subscription.types';
 import { PlanCard } from './PlanCard';
+import { PlanCode } from '../types/subscription.types';
 
 interface PlanSelectionGridProps {
   /** Current subscription plan code to highlight */
@@ -30,19 +31,23 @@ export const PlanSelectionGrid = memo(function PlanSelectionGrid({
   allowSelectCurrent = false,
 }: PlanSelectionGridProps) {
   // Read plans from global store (loaded once on app init)
-  const plans = usePlanStore(state => state.plans);
+  const allPlans = usePlanStore(state => state.plans);
   const loading = usePlanStore(state => state.isLoading);
   const error = usePlanStore(state => state.error);
 
+  // Filter to show only production plans (exclude legacy and test plans)
+  const productionPlanCodes = [PlanCode.Free, PlanCode.Starter, PlanCode.Professional];
+  const plans = allPlans.filter(plan => productionPlanCodes.includes(plan.code as any));
+
   // Show loading skeleton if still loading OR if plans not loaded yet
-  const showLoading = loading || plans.length === 0;
+  const showLoading = loading || allPlans.length === 0;
 
   return (
     <div className="lg:w-fit lg:mx-auto">
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {showLoading ? (
-          // Skeleton loading cards
-          [...Array(4)].map((_, i) => (
+          // Skeleton loading cards (3 production plans)
+          [...Array(3)].map((_, i) => (
             <div
               key={i}
               className="rounded-lg border-2 border-gray-200 bg-white p-6 animate-pulse flex flex-col w-full min-w-[200px]"

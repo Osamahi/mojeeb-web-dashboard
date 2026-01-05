@@ -7,12 +7,19 @@ import { PlanCode } from '../types/subscription.types';
 
 /**
  * Plan tier hierarchy (lower number = lower tier)
+ * Includes both production codes and legacy codes for backwards compatibility
  */
 const PLAN_TIER_HIERARCHY: Record<string, number> = {
+  // Production codes (from PlanCode enum)
   [PlanCode.Free]: 0,
   [PlanCode.Starter]: 1,
   [PlanCode.Professional]: 2,
-  [PlanCode.Enterprise]: 3,
+
+  // Legacy codes (for existing subscriptions - display only)
+  free: 0,
+  starter: 1,
+  professional: 2,
+  enterprise: 3,
 };
 
 /**

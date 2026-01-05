@@ -11,10 +11,9 @@ export enum SubscriptionStatus {
 }
 
 export enum PlanCode {
-  Free = 'free',
-  Starter = 'starter',
-  Professional = 'professional',
-  Enterprise = 'enterprise',
+  Free = 'free_production',
+  Starter = 'starter_production',
+  Professional = 'professional_production',
 }
 
 export enum Currency {

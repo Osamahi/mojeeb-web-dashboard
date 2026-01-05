@@ -79,7 +79,8 @@ export function PlanChangeWizard({
 
     // Validation: Ensure plan has valid pricing (try current currency, fallback to first available)
     const { price, currency: actualCurrency } = getPriceAndCurrency(selectedPlan);
-    if (!price || price === 0) {
+    // Allow price = 0 for free plans, only reject if pricing is undefined/null
+    if (price === undefined || price === null) {
       toast.error(t('plan_change_wizard.invalid_pricing'), {
         description: t('plan_change_wizard.no_pricing_available'),
       });

@@ -93,7 +93,6 @@ export function CreateSubscriptionModal({
                 <option value={PlanCode.Free}>{t('create_subscription.plan_free')}</option>
                 <option value={PlanCode.Starter}>{t('create_subscription.plan_starter')}</option>
                 <option value={PlanCode.Professional}>{t('create_subscription.plan_professional')}</option>
-                <option value={PlanCode.Enterprise}>{t('create_subscription.plan_enterprise')}</option>
               </select>
             </div>
 
