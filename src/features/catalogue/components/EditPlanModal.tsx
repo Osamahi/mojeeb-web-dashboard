@@ -461,24 +461,6 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
                     </p>
                   </div>
                 </div>
-
-                {/* Sync Checkbox */}
-                <div className="pt-2 border-t border-neutral-200">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={syncToStripe}
-                      onChange={(e) => setSyncToStripe(e.target.checked)}
-                      className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500/20"
-                    />
-                    <span className="text-sm text-neutral-700">
-                      Also update Stripe product when saving
-                    </span>
-                  </label>
-                  <p className="mt-1 text-xs text-neutral-500 ml-6">
-                    When checked, the product name and description will be synced to Stripe
-                  </p>
-                </div>
               </div>
             )}
           </div>
@@ -565,6 +547,23 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
                 </table>
               </div>
             )}
+          </div>
+        ) : null}
+
+        {/* Stripe Sync Option - Only show if plan has Stripe product */}
+        {planDetails?.stripeProductId && !isLoadingDetails ? (
+          <div className="space-y-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={syncToStripe}
+                onChange={(e) => setSyncToStripe(e.target.checked)}
+                className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500/20"
+              />
+              <span className="text-sm font-medium text-neutral-700">
+                Also update Stripe
+              </span>
+            </label>
           </div>
         ) : null}
 
