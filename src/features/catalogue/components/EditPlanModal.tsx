@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { toast } from 'sonner';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { useUpdatePlanMutation } from '../hooks/useUpdatePlanMutation';
 import { catalogueService } from '../services/catalogueService';
@@ -32,6 +34,7 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isStripeExpanded, setIsStripeExpanded] = useState(false); // Collapsed by default
 
   // Update form when plan details are loaded
   useEffect(() => {
@@ -128,6 +131,15 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
         delete newErrors[errorKey];
         return newErrors;
       });
+    }
+  };
+
+  const handleCopyPriceId = async (priceId: string) => {
+    try {
+      await navigator.clipboard.writeText(priceId);
+      toast.success('Stripe Price ID copied!');
+    } catch (error) {
+      toast.error('Failed to copy Price ID');
     }
   };
 
@@ -337,69 +349,75 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
           </div>
         ) : planDetails?.stripePriceIds && Object.keys(planDetails.stripePriceIds).length > 0 ? (
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-neutral-900">
+            {/* Collapsible Header */}
+            <button
+              type="button"
+              onClick={() => setIsStripeExpanded(!isStripeExpanded)}
+              className="flex items-center gap-2 text-sm font-semibold text-neutral-900 hover:text-neutral-700 transition-colors"
+            >
+              {isStripeExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
               Stripe Price IDs
-            </h3>
-            <div className="overflow-x-auto rounded-lg border border-neutral-200">
-              <table className="min-w-full divide-y divide-neutral-200">
-                <thead className="bg-neutral-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700">
-                      Currency
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700">
-                      Monthly Price ID
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700">
-                      Annual Price ID
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-200 bg-white">
-                  {Object.entries(planDetails.stripePriceIds).map(([currency, intervals]) => (
-                    <tr key={currency}>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-neutral-900">
-                        {currency}
-                      </td>
-                      <td className="px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <code className="rounded bg-neutral-100 px-2 py-1 text-xs text-neutral-700">
-                            {intervals?.monthly || 'Not set'}
-                          </code>
-                          {intervals?.monthly && (
-                            <button
-                              type="button"
-                              onClick={() => navigator.clipboard.writeText(intervals.monthly)}
-                              className="text-xs text-neutral-500 hover:text-neutral-700"
-                              title="Copy to clipboard"
-                            >
-                              📋
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <code className="rounded bg-neutral-100 px-2 py-1 text-xs text-neutral-700">
-                            {intervals?.annual || 'Not set'}
-                          </code>
-                          {intervals?.annual && (
-                            <button
-                              type="button"
-                              onClick={() => navigator.clipboard.writeText(intervals.annual)}
-                              className="text-xs text-neutral-500 hover:text-neutral-700"
-                              title="Copy to clipboard"
-                            >
-                              📋
-                            </button>
-                          )}
-                        </div>
-                      </td>
+            </button>
+
+            {/* Collapsible Content */}
+            {isStripeExpanded && (
+              <div className="overflow-x-auto rounded-lg border border-neutral-200">
+                <table className="min-w-full divide-y divide-neutral-200">
+                  <thead className="bg-neutral-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700">
+                        Currency
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700">
+                        Monthly Price ID
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700">
+                        Annual Price ID
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-200 bg-white">
+                    {Object.entries(planDetails.stripePriceIds).map(([currency, intervals]) => (
+                      <tr key={currency}>
+                        <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-neutral-900">
+                          {currency}
+                        </td>
+                        <td className="px-4 py-2">
+                          {intervals?.monthly ? (
+                            <code
+                              onClick={() => handleCopyPriceId(intervals.monthly)}
+                              className="cursor-pointer rounded bg-neutral-100 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200 transition-colors"
+                              title="Click to copy"
+                            >
+                              {intervals.monthly}
+                            </code>
+                          ) : (
+                            <span className="text-xs text-neutral-400">Not set</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2">
+                          {intervals?.annual ? (
+                            <code
+                              onClick={() => handleCopyPriceId(intervals.annual)}
+                              className="cursor-pointer rounded bg-neutral-100 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-200 transition-colors"
+                              title="Click to copy"
+                            >
+                              {intervals.annual}
+                            </code>
+                          ) : (
+                            <span className="text-xs text-neutral-400">Not set</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         ) : null}
 
