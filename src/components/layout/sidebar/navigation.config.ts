@@ -17,6 +17,7 @@ import {
   CreditCard,
   DollarSign,
   Package,
+  BookOpen,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -83,6 +84,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.stripe_products',
     href: '/pricing',
     icon: Package,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Plan Catalogue',
+    translationKey: 'navigation.plan_catalogue',
+    href: '/catalogue',
+    icon: BookOpen,
     requireSuperAdmin: true,
   },
   {

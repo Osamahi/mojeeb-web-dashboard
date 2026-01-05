@@ -701,6 +701,7 @@
     "subscriptions": "Subscriptions",
     "pricing": "Pricing",
     "stripe_products": "Stripe Products",
+    "plan_catalogue": "Plan Catalogue",
     "my_subscription": "My Subscription",
     "billing": "Billing",
     "team": "Team",
@@ -1693,6 +1694,109 @@
     "interval": {
       "monthly": "Monthly",
       "annual": "Annual"
+    }
+  },
+  "catalogue": {
+    "title": "Plan Catalogue",
+    "subtitle": "Manage subscription plans and pricing",
+    "addPlan": "Add Plan",
+    "errorLoadingPlans": "Failed to load subscription plans. Please try again.",
+    "noPlansFound": "No subscription plans found",
+    "createPlanSuccess": "Plan created successfully",
+    "createPlanError": "Failed to create plan. Please try again.",
+    "updatePlanSuccess": "Plan updated successfully",
+    "updatePlanError": "Failed to update plan. Please try again.",
+    "archivePlanSuccess": "Plan archived successfully",
+    "archivePlanError": "Failed to archive plan. Please try again.",
+    "table": {
+      "code": "Code",
+      "name": "Name",
+      "limits": "Limits",
+      "trial": "Trial",
+      "status": "Status",
+      "subscriptions": "Active Subscriptions",
+      "createdAt": "Created",
+      "actions": "Actions",
+      "messages": "messages",
+      "agents": "agents",
+      "days": "days",
+      "active": "Active",
+      "inactive": "Inactive",
+      "editPlan": "Edit plan",
+      "archivePlan": "Archive plan",
+      "cannotArchiveWithSubscriptions": "Cannot archive plan with active subscriptions"
+    },
+    "addModal": {
+      "title": "Create New Plan",
+      "subtitle": "Add a new subscription plan to your catalogue",
+      "cancel": "Cancel",
+      "create": "Create Plan",
+      "creating": "Creating...",
+      "pricingNote": "💡 You can set pricing and Stripe price IDs after creating the plan by editing it.",
+      "sections": {
+        "basicInfo": "Basic Information",
+        "limits": "Plan Limits"
+      },
+      "fields": {
+        "code": "Plan Code",
+        "codeHint": "Lowercase letters, numbers, hyphens and underscores only (e.g., starter, pro, enterprise)",
+        "name": "Plan Name",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe what this plan offers to customers...",
+        "messageLimit": "Messages",
+        "agentLimit": "Agents",
+        "trialDays": "Trial Days"
+      },
+      "errors": {
+        "codeRequired": "Plan code is required",
+        "codeInvalid": "Plan code must contain only lowercase letters, numbers, hyphens and underscores",
+        "nameRequired": "Plan name is required",
+        "messageLimitInvalid": "Message limit must be 0 or greater",
+        "agentLimitInvalid": "Agent limit must be 0 or greater",
+        "trialDaysInvalid": "Trial days must be 0 or greater"
+      }
+    },
+    "editModal": {
+      "title": "Edit Plan",
+      "subtitle": "Editing plan: {{planName}}",
+      "cancel": "Cancel",
+      "update": "Save Changes",
+      "updating": "Updating...",
+      "activeSubscriptionsWarning": "This plan has {{count}} active subscription(s). Changes to limits may affect existing subscribers.",
+      "sections": {
+        "basicInfo": "Basic Information",
+        "limits": "Plan Limits",
+        "status": "Plan Status"
+      },
+      "fields": {
+        "code": "Plan Code",
+        "codeImmutable": "(cannot be changed)",
+        "name": "Plan Name",
+        "description": "Description",
+        "messageLimit": "Messages",
+        "agentLimit": "Agents",
+        "trialDays": "Trial Days",
+        "isActive": "Active Status",
+        "isActiveDescription": "Inactive plans will not be available for new subscriptions"
+      },
+      "errors": {
+        "nameRequired": "Plan name is required",
+        "messageLimitInvalid": "Message limit must be 0 or greater",
+        "agentLimitInvalid": "Agent limit must be 0 or greater",
+        "trialDaysInvalid": "Trial days must be 0 or greater"
+      }
+    },
+    "archiveModal": {
+      "title": "Archive Plan",
+      "subtitle": "This action will deactivate the plan",
+      "warning": "Are you sure you want to archive this plan?",
+      "warningDescription": "Archived plans cannot be assigned to new subscriptions. Existing subscriptions will continue unaffected.",
+      "planCode": "Plan Code",
+      "planName": "Plan Name",
+      "activeSubscriptions": "Active Subscriptions",
+      "cancel": "Cancel",
+      "confirmArchive": "Archive Plan",
+      "archiving": "Archiving..."
     }
   }
 }
