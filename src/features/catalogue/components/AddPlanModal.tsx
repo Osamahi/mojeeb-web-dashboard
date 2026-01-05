@@ -322,9 +322,6 @@ export function AddPlanModal({ isOpen, onClose }: AddPlanModalProps) {
               <option value="test">Create Stripe Test Product</option>
               <option value="production">Create Stripe Production Product</option>
             </select>
-            <p className="mt-1 text-xs text-neutral-500">
-              Choose whether to create a Stripe product for this plan (auto-generated with price IDs)
-            </p>
           </div>
         </div>
 
