@@ -57,6 +57,13 @@ class CatalogueService {
       pricing: request.pricing,
       features: request.features,
       stripe_price_ids: request.stripePriceIds,
+      // Stripe product linking
+      stripe_product_id: request.stripeProductId,
+      stripe_product_name: request.stripeProductName,
+      stripe_product_description: request.stripeProductDescription,
+      stripe_created_at: request.stripeCreatedAt,
+      stripe_updated_at: request.stripeUpdatedAt,
+      stripe_livemode: request.stripeLivemode,
     };
 
     const response = await api.post<ApiResponse<ApiPlanCatalogueDetail>>(
@@ -84,6 +91,12 @@ class CatalogueService {
       features: request.features,
       stripe_price_ids: request.stripePriceIds,
       is_active: request.isActive,
+      // Stripe product linking
+      stripe_product_id: request.stripeProductId,
+      stripe_product_name: request.stripeProductName,
+      stripe_product_description: request.stripeProductDescription,
+      stripe_livemode: request.stripeLivemode,
+      sync_to_stripe: request.syncToStripe,
     };
 
     const response = await api.patch<ApiResponse<ApiPlanCatalogueDetail>>(
@@ -119,6 +132,9 @@ class CatalogueService {
       isActive: apiItem.is_active,
       createdAt: apiItem.created_at,
       updatedAt: apiItem.updated_at,
+      // Stripe product metadata
+      stripeProductId: apiItem.stripe_product_id,
+      stripeLivemode: apiItem.stripe_livemode,
     };
   }
 
@@ -130,6 +146,13 @@ class CatalogueService {
       pricing: apiDetail.pricing,
       features: apiDetail.features,
       stripePriceIds: apiDetail.stripe_price_ids,
+      // Stripe product metadata
+      stripeProductId: apiDetail.stripe_product_id,
+      stripeProductName: apiDetail.stripe_product_name,
+      stripeProductDescription: apiDetail.stripe_product_description,
+      stripeCreatedAt: apiDetail.stripe_created_at,
+      stripeUpdatedAt: apiDetail.stripe_updated_at,
+      stripeLivemode: apiDetail.stripe_livemode,
     };
   }
 }

@@ -75,9 +75,9 @@ export function PlanCatalogueTable({
                   <span className="text-sm font-medium text-neutral-900">
                     {plan.name}
                   </span>
-                  {plan.description && (
+                  {plan.stripeProductId && (
                     <span className="text-xs text-neutral-500">
-                      {plan.description}
+                      {plan.stripeLivemode ? 'Production' : 'Testing'}
                     </span>
                   )}
                 </div>

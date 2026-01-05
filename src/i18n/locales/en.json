@@ -383,6 +383,7 @@
     "connected_days_ago": "Connected {{days}} Days Ago",
     "health_check": "Health Check",
     "disconnect": "Disconnect",
+    "reconnect": "Reconnect",
     "inactive": "Inactive"
   },
   "lead_summary": {

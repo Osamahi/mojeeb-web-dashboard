@@ -383,6 +383,7 @@
     "connected_days_ago": "متوصل من {{days}} أيام",
     "health_check": "فحص الصحة",
     "disconnect": "قطع الاتصال",
+    "reconnect": "إعادة الاتصال",
     "inactive": "مش نشط"
   },
   "lead_summary": {

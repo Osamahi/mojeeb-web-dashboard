@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { useCreatePlanMutation } from '../hooks/useCreatePlanMutation';
-import type { CreatePlanRequest } from '../types/catalogue.types';
+import type { CreatePlanRequest, PricingMatrix, Currency } from '../types/catalogue.types';
 
 interface AddPlanModalProps {
   isOpen: boolean;
@@ -23,6 +23,17 @@ export function AddPlanModal({ isOpen, onClose }: AddPlanModalProps) {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Stripe Product Creation Mode
+  type StripeMode = 'none' | 'test' | 'production';
+  const [stripeMode, setStripeMode] = useState<StripeMode>('none');
+
+  // Pricing state
+  const [pricing, setPricing] = useState<PricingMatrix>({
+    USD: { monthly: 0, annual: 0 },
+    EGP: { monthly: 0, annual: 0 },
+    SAR: { monthly: 0, annual: 0 },
+  });
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -57,8 +68,20 @@ export function AddPlanModal({ isOpen, onClose }: AddPlanModalProps) {
     }
 
     try {
-      await createMutation.mutateAsync(formData);
+      // Build complete request with pricing and Stripe data
+      const createRequest: CreatePlanRequest = {
+        ...formData,
+        // Always include pricing
+        pricing,
+        // Set stripeLivemode based on dropdown selection
+        ...(stripeMode !== 'none' && {
+          stripeLivemode: stripeMode === 'production',
+        }),
+      };
+
+      await createMutation.mutateAsync(createRequest);
       onClose();
+
       // Reset form
       setFormData({
         code: '',
@@ -67,6 +90,12 @@ export function AddPlanModal({ isOpen, onClose }: AddPlanModalProps) {
         messageLimit: 1000,
         agentLimit: 1,
         trialDays: 0,
+      });
+      setStripeMode('none');
+      setPricing({
+        USD: { monthly: 0, annual: 0 },
+        EGP: { monthly: 0, annual: 0 },
+        SAR: { monthly: 0, annual: 0 },
       });
       setErrors({});
     } catch (error) {
@@ -217,11 +246,86 @@ export function AddPlanModal({ isOpen, onClose }: AddPlanModalProps) {
           </div>
         </div>
 
-        {/* Info Note */}
-        <div className="rounded-lg bg-primary-50 p-4">
-          <p className="text-sm text-primary-900">
-            {t('catalogue.addModal.pricingNote')}
-          </p>
+        {/* Pricing */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold text-neutral-900">
+            Pricing
+          </h3>
+          <div className="space-y-4">
+            {(['USD', 'EGP', 'SAR'] as Currency[]).map((currency) => (
+              <div key={currency} className="space-y-2">
+                <h4 className="text-xs font-semibold text-neutral-700">{currency}</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">
+                      Monthly
+                    </label>
+                    <input
+                      type="number"
+                      value={pricing[currency].monthly || ''}
+                      onChange={(e) =>
+                        setPricing({
+                          ...pricing,
+                          [currency]: { ...pricing[currency], monthly: parseFloat(e.target.value) || 0 },
+                        })
+                      }
+                      min="0"
+                      step="0.01"
+                      className="block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                      placeholder="0.00"
+                      disabled={createMutation.isPending}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">
+                      Annual
+                    </label>
+                    <input
+                      type="number"
+                      value={pricing[currency].annual || ''}
+                      onChange={(e) =>
+                        setPricing({
+                          ...pricing,
+                          [currency]: { ...pricing[currency], annual: parseFloat(e.target.value) || 0 },
+                        })
+                      }
+                      min="0"
+                      step="0.01"
+                      className="block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                      placeholder="0.00"
+                      disabled={createMutation.isPending}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Stripe Product Creation */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-neutral-900">
+            Stripe Product
+          </h3>
+          <div>
+            <label htmlFor="stripeMode" className="block text-sm font-medium text-neutral-700 mb-2">
+              Product Creation
+            </label>
+            <select
+              id="stripeMode"
+              value={stripeMode}
+              onChange={(e) => setStripeMode(e.target.value as StripeMode)}
+              className="block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+              disabled={createMutation.isPending}
+            >
+              <option value="none">No Stripe Product</option>
+              <option value="test">Create Stripe Test Product</option>
+              <option value="production">Create Stripe Production Product</option>
+            </select>
+            <p className="mt-1 text-xs text-neutral-500">
+              Choose whether to create a Stripe product for this plan (auto-generated with price IDs)
+            </p>
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -237,7 +341,7 @@ export function AddPlanModal({ isOpen, onClose }: AddPlanModalProps) {
           <button
             type="submit"
             disabled={createMutation.isPending}
-            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {createMutation.isPending
               ? t('catalogue.addModal.creating')

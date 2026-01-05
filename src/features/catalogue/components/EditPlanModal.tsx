@@ -35,6 +35,14 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isStripeExpanded, setIsStripeExpanded] = useState(false); // Collapsed by default
+  const [isStripeProductExpanded, setIsStripeProductExpanded] = useState(false); // Stripe Product section
+  const [syncToStripe, setSyncToStripe] = useState(false); // Checkbox for syncing to Stripe
+
+  // Stripe product data state
+  const [stripeProductData, setStripeProductData] = useState({
+    name: '',
+    description: '',
+  });
 
   // Update form when plan details are loaded
   useEffect(() => {
@@ -46,6 +54,14 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
         agentLimit: planDetails.agentLimit,
         pricing: planDetails.pricing || {},
       });
+
+      // Populate Stripe product data if available
+      if (planDetails.stripeProductId) {
+        setStripeProductData({
+          name: planDetails.stripeProductName || '',
+          description: planDetails.stripeProductDescription || '',
+        });
+      }
     }
   }, [planDetails]);
 
@@ -88,9 +104,19 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
     }
 
     try {
+      const updateRequest: UpdatePlanRequest = {
+        ...formData,
+        // Add Stripe product fields if checkbox is checked
+        ...(syncToStripe && planDetails?.stripeProductId && {
+          stripeProductName: stripeProductData.name,
+          stripeProductDescription: stripeProductData.description,
+          syncToStripe: true,
+        }),
+      };
+
       await updateMutation.mutateAsync({
         id: plan.id,
-        request: formData,
+        request: updateRequest,
       });
       onClose();
     } catch (error) {
@@ -337,7 +363,128 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
           </div>
         ) : null}
 
-        {/* Stripe Information */}
+        {/* Stripe Product Linking */}
+        {isLoadingDetails ? (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-neutral-900">
+              Stripe Product
+            </h3>
+            <div className="flex items-center justify-center py-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+            </div>
+          </div>
+        ) : planDetails?.stripeProductId ? (
+          <div className="space-y-3">
+            {/* Collapsible Header */}
+            <button
+              type="button"
+              onClick={() => setIsStripeProductExpanded(!isStripeProductExpanded)}
+              className="flex items-center gap-2 text-sm font-semibold text-neutral-900 hover:text-neutral-700 transition-colors"
+            >
+              {isStripeProductExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+              Stripe Product Linking
+            </button>
+
+            {/* Collapsible Content */}
+            {isStripeProductExpanded && (
+              <div className="space-y-4 rounded-lg border border-neutral-200 p-4 bg-neutral-50">
+                {/* Product ID (read-only) */}
+                <div>
+                  <label className="block text-xs font-medium text-neutral-700 mb-1">
+                    Product ID
+                  </label>
+                  <code className="block w-full rounded bg-white px-3 py-2 text-sm text-neutral-900 border border-neutral-200">
+                    {planDetails.stripeProductId}
+                  </code>
+                </div>
+
+                {/* Product Name (editable) */}
+                <div>
+                  <label className="block text-xs font-medium text-neutral-700 mb-1">
+                    Product Name
+                  </label>
+                  <input
+                    type="text"
+                    value={stripeProductData.name}
+                    onChange={(e) => setStripeProductData({ ...stripeProductData, name: e.target.value })}
+                    className="block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
+                    placeholder="Mojeeb Starter"
+                  />
+                </div>
+
+                {/* Product Description (editable) */}
+                <div>
+                  <label className="block text-xs font-medium text-neutral-700 mb-1">
+                    Product Description
+                  </label>
+                  <textarea
+                    value={stripeProductData.description}
+                    onChange={(e) => setStripeProductData({ ...stripeProductData, description: e.target.value })}
+                    rows={3}
+                    className="block w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 resize-none"
+                    placeholder="1 agent, 3000 messages/month"
+                  />
+                </div>
+
+                {/* Metadata (read-only) */}
+                <div className="grid grid-cols-3 gap-3 pt-2 border-t border-neutral-200">
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-500 mb-1">
+                      Created
+                    </label>
+                    <p className="text-xs text-neutral-700">
+                      {planDetails.stripeCreatedAt
+                        ? new Date(planDetails.stripeCreatedAt).toLocaleDateString()
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-500 mb-1">
+                      Updated
+                    </label>
+                    <p className="text-xs text-neutral-700">
+                      {planDetails.stripeUpdatedAt
+                        ? new Date(planDetails.stripeUpdatedAt).toLocaleDateString()
+                        : 'N/A'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-500 mb-1">
+                      Mode
+                    </label>
+                    <p className="text-xs text-neutral-700">
+                      {planDetails.stripeLivemode ? 'Production' : 'Test'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Sync Checkbox */}
+                <div className="pt-2 border-t border-neutral-200">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={syncToStripe}
+                      onChange={(e) => setSyncToStripe(e.target.checked)}
+                      className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500/20"
+                    />
+                    <span className="text-sm text-neutral-700">
+                      Also update Stripe product when saving
+                    </span>
+                  </label>
+                  <p className="mt-1 text-xs text-neutral-500 ml-6">
+                    When checked, the product name and description will be synced to Stripe
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* Stripe Price IDs */}
         {isLoadingDetails ? (
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-neutral-900">
