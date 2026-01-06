@@ -24,7 +24,7 @@ export function SubscriptionTable({
   const { t } = useTranslation();
   const { format } = useDateLocale();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left?: number; right?: number } | null>(null);
   const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   const handleMenuToggle = (subscriptionId: string) => {
@@ -35,10 +35,22 @@ export function SubscriptionTable({
       const button = buttonRefs.current[subscriptionId];
       if (button) {
         const rect = button.getBoundingClientRect();
-        setMenuPosition({
-          top: rect.bottom + 8,
-          right: window.innerWidth - rect.right,
-        });
+        const isRTL = document.documentElement.dir === 'rtl';
+
+        // Position menu based on text direction
+        if (isRTL) {
+          // RTL: Position from left edge
+          setMenuPosition({
+            top: rect.bottom + 8,
+            left: rect.left,
+          });
+        } else {
+          // LTR: Position from right edge
+          setMenuPosition({
+            top: rect.bottom + 8,
+            right: window.innerWidth - rect.right,
+          });
+        }
       }
       setOpenMenuId(subscriptionId);
     }
@@ -179,7 +191,11 @@ export function SubscriptionTable({
                       {/* Menu */}
                       <div
                         className="fixed z-20 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
-                        style={{ top: `${menuPosition.top}px`, right: `${menuPosition.right}px` }}
+                        style={{
+                          top: `${menuPosition.top}px`,
+                          ...(menuPosition.left !== undefined ? { left: `${menuPosition.left}px` } : {}),
+                          ...(menuPosition.right !== undefined ? { right: `${menuPosition.right}px` } : {}),
+                        }}
                       >
                         <div className="py-1" role="menu">
                           <button

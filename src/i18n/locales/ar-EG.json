@@ -787,6 +787,7 @@
     "no_subscriptions_description": "حاول تعديل البحث أو الفلاتر",
     "loading_more": "جاري تحميل المزيد من الاشتراكات...",
     "scroll_to_load": "قم بالتمرير لأسفل لتحميل المزيد • عرض {{showing}} من {{total}}",
+    "scroll_to_load_simple": "قم بالتمرير لأسفل لتحميل المزيد • عرض {{count}} اشتراك",
     "all_loaded": "تم تحميل جميع {{count}} اشتراك",
     "flag_success": "تم وضع علامة على الاشتراك لعدم الدفع",
     "unflag_success": "تم إزالة العلامة من الاشتراك",

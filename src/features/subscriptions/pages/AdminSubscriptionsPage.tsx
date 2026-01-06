@@ -27,7 +27,6 @@ export default function AdminSubscriptionsPage() {
   // Infinite scroll state
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [totalCount, setTotalCount] = useState(0);
   const observerTarget = useRef<HTMLDivElement>(null);
 
   const pageSize = 50; // Fixed page size for infinite scroll
@@ -41,29 +40,28 @@ export default function AdminSubscriptionsPage() {
         setLoading(true);
       }
 
-      const response = await subscriptionService.getAllSubscriptions(filters, pageNum, pageSize);
+      const items = await subscriptionService.getAllSubscriptions(filters, pageNum, pageSize);
 
       console.log('📊 Infinite scroll response:', {
         page: pageNum,
-        itemsCount: response.items.length,
-        totalCount: response.pagination.totalCount,
-        hasNext: response.pagination.hasNext
+        itemsCount: items.length,
+        hasMore: items.length === pageSize
       });
 
       if (append) {
         // Append new items to existing list, filtering out duplicates
         setSubscriptions(prev => {
           const existingIds = new Set(prev.map(s => s.id));
-          const newItems = response.items.filter(item => !existingIds.has(item.id));
+          const newItems = items.filter(item => !existingIds.has(item.id));
           return [...prev, ...newItems];
         });
       } else {
         // Replace list (initial load or filter change)
-        setSubscriptions(response.items);
+        setSubscriptions(items);
       }
 
-      setTotalCount(response.pagination.totalCount);
-      setHasMore(response.pagination.hasNext);
+      // If we got fewer items than page size, we've reached the end
+      setHasMore(items.length === pageSize);
     } catch (error) {
       console.error('Failed to load subscriptions:', error);
       toast.error(t('subscriptions.load_failed'));
@@ -340,11 +338,11 @@ export default function AdminSubscriptionsPage() {
                 </div>
               ) : hasMore ? (
                 <div className="text-center text-sm text-gray-500">
-                  {t('subscriptions.scroll_to_load', { showing: subscriptions.length, total: totalCount })}
+                  {t('subscriptions.scroll_to_load_simple', { count: subscriptions.length })}
                 </div>
               ) : (
                 <div className="text-center text-sm text-gray-500">
-                  {t('subscriptions.all_loaded', { count: totalCount })}
+                  {t('subscriptions.all_loaded', { count: subscriptions.length })}
                 </div>
               )}
             </div>

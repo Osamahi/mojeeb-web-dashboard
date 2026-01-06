@@ -183,22 +183,13 @@ class SubscriptionService {
   /**
    * Get all subscriptions with optional filters and pagination
    * GET /api/admin/subscriptions?page=1&pageSize=50&organizationId=...&status=...&planCode=...
+   * Note: Backend returns simple list (no pagination metadata) - infinite scroll handles pagination
    */
   async getAllSubscriptions(
     filters?: SubscriptionFilters,
     page: number = 1,
     pageSize: number = 50
-  ): Promise<{
-    items: SubscriptionDetails[];
-    pagination: {
-      page: number;
-      pageSize: number;
-      totalCount: number;
-      totalPages: number;
-      hasNext: boolean;
-      hasPrevious: boolean;
-    };
-  }> {
+  ): Promise<SubscriptionDetails[]> {
     const params = new URLSearchParams();
 
     // Add pagination params
@@ -222,23 +213,13 @@ class SubscriptionService {
     console.log('🔍 getAllSubscriptions - Filters:', filters);
     console.log('🔍 getAllSubscriptions - URL:', `/api/admin/subscriptions?${params.toString()}`);
 
-    const response = await api.get<PaginatedApiResponse<ApiSubscriptionResponse>>(
+    const response = await api.get<ApiResponse<ApiSubscriptionResponse[]>>(
       `/api/admin/subscriptions?${params.toString()}`
     );
 
-    return {
-      items: response.data.data.map((sub) =>
-        this.transformSubscriptionResponse(sub)
-      ),
-      pagination: {
-        page: response.data.pagination.page,
-        pageSize: response.data.pagination.page_size,
-        totalCount: response.data.pagination.total_count,
-        totalPages: response.data.pagination.total_pages,
-        hasNext: response.data.pagination.has_next,
-        hasPrevious: response.data.pagination.has_previous,
-      },
-    };
+    return response.data.data.map((sub) =>
+      this.transformSubscriptionResponse(sub)
+    );
   }
 
   /**

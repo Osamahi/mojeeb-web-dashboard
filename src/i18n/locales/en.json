@@ -787,6 +787,7 @@
     "no_subscriptions_description": "Try adjusting your search or filters",
     "loading_more": "Loading more subscriptions...",
     "scroll_to_load": "Scroll down to load more • Showing {{showing}} of {{total}}",
+    "scroll_to_load_simple": "Scroll down to load more • Showing {{count}} subscriptions",
     "all_loaded": "All {{count}} subscriptions loaded",
     "flag_success": "Subscription flagged for non-payment",
     "unflag_success": "Subscription unflagged",
