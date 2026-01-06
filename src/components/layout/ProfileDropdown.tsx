@@ -16,6 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { User } from '@/features/auth/types/auth.types';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
+import { PlanCode } from '@/features/subscriptions/types/subscription.types';
 import { useUIStore } from '@/stores/uiStore';
 import { changeLanguageAsync } from '@/i18n/config';
 import type { Locale } from '@/i18n/locales';
@@ -37,8 +38,8 @@ export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
   // Use UI store for modal state
   const setShowUpgradeWizard = useUIStore(state => state.setShowUpgradeWizard);
 
-  // Check if user is on free plan
-  const isFreePlan = subscription?.planCode?.toLowerCase() === 'free';
+  // Check if user is on free plan (FIXED: use PlanCode enum instead of string comparison)
+  const isFreePlan = subscription?.planCode === PlanCode.Free;
 
   const handleLogout = async () => {
     try {

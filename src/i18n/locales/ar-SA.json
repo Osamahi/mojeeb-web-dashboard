@@ -710,7 +710,7 @@
     "main_aria_label": "القائمة الرئيسية"
   },
   "sidebar": {
-    "upgrade": "ترقية"
+    "upgrade": "ترقية الباقة"
   },
   "team": {
     "title": "الفريق",
@@ -799,8 +799,8 @@
     "load_failed": "فشل في تحميل الاشتراكات",
     "my_title": "اشتراكي",
     "my_subtitle": "إدارة خطتك وعرض إحصائيات الاستخدام",
-    "upgrade_plan": "ترقية الخطة",
-    "change_plan": "تغيير الخطة",
+    "upgrade_plan": "ترقية الباقة",
+    "change_plan": "تغيير الباقة",
     "view_usage": "عرض الاستخدام",
     "renew_subscription": "تجديد الاشتراك",
     "flag_non_paying": "وضع علامة عدم الدفع",
@@ -853,7 +853,7 @@
   },
   "profile": {
     "user_fallback": "مستخدم",
-    "upgrade_plan": "ترقية الخطة",
+    "upgrade_plan": "ترقية الباقة",
     "manage_subscription": "إدارة الاشتراك",
     "logout": "تسجيل الخروج",
     "logging_out": "جارٍ تسجيل الخروج...",

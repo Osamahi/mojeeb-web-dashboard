@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, Receipt, CreditCard, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
+import { PlanCode } from '../types/subscription.types';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { PlanChangeWizard } from '../components/PlanChangeWizard';
 import { ViewInvoicesModal } from '../components/ViewInvoicesModal';
@@ -95,7 +96,7 @@ export default function MySubscriptionPage() {
               className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
               <Rocket className="h-4 w-4" />
-              {subscription?.planCode === 'free' ? t('subscriptions.upgrade_plan') : t('subscriptions.change_plan')}
+              {subscription?.planCode === PlanCode.Free ? t('subscriptions.upgrade_plan') : t('subscriptions.change_plan')}
             </button>
           </>
         }
