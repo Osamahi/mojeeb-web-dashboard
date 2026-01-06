@@ -8,10 +8,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
+import { Plus, MessageSquare, Plug } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -46,6 +46,7 @@ function mergeJobIds(optimisticIds: string[], backendJobs: Array<{ jobId: string
 export default function StudioPage() {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_studio');
+  const navigate = useNavigate();
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const isDesktop = useIsDesktop();
   const [isAddKBModalOpen, setIsAddKBModalOpen] = useState(false);
@@ -225,23 +226,48 @@ export default function StudioPage() {
         </div>
       </div>
 
-      {/* Floating Action Button - Mobile & Tablet (Centered at Bottom) */}
+      {/* Floating Action Buttons - Mobile & Tablet (Centered at Bottom) */}
       {!isDesktop && (
-        <button
-          onClick={() => setIsChatPanelOpen(true)}
-          className={cn(
-            'fixed bottom-6 left-1/2 -translate-x-1/2 z-30',
-            'px-4 py-3 rounded-full',
-            'bg-black text-white shadow-lg',
-            'flex items-center justify-center',
-            'hover:bg-neutral-800 active:scale-95',
-            'transition-all duration-200',
-            'lg:hidden'
-          )}
-          aria-label={t('studio.test_chat_label')}
-        >
-          <span className="text-sm font-medium whitespace-nowrap">{t('studio.test_agent')}</span>
-        </button>
+        <div className={cn('fixed bottom-6 left-1/2 -translate-x-1/2 z-30', 'lg:hidden')}>
+          <div className={cn('flex items-center', 'bg-black rounded-full shadow-lg p-1')}>
+            {/* Test Agent Button */}
+            <button
+              onClick={() => setIsChatPanelOpen(true)}
+              className={cn(
+                'px-4 py-3',
+                'ltr:rounded-l-full rtl:rounded-r-full',
+                'bg-black text-white',
+                'flex items-center justify-center',
+                'hover:bg-neutral-700 active:scale-95',
+                'transition-all duration-200'
+              )}
+              aria-label={t('studio.test_chat_label')}
+            >
+              <MessageSquare className="w-4 h-4 me-3" />
+              <span className="text-sm font-medium whitespace-nowrap">{t('studio.test')}</span>
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-8 bg-neutral-700" />
+
+            {/* Connect Agent Button */}
+            <button
+              onClick={() => navigate('/connections')}
+              className={cn(
+                'px-4 py-3',
+                'ltr:rounded-r-full rtl:rounded-l-full',
+                'bg-black text-white',
+                'flex items-center justify-center',
+                'hover:bg-neutral-700 active:scale-95',
+                'transition-all duration-200'
+              )}
+              aria-label="Connect Agent"
+            >
+              <Plug className="w-4 h-4 me-3" />
+              <span className="text-sm font-medium whitespace-nowrap">{t('studio.connect_agent')}</span>
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Slide-out Test Chat Panel - Mobile only */}
