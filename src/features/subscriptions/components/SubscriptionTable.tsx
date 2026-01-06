@@ -156,7 +156,7 @@ export function SubscriptionTable({
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <RefreshCw className="h-4 w-4" />
-                            {t('subscriptions.view_details')}
+                            {t('subscriptions.renew_subscription')}
                           </button>
 
                           <button
@@ -167,7 +167,7 @@ export function SubscriptionTable({
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <Flag className="h-4 w-4" />
-                            {subscription.isFlaggedNonPaying ? t('subscriptions.cancel_subscription') : t('subscriptions.cancel_subscription')}
+                            {subscription.isFlaggedNonPaying ? t('subscriptions.unflag') : t('subscriptions.flag_non_paying')}
                           </button>
 
                           <button
@@ -180,12 +180,12 @@ export function SubscriptionTable({
                             {subscription.status === 'paused' ? (
                               <>
                                 <Play className="h-4 w-4" />
-                                {t('subscriptions.view_details')}
+                                {t('subscriptions.resume')}
                               </>
                             ) : (
                               <>
                                 <Pause className="h-4 w-4" />
-                                {t('subscriptions.cancel_subscription')}
+                                {t('subscriptions.pause')}
                               </>
                             )}
                           </button>
