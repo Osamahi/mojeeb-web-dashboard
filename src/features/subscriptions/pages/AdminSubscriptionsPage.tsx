@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { subscriptionService } from '../services/subscriptionService';
 import type { SubscriptionDetails, SubscriptionFilters, PlanCode, SubscriptionStatus } from '../types/subscription.types';
 import { CreateSubscriptionModal } from '../components/CreateSubscriptionModal';
+import { AdminChangePlanModal } from '../components/AdminChangePlanModal';
 import { SubscriptionTable } from '../components/SubscriptionTable';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { toast } from 'sonner';
@@ -16,6 +17,8 @@ export default function AdminSubscriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showChangePlanModal, setShowChangePlanModal] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionDetails | null>(null);
   const [filters, setFilters] = useState<SubscriptionFilters>({});
   const [searchInput, setSearchInput] = useState(''); // Local search input for debouncing
 
@@ -144,6 +147,11 @@ export default function AdminSubscriptionsPage() {
       console.error('Failed to renew subscription:', error);
       toast.error(t('subscriptions.renew_failed'));
     }
+  };
+
+  const handleChangePlan = (subscription: SubscriptionDetails) => {
+    setSelectedSubscription(subscription);
+    setShowChangePlanModal(true);
   };
 
   // Refresh handler - reset infinite scroll state
@@ -312,6 +320,7 @@ export default function AdminSubscriptionsPage() {
               onFlag={handleFlag}
               onPause={handlePause}
               onRenew={handleRenew}
+              onChangePlan={handleChangePlan}
             />
 
             {/* Infinite Scroll Indicator */}
@@ -344,6 +353,19 @@ export default function AdminSubscriptionsPage() {
           handleRefresh();
         }}
       />
+
+      {/* Change Plan Modal */}
+      {selectedSubscription && (
+        <AdminChangePlanModal
+          isOpen={showChangePlanModal}
+          onClose={() => {
+            setShowChangePlanModal(false);
+            setSelectedSubscription(null);
+          }}
+          onSuccess={handleRefresh}
+          subscription={selectedSubscription}
+        />
+      )}
     </div>
   );
 }

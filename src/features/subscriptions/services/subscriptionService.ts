@@ -157,13 +157,25 @@ class SubscriptionService {
   /**
    * Create a new subscription for an organization
    * POST /api/admin/subscriptions
+   * IMPORTANT: Transform camelCase to snake_case for Newtonsoft.Json backend
    */
   async createSubscription(
     request: CreateSubscriptionRequest
   ): Promise<SubscriptionDetails> {
+    // Transform camelCase to snake_case for backend (Newtonsoft.Json)
+    const snakeCaseRequest = {
+      organization_id: request.organizationId,
+      plan_code: request.planCode,
+      currency: request.currency,
+      billing_interval: request.billingInterval,
+    };
+
+    console.log('🔄 createSubscription - Frontend request (camelCase):', request);
+    console.log('🔄 createSubscription - Backend payload (snake_case):', snakeCaseRequest);
+
     const response = await api.post<ApiResponse<ApiSubscriptionResponse>>(
       '/api/admin/subscriptions',
-      request
+      snakeCaseRequest
     );
     return this.transformSubscriptionResponse(response.data.data);
   }
@@ -260,6 +272,34 @@ class SubscriptionService {
   async renewSubscription(id: string): Promise<SubscriptionDetails> {
     const response = await api.post<ApiResponse<ApiSubscriptionResponse>>(
       `/api/admin/subscriptions/${id}/renew`
+    );
+    return this.transformSubscriptionResponse(response.data.data);
+  }
+
+  /**
+   * Admin changes a subscription's plan (upgrade/downgrade)
+   * PATCH /api/admin/subscriptions/{id}/change-plan
+   * IMPORTANT: Transform camelCase to snake_case for Newtonsoft.Json backend
+   */
+  async adminChangePlan(
+    subscriptionId: string,
+    planCode: string,
+    currency?: string,
+    billingInterval?: string
+  ): Promise<SubscriptionDetails> {
+    // Transform camelCase to snake_case for backend (Newtonsoft.Json)
+    const snakeCaseRequest = {
+      plan_code: planCode,
+      currency: currency,
+      billing_interval: billingInterval,
+    };
+
+    console.log('🔄 adminChangePlan - Frontend request (camelCase):', { planCode, currency, billingInterval });
+    console.log('🔄 adminChangePlan - Backend payload (snake_case):', snakeCaseRequest);
+
+    const response = await api.patch<ApiResponse<ApiSubscriptionResponse>>(
+      `/api/admin/subscriptions/${subscriptionId}/change-plan`,
+      snakeCaseRequest
     );
     return this.transformSubscriptionResponse(response.data.data);
   }

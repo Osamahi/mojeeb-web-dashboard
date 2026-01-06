@@ -5,6 +5,8 @@ import { PlanCode, Currency, BillingInterval } from '../types/subscription.types
 import type { CreateSubscriptionRequest } from '../types/subscription.types';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { toast } from 'sonner';
+import OrganizationSelector from '@/features/organizations/components/OrganizationSelector';
+import type { Organization } from '@/features/organizations/types';
 
 interface CreateSubscriptionModalProps {
   isOpen: boolean;
@@ -19,6 +21,7 @@ export function CreateSubscriptionModal({
 }: CreateSubscriptionModalProps) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
+  const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
   const [formData, setFormData] = useState<CreateSubscriptionRequest>({
     organizationId: '',
     planCode: PlanCode.Starter,
@@ -26,22 +29,27 @@ export function CreateSubscriptionModal({
     billingInterval: BillingInterval.Monthly,
   });
 
+  const handleOrganizationSelect = (organizationId: string, organization: Organization) => {
+    setSelectedOrganization(organization);
+    setFormData({ ...formData, organizationId });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.organizationId) {
-      toast.error(t('create_subscription.org_id_required'));
+      toast.error(t('create_subscription.org_id_required', 'Please select an organization'));
       return;
     }
 
     try {
       setLoading(true);
       await subscriptionService.createSubscription(formData);
-      toast.success(t('create_subscription.success'));
+      toast.success(t('create_subscription.success', 'Subscription created successfully'));
       onSuccess();
     } catch (error) {
       console.error('Failed to create subscription:', error);
-      toast.error(t('create_subscription.error'));
+      toast.error(t('create_subscription.error', 'Failed to create subscription'));
     } finally {
       setLoading(false);
     }
@@ -58,23 +66,18 @@ export function CreateSubscriptionModal({
       closable={!loading}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Organization ID */}
+            {/* Organization Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                {t('create_subscription.org_id_label')}
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t('create_subscription.org_label', 'Organization')}
               </label>
-              <input
-                type="text"
-                required
+              <OrganizationSelector
                 value={formData.organizationId}
-                onChange={(e) =>
-                  setFormData({ ...formData, organizationId: e.target.value })
-                }
-                placeholder={t('create_subscription.org_id_placeholder')}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                onChange={handleOrganizationSelect}
+                placeholder={t('create_subscription.org_placeholder', 'Search for an organization...')}
               />
               <p className="mt-1 text-xs text-gray-500">
-                {t('create_subscription.org_id_hint')}
+                {t('create_subscription.org_hint', 'Select the organization to assign this subscription to')}
               </p>
             </div>
 

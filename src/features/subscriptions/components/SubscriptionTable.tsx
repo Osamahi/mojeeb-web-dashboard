@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MoreVertical, Flag, Pause, Play, RefreshCw } from 'lucide-react';
+import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SubscriptionDetails } from '../types/subscription.types';
 import { useDateLocale } from '@/lib/dateConfig';
@@ -9,6 +9,7 @@ interface SubscriptionTableProps {
   onFlag: (id: string, flag: boolean) => void;
   onPause: (id: string, pause: boolean) => void;
   onRenew: (id: string) => void;
+  onChangePlan: (subscription: SubscriptionDetails) => void;
 }
 
 export function SubscriptionTable({
@@ -16,6 +17,7 @@ export function SubscriptionTable({
   onFlag,
   onPause,
   onRenew,
+  onChangePlan,
 }: SubscriptionTableProps) {
   const { t } = useTranslation();
   const { format } = useDateLocale();
@@ -135,6 +137,17 @@ export function SubscriptionTable({
                       {/* Menu */}
                       <div className="absolute right-0 z-20 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                         <div className="py-1" role="menu">
+                          <button
+                            onClick={() => {
+                              onChangePlan(subscription);
+                              setOpenMenuId(null);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Edit className="h-4 w-4" />
+                            {t('subscriptions.change_plan', 'Change Plan')}
+                          </button>
+
                           <button
                             onClick={() => {
                               onRenew(subscription.id);
