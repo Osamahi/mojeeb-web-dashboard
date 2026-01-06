@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit, BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SubscriptionDetails } from '../types/subscription.types';
 import { useDateLocale } from '@/lib/dateConfig';
@@ -10,6 +10,7 @@ interface SubscriptionTableProps {
   onPause: (id: string, pause: boolean) => void;
   onRenew: (id: string) => void;
   onChangePlan: (subscription: SubscriptionDetails) => void;
+  onViewUsage: (subscription: SubscriptionDetails) => void;
 }
 
 export function SubscriptionTable({
@@ -18,10 +19,47 @@ export function SubscriptionTable({
   onPause,
   onRenew,
   onChangePlan,
+  onViewUsage,
 }: SubscriptionTableProps) {
   const { t } = useTranslation();
   const { format } = useDateLocale();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
+  const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+
+  const handleMenuToggle = (subscriptionId: string) => {
+    if (openMenuId === subscriptionId) {
+      setOpenMenuId(null);
+      setMenuPosition(null);
+    } else {
+      const button = buttonRefs.current[subscriptionId];
+      if (button) {
+        const rect = button.getBoundingClientRect();
+        setMenuPosition({
+          top: rect.bottom + 8,
+          right: window.innerWidth - rect.right,
+        });
+      }
+      setOpenMenuId(subscriptionId);
+    }
+  };
+
+  // Close menu on scroll or resize
+  useEffect(() => {
+    const handleCloseMenu = () => {
+      setOpenMenuId(null);
+      setMenuPosition(null);
+    };
+
+    if (openMenuId) {
+      window.addEventListener('scroll', handleCloseMenu, true);
+      window.addEventListener('resize', handleCloseMenu);
+      return () => {
+        window.removeEventListener('scroll', handleCloseMenu, true);
+        window.removeEventListener('resize', handleCloseMenu);
+      };
+    }
+  }, [openMenuId]);
 
   const getStatusBadgeClasses = (status: string) => {
     switch (status.toLowerCase()) {
@@ -121,26 +159,46 @@ export function SubscriptionTable({
               <td className="relative whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                 <div className="relative">
                   <button
-                    onClick={() => setOpenMenuId(openMenuId === subscription.id ? null : subscription.id)}
+                    ref={(el) => (buttonRefs.current[subscription.id] = el)}
+                    onClick={() => handleMenuToggle(subscription.id)}
                     className="text-gray-400 hover:text-gray-600"
                   >
                     <MoreVertical className="h-5 w-5" />
                   </button>
 
-                  {openMenuId === subscription.id && (
+                  {openMenuId === subscription.id && menuPosition && (
                     <>
                       {/* Backdrop */}
                       <div
                         className="fixed inset-0 z-10"
-                        onClick={() => setOpenMenuId(null)}
+                        onClick={() => {
+                          setOpenMenuId(null);
+                          setMenuPosition(null);
+                        }}
                       />
                       {/* Menu */}
-                      <div className="absolute right-0 z-20 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                      <div
+                        className="fixed z-20 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
+                        style={{ top: `${menuPosition.top}px`, right: `${menuPosition.right}px` }}
+                      >
                         <div className="py-1" role="menu">
+                          <button
+                            onClick={() => {
+                              onViewUsage(subscription);
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <BarChart3 className="h-4 w-4" />
+                            {t('subscriptions.view_usage')}
+                          </button>
+
                           <button
                             onClick={() => {
                               onChangePlan(subscription);
                               setOpenMenuId(null);
+                              setMenuPosition(null);
                             }}
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                           >
@@ -152,6 +210,7 @@ export function SubscriptionTable({
                             onClick={() => {
                               onRenew(subscription.id);
                               setOpenMenuId(null);
+                              setMenuPosition(null);
                             }}
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                           >
@@ -163,6 +222,7 @@ export function SubscriptionTable({
                             onClick={() => {
                               onFlag(subscription.id, !subscription.isFlaggedNonPaying);
                               setOpenMenuId(null);
+                              setMenuPosition(null);
                             }}
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                           >
@@ -174,6 +234,7 @@ export function SubscriptionTable({
                             onClick={() => {
                               onPause(subscription.id, subscription.status !== 'paused');
                               setOpenMenuId(null);
+                              setMenuPosition(null);
                             }}
                             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                           >

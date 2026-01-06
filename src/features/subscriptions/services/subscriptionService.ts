@@ -305,6 +305,19 @@ class SubscriptionService {
   }
 
   /**
+   * Get usage statistics for a specific subscription
+   * GET /api/admin/subscriptions/{id}/usage
+   */
+  async getSubscriptionUsage(subscriptionId: string): Promise<UsageSummary> {
+    console.log('📊 getSubscriptionUsage - Fetching usage for subscription:', subscriptionId);
+
+    const response = await api.get<ApiResponse<ApiUsageResponse>>(
+      `/api/admin/subscriptions/${subscriptionId}/usage`
+    );
+    return this.transformUsageResponse(response.data.data);
+  }
+
+  /**
    * Private helper methods for transforming API responses
    */
 

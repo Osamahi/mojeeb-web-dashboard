@@ -5,6 +5,7 @@ import { subscriptionService } from '../services/subscriptionService';
 import type { SubscriptionDetails, SubscriptionFilters, PlanCode, SubscriptionStatus } from '../types/subscription.types';
 import { CreateSubscriptionModal } from '../components/CreateSubscriptionModal';
 import { AdminChangePlanModal } from '../components/AdminChangePlanModal';
+import { ViewUsageModal } from '../components/ViewUsageModal';
 import { SubscriptionTable } from '../components/SubscriptionTable';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ export default function AdminSubscriptionsPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showChangePlanModal, setShowChangePlanModal] = useState(false);
+  const [showViewUsageModal, setShowViewUsageModal] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionDetails | null>(null);
   const [filters, setFilters] = useState<SubscriptionFilters>({});
   const [searchInput, setSearchInput] = useState(''); // Local search input for debouncing
@@ -152,6 +154,11 @@ export default function AdminSubscriptionsPage() {
   const handleChangePlan = (subscription: SubscriptionDetails) => {
     setSelectedSubscription(subscription);
     setShowChangePlanModal(true);
+  };
+
+  const handleViewUsage = (subscription: SubscriptionDetails) => {
+    setSelectedSubscription(subscription);
+    setShowViewUsageModal(true);
   };
 
   // Refresh handler - reset infinite scroll state
@@ -321,6 +328,7 @@ export default function AdminSubscriptionsPage() {
               onPause={handlePause}
               onRenew={handleRenew}
               onChangePlan={handleChangePlan}
+              onViewUsage={handleViewUsage}
             />
 
             {/* Infinite Scroll Indicator */}
@@ -363,6 +371,18 @@ export default function AdminSubscriptionsPage() {
             setSelectedSubscription(null);
           }}
           onSuccess={handleRefresh}
+          subscription={selectedSubscription}
+        />
+      )}
+
+      {/* View Usage Modal */}
+      {selectedSubscription && (
+        <ViewUsageModal
+          isOpen={showViewUsageModal}
+          onClose={() => {
+            setShowViewUsageModal(false);
+            setSelectedSubscription(null);
+          }}
           subscription={selectedSubscription}
         />
       )}

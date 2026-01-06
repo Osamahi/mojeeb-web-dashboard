@@ -800,6 +800,7 @@
     "my_subtitle": "إدارة خطتك وعرض إحصائيات الاستخدام",
     "upgrade_plan": "ترقية الخطة",
     "change_plan": "تغيير الخطة",
+    "view_usage": "عرض الاستخدام",
     "renew_subscription": "تجديد الاشتراك",
     "flag_non_paying": "وضع علامة عدم الدفع",
     "unflag": "إزالة العلامة",
@@ -833,7 +834,21 @@
     "messages_count": "{{count}} رسالة",
     "messages_count_plural": "{{count}} رسالة",
     "agents_count": "{{count}} وكيل",
-    "agents_count_plural": "{{count}} وكيل"
+    "agents_count_plural": "{{count}} وكيل",
+    "usage_modal": {
+      "title": "تفاصيل الاستخدام",
+      "error_loading": "فشل في تحميل بيانات الاستخدام",
+      "messages": "الرسائل",
+      "agents": "الوكلاء",
+      "current_billing_period": "فترة الفوترة الحالية",
+      "active_agents": "الوكلاء النشطون",
+      "used": "مُستخدَم",
+      "remaining": "المتبقي",
+      "limit": "الحد",
+      "approaching_limit": "أنت تقترب من حد الاستخدام. فكر في ترقية خطتك.",
+      "billing_period": "فترة الفوترة",
+      "resets_on": "يتم إعادة تعيين الاستخدام في"
+    }
   },
   "profile": {
     "user_fallback": "مستخدم",
