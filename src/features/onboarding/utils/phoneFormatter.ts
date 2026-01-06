@@ -47,6 +47,11 @@ export function formatPhoneNumber(value: string, format: string): string {
     }
   }
 
+  // Append any remaining digits beyond the format pattern
+  if (digitIndex < digits.length) {
+    formatted += digits.substring(digitIndex);
+  }
+
   return formatted.trim();
 }
 

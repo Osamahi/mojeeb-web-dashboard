@@ -15,6 +15,7 @@ import { detectCountryFromTimezone } from '@/features/onboarding/utils/countryDe
 import { logger } from '@/lib/logger';
 import { CheckCircleIcon } from '@/shared/components/icons';
 import { sessionHelper } from '@/lib/sessionHelper';
+import { useAuthStore } from '../stores/authStore';
 import {
   formatPhoneNumber,
   formatPhoneForDisplay,
@@ -33,13 +34,13 @@ interface PhoneCollectionModalProps {
 
 export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: PhoneCollectionModalProps) => {
   const { t } = useTranslation();
+  const updateUserPhone = useAuthStore((state) => state.updateUserPhone);
   const [countries, setCountries] = useState<Country[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isValid, setIsValid] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedPhone, setSubmittedPhone] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -105,30 +106,43 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isValid || !selectedCountry || isSubmitting) return;
+    if (!isValid || !selectedCountry) return;
 
-    setIsSubmitting(true);
+    const fullPhone = getFullPhoneNumber(selectedCountry.dialCode, phoneNumber);
 
+    // 1. Optimistically update the authStore immediately
+    updateUserPhone(fullPhone);
+
+    // 2. Update UI state for success view
+    setIsSuccess(true);
+    setSubmittedPhone(fullPhone);
+
+    // 3. Clear phone tracking (modal + banner)
+    sessionHelper.clearPhoneTracking();
+
+    // 4. Show brief saving toast
+    const savingToast = toast.loading(t('phone_collection.saving'));
+
+    // 5. Call onSuccess callback (if provided)
+    onSuccess?.(fullPhone);
+
+    // 6. Background API call
     try {
-      const fullPhone = getFullPhoneNumber(selectedCountry.dialCode, phoneNumber);
-
-      // Update user profile with phone
       await profileService.updatePhone(fullPhone);
 
-      setIsSuccess(true);
-      setSubmittedPhone(fullPhone);
-
-      // Clear all phone tracking (modal + banner)
-      sessionHelper.clearPhoneTracking();
-
-      toast.success(t('phone_collection.success'));
-      onSuccess?.(fullPhone);
+      // Success: Update toast
+      toast.success(t('phone_collection.success'), { id: savingToast });
     } catch (error) {
+      // Error: Rollback optimistic update
       logger.error('Failed to update phone number', error instanceof Error ? error : new Error(String(error)));
-      toast.error(t('phone_collection.error'));
+
+      // Rollback: Clear the phone from authStore
+      updateUserPhone('');
+
+      // Show error and revert UI
+      toast.error(t('phone_collection.error'), { id: savingToast });
+      setIsSuccess(false);
       setHasError(true);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -160,8 +174,8 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
       onClose={handleClose}
       maxWidth="sm"
       title={isSuccess ? t('phone_collection.success_title') : t('phone_collection.title')}
-      isLoading={isSubmitting}
-      closable={!isSubmitting}
+      isLoading={false}
+      closable={true}
     >
       {isSuccess ? (
         // Success State
@@ -195,7 +209,7 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Country Selector + Phone Input */}
           <div className="relative w-full">
-            <div className="flex gap-2 w-full">
+            <div className="flex gap-2 w-full" dir="ltr">
               {/* Country Dropdown */}
               <div className="relative flex-shrink-0" ref={dropdownRef}>
                 <button
@@ -246,6 +260,7 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
                 onChange={handlePhoneChange}
                 placeholder={selectedCountry.format.replace(/X/g, '0')}
                 autoFocus
+                dir="ltr"
                 className={`flex-1 min-w-0 px-4 py-3 text-base border rounded-xl focus:outline-none focus:ring-2 transition-colors ${
                   isValid
                     ? 'border-green-500 focus:ring-green-500 focus:border-green-500'
@@ -267,9 +282,9 @@ export const PhoneCollectionModal = ({ isOpen, onClose, onSuccess, onSkip }: Pho
           {/* Action Buttons */}
           <ModalActions
             primary={{
-              label: isSubmitting ? t('phone_collection.saving') : t('common.save'),
+              label: t('common.save'),
               onClick: handleSubmit,
-              disabled: !isValid || isSubmitting,
+              disabled: !isValid,
             }}
             secondary={{
               label: t('phone_collection.skip_button'),
