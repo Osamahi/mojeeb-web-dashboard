@@ -5,6 +5,7 @@ import { subscriptionService } from '../services/subscriptionService';
 import type { SubscriptionDetails, SubscriptionFilters, PlanCode, SubscriptionStatus } from '../types/subscription.types';
 import { CreateSubscriptionModal } from '../components/CreateSubscriptionModal';
 import { AdminChangePlanModal } from '../components/AdminChangePlanModal';
+import { EditLimitsModal } from '../components/EditLimitsModal';
 import { ViewUsageModal } from '../components/ViewUsageModal';
 import { SubscriptionTable } from '../components/SubscriptionTable';
 import { BaseHeader } from '@/components/ui/BaseHeader';
@@ -19,6 +20,7 @@ export default function AdminSubscriptionsPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showChangePlanModal, setShowChangePlanModal] = useState(false);
+  const [showEditLimitsModal, setShowEditLimitsModal] = useState(false);
   const [showViewUsageModal, setShowViewUsageModal] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionDetails | null>(null);
   const [filters, setFilters] = useState<SubscriptionFilters>({});
@@ -152,6 +154,11 @@ export default function AdminSubscriptionsPage() {
   const handleChangePlan = (subscription: SubscriptionDetails) => {
     setSelectedSubscription(subscription);
     setShowChangePlanModal(true);
+  };
+
+  const handleEditLimits = (subscription: SubscriptionDetails) => {
+    setSelectedSubscription(subscription);
+    setShowEditLimitsModal(true);
   };
 
   const handleViewUsage = (subscription: SubscriptionDetails) => {
@@ -326,6 +333,7 @@ export default function AdminSubscriptionsPage() {
               onPause={handlePause}
               onRenew={handleRenew}
               onChangePlan={handleChangePlan}
+              onEditLimits={handleEditLimits}
               onViewUsage={handleViewUsage}
             />
 
@@ -366,6 +374,19 @@ export default function AdminSubscriptionsPage() {
           isOpen={showChangePlanModal}
           onClose={() => {
             setShowChangePlanModal(false);
+            setSelectedSubscription(null);
+          }}
+          onSuccess={handleRefresh}
+          subscription={selectedSubscription}
+        />
+      )}
+
+      {/* Edit Limits Modal */}
+      {selectedSubscription && (
+        <EditLimitsModal
+          isOpen={showEditLimitsModal}
+          onClose={() => {
+            setShowEditLimitsModal(false);
             setSelectedSubscription(null);
           }}
           onSuccess={handleRefresh}

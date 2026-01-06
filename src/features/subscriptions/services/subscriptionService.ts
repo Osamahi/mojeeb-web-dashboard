@@ -286,6 +286,32 @@ class SubscriptionService {
   }
 
   /**
+   * Update message and agent limits for a subscription (SuperAdmin only)
+   * PATCH /api/admin/subscriptions/{id}/limits
+   * IMPORTANT: Transform camelCase to snake_case for Newtonsoft.Json backend
+   */
+  async adminUpdateLimits(
+    subscriptionId: string,
+    messageLimit?: number | null,
+    agentLimit?: number | null
+  ): Promise<SubscriptionDetails> {
+    // Transform camelCase to snake_case for backend (Newtonsoft.Json)
+    const snakeCaseRequest = {
+      message_limit: messageLimit,
+      agent_limit: agentLimit,
+    };
+
+    console.log('🔄 adminUpdateLimits - Frontend request (camelCase):', { messageLimit, agentLimit });
+    console.log('🔄 adminUpdateLimits - Backend payload (snake_case):', snakeCaseRequest);
+
+    const response = await api.patch<ApiResponse<ApiSubscriptionResponse>>(
+      `/api/admin/subscriptions/${subscriptionId}/limits`,
+      snakeCaseRequest
+    );
+    return this.transformSubscriptionResponse(response.data.data);
+  }
+
+  /**
    * Get usage statistics for a specific subscription
    * GET /api/admin/subscriptions/{id}/usage
    */

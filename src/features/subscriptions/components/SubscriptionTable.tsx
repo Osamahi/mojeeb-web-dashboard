@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit, BarChart3 } from 'lucide-react';
+import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit, BarChart3, Sliders } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SubscriptionDetails } from '../types/subscription.types';
 import { useDateLocale } from '@/lib/dateConfig';
@@ -10,6 +10,7 @@ interface SubscriptionTableProps {
   onPause: (id: string, pause: boolean) => void;
   onRenew: (id: string) => void;
   onChangePlan: (subscription: SubscriptionDetails) => void;
+  onEditLimits: (subscription: SubscriptionDetails) => void;
   onViewUsage: (subscription: SubscriptionDetails) => void;
 }
 
@@ -19,6 +20,7 @@ export function SubscriptionTable({
   onPause,
   onRenew,
   onChangePlan,
+  onEditLimits,
   onViewUsage,
 }: SubscriptionTableProps) {
   const { t } = useTranslation();
@@ -220,6 +222,18 @@ export function SubscriptionTable({
                           >
                             <Edit className="h-4 w-4" />
                             {t('subscriptions.change_plan', 'Change Plan')}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              onEditLimits(subscription);
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Sliders className="h-4 w-4" />
+                            {t('subscriptions.edit_limits', 'Edit Limits')}
                           </button>
 
                           <button

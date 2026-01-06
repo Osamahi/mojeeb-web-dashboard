@@ -801,6 +801,7 @@
     "my_subtitle": "Manage your plan and view usage statistics",
     "upgrade_plan": "Upgrade Plan",
     "change_plan": "Change Plan",
+    "edit_limits": "Edit Limits",
     "view_usage": "View Usage",
     "renew_subscription": "Renew Subscription",
     "flag_non_paying": "Flag Non-Paying",
@@ -1820,5 +1821,30 @@
       "confirmArchive": "Archive Plan",
       "archiving": "Archiving..."
     }
+  },
+  "edit_limits": {
+    "title": "Edit Subscription Limits",
+    "subtitle": "Adjust limits for the current billing period (0 = unlimited)",
+    "current_subscription": "Current Subscription",
+    "organization": "Organization",
+    "plan": "Plan",
+    "status": "Status",
+    "message_limit": "Message Limit",
+    "message_limit_placeholder": "Enter message limit (0 = unlimited)",
+    "message_limit_help": "Current limit: {{limit}}",
+    "agent_limit": "Agent Limit",
+    "agent_limit_placeholder": "Enter agent limit (0 = unlimited)",
+    "agent_limit_help": "Current limit: {{limit}}",
+    "preview": "Preview Changes",
+    "message_change": "Message Limit: {{old}} → {{new}}",
+    "agent_change": "Agent Limit: {{old}} → {{new}}",
+    "info": "These changes only affect the current billing period. Future renewals will use plan defaults unless you set new limits then.",
+    "success": "Subscription limits updated successfully",
+    "error": "Failed to update subscription limits",
+    "no_changes": "No changes made",
+    "invalid_message_limit": "Message limit must be 0 or greater",
+    "invalid_agent_limit": "Agent limit must be 0 or greater",
+    "updating": "Updating...",
+    "update": "Update Limits"
   }
 }
