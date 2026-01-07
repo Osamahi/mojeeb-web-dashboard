@@ -20,6 +20,7 @@ const UsersPage = lazy(() => import('./features/users/pages/UsersPage'));
 const OrganizationsPage = lazy(() => import('./features/organizations/pages/OrganizationsPage'));
 const TeamManagementPage = lazy(() => import('./features/organizations/pages/TeamManagementPage'));
 const ConnectionsPage = lazy(() => import('./features/connections/pages/ConnectionsPage'));
+const AdminConnectionsPage = lazy(() => import('./features/connections/pages/AdminConnectionsPage'));
 const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthCallbackPage'));
 const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 const InstallWidgetPage = lazy(() => import('./pages/InstallWidgetPage').then(m => ({ default: m.InstallWidgetPage })));
@@ -281,6 +282,14 @@ export const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <OrganizationsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'admin-connections',
+        element: (
+          <SuperAdminRoute>
+            <AdminConnectionsPage />
           </SuperAdminRoute>
         ),
       },

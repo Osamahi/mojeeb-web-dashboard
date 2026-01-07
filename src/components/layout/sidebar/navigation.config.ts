@@ -18,6 +18,7 @@ import {
   DollarSign,
   Package,
   BookOpen,
+  Network,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -70,6 +71,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.organizations',
     href: '/organizations',
     icon: Building2,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'All Connections',
+    translationKey: 'navigation.admin_connections',
+    href: '/admin-connections',
+    icon: Network,
     requireSuperAdmin: true,
   },
   {
