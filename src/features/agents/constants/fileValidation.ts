@@ -19,19 +19,19 @@ export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 export const ALLOWED_FILE_TYPES = [
   'text/plain',
   'application/pdf',
-  'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/csv',
 ] as const;
 
 /**
  * Allowed file extensions for document uploads
  */
-export const ALLOWED_FILE_EXTENSIONS = ['.txt', '.pdf', '.doc', '.docx'] as const;
+export const ALLOWED_FILE_EXTENSIONS = ['.txt', '.pdf', '.docx', '.csv'] as const;
 
 /**
  * User-friendly error messages for file validation failures
  */
 export const FILE_VALIDATION_ERRORS = {
   SIZE: `File size exceeds ${MAX_FILE_SIZE_MB}MB limit. Please choose a smaller file.`,
-  TYPE: 'Invalid file type. Please upload a TXT, PDF, DOC, or DOCX file.',
+  TYPE: 'Invalid file type. Please upload a TXT, PDF, DOCX, or CSV file.',
 } as const;
