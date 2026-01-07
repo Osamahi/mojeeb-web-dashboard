@@ -258,7 +258,7 @@ export default function AddKnowledgeBaseModal({
             </label>
             <input
               type="file"
-              accept=".txt,.pdf,.docx,.csv"
+              accept=".txt,.pdf,.docx,.csv,.xlsx,.xls"
               onChange={handleFileSelect}
               disabled={uploadMutation.isPending}
               className="block w-full text-sm text-neutral-600
