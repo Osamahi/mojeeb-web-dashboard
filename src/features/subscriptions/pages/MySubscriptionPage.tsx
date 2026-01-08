@@ -1,12 +1,10 @@
 import { useState, useCallback } from 'react';
-import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, Receipt, CreditCard, X } from 'lucide-react';
+import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { PlanCode } from '../types/subscription.types';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { PlanChangeWizard } from '../components/PlanChangeWizard';
-import { ViewInvoicesModal } from '../components/ViewInvoicesModal';
-import { PaymentMethodModal } from '../components/PaymentMethodModal';
 import { CancelSubscriptionModal } from '@/features/billing/components/CancelSubscriptionModal';
 import {
   DropdownMenu,
@@ -27,8 +25,6 @@ export default function MySubscriptionPage() {
   const usage = useSubscriptionStore(state => state.usage);
   const loading = useSubscriptionStore(state => state.isLoading);
   const [showWizard, setShowWizard] = useState(false);
-  const [showInvoicesModal, setShowInvoicesModal] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
   const handleUpgradeClick = useCallback(() => {
@@ -74,14 +70,16 @@ export default function MySubscriptionPage() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => setShowPaymentModal(true)}>
+                {/* Hidden: Payment Method */}
+                {/* <DropdownMenuItem onClick={() => setShowPaymentModal(true)}>
                   <CreditCard className="me-2 h-4 w-4" />
                   {t('billing.payment_method')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowInvoicesModal(true)}>
+                </DropdownMenuItem> */}
+                {/* Hidden: View Invoices */}
+                {/* <DropdownMenuItem onClick={() => setShowInvoicesModal(true)}>
                   <Receipt className="me-2 h-4 w-4" />
                   {t('billing.view_invoices')}
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem
                   onClick={() => setShowCancelModal(true)}
                   className="text-red-600 focus:text-red-600"
@@ -364,15 +362,7 @@ export default function MySubscriptionPage() {
         />
       )}
 
-      {/* Billing Modals */}
-      <ViewInvoicesModal
-        isOpen={showInvoicesModal}
-        onClose={() => setShowInvoicesModal(false)}
-      />
-      <PaymentMethodModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-      />
+      {/* Cancel Subscription Modal */}
       <CancelSubscriptionModal
         isOpen={showCancelModal}
         onClose={() => setShowCancelModal(false)}
