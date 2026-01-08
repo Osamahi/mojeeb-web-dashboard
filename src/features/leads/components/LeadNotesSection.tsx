@@ -3,10 +3,11 @@
  * Displays note history timeline with add/edit/delete functionality
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDateLocale } from '@/lib/dateConfig';
 import { Trash2, Edit2, Check, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   useLeadNotes,
   useCreateLeadNote,
@@ -36,6 +37,14 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [noteToDelete, setNoteToDelete] = useState<string | null>(null);
+
+  // Ref for auto-focusing the add note textarea
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus textarea when component mounts
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
 
   // Handle adding a new note
   const handleAddNote = () => {
@@ -124,36 +133,14 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
     return note.text;
   };
 
-  // Empty state
-  if (!isLoading && (!notes || notes.length === 0)) {
-    return (
-      <div className="space-y-4">
-        {/* Add Note Input */}
-        <div className="space-y-2">
-          <textarea
-            value={newNoteText}
-            onChange={(e) => setNewNoteText(e.target.value)}
-            placeholder={t('lead_notes.add_placeholder')}
-            rows={3}
-            className="w-full px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent resize-none text-sm"
-          />
-          <button
-            onClick={handleAddNote}
-            disabled={!newNoteText.trim() || createMutation.isPending}
-            className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {createMutation.isPending ? t('lead_notes.adding') : t('lead_notes.add_note')}
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const hasNotes = !isLoading && notes && notes.length > 0;
 
   return (
     <div className="space-y-4">
-      {/* Add Note Input */}
+      {/* Add Note Input - Always visible */}
       <div className="space-y-2">
         <textarea
+          ref={textareaRef}
           value={newNoteText}
           onChange={(e) => setNewNoteText(e.target.value)}
           placeholder={t('lead_notes.add_placeholder')}
@@ -169,22 +156,20 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
         </button>
       </div>
 
-      {/* Notes Timeline */}
-      <div className="space-y-3">
-        <p className="text-sm font-medium text-neutral-900">{t('lead_notes.activity_timeline')}</p>
-
-        {isLoading ? (
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-4 bg-neutral-100 rounded w-1/4 mb-2"></div>
-                <div className="h-16 bg-neutral-100 rounded"></div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {notes?.map((note) => (
+      {/* Notes Timeline - Animated expansion */}
+      <AnimatePresence>
+        {hasNotes && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-neutral-900">{t('lead_notes.activity_timeline')}</p>
+              <div className="space-y-3">
+                {notes?.map((note) => (
               <div
                 key={note.id}
                 className="border-l-2 border-neutral-200 pl-4 pb-3 relative group"
@@ -269,11 +254,13 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
                     addSuffix: true
                   })}
                 </p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
