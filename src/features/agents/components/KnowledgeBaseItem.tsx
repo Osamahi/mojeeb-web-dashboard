@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { ChevronRight, Edit2, Trash2, Check, X } from 'lucide-react';
+import { ChevronRight, Edit2, Trash2, Check, X, FileText } from 'lucide-react';
 import type { KnowledgeBase } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -33,16 +33,22 @@ export default function KnowledgeBaseItem({
   const [isEditing, setIsEditing] = useState(false);
   const [currentName, setCurrentName] = useState(knowledgeBase.name);
   const [editName, setEditName] = useState(knowledgeBase.name);
-  // Convert plain text to HTML on initial load
-  const [editContent, setEditContent] = useState(plainTextToHtml(knowledgeBase.content));
+  // Convert plain text to HTML on initial load (handle NULL content for documents)
+  const [editContent, setEditContent] = useState(
+    knowledgeBase.content ? plainTextToHtml(knowledgeBase.content) : ''
+  );
   const [isModified, setIsModified] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
+  // Check if KB is document-based (content stored in chunks, not in KB record)
+  const isDocumentBased = knowledgeBase.source_type === 'document';
+
   // Check if data has been modified
   useEffect(() => {
+    const originalContent = knowledgeBase.content ? plainTextToHtml(knowledgeBase.content) : '';
     const hasChanges =
       editName !== knowledgeBase.name ||
-      editContent !== plainTextToHtml(knowledgeBase.content);
+      editContent !== originalContent;
     setIsModified(hasChanges);
   }, [editName, editContent, knowledgeBase]);
 
@@ -114,10 +120,47 @@ export default function KnowledgeBaseItem({
     );
   };
 
-  // Content preview
-  const contentPreview = knowledgeBase.content.substring(0, 120) +
-    (knowledgeBase.content.length > 120 ? '...' : '');
+  // Content preview (handle NULL for document-based KBs)
+  const contentPreview = knowledgeBase.content
+    ? knowledgeBase.content.substring(0, 120) + (knowledgeBase.content.length > 120 ? '...' : '')
+    : null;
 
+  // Render different card types based on source type
+  if (isDocumentBased) {
+    // Document KB: Simple card with document icon (not expandable)
+    return (
+      <>
+        {ConfirmDialogComponent}
+
+        <div className="bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">
+          <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
+            {/* Document icon */}
+            <FileText className="w-5 h-5 text-neutral-400 flex-shrink-0" />
+
+            {/* Title */}
+            <h3 className="flex-1 text-base font-semibold text-neutral-950 truncate">
+              {toTitleCase(currentName)}
+            </h3>
+
+            {/* Action buttons - visible on hover */}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+                className="p-2 sm:p-1.5 hover:bg-red-50 rounded transition-colors text-neutral-600 hover:text-red-600 disabled:opacity-50 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                title={t('knowledge_base.delete_title')}
+                aria-label={t('knowledge_base.delete_aria_label')}
+              >
+                <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Manual KB: Expandable accordion (existing behavior)
   return (
     <>
       {ConfirmDialogComponent}
@@ -152,13 +195,14 @@ export default function KnowledgeBaseItem({
           )}>
             {!isEditing && (
               <>
+                {/* Edit button */}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!isExpanded) setIsExpanded(true);
                     setIsEditing(true);
                   }}
-                  className="p-2 sm:p-1.5 hover:bg-neutral-100 rounded transition-colors text-neutral-600 hover:text-neutral-950 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+                  className="p-2 sm:p-1.5 rounded transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center hover:bg-neutral-100 text-neutral-600 hover:text-neutral-950"
                   title={t('knowledge_base.edit_title')}
                   aria-label={t('knowledge_base.edit_aria_label')}
                 >
@@ -221,7 +265,7 @@ export default function KnowledgeBaseItem({
                     onClick={() => {
                       setIsEditing(false);
                       setEditName(knowledgeBase.name);
-                      setEditContent(plainTextToHtml(knowledgeBase.content));
+                      setEditContent(knowledgeBase.content ? plainTextToHtml(knowledgeBase.content) : '');
                     }}
                     disabled={updateMutation.isPending}
                   >
@@ -240,10 +284,16 @@ export default function KnowledgeBaseItem({
             ) : (
               // View Mode - Clean Read-only
               <div className="pt-4 space-y-3">
-                <div
-                  className="text-sm text-neutral-700 leading-relaxed prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: plainTextToHtml(knowledgeBase.content) }}
-                />
+                {knowledgeBase.content ? (
+                  // Manual KB with content
+                  <div
+                    className="text-sm text-neutral-700 leading-relaxed prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: plainTextToHtml(knowledgeBase.content) }}
+                  />
+                ) : (
+                  // Edge case: manual KB with no content
+                  <div className="text-sm text-neutral-400 italic">No content available</div>
+                )}
 
                 {/* Success Message */}
                 {showSuccessMessage && (
