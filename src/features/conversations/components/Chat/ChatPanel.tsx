@@ -6,7 +6,7 @@
 
 import { useMemo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, User, MoreVertical, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, MoreVertical, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
@@ -36,7 +36,8 @@ interface ChatPanelProps {
 }
 
 export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === 'rtl';
   const queryClient = useQueryClient();
   const globalSelectedAgent = useAgentStore((state) => state.globalSelectedAgent);
   const selectConversation = useConversationStore((state) => state.selectConversation);
@@ -161,7 +162,11 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
             className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
             aria-label={t('conversations.go_back')}
           >
-            <ArrowLeft className="w-5 h-5" />
+            {isRTL ? (
+              <ArrowRight className="w-5 h-5" />
+            ) : (
+              <ArrowLeft className="w-5 h-5" />
+            )}
           </button>
         )}
 
@@ -213,7 +218,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         </DropdownMenu>
       </div>
     ),
-    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, t]
+    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, t, isRTL]
   );
 
   // Handle load more with Zustand store
