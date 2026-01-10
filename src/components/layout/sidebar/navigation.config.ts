@@ -19,6 +19,7 @@ import {
   Package,
   BookOpen,
   Network,
+  FlaskConical,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -99,6 +100,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.plan_catalogue',
     href: '/catalogue',
     icon: BookOpen,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Embedding Test',
+    translationKey: 'navigation.embedding_test',
+    href: '/embedding-test',
+    icon: FlaskConical,
     requireSuperAdmin: true,
   },
   {

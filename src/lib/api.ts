@@ -18,6 +18,10 @@ export { setTokens, getAccessToken, getRefreshToken, clearTokens };
 export const API_URL = env.VITE_API_URL;
 const API_TIMEOUT = env.VITE_API_TIMEOUT;
 
+// DEBUG: Log API URL on initialization
+console.log('🌐 [API] Initializing with baseURL:', API_URL);
+console.log('⏱️ [API] Timeout:', API_TIMEOUT, 'ms');
+
 // Global QueryClient instance for cache clearing on logout
 let globalQueryClient: QueryClient | null = null;
 
@@ -46,6 +50,11 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // DEBUG: Log full request URL
+    const fullUrl = `${config.baseURL || API_URL}${config.url || ''}`;
+    console.log(`🔗 [API] Request: ${config.method?.toUpperCase()} ${fullUrl}`);
+
     return config;
   },
   (error) => Promise.reject(error)
