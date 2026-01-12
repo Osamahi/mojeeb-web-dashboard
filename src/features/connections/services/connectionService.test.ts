@@ -24,7 +24,7 @@ vi.mock('@/lib/api', async () => {
   const axios = await import('axios');
 
   const testApi = axios.default.create({
-    baseURL: 'http://localhost:5267',
+    baseURL: 'http://localhost:5000',
     timeout: 30000,
     headers: {
       'Content-Type': 'application/json',
@@ -33,7 +33,7 @@ vi.mock('@/lib/api', async () => {
 
   return {
     default: testApi,
-    API_URL: 'http://localhost:5267',
+    API_URL: 'http://localhost:5000',
   };
 });
 
@@ -93,7 +93,7 @@ describe('connectionService', () => {
   describe('getConnections', () => {
     it('should fetch connections and transform to camelCase', async () => {
       server.use(
-        http.get('http://localhost:5267/api/social/connections', () => {
+        http.get('http://localhost:5000/api/social/connections', () => {
           return HttpResponse.json({
             data: [mockApiConnection],
           });
@@ -120,7 +120,7 @@ describe('connectionService', () => {
 
     it('should handle empty connections list', async () => {
       server.use(
-        http.get('http://localhost:5267/api/social/connections', () => {
+        http.get('http://localhost:5000/api/social/connections', () => {
           return HttpResponse.json({ data: [] });
         })
       );
@@ -132,7 +132,7 @@ describe('connectionService', () => {
 
     it('should handle missing data property gracefully', async () => {
       server.use(
-        http.get('http://localhost:5267/api/social/connections', () => {
+        http.get('http://localhost:5000/api/social/connections', () => {
           return HttpResponse.json({});
         })
       );
@@ -149,7 +149,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/social/connections', () => {
+        http.get('http://localhost:5000/api/social/connections', () => {
           return HttpResponse.json({ data: [unknownPlatformConnection] });
         })
       );
@@ -164,7 +164,7 @@ describe('connectionService', () => {
 
     it('should throw NotFoundError on 404', async () => {
       server.use(
-        http.get('http://localhost:5267/api/social/connections', () => {
+        http.get('http://localhost:5000/api/social/connections', () => {
           return HttpResponse.json(
             { message: 'Agent not found' },
             { status: 404 }
@@ -179,7 +179,7 @@ describe('connectionService', () => {
 
     it('should throw ApiError on server error', async () => {
       server.use(
-        http.get('http://localhost:5267/api/social/connections', () => {
+        http.get('http://localhost:5000/api/social/connections', () => {
           return HttpResponse.json(
             { message: 'Internal server error' },
             { status: 500 }
@@ -202,7 +202,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/social/connections', () => {
+        http.get('http://localhost:5000/api/social/connections', () => {
           return HttpResponse.json({ data: [connectionWithNulls] });
         })
       );
@@ -225,7 +225,7 @@ describe('connectionService', () => {
       }));
 
       server.use(
-        http.get('http://localhost:5267/api/social/connections', () => {
+        http.get('http://localhost:5000/api/social/connections', () => {
           return HttpResponse.json({ data: connections });
         })
       );
@@ -241,7 +241,7 @@ describe('connectionService', () => {
   describe('disconnectPlatform', () => {
     it('should disconnect platform successfully', async () => {
       server.use(
-        http.delete('http://localhost:5267/api/social/connections/conn-123', () => {
+        http.delete('http://localhost:5000/api/social/connections/conn-123', () => {
           return HttpResponse.json({ message: 'Connection disconnected successfully' });
         })
       );
@@ -251,7 +251,7 @@ describe('connectionService', () => {
 
     it('should throw NotFoundError on 404', async () => {
       server.use(
-        http.delete('http://localhost:5267/api/social/connections/nonexistent', () => {
+        http.delete('http://localhost:5000/api/social/connections/nonexistent', () => {
           return HttpResponse.json(
             { message: 'Connection not found' },
             { status: 404 }
@@ -266,7 +266,7 @@ describe('connectionService', () => {
 
     it('should throw ApiError on 403 forbidden', async () => {
       server.use(
-        http.delete('http://localhost:5267/api/social/connections/conn-123', () => {
+        http.delete('http://localhost:5000/api/social/connections/conn-123', () => {
           return HttpResponse.json(
             { message: 'Forbidden' },
             { status: 403 }
@@ -283,7 +283,7 @@ describe('connectionService', () => {
   describe('checkConnectionHealth', () => {
     it('should check health and transform healthy response', async () => {
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(mockHealthyApiResponse);
         })
       );
@@ -302,7 +302,7 @@ describe('connectionService', () => {
 
     it('should handle unhealthy connection', async () => {
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(mockUnhealthyApiResponse);
         })
       );
@@ -320,7 +320,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(malformedResponse);
         })
       );
@@ -347,7 +347,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(responseWithoutScopes);
         })
       );
@@ -368,7 +368,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(invalidScopesResponse);
         })
       );
@@ -393,7 +393,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(mixedScopesResponse);
         })
       );
@@ -415,7 +415,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(invalidExpiryResponse);
         })
       );
@@ -442,7 +442,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(zeroExpiryResponse);
         })
       );
@@ -464,7 +464,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(subscriptionErrorResponse);
         })
       );
@@ -481,7 +481,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(malformedSubscriptionResponse);
         })
       );
@@ -497,7 +497,7 @@ describe('connectionService', () => {
 
     it('should throw NotFoundError on 404', async () => {
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/nonexistent', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/nonexistent', () => {
           return HttpResponse.json(
             { message: 'Connection not found' },
             { status: 404 }
@@ -524,7 +524,7 @@ describe('connectionService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/FacebookBusinessOAuth/check-health/conn-123', () => {
+        http.get('http://localhost:5000/api/FacebookBusinessOAuth/check-health/conn-123', () => {
           return HttpResponse.json(response);
         })
       );

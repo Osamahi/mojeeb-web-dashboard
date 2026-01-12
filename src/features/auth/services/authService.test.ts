@@ -57,7 +57,7 @@ vi.mock('@/lib/api', async () => {
   const axios = await import('axios');
 
   const testApi = axios.default.create({
-    baseURL: 'http://localhost:5267',
+    baseURL: 'http://localhost:5000',
     timeout: 30000,
     headers: {
       'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ vi.mock('@/lib/api', async () => {
 
   return {
     default: testApi,
-    API_URL: 'http://localhost:5267',
+    API_URL: 'http://localhost:5000',
     setTokens: vi.fn(),
     getAccessToken: vi.fn(),
     getRefreshToken: vi.fn(),
@@ -132,7 +132,7 @@ describe('authService', () => {
 
     it('should handle login failure', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/login', () => {
+        http.post('http://localhost:5000/api/auth/login', () => {
           return HttpResponse.json(
             { message: 'Invalid credentials' },
             { status: 401 }
@@ -182,7 +182,7 @@ describe('authService', () => {
   describe('loginWithGoogle', () => {
     it('should login with Google OAuth successfully', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/oauth', async ({ request }) => {
+        http.post('http://localhost:5000/api/auth/oauth', async ({ request }) => {
           const body = (await request.json()) as any;
 
           if (body.provider === 'google') {
@@ -216,7 +216,7 @@ describe('authService', () => {
 
     it('should handle Google OAuth failure', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/oauth', () => {
+        http.post('http://localhost:5000/api/auth/oauth', () => {
           return HttpResponse.json(
             { message: 'OAuth authentication failed' },
             { status: 401 }
@@ -235,7 +235,7 @@ describe('authService', () => {
   describe('loginWithApple', () => {
     it('should login with Apple Sign-In successfully', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/oauth', async ({ request }) => {
+        http.post('http://localhost:5000/api/auth/oauth', async ({ request }) => {
           const body = (await request.json()) as any;
 
           if (body.provider === 'apple') {
@@ -269,7 +269,7 @@ describe('authService', () => {
   describe('register', () => {
     it('should register new user successfully', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/register', async ({ request }) => {
+        http.post('http://localhost:5000/api/auth/register', async ({ request }) => {
           const body = (await request.json()) as any;
 
           return HttpResponse.json({
@@ -300,7 +300,7 @@ describe('authService', () => {
 
     it('should handle registration failure for duplicate email', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/register', () => {
+        http.post('http://localhost:5000/api/auth/register', () => {
           return HttpResponse.json(
             { message: 'Email already exists' },
             { status: 409 }
@@ -329,7 +329,7 @@ describe('authService', () => {
 
     it('should clear auth store even if API call fails', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/logout', () => {
+        http.post('http://localhost:5000/api/auth/logout', () => {
           return HttpResponse.json(
             { message: 'Server error' },
             { status: 500 }
@@ -347,7 +347,7 @@ describe('authService', () => {
   describe('forgotPassword', () => {
     it('should send forgot password request successfully', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/forgot-password', () => {
+        http.post('http://localhost:5000/api/auth/forgot-password', () => {
           return HttpResponse.json({ message: 'Password reset email sent' });
         })
       );
@@ -359,7 +359,7 @@ describe('authService', () => {
 
     it('should handle forgot password for non-existent email', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/forgot-password', () => {
+        http.post('http://localhost:5000/api/auth/forgot-password', () => {
           return HttpResponse.json(
             { message: 'Email not found' },
             { status: 404 }
@@ -376,7 +376,7 @@ describe('authService', () => {
   describe('resetPassword', () => {
     it('should reset password with valid token', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/reset-password', () => {
+        http.post('http://localhost:5000/api/auth/reset-password', () => {
           return HttpResponse.json({ message: 'Password reset successful' });
         })
       );
@@ -391,7 +391,7 @@ describe('authService', () => {
 
     it('should handle invalid or expired reset token', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/reset-password', () => {
+        http.post('http://localhost:5000/api/auth/reset-password', () => {
           return HttpResponse.json(
             { message: 'Invalid or expired token' },
             { status: 400 }
@@ -411,7 +411,7 @@ describe('authService', () => {
   describe('changePassword', () => {
     it('should change password for authenticated user', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/change-password', () => {
+        http.post('http://localhost:5000/api/auth/change-password', () => {
           return HttpResponse.json({ message: 'Password changed successfully' });
         })
       );
@@ -426,7 +426,7 @@ describe('authService', () => {
 
     it('should handle incorrect old password', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/change-password', () => {
+        http.post('http://localhost:5000/api/auth/change-password', () => {
           return HttpResponse.json(
             { message: 'Old password is incorrect' },
             { status: 400 }
@@ -446,7 +446,7 @@ describe('authService', () => {
   describe('getCurrentUser', () => {
     it('should get current user and update store', async () => {
       server.use(
-        http.get('http://localhost:5267/api/auth/me', () => {
+        http.get('http://localhost:5000/api/auth/me', () => {
           return HttpResponse.json(mockUserData);
         })
       );
@@ -459,7 +459,7 @@ describe('authService', () => {
 
     it('should handle unauthorized request', async () => {
       server.use(
-        http.get('http://localhost:5267/api/auth/me', () => {
+        http.get('http://localhost:5000/api/auth/me', () => {
           return HttpResponse.json(
             { message: 'Unauthorized' },
             { status: 401 }
@@ -511,7 +511,7 @@ describe('authService', () => {
   describe('refreshToken', () => {
     it('should refresh access token successfully', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/refresh', () => {
+        http.post('http://localhost:5000/api/auth/refresh', () => {
           return HttpResponse.json({
             accessToken: 'new-access-token',
             refreshToken: 'new-refresh-token',
@@ -529,7 +529,7 @@ describe('authService', () => {
 
     it('should handle invalid refresh token', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/refresh', () => {
+        http.post('http://localhost:5000/api/auth/refresh', () => {
           return HttpResponse.json(
             { message: 'Invalid refresh token' },
             { status: 401 }
@@ -544,7 +544,7 @@ describe('authService', () => {
 
     it('should handle expired refresh token', async () => {
       server.use(
-        http.post('http://localhost:5267/api/auth/refresh', () => {
+        http.post('http://localhost:5000/api/auth/refresh', () => {
           return HttpResponse.json(
             { message: 'Refresh token expired' },
             { status: 401 }

@@ -110,6 +110,13 @@ export const navigation: NavigationItem[] = [
     requireSuperAdmin: true,
   },
   {
+    name: 'Pinecone Test',
+    translationKey: 'navigation.pinecone_test',
+    href: '/pinecone-test',
+    icon: FlaskConical,
+    requireSuperAdmin: true,
+  },
+  {
     name: 'My Subscription',
     translationKey: 'navigation.my_subscription',
     href: '/my-subscription',

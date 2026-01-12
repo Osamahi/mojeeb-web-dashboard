@@ -13,7 +13,7 @@ vi.mock('./logger', () => ({
 // Mock the env config to avoid import.meta.env issues
 vi.mock('@/config/env', () => ({
   env: {
-    VITE_API_URL: 'http://localhost:5267',
+    VITE_API_URL: 'http://localhost:5000',
     VITE_SUPABASE_URL: 'http://localhost:54321',
     VITE_SUPABASE_ANON_KEY: 'eyJtest',
     VITE_TOKEN_ENCRYPTION_KEY: undefined, // Test without encryption key to use fallback

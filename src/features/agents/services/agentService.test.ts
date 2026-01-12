@@ -25,7 +25,7 @@ vi.mock('@/lib/api', async () => {
   const axios = await import('axios');
 
   const testApi = axios.default.create({
-    baseURL: 'http://localhost:5267',
+    baseURL: 'http://localhost:5000',
     timeout: 30000,
     headers: {
       'Content-Type': 'application/json',
@@ -34,7 +34,7 @@ vi.mock('@/lib/api', async () => {
 
   return {
     default: testApi,
-    API_URL: 'http://localhost:5267',
+    API_URL: 'http://localhost:5000',
   };
 });
 
@@ -113,7 +113,7 @@ describe('agentService', () => {
   describe('getAgents', () => {
     it('should fetch all agents and transform to camelCase', async () => {
       server.use(
-        http.get('http://localhost:5267/api/agents', () => {
+        http.get('http://localhost:5000/api/agents', () => {
           return HttpResponse.json({
             success: true,
             message: null,
@@ -138,7 +138,7 @@ describe('agentService', () => {
 
     it('should handle empty agents list', async () => {
       server.use(
-        http.get('http://localhost:5267/api/agents', () => {
+        http.get('http://localhost:5000/api/agents', () => {
           return HttpResponse.json({
             success: true,
             message: null,
@@ -154,7 +154,7 @@ describe('agentService', () => {
 
     it('should handle API error', async () => {
       server.use(
-        http.get('http://localhost:5267/api/agents', () => {
+        http.get('http://localhost:5000/api/agents', () => {
           return HttpResponse.json(
             { message: 'Server error' },
             { status: 500 }
@@ -169,7 +169,7 @@ describe('agentService', () => {
   describe('getAgent', () => {
     it('should fetch single agent by ID', async () => {
       server.use(
-        http.get('http://localhost:5267/api/agents/agent-123', () => {
+        http.get('http://localhost:5000/api/agents/agent-123', () => {
           return HttpResponse.json({
             success: true,
             message: null,
@@ -189,7 +189,7 @@ describe('agentService', () => {
 
     it('should handle agent not found', async () => {
       server.use(
-        http.get('http://localhost:5267/api/agents/nonexistent', () => {
+        http.get('http://localhost:5000/api/agents/nonexistent', () => {
           return HttpResponse.json(
             { message: 'Agent not found' },
             { status: 404 }
@@ -215,14 +215,14 @@ describe('agentService', () => {
 
       server.use(
         // POST returns minimal response with just id
-        http.post('http://localhost:5267/api/agents', async () => {
+        http.post('http://localhost:5000/api/agents', async () => {
           return HttpResponse.json(
             { id: 'new-agent-id' },
             { status: 201 }
           );
         }),
         // Then GET is called to fetch full agent details
-        http.get('http://localhost:5267/api/agents/new-agent-id', () => {
+        http.get('http://localhost:5000/api/agents/new-agent-id', () => {
           return HttpResponse.json({
             success: true,
             message: null,
@@ -249,7 +249,7 @@ describe('agentService', () => {
 
     it('should handle validation error', async () => {
       server.use(
-        http.post('http://localhost:5267/api/agents', () => {
+        http.post('http://localhost:5000/api/agents', () => {
           return HttpResponse.json(
             { message: 'Name is required' },
             { status: 400 }
@@ -271,7 +271,7 @@ describe('agentService', () => {
       };
 
       server.use(
-        http.put('http://localhost:5267/api/agents/agent-123', async ({ request }) => {
+        http.put('http://localhost:5000/api/agents/agent-123', async ({ request }) => {
           const body = (await request.json()) as any;
 
           return HttpResponse.json({
@@ -293,7 +293,7 @@ describe('agentService', () => {
 
     it('should handle unauthorized update', async () => {
       server.use(
-        http.put('http://localhost:5267/api/agents/agent-123', () => {
+        http.put('http://localhost:5000/api/agents/agent-123', () => {
           return HttpResponse.json(
             { message: 'Unauthorized' },
             { status: 403 }
@@ -310,7 +310,7 @@ describe('agentService', () => {
   describe('deleteAgent', () => {
     it('should delete agent successfully', async () => {
       server.use(
-        http.delete('http://localhost:5267/api/agents/agent-123', () => {
+        http.delete('http://localhost:5000/api/agents/agent-123', () => {
           return HttpResponse.json({ message: 'Agent deleted successfully' });
         })
       );
@@ -322,7 +322,7 @@ describe('agentService', () => {
 
     it('should handle delete failure', async () => {
       server.use(
-        http.delete('http://localhost:5267/api/agents/agent-123', () => {
+        http.delete('http://localhost:5000/api/agents/agent-123', () => {
           return HttpResponse.json(
             { message: 'Cannot delete agent with active conversations' },
             { status: 400 }
@@ -339,7 +339,7 @@ describe('agentService', () => {
   describe('getKnowledgeBases', () => {
     it('should fetch knowledge bases for agent', async () => {
       server.use(
-        http.get('http://localhost:5267/api/agents/agent-123/knowledgebases', () => {
+        http.get('http://localhost:5000/api/agents/agent-123/knowledgebases', () => {
           return HttpResponse.json([mockKnowledgeBase]);
         })
       );
@@ -356,7 +356,7 @@ describe('agentService', () => {
 
     it('should handle empty knowledge bases', async () => {
       server.use(
-        http.get('http://localhost:5267/api/agents/agent-123/knowledgebases', () => {
+        http.get('http://localhost:5000/api/agents/agent-123/knowledgebases', () => {
           return HttpResponse.json([]);
         })
       );
@@ -370,7 +370,7 @@ describe('agentService', () => {
   describe('getAllKnowledgeBases', () => {
     it('should fetch all knowledge bases for current user', async () => {
       server.use(
-        http.get('http://localhost:5267/api/knowledgebases', () => {
+        http.get('http://localhost:5000/api/knowledgebases', () => {
           return HttpResponse.json([mockKnowledgeBase]);
         })
       );
@@ -395,7 +395,7 @@ describe('agentService', () => {
       };
 
       server.use(
-        http.post('http://localhost:5267/api/knowledgebases', async ({ request }) => {
+        http.post('http://localhost:5000/api/knowledgebases', async ({ request }) => {
           const body = (await request.json()) as any;
 
           return HttpResponse.json(
@@ -432,7 +432,7 @@ describe('agentService', () => {
       };
 
       server.use(
-        http.put('http://localhost:5267/api/knowledgebases/kb-123', async ({ request }) => {
+        http.put('http://localhost:5000/api/knowledgebases/kb-123', async ({ request }) => {
           const body = (await request.json()) as any;
 
           return HttpResponse.json({
@@ -456,7 +456,7 @@ describe('agentService', () => {
   describe('deleteKnowledgeBase', () => {
     it('should delete knowledge base successfully', async () => {
       server.use(
-        http.delete('http://localhost:5267/api/knowledgebases/kb-123', () => {
+        http.delete('http://localhost:5000/api/knowledgebases/kb-123', () => {
           return HttpResponse.json({ message: 'Knowledge base deleted' });
         })
       );
@@ -470,7 +470,7 @@ describe('agentService', () => {
   describe('linkKnowledgeBase', () => {
     it('should link knowledge base to agent', async () => {
       server.use(
-        http.post('http://localhost:5267/api/agents/agent-123/knowledgebases/kb-123', () => {
+        http.post('http://localhost:5000/api/agents/agent-123/knowledgebases/kb-123', () => {
           return HttpResponse.json({ message: 'Linked successfully' });
         })
       );
@@ -482,7 +482,7 @@ describe('agentService', () => {
 
     it('should handle already linked error', async () => {
       server.use(
-        http.post('http://localhost:5267/api/agents/agent-123/knowledgebases/kb-123', () => {
+        http.post('http://localhost:5000/api/agents/agent-123/knowledgebases/kb-123', () => {
           return HttpResponse.json(
             { message: 'Knowledge base already linked' },
             { status: 409 }
@@ -499,7 +499,7 @@ describe('agentService', () => {
   describe('unlinkKnowledgeBase', () => {
     it('should unlink knowledge base from agent', async () => {
       server.use(
-        http.delete('http://localhost:5267/api/agents/agent-123/knowledgebases/kb-123', () => {
+        http.delete('http://localhost:5000/api/agents/agent-123/knowledgebases/kb-123', () => {
           return HttpResponse.json({ message: 'Unlinked successfully' });
         })
       );
@@ -519,7 +519,7 @@ describe('agentService', () => {
       const mockFile = new File(['test'], 'avatar.jpg', { type: 'image/jpeg' });
 
       server.use(
-        http.post('http://localhost:5267/api/chat/upload-image', async () => {
+        http.post('http://localhost:5000/api/chat/upload-image', async () => {
           return HttpResponse.json({
             url: 'https://example.com/uploaded-avatar.jpg',
           });
@@ -535,7 +535,7 @@ describe('agentService', () => {
       const mockFile = new File(['test'], 'avatar.jpg', { type: 'image/jpeg' });
 
       server.use(
-        http.post('http://localhost:5267/api/chat/upload-image', () => {
+        http.post('http://localhost:5000/api/chat/upload-image', () => {
           return HttpResponse.json(
             { message: 'Invalid file type' },
             { status: 400 }
@@ -552,7 +552,7 @@ describe('agentService', () => {
   describe('snake_case to camelCase transformation', () => {
     it('should correctly transform all agent properties', async () => {
       server.use(
-        http.get('http://localhost:5267/api/agents/agent-123', () => {
+        http.get('http://localhost:5000/api/agents/agent-123', () => {
           return HttpResponse.json({
             success: true,
             message: null,
@@ -606,7 +606,7 @@ describe('agentService', () => {
       };
 
       server.use(
-        http.get('http://localhost:5267/api/agents/agent-123', () => {
+        http.get('http://localhost:5000/api/agents/agent-123', () => {
           return HttpResponse.json({
             success: true,
             message: null,

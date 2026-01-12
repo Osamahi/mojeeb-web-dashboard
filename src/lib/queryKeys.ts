@@ -81,6 +81,24 @@ export const queryKeys = {
    */
   documentJob: (jobId: string | undefined) => ['document-job', jobId] as const,
 
+  // ==================== Pinecone Upload Job Queries ====================
+
+  /**
+   * Query key for fetching Pinecone upload jobs by agent
+   * @param {string | undefined} agentId - The agent ID
+   * @param {string | undefined} status - Optional status filter
+   * @returns {readonly ['pinecone-jobs', string | undefined, string | undefined]} Query key tuple
+   */
+  pineconeJobs: (agentId: string | undefined, status?: string) =>
+    ['pinecone-jobs', agentId, status] as const,
+
+  /**
+   * Query key for fetching a single Pinecone upload job
+   * @param {string | undefined} jobId - The job ID
+   * @returns {readonly ['pinecone-job', string | undefined]} Query key tuple
+   */
+  pineconeJob: (jobId: string | undefined) => ['pinecone-job', jobId] as const,
+
   // ==================== Team Queries ====================
 
   /**

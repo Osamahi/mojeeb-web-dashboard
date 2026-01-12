@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 // Mock API URL - use a test URL since env won't be available in tests
-const API_URL = 'http://localhost:5267';
+const API_URL = 'http://localhost:5000';
 
 // Mock data
 const mockUser = {
