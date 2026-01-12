@@ -103,13 +103,6 @@ export const navigation: NavigationItem[] = [
     requireSuperAdmin: true,
   },
   {
-    name: 'Embedding Test',
-    translationKey: 'navigation.embedding_test',
-    href: '/embedding-test',
-    icon: FlaskConical,
-    requireSuperAdmin: true,
-  },
-  {
     name: 'Pinecone Test',
     translationKey: 'navigation.pinecone_test',
     href: '/pinecone-test',

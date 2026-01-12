@@ -7,9 +7,9 @@ export function usePineconeUpload() {
   return useMutation({
     mutationFn: (request: PineconeUploadRequest) => uploadDocument(request),
     onSuccess: (data) => {
-      if (data.success) {
+      if (data.success && data.data) {
         toast.success(
-          `Document uploaded successfully! ${data.chunks_uploaded} chunks created in ${data.duration_ms?.toFixed(0)}ms`
+          `Document uploaded successfully! ${data.data.chunksUploaded} chunks created in ${data.data.durationMs.toFixed(0)}ms`
         );
       } else {
         toast.error(data.error || 'Upload failed');

@@ -1,17 +1,21 @@
 // Pinecone Test Types
 
 export interface PineconeUploadRequest {
-  agent_id: string;
-  filename: string;
-  text: string;
+  agentId: string;
+  file: File;
 }
 
 export interface PineconeUploadResponse {
   success: boolean;
-  chunks_uploaded?: number;
-  document_id?: string;
-  namespace?: string;
-  duration_ms?: number;
+  message?: string;
+  data?: {
+    documentId: string;
+    namespace: string;
+    chunksUploaded: number;
+    durationMs: number;
+    filename: string;
+    textLength: number;
+  };
   error?: string;
 }
 

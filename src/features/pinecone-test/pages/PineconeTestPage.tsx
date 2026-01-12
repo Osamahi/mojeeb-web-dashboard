@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Upload, Search, FileText, TrendingUp } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
-import { useUploadToPinecone, usePineconeJob } from '@/features/agents/hooks/usePineconeJob';
+import { usePineconeUpload } from '../hooks/usePineconeUpload';
 import { usePineconeSearch } from '../hooks/usePineconeSearch';
-import { getStepLabel } from '@/features/agents/types/pineconeUpload.types';
 import type { PineconeMatch } from '../types/pineconeTest.types';
 
 const TEST_AGENT_ID = '3f35d88d-536e-43a7-abf1-8d286a01c474';
@@ -13,54 +12,47 @@ export default function PineconeTestPage() {
 
   // Upload form state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [currentJobId, setCurrentJobId] = useState<string | undefined>(undefined);
+  const [uploadResult, setUploadResult] = useState<{ success: boolean; chunks?: number; error?: string } | null>(null);
 
   // Search form state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<PineconeMatch[]>([]);
 
-  const uploadMutation = useUploadToPinecone();
+  const uploadMutation = usePineconeUpload();
   const searchMutation = usePineconeSearch();
-
-  // Track current upload job progress
-  const { data: currentJob } = usePineconeJob(currentJobId);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      setUploadResult(null); // Clear previous result
     }
   };
 
   const handleUpload = async () => {
     if (!selectedFile) return;
 
-    // Start async upload and get job ID
-    // Backend will extract text using DocumentParserService
-    const jobCreated = await uploadMutation.mutateAsync({
-      agentId: TEST_AGENT_ID,
-      file: selectedFile,
-    });
+    try {
+      // Synchronous upload - waits for complete result
+      const result = await uploadMutation.mutateAsync({
+        agentId: TEST_AGENT_ID,
+        file: selectedFile,
+      });
 
-    // Track the job progress
-    setCurrentJobId(jobCreated.jobId);
-  };
-
-  // Clear job tracking when completed or failed
-  if (currentJob && (currentJob.status === 'completed' || currentJob.status === 'failed')) {
-    if (currentJob.status === 'completed') {
-      // Clear file and job after successful upload
-      setTimeout(() => {
-        setSelectedFile(null);
-        setCurrentJobId(undefined);
-      }, 2000); // Show success for 2 seconds
-    } else {
-      // Clear job but keep file on error (allow retry)
-      setTimeout(() => {
-        setCurrentJobId(undefined);
-      }, 3000); // Show error for 3 seconds
+      if (result.success) {
+        setUploadResult({ success: true, chunks: result.data?.chunksUploaded });
+        // Clear file after 2 seconds
+        setTimeout(() => {
+          setSelectedFile(null);
+          setUploadResult(null);
+        }, 2000);
+      } else {
+        setUploadResult({ success: false, error: result.error || 'Upload failed' });
+      }
+    } catch (error) {
+      setUploadResult({ success: false, error: error instanceof Error ? error.message : 'Upload failed' });
     }
-  }
+  };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -174,29 +166,33 @@ export default function PineconeTestPage() {
 
                 <button
                   onClick={handleUpload}
-                  disabled={!selectedFile || uploadMutation.isPending || !!currentJobId}
+                  disabled={!selectedFile || uploadMutation.isPending}
                   className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors font-medium"
                 >
                   <Upload className="w-4 h-4" />
-                  {currentJob ? (
-                    currentJob.status === 'completed' ? (
-                      `✓ Upload Complete - ${currentJob.chunkCount} chunks`
-                    ) : currentJob.status === 'failed' ? (
-                      `✗ Upload Failed - ${currentJob.errorMessage || 'Unknown error'}`
+                  {uploadResult ? (
+                    uploadResult.success ? (
+                      `✓ Upload Complete - ${uploadResult.chunks} chunks`
                     ) : (
-                      `${currentJob.progressPercentage}% - ${getStepLabel(currentJob.currentStep)}`
+                      `✗ ${uploadResult.error}`
                     )
                   ) : uploadMutation.isPending ? (
-                    'Starting upload...'
+                    'Uploading... (this may take 10-30 seconds)'
                   ) : (
                     'Upload Document'
                   )}
                 </button>
 
+                {uploadResult && !uploadResult.success && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    {uploadResult.error}
+                  </div>
+                )}
+
                 <div className="text-xs text-neutral-500 space-y-1">
                   <p>• Test Agent ID: {TEST_AGENT_ID}</p>
-                  <p>• Chunking: 500 tokens per chunk with 100-token overlap</p>
-                  <p>• Processing: Async job with real-time progress via Supabase Realtime</p>
+                  <p>• Chunking: 250 characters per chunk with 50-character overlap</p>
+                  <p>• Processing: Synchronous upload (waits for complete result, no progress tracking)</p>
                 </div>
               </div>
             </div>

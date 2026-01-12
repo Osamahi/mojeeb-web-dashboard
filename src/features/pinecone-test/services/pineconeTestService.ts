@@ -9,14 +9,23 @@ import type {
 const BASE_URL = '/api/pineconetest';
 
 /**
- * Upload a document to Pinecone
+ * Upload a document to Pinecone (synchronous - waits for complete result)
  */
 export async function uploadDocument(
   request: PineconeUploadRequest
 ): Promise<PineconeUploadResponse> {
+  const formData = new FormData();
+  formData.append('file', request.file);
+  formData.append('agentId', request.agentId);
+
   const response = await api.post<PineconeUploadResponse>(
     `${BASE_URL}/upload`,
-    request
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
   );
   return response.data;
 }

@@ -30,7 +30,6 @@ const AdminPlanCataloguePage = lazy(() => import('./features/catalogue/pages/Adm
 const MySubscriptionPage = lazy(() => import('./features/subscriptions/pages/MySubscriptionPage'));
 const SubscriptionSuccessPage = lazy(() => import('./features/billing/pages/SubscriptionSuccessPage'));
 const SubscriptionCancelPage = lazy(() => import('./features/billing/pages/SubscriptionCancelPage'));
-const EmbeddingTestPage = lazy(() => import('./features/embedding-test/pages/EmbeddingTestPage'));
 const PineconeTestPage = lazy(() => import('./features/pinecone-test/pages/PineconeTestPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage').then(m => ({ default: m.ServerErrorPage })));
@@ -334,14 +333,6 @@ export const router = createBrowserRouter([
       {
         path: 'my-subscription',
         element: <MySubscriptionPage />,
-      },
-      {
-        path: 'embedding-test',
-        element: (
-          <SuperAdminRoute>
-            <EmbeddingTestPage />
-          </SuperAdminRoute>
-        ),
       },
       {
         path: 'pinecone-test',
