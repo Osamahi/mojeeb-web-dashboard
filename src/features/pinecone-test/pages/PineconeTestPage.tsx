@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Upload, Search, FileText, TrendingUp } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
-import { Button } from '@/components/ui/Button';
 import { usePineconeUpload } from '../hooks/usePineconeUpload';
 import { usePineconeSearch } from '../hooks/usePineconeSearch';
 import type { PineconeMatch } from '../types/pineconeTest.types';
@@ -110,7 +109,7 @@ export default function PineconeTestPage() {
           {activeTab === 'upload' && (
             <div className="bg-white rounded-lg border border-neutral-200 p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
-                <Upload className="w-5 h-5 text-brand-cyan" />
+                <Upload className="w-5 h-5 text-neutral-700" />
                 Upload Document
               </h2>
 
@@ -125,7 +124,7 @@ export default function PineconeTestPage() {
                       htmlFor="file-upload"
                       className="flex-1 cursor-pointer"
                     >
-                      <div className="flex items-center justify-center gap-3 px-4 py-8 border-2 border-dashed border-neutral-300 rounded-lg hover:border-brand-cyan hover:bg-brand-cyan/5 transition-colors">
+                      <div className="flex items-center justify-center gap-3 px-4 py-8 border-2 border-dashed border-neutral-300 rounded-lg hover:border-neutral-400 hover:bg-neutral-50 transition-colors">
                         <Upload className="w-6 h-6 text-neutral-400" />
                         <div className="text-center">
                           {selectedFile ? (
@@ -164,14 +163,12 @@ export default function PineconeTestPage() {
                   </p>
                 </div>
 
-                <Button
+                <button
                   onClick={handleUpload}
                   disabled={!selectedFile || uploadMutation.isPending}
-                  isLoading={uploadMutation.isPending}
-                  className="w-full"
-                  size="lg"
+                  className="w-full px-6 py-3 bg-neutral-950 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors font-medium"
                 >
-                  {!uploadMutation.isPending && <Upload className="w-4 h-4 mr-2" />}
+                  <Upload className="w-4 h-4" />
                   {uploadResult ? (
                     uploadResult.success ? (
                       `✓ Upload Complete - ${uploadResult.chunks} chunks`
@@ -183,7 +180,7 @@ export default function PineconeTestPage() {
                   ) : (
                     'Upload Document'
                   )}
-                </Button>
+                </button>
 
                 {uploadResult && !uploadResult.success && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
@@ -205,7 +202,7 @@ export default function PineconeTestPage() {
             <>
               <div className="bg-white rounded-lg border border-neutral-200 p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
-                  <Search className="w-5 h-5 text-brand-cyan" />
+                  <Search className="w-5 h-5 text-neutral-700" />
                   Search Documents
                 </h2>
 
@@ -219,7 +216,7 @@ export default function PineconeTestPage() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="What would you like to search for?"
                       rows={4}
-                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan resize-none"
+                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-neutral-200 focus:border-neutral-400 resize-none"
                       disabled={searchMutation.isPending}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -229,16 +226,14 @@ export default function PineconeTestPage() {
                     />
                   </div>
 
-                  <Button
+                  <button
                     onClick={handleSearch}
                     disabled={!searchQuery.trim() || searchMutation.isPending}
-                    isLoading={searchMutation.isPending}
-                    className="w-full"
-                    size="lg"
+                    className="w-full px-6 py-3 bg-neutral-950 text-white rounded-lg hover:bg-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors font-medium"
                   >
-                    {!searchMutation.isPending && <Search className="w-4 h-4 mr-2" />}
+                    <Search className="w-4 h-4" />
                     {searchMutation.isPending ? 'Searching...' : 'Search'}
-                  </Button>
+                  </button>
 
                   <div className="text-xs text-neutral-500 space-y-1">
                     <p>• Test Agent ID: {TEST_AGENT_ID}</p>
@@ -287,8 +282,8 @@ function ResultCard({ match, index }: { match: PineconeMatch; index: number }) {
       <div className="flex items-start justify-between mb-3">
         <span className="text-sm font-semibold text-neutral-600">{index + 1}.</span>
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-brand-cyan" />
-          <span className="px-3 py-1 rounded-full bg-brand-cyan/10 border border-brand-cyan/30 text-sm font-medium text-brand-cyan">
+          <TrendingUp className="w-4 h-4 text-neutral-600" />
+          <span className="px-3 py-1 rounded-full bg-neutral-100 border border-neutral-300 text-sm font-medium text-neutral-700">
             Score: {scorePercentage}%
           </span>
         </div>
