@@ -217,6 +217,16 @@ api.interceptors.response.use(
     // Handle retryable errors with exponential backoff (429, 5xx, network errors)
     const attemptNumber = originalRequest._retryCount + 1;
 
+    // Skip retry if X-No-Retry header is present (e.g., for long-running uploads)
+    if (originalRequest.headers?.['X-No-Retry'] === 'true') {
+      logger.info('Skipping retry due to X-No-Retry header', {
+        url: originalRequest.url,
+        method: originalRequest.method,
+        status: error.response?.status,
+      });
+      return Promise.reject(error);
+    }
+
     if (shouldRetry(error, attemptNumber)) {
       originalRequest._retryCount = attemptNumber;
 

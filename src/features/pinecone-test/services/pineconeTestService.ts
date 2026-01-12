@@ -24,7 +24,9 @@ export async function uploadDocument(
     {
       headers: {
         'Content-Type': 'multipart/form-data',
+        'X-No-Retry': 'true', // Prevent automatic retries for long-running uploads
       },
+      timeout: 90000, // 90 seconds for large file uploads (backend takes ~43s)
     }
   );
   return response.data;
