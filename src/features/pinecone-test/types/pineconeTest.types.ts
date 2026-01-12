@@ -9,12 +9,12 @@ export interface PineconeUploadResponse {
   success: boolean;
   message?: string;
   data?: {
-    documentId: string;
+    document_id: string;
     namespace: string;
-    chunksUploaded: number;
-    durationMs: number;
+    chunks_uploaded: number;
+    duration_ms: number;
     filename: string;
-    textLength: number;
+    text_length: number;
   };
   error?: string;
 }
