@@ -15,15 +15,23 @@ class ChatApiService {
    */
   async sendMessageWithAI(request: SendMessageWithAIRequest): Promise<ChatMessage> {
     try {
-      const { data } = await api.post<ChatMessage>('/api/chat/generate-response', {
-        conversationId: request.conversationId,
-        message: request.message,
-        agentId: request.agentId,
-        messageType: request.messageType || MessageType.Text,
-        attachments: request.attachments,
-        source: request.source,
-        platformConversationId: request.platformConversationId,
-      });
+      const { data } = await api.post<ChatMessage>(
+        '/api/chat/generate-response',
+        {
+          conversationId: request.conversationId,
+          message: request.message,
+          agentId: request.agentId,
+          messageType: request.messageType || MessageType.Text,
+          attachments: request.attachments,
+          source: request.source,
+          platformConversationId: request.platformConversationId,
+        },
+        {
+          headers: {
+            'X-No-Retry': 'true', // Prevent retry on timeout - AI generation can take >30s
+          },
+        }
+      );
 
       return data;
     } catch (error) {

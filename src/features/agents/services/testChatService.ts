@@ -106,6 +106,11 @@ async function sendTestMessage(request: SendMessageRequest): Promise<MessageResp
       attachments: request.attachments ?? null,
       source: request.source ?? null,
       platformConversationId: request.platformConversationId ?? null,
+    },
+    {
+      headers: {
+        'X-No-Retry': 'true', // Prevent retry on timeout - AI generation can take >30s
+      },
     }
   );
 
