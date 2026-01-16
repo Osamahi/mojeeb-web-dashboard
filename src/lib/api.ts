@@ -118,6 +118,7 @@ api.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
       _retryCount?: number;
+      _skipRetry?: boolean;
     };
 
     // Initialize retry count if not present
@@ -203,6 +204,16 @@ api.interceptors.response.use(
         isRefreshing = false;
         logger.debug('[API Interceptor] Refresh flow complete');
       }
+    }
+
+    // Check if request should skip retry (e.g., document uploads to prevent duplicates)
+    if (originalRequest._skipRetry) {
+      logger.info('Skipping retry for request (skipRetry flag set)', {
+        url: originalRequest.url,
+        method: originalRequest.method,
+        status: error.response?.status,
+      });
+      return Promise.reject(error);
     }
 
     // Handle retryable errors with exponential backoff (429, 5xx, network errors)

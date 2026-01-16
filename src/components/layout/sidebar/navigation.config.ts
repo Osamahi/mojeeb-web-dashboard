@@ -19,6 +19,7 @@ import {
   Package,
   BookOpen,
   Network,
+  Database,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -99,6 +100,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.plan_catalogue',
     href: '/catalogue',
     icon: BookOpen,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Grounding',
+    translationKey: 'navigation.grounding',
+    href: '/grounding',
+    icon: Database,
     requireSuperAdmin: true,
   },
   {

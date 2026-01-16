@@ -217,6 +217,26 @@ export const queryKeys = {
    * @returns {readonly ['subscription', 'me']} Query key tuple
    */
   mySubscription: () => ['subscription', 'me'] as const,
+
+  // ==================== Grounding Queries ====================
+
+  /**
+   * Query keys for Vertex AI grounding datastores
+   */
+  grounding: {
+    /**
+     * Query key for fetching all Vertex AI datastores
+     * @returns {readonly ['grounding', 'datastores']} Query key tuple
+     */
+    datastores: () => ['grounding', 'datastores'] as const,
+
+    /**
+     * Query key for fetching documents in a specific datastore
+     * @param {string | undefined} datastoreId - The datastore ID
+     * @returns {readonly ['grounding', 'documents', string | undefined]} Query key tuple
+     */
+    documents: (datastoreId: string | undefined) => ['grounding', 'documents', datastoreId] as const,
+  },
 } as const;
 
 /**

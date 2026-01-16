@@ -343,6 +343,7 @@ class AgentService {
 
   /**
    * Upload document asynchronously and get job ID for polling
+   * Note: Disables auto-retry to prevent duplicate uploads on timeout
    */
   async uploadDocumentAsync(agentId: string, file: File): Promise<DocumentJobCreated> {
     const formData = new FormData();
@@ -356,7 +357,8 @@ class AgentService {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      }
+        _skipRetry: true, // Disable auto-retry to prevent duplicate jobs on timeout
+      } as any // Type assertion to allow custom _skipRetry property
     );
 
     return this.transformJobCreated(data.data);
