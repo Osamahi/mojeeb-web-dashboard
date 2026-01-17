@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, MessageSquare, Plug } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
@@ -173,15 +174,29 @@ export default function StudioPage() {
                   <Spinner size="md" />
                 </div>
               ) : knowledgeBases && knowledgeBases.length > 0 ? (
-                <>
+                <AnimatePresence mode="popLayout">
                   {knowledgeBases.map((kb) => (
-                    <KnowledgeBaseItem
+                    <motion.div
                       key={kb.id}
-                      knowledgeBase={kb}
-                      onUpdate={() => refetchKBs()}
-                    />
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{
+                        opacity: 0,
+                        scale: 0.95,
+                        height: 0,
+                        marginBottom: 0,
+                        transition: { duration: 0.3 }
+                      }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <KnowledgeBaseItem
+                        knowledgeBase={kb}
+                        onUpdate={() => refetchKBs()}
+                      />
+                    </motion.div>
                   ))}
-                </>
+                </AnimatePresence>
               ) : (
                 <div className="text-center py-8 text-sm text-neutral-500">
                   {t('studio.no_knowledge_message')}

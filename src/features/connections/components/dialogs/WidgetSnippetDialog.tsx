@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Copy, Check, Code, ArrowLeft, Share2 } from 'lucide-react';
+import { Copy, Check, Code, ArrowLeft, ArrowRight, Share2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
@@ -24,6 +24,7 @@ type WizardStep = 'mode-selection' | 'installation';
 export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProps) {
   const { t } = useTranslation();
   const { agent } = useAgentContext();
+  const isRTL = document.documentElement.dir === 'rtl';
   const [currentStep, setCurrentStep] = useState<WizardStep>('mode-selection');
   const [selectedMode, setSelectedMode] = useState<WidgetMode | null>(null);
   const [snippet, setSnippet] = useState<string>('');
@@ -239,7 +240,7 @@ ${snippet}
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-base font-semibold text-neutral-900">
-                          {modeOption.label}
+                          {t(modeOption.label)}
                         </span>
                         {modeOption.badge && (
                           <span
@@ -252,12 +253,12 @@ ${snippet}
                               }
                             `}
                           >
-                            {modeOption.badge}
+                            {t(modeOption.badge)}
                           </span>
                         )}
                       </div>
                       <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-                        {modeOption.description}
+                        {t(modeOption.description)}
                       </p>
                     </div>
                   )}
@@ -559,7 +560,7 @@ ${snippet}
           {currentStep === 'installation' ? (
             <>
               <Button variant="secondary" onClick={handleBack} className="flex items-center gap-2">
-                <ArrowLeft className="w-4 h-4" />
+                {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
                 {t('widget_snippet.back')}
               </Button>
               <div className="flex items-center gap-3">

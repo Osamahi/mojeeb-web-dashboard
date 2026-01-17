@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { ChevronRight, Edit2, Trash2, Check, X, FileText } from 'lucide-react';
+import { ChevronRight, Edit2, Trash2, Check, X, FileText, Loader2 } from 'lucide-react';
 import type { KnowledgeBase } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -28,7 +28,7 @@ export default function KnowledgeBaseItem({
   onUpdate,
 }: KnowledgeBaseItemProps) {
   const { t } = useTranslation();
-  const { confirm, ConfirmDialogComponent } = useConfirm();
+  const { confirm, ConfirmDialogComponent, setLoading } = useConfirm();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentName, setCurrentName] = useState(knowledgeBase.name);
@@ -109,6 +109,7 @@ export default function KnowledgeBaseItem({
     });
 
     if (confirmed) {
+      setLoading(true);
       deleteMutation.mutate();
     }
   };
@@ -132,8 +133,11 @@ export default function KnowledgeBaseItem({
       <>
         {ConfirmDialogComponent}
 
-        <div className="bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">
-          <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
+        <div className="relative bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">
+          <div className={cn(
+            "flex items-center gap-2 sm:gap-3 p-3 sm:p-4 transition-opacity duration-300",
+            deleteMutation.isPending && "opacity-50"
+          )}>
             {/* Document icon */}
             <FileText className="w-5 h-5 text-neutral-400 flex-shrink-0" />
 
@@ -151,10 +155,26 @@ export default function KnowledgeBaseItem({
                 title={t('knowledge_base.delete_title')}
                 aria-label={t('knowledge_base.delete_aria_label')}
               >
-                <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                {deleteMutation.isPending ? (
+                  <Loader2 className="w-5 h-5 sm:w-4 sm:h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                )}
               </button>
             </div>
           </div>
+
+          {/* Loading overlay */}
+          {deleteMutation.isPending && (
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+              <div className="flex items-center gap-2 text-gray-600">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="text-sm font-medium">
+                  {t('common.deleting')}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </>
     );
@@ -165,16 +185,20 @@ export default function KnowledgeBaseItem({
     <>
       {ConfirmDialogComponent}
 
-      <div className="bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">
-        {/* Accordion Header - GitHub Style */}
-        <div
-          className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 cursor-pointer"
-          onClick={() => {
-            if (!isEditing) {
-              setIsExpanded(!isExpanded);
-            }
-          }}
-        >
+      <div className="relative bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">
+        <div className={cn(
+          "transition-opacity duration-300",
+          deleteMutation.isPending && "opacity-50"
+        )}>
+          {/* Accordion Header - GitHub Style */}
+          <div
+            className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 cursor-pointer"
+            onClick={() => {
+              if (!isEditing) {
+                setIsExpanded(!isExpanded);
+              }
+            }}
+          >
           {/* Chevron indicator */}
           <ChevronRight
             className={cn(
@@ -218,7 +242,11 @@ export default function KnowledgeBaseItem({
                   title={t('knowledge_base.delete_title')}
                   aria-label={t('knowledge_base.delete_aria_label')}
                 >
-                  <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                  {deleteMutation.isPending ? (
+                    <Loader2 className="w-5 h-5 sm:w-4 sm:h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                  )}
                 </button>
               </>
             )}
@@ -304,6 +332,19 @@ export default function KnowledgeBaseItem({
                 )}
               </div>
             )}
+          </div>
+        )}
+        </div>
+
+        {/* Loading overlay */}
+        {deleteMutation.isPending && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+            <div className="flex items-center gap-2 text-gray-600">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-sm font-medium">
+                {t('common.deleting')}
+              </span>
+            </div>
           </div>
         )}
       </div>

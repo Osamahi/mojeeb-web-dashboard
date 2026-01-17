@@ -6,7 +6,7 @@
 
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { AlertTriangle, Info, X } from 'lucide-react';
+import { AlertTriangle, Info, X, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 import { cn } from '@/lib/utils';
@@ -109,7 +109,7 @@ export const ConfirmDialog = ({
           onClick={onClose}
           disabled={isLoading}
           className={cn(
-            'absolute top-4 right-4 text-neutral-400 hover:text-neutral-600',
+            'absolute top-4 end-4 text-neutral-400 hover:text-neutral-600',
             'transition-colors rounded-md p-1 hover:bg-neutral-100',
             'disabled:opacity-50 disabled:pointer-events-none'
           )}
@@ -159,8 +159,10 @@ export const ConfirmDialog = ({
               variant={variant === 'danger' ? 'danger' : 'primary'}
               onClick={handleConfirm}
               disabled={isLoading}
+              className="flex items-center gap-2"
             >
-              {isLoading ? t('common.loading') : finalConfirmText}
+              {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isLoading ? t('common.deleting') : finalConfirmText}
             </Button>
           </div>
         </div>

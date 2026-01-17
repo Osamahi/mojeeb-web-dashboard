@@ -66,7 +66,7 @@ export function AvailablePlatformRow({
               isComingSoon ? 'text-neutral-500' : 'text-neutral-900'
             )}
           >
-            {platform.name}
+            {t(platform.name)}
           </h3>
         </div>
 
@@ -77,7 +77,7 @@ export function AvailablePlatformRow({
             isComingSoon ? 'text-neutral-400' : 'text-neutral-500'
           )}
         >
-          {platform.description}
+          {t(platform.description)}
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export function AvailablePlatformRow({
       {isComingSoon ? (
         <div className="flex-shrink-0">
           <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
-            Coming Soon
+            {t('platforms.coming_soon')}
           </span>
         </div>
       ) : showsWidget ? (

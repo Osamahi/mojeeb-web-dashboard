@@ -36,6 +36,7 @@ export interface ConfirmOptions {
 
 interface DialogState extends ConfirmOptions {
   open: boolean;
+  isLoading: boolean;
   resolve: (value: boolean) => void;
 }
 
@@ -44,6 +45,7 @@ export const useConfirm = () => {
 
   const [dialogState, setDialogState] = useState<DialogState>({
     open: false,
+    isLoading: false,
     title: '',
     message: '',
     confirmText: t('use_confirm.confirm'),
@@ -72,6 +74,10 @@ export const useConfirm = () => {
     dialogState.resolve(true);
   }, [dialogState]);
 
+  const setLoading = useCallback((loading: boolean) => {
+    setDialogState((prev) => ({ ...prev, isLoading: loading }));
+  }, []);
+
   const ConfirmDialogComponent = (
     <ConfirmDialog
       open={dialogState.open}
@@ -82,11 +88,13 @@ export const useConfirm = () => {
       confirmText={dialogState.confirmText}
       cancelText={dialogState.cancelText}
       variant={dialogState.variant}
+      isLoading={dialogState.isLoading}
     />
   );
 
   return {
     confirm,
     ConfirmDialogComponent,
+    setLoading,
   };
 };

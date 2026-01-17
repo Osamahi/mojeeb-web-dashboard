@@ -161,20 +161,21 @@ export interface WidgetModeOption {
 
 /**
  * Available widget mode options
+ * NOTE: label, description, and badge are translation keys, not actual text
  */
 export const WIDGET_MODES: WidgetModeOption[] = [
   {
     value: 'default',
-    label: 'Ready Made Widget',
-    description: 'Includes launcher button, zero configuration, perfect for most websites',
-    badge: 'Recommended',
+    label: 'widget_snippet.mode_default_label',
+    description: 'widget_snippet.mode_default_description',
+    badge: 'widget_snippet.mode_default_badge',
     badgeVariant: 'recommended',
   },
   {
     value: 'headless',
-    label: 'Customized Integration',
-    description: 'Use your own buttons/triggers, full control, for custom integrations',
-    badge: 'Advanced',
+    label: 'widget_snippet.mode_headless_label',
+    description: 'widget_snippet.mode_headless_description',
+    badge: 'widget_snippet.mode_headless_badge',
     badgeVariant: 'advanced',
   },
 ];

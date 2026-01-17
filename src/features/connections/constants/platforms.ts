@@ -35,12 +35,13 @@ export type PlatformMetadata = {
 /**
  * All available platforms with their metadata
  * Order determines display order in the UI
+ * NOTE: name and description are translation keys, not actual text
  */
 export const PLATFORMS: PlatformMetadata[] = [
   {
     id: 'facebook',
-    name: 'Facebook',
-    description: 'Connect your Facebook Business Page to receive and respond to messages',
+    name: 'platforms.facebook_name',
+    description: 'platforms.facebook_description',
     status: 'available',
     usesOAuth: true,
     showsWidget: false,
@@ -50,8 +51,8 @@ export const PLATFORMS: PlatformMetadata[] = [
   },
   {
     id: 'instagram',
-    name: 'Instagram',
-    description: 'Connect your Instagram Business Account to manage DMs and comments',
+    name: 'platforms.instagram_name',
+    description: 'platforms.instagram_description',
     status: 'available',
     usesOAuth: true,
     showsWidget: false,
@@ -61,8 +62,8 @@ export const PLATFORMS: PlatformMetadata[] = [
   },
   {
     id: 'widget',
-    name: 'Website',
-    description: 'Embed Mojeeb chat widget on your website to engage visitors',
+    name: 'platforms.widget_name',
+    description: 'platforms.widget_description',
     status: 'available',
     usesOAuth: false,
     showsWidget: true,
@@ -72,8 +73,8 @@ export const PLATFORMS: PlatformMetadata[] = [
   },
   {
     id: 'whatsapp',
-    name: 'WhatsApp Business',
-    description: 'Connect your WhatsApp Business account to automate customer conversations',
+    name: 'platforms.whatsapp_name',
+    description: 'platforms.whatsapp_description',
     status: 'available',
     usesOAuth: true,
     showsWidget: false,
@@ -84,8 +85,8 @@ export const PLATFORMS: PlatformMetadata[] = [
   },
   {
     id: 'tiktok',
-    name: 'TikTok',
-    description: 'Manage TikTok comments and direct messages from your account',
+    name: 'platforms.tiktok_name',
+    description: 'platforms.tiktok_description',
     status: 'coming_soon',
     usesOAuth: false,
     showsWidget: false,
