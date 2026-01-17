@@ -119,6 +119,11 @@ export function useDocumentJob(jobId: string | undefined, enabled = true) {
             notifyJobStatusChange(newJob.status, newJob.file_name);
             // Invalidate all job queries when job completes or fails
             queryClient.invalidateQueries({ queryKey: queryKeys.documentJobs(newJob.agent_id) });
+
+            // Invalidate knowledge bases when job completes (new KB may have been created)
+            if (newJob?.status === 'completed') {
+              queryClient.invalidateQueries({ queryKey: queryKeys.knowledgeBases(newJob.agent_id) });
+            }
           }
         }
       )
@@ -206,7 +211,7 @@ export function useDocumentJobs(agentIdOverride?: string, status?: DocumentJobSt
 
               // Invalidate knowledge bases when job completes (new KB may have been created)
               if (newJob?.status === 'completed') {
-                queryClient.invalidateQueries({ queryKey: queryKeys.knowledgeBases(agentId) });
+                queryClient.invalidateQueries({ queryKey: queryKeys.knowledgeBases(newJob.agent_id) });
               }
             }
           }

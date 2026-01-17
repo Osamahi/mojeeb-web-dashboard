@@ -1194,12 +1194,15 @@
   "document_upload_progress": {
     "status_completed": "المعالجة خلصت",
     "status_failed": "المعالجة فشلت",
-    "status_processing": "بنعالج الملف...",
+    "status_processing": "المساعد بيتعلم من الملف ده...",
+    "status_import_pending": "بندرّب المساعد بتاعك...",
     "status_queued": "في الانتظار للمعالجة",
-    "step_validating": "بنتحقق من الملف...",
-    "step_parsing": "بنحلل المحتوى...",
-    "step_ai_processing": "معالجة بالذكاء الاصطناعي...",
-    "step_completed": "خلص"
+    "step_validating": "بنجهّز الملف",
+    "step_parsing": "بنقرا ونرتّب المحتوى",
+    "step_ai_processing": "المساعد بيتعلم",
+    "step_indexing": "بنخزّن المعرفة للرد السريع",
+    "step_Indexing document in Vertex AI": "بنخزّن المعرفة للرد السريع",
+    "step_completed": "المساعد بقى جاهز"
   },
   "oauth_authorize": {
     "error_no_agent": "ماختارتش إيجنت. اختار إيجنت الأول.",

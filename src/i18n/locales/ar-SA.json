@@ -1195,12 +1195,15 @@
   "document_upload_progress": {
     "status_completed": "اكتملت المعالجة",
     "status_failed": "فشلت المعالجة",
-    "status_processing": "جارٍ معالجة المستند...",
+    "status_processing": "المساعد يتعلّم من هذا المستند...",
+    "status_import_pending": "جارٍ تدريب المساعد...",
     "status_queued": "في قائمة الانتظار للمعالجة",
-    "step_validating": "جارٍ التحقق من المستند...",
-    "step_parsing": "جارٍ تحليل المحتوى...",
-    "step_ai_processing": "جارٍ المعالجة بالذكاء الاصطناعي...",
-    "step_completed": "مكتمل"
+    "step_validating": "تجهيز المستند",
+    "step_parsing": "قراءة وتنظيم المحتوى",
+    "step_ai_processing": "تعلّم المساعد",
+    "step_indexing": "حفظ المعرفة للرد السريع",
+    "step_Indexing document in Vertex AI": "حفظ المعرفة للرد السريع",
+    "step_completed": "المساعد جاهز"
   },
   "connection_health": {
     "loading": "جارٍ تحميل حالة الاتصال",

@@ -92,7 +92,7 @@ export type AgentFilters = {
 };
 
 // Document Processing Job Types
-export type DocumentJobStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+export type DocumentJobStatus = 'pending' | 'processing' | 'import_pending' | 'completed' | 'failed' | 'cancelled';
 export type DocumentJobStep = 'validating' | 'parsing' | 'ai_processing' | 'completed';
 
 export type DocumentProcessingJob = {
