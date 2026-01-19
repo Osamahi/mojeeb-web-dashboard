@@ -1,6 +1,7 @@
 import api from '@/lib/api';
 import axios from 'axios';
 import { API_URL } from '@/lib/api';
+import { env } from '@/config/env';
 import type {
   LoginCredentials,
   RegisterData,
