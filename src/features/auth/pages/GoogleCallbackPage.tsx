@@ -36,11 +36,6 @@ export default function GoogleCallbackPage() {
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
 
-        console.log('[GoogleCallback] 🔍 FULL URL:', window.location.href);
-        console.log('[GoogleCallback] 📝 URL Search Params:', Object.fromEntries(searchParams.entries()));
-        console.log('[GoogleCallback] ✅ Authorization Code:', code ? `${code.substring(0, 20)}...` : 'MISSING');
-        console.log('[GoogleCallback] ❌ Error from Google:', error || 'none');
-
         logger.info('Processing Google OAuth callback', {
           hasCode: !!code,
           hasError: !!error,
@@ -50,7 +45,6 @@ export default function GoogleCallbackPage() {
         // Handle OAuth errors from Google
         if (error) {
           const message = errorDescription || `Authorization error: ${error}`;
-          console.error('[GoogleCallback] ❌ OAuth Error:', { error, errorDescription });
           logger.error('Google OAuth returned error', { error, errorDescription });
           setErrorMessage(message);
           setStatus('error');
@@ -60,7 +54,6 @@ export default function GoogleCallbackPage() {
 
         // Check for authorization code
         if (!code) {
-          console.error('[GoogleCallback] ❌ No authorization code!');
           logger.error('No authorization code in Google OAuth callback');
           setErrorMessage(t('social_login.google_no_code'));
           setStatus('error');
@@ -70,13 +63,8 @@ export default function GoogleCallbackPage() {
 
         // Send authorization code to backend for token exchange
         // Backend will exchange code for tokens and fetch user info securely
-        console.log('[GoogleCallback] 🚀 Calling backend API with code...');
-        console.log('[GoogleCallback] 📍 API Base URL:', import.meta.env.VITE_API_URL);
-        console.log('[GoogleCallback] 📍 Full endpoint:', `${import.meta.env.VITE_API_URL}/api/auth/google/code`);
         logger.info('Sending authorization code to backend for exchange');
-
         const authResponse = await authService.loginWithGoogleCode(code);
-        console.log('[GoogleCallback] ✅ Backend response received:', { userId: authResponse.user.id, email: authResponse.user.email });
 
         // Track signup/login completion
         track('signup_completed', {
@@ -95,12 +83,6 @@ export default function GoogleCallbackPage() {
         }, 1500);
       } catch (err) {
         const axiosError = err as AxiosError<{ message?: string }>;
-        console.error('[GoogleCallback] ❌ EXCEPTION CAUGHT!');
-        console.error('[GoogleCallback] Error Type:', (err as Error)?.name);
-        console.error('[GoogleCallback] Error Message:', (err as Error)?.message);
-        console.error('[GoogleCallback] HTTP Status:', axiosError?.response?.status);
-        console.error('[GoogleCallback] Response Data:', axiosError?.response?.data);
-        console.error('[GoogleCallback] Full Error:', err);
         logger.error('Error processing Google OAuth callback', { error: err });
         const message = axiosError?.response?.data?.message || t('social_login.google_error');
         setErrorMessage(message);
