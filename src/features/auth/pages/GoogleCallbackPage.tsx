@@ -60,51 +60,11 @@ export default function GoogleCallbackPage() {
           return;
         }
 
-        // Exchange code for access token via Google's token endpoint
-        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            code,
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
-            redirect_uri: import.meta.env.VITE_GOOGLE_REDIRECT_URI || `${window.location.origin}/auth/google/callback`,
-            grant_type: 'authorization_code',
-          }),
-        });
+        // Send authorization code to backend for token exchange
+        // Backend will exchange code for tokens and fetch user info securely
+        logger.info('Sending authorization code to backend for exchange');
 
-        if (!tokenResponse.ok) {
-          const errorData = await tokenResponse.json();
-          throw new Error(errorData.error_description || 'Failed to exchange authorization code');
-        }
-
-        const tokenData = await tokenResponse.json();
-        const accessToken = tokenData.access_token;
-
-        // Fetch user info from Google
-        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-
-        if (!userInfoResponse.ok) {
-          throw new Error(t('social_login.google_fetch_error'));
-        }
-
-        const userInfo = await userInfoResponse.json();
-
-        logger.info('Google redirect OAuth success', {
-          email: userInfo.email,
-          name: userInfo.name,
-        });
-
-        // Send complete data to backend
-        const authResponse = await authService.loginWithGoogle(
-          accessToken,
-          userInfo.email || '',
-          userInfo.name || '',
-          userInfo.picture || ''
-        );
+        const authResponse = await authService.loginWithGoogleCode(code);
 
         // Track signup/login completion
         track('signup_completed', {

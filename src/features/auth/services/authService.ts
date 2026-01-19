@@ -152,6 +152,31 @@ class AuthService {
   }
 
   /**
+   * Login with Google using authorization code (redirect flow)
+   * Backend will exchange code for tokens and fetch user info
+   */
+  async loginWithGoogleCode(authorizationCode: string): Promise<AuthResponse> {
+    const { data } = await api.post<ApiAuthResponse>('/api/auth/google/code', {
+      code: authorizationCode,
+    });
+
+    // Backend returns snake_case, convert to camelCase
+    const authResponse: AuthResponse = {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      user: this.transformUser(data.user),
+    };
+
+    // Update auth store
+    useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
+
+    // After successful login, fetch agents and initialize selection
+    await this.initializeAgentData();
+
+    return authResponse;
+  }
+
+  /**
    * Login with Apple Sign-In
    */
   async loginWithApple(idToken: string): Promise<AuthResponse> {
