@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Copy, Check, Code, ArrowLeft, Share2 } from 'lucide-react';
+import { Copy, Check, Code, ArrowLeft, ArrowRight, Share2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
@@ -22,7 +22,7 @@ export interface WidgetSnippetDialogProps {
 type WizardStep = 'mode-selection' | 'installation';
 
 export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { agent } = useAgentContext();
   const [currentStep, setCurrentStep] = useState<WizardStep>('mode-selection');
   const [selectedMode, setSelectedMode] = useState<WidgetMode | null>(null);
@@ -239,7 +239,7 @@ ${snippet}
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-base font-semibold text-neutral-900">
-                          {modeOption.label}
+                          {t(`widget_snippet.mode_${modeOption.value}_label`)}
                         </span>
                         {modeOption.badge && (
                           <span
@@ -252,12 +252,12 @@ ${snippet}
                               }
                             `}
                           >
-                            {modeOption.badge}
+                            {t(`widget_snippet.mode_${modeOption.value}_badge`)}
                           </span>
                         )}
                       </div>
                       <p className="mt-2 text-sm text-neutral-600 leading-relaxed">
-                        {modeOption.description}
+                        {t(`widget_snippet.mode_${modeOption.value}_description`)}
                       </p>
                     </div>
                   )}
@@ -559,7 +559,11 @@ ${snippet}
           {currentStep === 'installation' ? (
             <>
               <Button variant="secondary" onClick={handleBack} className="flex items-center gap-2">
-                <ArrowLeft className="w-4 h-4" />
+                {i18n.language.startsWith('ar') ? (
+                  <ArrowRight className="w-4 h-4" />
+                ) : (
+                  <ArrowLeft className="w-4 h-4" />
+                )}
                 {t('widget_snippet.back')}
               </Button>
               <div className="flex items-center gap-3">

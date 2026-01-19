@@ -66,7 +66,7 @@ export function AvailablePlatformRow({
               isComingSoon ? 'text-neutral-500' : 'text-neutral-900'
             )}
           >
-            {platform.name}
+            {t(`connections.platform_${platform.id}_name`)}
           </h3>
         </div>
 
@@ -77,7 +77,7 @@ export function AvailablePlatformRow({
             isComingSoon ? 'text-neutral-400' : 'text-neutral-500'
           )}
         >
-          {platform.description}
+          {t(`connections.platform_${platform.id}_desc`)}
         </p>
       </div>
 
