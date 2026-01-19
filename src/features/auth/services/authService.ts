@@ -158,6 +158,7 @@ class AuthService {
   async loginWithGoogleCode(authorizationCode: string): Promise<AuthResponse> {
     const { data } = await api.post<ApiAuthResponse>('/api/auth/google/code', {
       code: authorizationCode,
+      redirect_uri: env.VITE_GOOGLE_REDIRECT_URI || `${window.location.origin}/auth/google/callback`,
     });
 
     // Backend returns snake_case, convert to camelCase
