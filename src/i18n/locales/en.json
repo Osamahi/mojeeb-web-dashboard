@@ -557,6 +557,7 @@
     "title_connections": "Connections",
     "title_conversations": "Conversations",
     "title_forgot_password": "Reset Password",
+    "title_google_callback": "Google Sign In",
     "title_install_widget": "Install Widget",
     "title_leads": "Leads",
     "title_login": "Login",
@@ -1513,9 +1514,17 @@
     "google_fetch_error": "Failed to fetch user info from Google",
     "google_error": "Google sign-in failed. Please try again.",
     "google_cancelled": "Google sign-in was cancelled",
+    "google_no_code": "No authorization code received from Google",
+    "google_success": "Successfully signed in with Google!",
+    "google_processing_title": "Completing Sign In",
+    "google_processing_message": "Please wait while we verify your Google account...",
+    "google_success_title": "Sign In Successful",
+    "google_success_message": "Redirecting you to your dashboard...",
+    "google_error_title": "Sign In Failed",
     "signing_in": "Signing in...",
     "continue_with_google": "Continue with Google",
-    "continue_with_facebook": "Continue with Facebook"
+    "continue_with_facebook": "Continue with Facebook",
+    "return_to_login": "Return to Login"
   },
   "agent_search_dropdown": {
     "placeholder": "Search agents by name...",

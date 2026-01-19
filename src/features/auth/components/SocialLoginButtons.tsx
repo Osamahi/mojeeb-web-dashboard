@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { authService } from '../services/authService';
-// import { env } from '@/config/env'; // Temporarily disabled for Apple
+import { env } from '@/config/env';
 import { logger } from '@/lib/logger';
 import { useAnalytics } from '@/lib/analytics';
 
@@ -28,53 +28,17 @@ export const SocialLoginButtons = ({ disabled = false }: SocialLoginButtonsProps
   // const [isAppleLoading, setIsAppleLoading] = useState(false); // Temporarily disabled
 
   const googleLogin = useGoogleLogin({
+    flow: 'auth-code', // Use redirect flow instead of popup
+    ux_mode: 'redirect',
+    redirect_uri: env.VITE_GOOGLE_REDIRECT_URI || `${window.location.origin}/auth/google/callback`,
     onSuccess: async (tokenResponse) => {
+      // This will never be called in redirect mode, but keeping for backward compatibility
       setIsGoogleLoading(true);
-      try {
-        // Fetch user info from Google to match Flutter's implementation
-        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
-
-        if (!userInfoResponse.ok) {
-          throw new Error(t('social_login.google_fetch_error'));
-        }
-
-        const userInfo = await userInfoResponse.json();
-
-        logger.info('Google popup OAuth success', {
-          email: userInfo.email,
-          name: userInfo.name,
-        });
-
-        // Send complete data to backend (matches Flutter's OAuthResult)
-        const authResponse = await authService.loginWithGoogle(
-          tokenResponse.access_token,
-          userInfo.email || '',
-          userInfo.name || '',
-          userInfo.picture || ''
-        );
-
-        // Track signup/login completion - sends to all analytics providers
-        track('signup_completed', {
-          userId: authResponse.user.id,
-          email: authResponse.user.email,
-          name: authResponse.user.name,
-          signupMethod: 'google',
-        });
-
-        navigate('/conversations');
-      } catch (error) {
-        const axiosError = error as AxiosError<{ message?: string }>;
-        logger.error('Google sign-in error', error);
-        toast.error(axiosError?.response?.data?.message || t('social_login.google_error'));
-      } finally {
-        setIsGoogleLoading(false);
-      }
+      logger.info('Google redirect OAuth initiated');
     },
-    onError: () => {
-      logger.warn('Google sign-in cancelled or failed');
-      toast.error(t('social_login.google_cancelled'));
+    onError: (error) => {
+      logger.error('Google sign-in error', error);
+      toast.error(t('social_login.google_error'));
     },
   });
 

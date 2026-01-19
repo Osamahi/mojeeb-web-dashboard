@@ -557,6 +557,7 @@
     "title_connections": "الاتصالات",
     "title_conversations": "المحادثات",
     "title_forgot_password": "إعادة تعيين كلمة المرور",
+    "title_google_callback": "تسجيل الدخول بجوجل",
     "title_install_widget": "تثبيت الأداة",
     "title_leads": "العملاء المحتملون",
     "title_login": "تسجيل الدخول",
@@ -1510,9 +1511,17 @@
     "google_fetch_error": "فشل في الحصول على معلومات المستخدم من جوجل",
     "google_error": "فشل تسجيل الدخول بجوجل. يرجى المحاولة مرة أخرى.",
     "google_cancelled": "تم إلغاء تسجيل الدخول بجوجل",
+    "google_no_code": "لم نستلم رمز التفويض من جوجل",
+    "google_success": "تم تسجيل الدخول بنجاح باستخدام جوجل!",
+    "google_processing_title": "إتمام تسجيل الدخول",
+    "google_processing_message": "يرجى الانتظار بينما نتحقق من حسابك على جوجل...",
+    "google_success_title": "تم تسجيل الدخول بنجاح",
+    "google_success_message": "جاري تحويلك إلى لوحة التحكم...",
+    "google_error_title": "فشل تسجيل الدخول",
     "signing_in": "جاري تسجيل الدخول...",
     "continue_with_google": "المتابعة باستخدام جوجل",
-    "continue_with_facebook": "المتابعة باستخدام فيسبوك"
+    "continue_with_facebook": "المتابعة باستخدام فيسبوك",
+    "return_to_login": "العودة لصفحة الدخول"
   },
   "agent_search_dropdown": {
     "placeholder": "البحث عن المساعدين حسب الاسم...",

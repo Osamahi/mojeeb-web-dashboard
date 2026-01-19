@@ -10,6 +10,7 @@ import { PageSkeleton } from './components/ui/PageSkeleton';
 const LoginPage = lazy(() => import('./features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignUpPage = lazy(() => import('./features/auth/pages/SignUpPage').then(m => ({ default: m.SignUpPage })));
 const ForgotPasswordPage = lazy(() => import('./features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const GoogleCallbackPage = lazy(() => import('./features/auth/pages/GoogleCallbackPage'));
 const OnboardingWizard = lazy(() => import('./features/onboarding/pages/OnboardingWizard'));
 const DashboardLayout = lazy(() => import('./components/layout/DashboardLayout').then(m => ({ default: m.DashboardLayout })));
 const ConversationsPage = lazy(() => import('./pages/ConversationsPage').then(m => ({ default: m.ConversationsPage })));
@@ -211,6 +212,14 @@ export const router = createBrowserRouter([
         element: (
           <PublicRoute>
             <ForgotPasswordPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: '/auth/google/callback',
+        element: (
+          <PublicRoute allowAuthenticatedAccess={true}>
+            <GoogleCallbackPage />
           </PublicRoute>
         ),
       },

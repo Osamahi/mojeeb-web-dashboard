@@ -24,6 +24,7 @@ const envSchema = z.object({
 
   // OAuth Configuration (Optional)
   VITE_GOOGLE_CLIENT_ID: z.string().optional(),
+  VITE_GOOGLE_REDIRECT_URI: z.string().url().optional(),
   VITE_APPLE_CLIENT_ID: z.string().optional(),
   VITE_APPLE_REDIRECT_URI: z.string().url().optional(),
 
@@ -52,6 +53,7 @@ const parseEnv = () => {
     VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
     VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
     VITE_GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    VITE_GOOGLE_REDIRECT_URI: import.meta.env.VITE_GOOGLE_REDIRECT_URI,
     VITE_APPLE_CLIENT_ID: import.meta.env.VITE_APPLE_CLIENT_ID,
     VITE_APPLE_REDIRECT_URI: import.meta.env.VITE_APPLE_REDIRECT_URI,
     VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
