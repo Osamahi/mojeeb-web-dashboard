@@ -472,7 +472,8 @@
     "delete_title": "امسح المعرفة",
     "delete_aria": "امسح المعرفة",
     "name_placeholder": "اكتب اسم المعرفة...",
-    "content_edit_placeholder": "اكتب محتوى المعرفة..."
+    "content_edit_placeholder": "اكتب محتوى المعرفة...",
+    "saved_successfully": "تم الحفظ بنجاح"
   },
   "organizations": {
     "title": "المنظمات",

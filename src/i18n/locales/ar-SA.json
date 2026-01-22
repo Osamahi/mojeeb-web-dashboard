@@ -472,7 +472,8 @@
     "delete_title": "حذف",
     "delete_aria": "حذف قاعدة المعرفة",
     "name_placeholder": "اسم قاعدة المعرفة...",
-    "content_edit_placeholder": "أدخل محتوى قاعدة المعرفة..."
+    "content_edit_placeholder": "أدخل محتوى قاعدة المعرفة...",
+    "saved_successfully": "تم الحفظ بنجاح"
   },
   "organizations": {
     "title": "المنظمات",
