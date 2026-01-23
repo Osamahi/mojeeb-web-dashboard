@@ -99,14 +99,15 @@ export function handleChatError(
 
 /**
  * Handle message send errors
+ * Uses backend's error message for user-friendly context
  */
 export function handleMessageSendError(
   error: CatchError,
   context: ChatErrorContext
 ): void {
-  handleChatError(error, context, {
-    toastMessage: 'Failed to send message. Please try again.',
-  });
+  // Don't override toastMessage - let it fall back to getErrorMessage()
+  // This extracts the backend's friendly message (e.g., "Message limit exceeded...")
+  handleChatError(error, context);
 }
 
 /**

@@ -14,6 +14,7 @@ import { RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/errors';
 import { useChatEngine } from '@/features/conversations/hooks/useChatEngine';
 import { useLocalChatStorage } from '@/features/conversations/hooks/useChatStorage';
 import UnifiedChatView from '@/features/conversations/components/Chat/UnifiedChatView';
@@ -59,7 +60,7 @@ export default function TestChat({ agentId }: TestChatProps) {
     enablePagination: false,
     onError: (err) => {
       logger.error('[TestChat]', 'Test chat error', err);
-      toast.error(err.message || 'Failed to send message');
+      toast.error(getErrorMessage(err));
     },
     sendMessageFn: async (params) => {
       // Call test chat service
