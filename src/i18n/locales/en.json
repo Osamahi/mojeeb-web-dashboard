@@ -407,6 +407,7 @@
     "unable_fetch_pages": "Unable to fetch your pages. Please try again.",
     "back": "Back",
     "no_whatsapp_accounts": "No WhatsApp Business Accounts Found",
+    "no_whatsapp_accounts_desc": "We couldn't find any WhatsApp Business accounts linked to your Facebook Business Manager.",
     "no_whatsapp_desc": "We couldn't find any WhatsApp Business accounts linked to your Facebook Business Manager.",
     "no_pages_found": "No Pages Found",
     "no_pages_found_desc": "We couldn't find any Facebook pages associated with your account.",
