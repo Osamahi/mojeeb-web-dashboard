@@ -24,6 +24,7 @@ const ConnectionsPage = lazy(() => import('./features/connections/pages/Connecti
 const AdminConnectionsPage = lazy(() => import('./features/connections/pages/AdminConnectionsPage'));
 const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthCallbackPage'));
 const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
+const WhatsAppManagementPage = lazy(() => import('./features/whatsapp/pages/WhatsAppManagementPage'));
 const InstallWidgetPage = lazy(() => import('./pages/InstallWidgetPage').then(m => ({ default: m.InstallWidgetPage })));
 const AdminSubscriptionsPage = lazy(() => import('./features/subscriptions/pages/AdminSubscriptionsPage'));
 const AdminPricingPage = lazy(() => import('./features/pricing/pages/AdminPricingPage'));
@@ -277,6 +278,14 @@ export const router = createBrowserRouter([
       {
         path: 'leads',
         element: <LeadsPage />,
+      },
+      {
+        path: 'whatsapp-management',
+        element: (
+          <SuperAdminRoute>
+            <WhatsAppManagementPage />
+          </SuperAdminRoute>
+        ),
       },
       {
         path: 'users',

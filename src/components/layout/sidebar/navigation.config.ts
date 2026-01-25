@@ -19,6 +19,7 @@ import {
   Package,
   BookOpen,
   Network,
+  FileText,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -112,6 +113,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.team',
     href: '/team-management',
     icon: UserPlus,
+  },
+  {
+    name: 'WhatsApp',
+    translationKey: 'navigation.whatsapp',
+    href: '/whatsapp-management',
+    icon: FileText,
+    requireSuperAdmin: true,
   },
   {
     name: 'Support',
