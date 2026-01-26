@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { LogOut, Rocket, User as UserIcon, CreditCard, Languages } from 'lucide-react';
+import { LogOut, Rocket, User as UserIcon, CreditCard, Languages, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
@@ -82,6 +82,7 @@ export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
         <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center cursor-pointer overflow-hidden">
           {user?.avatarUrl ? (
             <img
+              key={user.avatarUrl}
               src={user.avatarUrl}
               alt={user.name || 'User'}
               className="w-full h-full object-cover"
@@ -123,6 +124,15 @@ export const ProfileDropdown = ({ user, onLogout }: ProfileDropdownProps) => {
             </DropdownMenuItem>
           )
         )}
+
+        {/* Settings */}
+        <DropdownMenuItem
+          onClick={() => window.location.href = '/settings'}
+          className="text-neutral-700 hover:text-neutral-900"
+        >
+          <Settings className="w-4 h-4 me-2" />
+          <span>{t('profile.settings')}</span>
+        </DropdownMenuItem>
 
         {/* Language Switcher */}
         <DropdownMenuItem
