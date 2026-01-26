@@ -5,6 +5,7 @@
  * Features:
  * - Account information (avatar, name, email, phone)
  * - Password change modal
+ * - Language preferences
  */
 
 import { useState } from 'react';
@@ -14,6 +15,7 @@ import { BaseHeader } from '@/components/ui/BaseHeader';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { AvatarUploader } from '@/features/auth/components/AvatarUploader';
@@ -22,7 +24,6 @@ import {
   useChangePasswordMutation,
 } from '@/features/auth/hooks/useProfileMutations';
 import type { UpdateProfileRequest, ChangePasswordRequest } from '@/features/auth/services/profileService';
-import { cn } from '@/lib/utils';
 
 export const SettingsPage = () => {
   const { t } = useTranslation();
@@ -84,110 +85,110 @@ export const SettingsPage = () => {
         subtitle={t('pages.settings_subtitle')}
       />
 
-      <div className="max-w-2xl space-y-6">
-        {/* Account Information Card */}
+      <div className="max-w-5xl space-y-6">
+        {/* Profile Picture Card */}
         <Card className="p-6">
-          <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-6">
-            {/* Profile Picture Section */}
-            <div className="pb-6 border-b border-neutral-200">
-              <AvatarUploader />
-            </div>
+          <AvatarUploader
+            layout="row"
+            buttonVariant="secondary"
+            buttonSize="md"
+          />
+        </Card>
 
-            {/* Name Input */}
+        {/* Basic Information Card */}
+        <Card className="p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                {t('settings.name')}
-              </label>
-              <input
-                {...registerProfile('name', {
-                  required: t('settings.nameRequired'),
-                  maxLength: {
-                    value: 100,
-                    message: t('settings.nameTooLong'),
-                  },
-                })}
-                type="text"
-                className={cn(
-                  'w-full h-10 px-4 rounded-md border transition-colors',
-                  'bg-white text-neutral-950 placeholder:text-neutral-400 text-base',
-                  'focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan',
-                  profileErrors.name ? 'border-red-500' : 'border-neutral-300'
-                )}
-                placeholder={t('settings.namePlaceholder')}
-              />
-              {profileErrors.name && (
-                <p className="mt-1 text-sm text-red-600">{profileErrors.name.message}</p>
-              )}
+              <h2 className="text-lg font-semibold text-neutral-900">
+                {t('settings.basicInfo')}
+              </h2>
+              <p className="text-sm text-neutral-600 mt-1">
+                {t('settings.basicInfoSubtitle')}
+              </p>
             </div>
+          </div>
 
-            {/* Email Input (Read-only) */}
+          <div className="mt-6">
+            <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-8">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input
+                  label={t('settings.name')}
+                  placeholder={t('settings.namePlaceholder')}
+                  autoComplete="name"
+                  error={profileErrors.name?.message}
+                  {...registerProfile('name', {
+                    required: t('settings.nameRequired'),
+                    maxLength: {
+                      value: 100,
+                      message: t('settings.nameTooLong'),
+                    },
+                  })}
+                />
+
+                <Input
+                  label={t('settings.email')}
+                  type="email"
+                  value={user?.email || ''}
+                  disabled
+                  autoComplete="email"
+                />
+
+                <div className="sm:col-span-2">
+                  <Input
+                    label={t('settings.phone')}
+                    placeholder={t('settings.phonePlaceholder')}
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    error={profileErrors.phone?.message}
+                    {...registerProfile('phone', {
+                      pattern: {
+                        value: /^[+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/,
+                        message: t('settings.phoneInvalid'),
+                      },
+                      maxLength: {
+                        value: 20,
+                        message: t('settings.phoneTooLong'),
+                      },
+                    })}
+                  />
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div className="flex justify-end pt-2">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={updateProfileMutation.isPending}
+                  isLoading={updateProfileMutation.isPending}
+                >
+                  {updateProfileMutation.isPending ? t('common.saving') : t('common.save')}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </Card>
+
+        {/* Change Password Card */}
+        <Card className="p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                {t('settings.email')}
-              </label>
-              <input
-                type="email"
-                value={user?.email || ''}
-                disabled
-                className="w-full h-10 px-4 rounded-md border border-neutral-300 bg-neutral-50 text-neutral-500 cursor-not-allowed text-base"
-              />
-            </div>
-
-            {/* Phone Input */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-2">
-                {t('settings.phone')}
-              </label>
-              <input
-                {...registerProfile('phone', {
-                  pattern: {
-                    value: /^[+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/,
-                    message: t('settings.phoneInvalid'),
-                  },
-                  maxLength: {
-                    value: 20,
-                    message: t('settings.phoneTooLong'),
-                  },
-                })}
-                type="tel"
-                className={cn(
-                  'w-full h-10 px-4 rounded-md border transition-colors',
-                  'bg-white text-neutral-950 placeholder:text-neutral-400 text-base',
-                  'focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan',
-                  profileErrors.phone ? 'border-red-500' : 'border-neutral-300'
-                )}
-                placeholder={t('settings.phonePlaceholder')}
-              />
-              {profileErrors.phone && (
-                <p className="mt-1 text-sm text-red-600">{profileErrors.phone.message}</p>
-              )}
-            </div>
-
-            {/* Change Password Link */}
-            <div className="pt-4 border-t border-neutral-200">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPasswordModal(true)}
-                className="px-0"
-              >
+              <h2 className="text-lg font-semibold text-neutral-900">
                 {t('settings.changePassword')}
-              </Button>
+              </h2>
+              <p className="text-sm text-neutral-600 mt-1">
+                {t('settings.changePasswordSubtitle')}
+              </p>
             </div>
-
-            {/* Save Button */}
-            <div className="flex justify-end pt-2">
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={updateProfileMutation.isPending}
-                isLoading={updateProfileMutation.isPending}
-              >
-                {updateProfileMutation.isPending ? t('common.saving') : t('common.save')}
-              </Button>
-            </div>
-          </form>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowPasswordModal(true)}
+            >
+              {t('settings.changePassword')}
+            </Button>
+          </div>
         </Card>
       </div>
 
@@ -205,80 +206,44 @@ export const SettingsPage = () => {
         closable={!changePasswordMutation.isPending}
       >
         <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-4">
-          {/* Current Password */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              {t('settings.currentPassword')}
-            </label>
-            <input
-              {...registerPassword('currentPassword', {
-                required: t('settings.currentPasswordRequired'),
-              })}
-              type="password"
-              className={cn(
-                'w-full h-10 px-4 rounded-md border transition-colors',
-                'bg-white text-neutral-950 placeholder:text-neutral-400 text-base',
-                'focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan',
-                passwordErrors.currentPassword ? 'border-red-500' : 'border-neutral-300'
-              )}
-              placeholder={t('settings.currentPasswordPlaceholder')}
-            />
-            {passwordErrors.currentPassword && (
-              <p className="mt-1 text-sm text-red-600">{passwordErrors.currentPassword.message}</p>
-            )}
-          </div>
+          <Input
+            label={t('settings.currentPassword')}
+            type="password"
+            placeholder={t('settings.currentPasswordPlaceholder')}
+            autoComplete="current-password"
+            error={passwordErrors.currentPassword?.message}
+            {...registerPassword('currentPassword', {
+              required: t('settings.currentPasswordRequired'),
+            })}
+          />
 
-          {/* New Password */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              {t('settings.newPassword')}
-            </label>
-            <input
-              {...registerPassword('newPassword', {
-                required: t('settings.newPasswordRequired'),
-                minLength: {
-                  value: 8,
-                  message: t('settings.newPasswordTooShort'),
-                },
-              })}
-              type="password"
-              className={cn(
-                'w-full h-10 px-4 rounded-md border transition-colors',
-                'bg-white text-neutral-950 placeholder:text-neutral-400 text-base',
-                'focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan',
-                passwordErrors.newPassword ? 'border-red-500' : 'border-neutral-300'
-              )}
-              placeholder={t('settings.newPasswordPlaceholder')}
-            />
-            {passwordErrors.newPassword && (
-              <p className="mt-1 text-sm text-red-600">{passwordErrors.newPassword.message}</p>
-            )}
-          </div>
+          <Input
+            label={t('settings.newPassword')}
+            type="password"
+            placeholder={t('settings.newPasswordPlaceholder')}
+            autoComplete="new-password"
+            error={passwordErrors.newPassword?.message}
+            {...registerPassword('newPassword', {
+              required: t('settings.newPasswordRequired'),
+              minLength: {
+                value: 8,
+                message: t('settings.newPasswordTooShort'),
+              },
+            })}
+          />
 
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              {t('settings.confirmPassword')}
-            </label>
-            <input
-              {...registerPassword('confirmPassword', {
-                required: t('settings.confirmPasswordRequired'),
-                validate: (value) =>
-                  value === newPassword || t('settings.passwordMismatch'),
-              })}
-              type="password"
-              className={cn(
-                'w-full h-10 px-4 rounded-md border transition-colors',
-                'bg-white text-neutral-950 placeholder:text-neutral-400 text-base',
-                'focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan',
-                passwordErrors.confirmPassword ? 'border-red-500' : 'border-neutral-300'
-              )}
-              placeholder={t('settings.confirmPasswordPlaceholder')}
-            />
-            {passwordErrors.confirmPassword && (
-              <p className="mt-1 text-sm text-red-600">{passwordErrors.confirmPassword.message}</p>
-            )}
-          </div>
+          <Input
+            label={t('settings.confirmPassword')}
+            type="password"
+            placeholder={t('settings.confirmPasswordPlaceholder')}
+            autoComplete="new-password"
+            error={passwordErrors.confirmPassword?.message}
+            {...registerPassword('confirmPassword', {
+              required: t('settings.confirmPasswordRequired'),
+              validate: (value) =>
+                value === newPassword || t('settings.passwordMismatch'),
+            })}
+          />
 
           {/* Modal Action Buttons */}
           <div className="flex justify-end gap-3 pt-4">

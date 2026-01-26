@@ -11,21 +11,30 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
+import Cropper, { type Area } from 'react-easy-crop';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '@/components/ui/Avatar';
 import { BaseModal } from '@/components/ui/BaseModal';
-import { Button } from '@/components/ui/Button';
+import { Button, type ButtonProps } from '@/components/ui/Button';
 import { useUploadAvatarMutation } from '../hooks/useProfileMutations';
 import { useAuthStore } from '../stores/authStore';
 import { cn } from '@/lib/utils';
 
 export interface AvatarUploaderProps {
   className?: string;
+  layout?: 'stacked' | 'row';
+  buttonVariant?: ButtonProps['variant'];
+  buttonSize?: ButtonProps['size'];
+  showButton?: boolean;
 }
 
-export function AvatarUploader({ className }: AvatarUploaderProps) {
+export function AvatarUploader({
+  className,
+  layout = 'stacked',
+  buttonVariant = 'ghost',
+  buttonSize = 'sm',
+  showButton = true,
+}: AvatarUploaderProps) {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const uploadMutation = useUploadAvatarMutation();
@@ -37,15 +46,9 @@ export function AvatarUploader({ className }: AvatarUploaderProps) {
   const [showCropModal, setShowCropModal] = useState(false);
   const [imageSrc, setImageSrc] = useState<string>('');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [crop, setCrop] = useState<Crop>({
-    unit: '%',
-    width: 90,
-    height: 90,
-    x: 5,
-    y: 5,
-  });
-  const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
   // Handle file selection
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,8 +83,19 @@ export function AvatarUploader({ className }: AvatarUploaderProps) {
   }, [t]);
 
   // Create cropped image blob
+  const createImage = useCallback((url: string): Promise<HTMLImageElement> => {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener('load', () => resolve(image));
+      image.addEventListener('error', (error) => reject(error));
+      image.setAttribute('crossOrigin', 'anonymous');
+      image.src = url;
+    });
+  }, []);
+
   const getCroppedImage = useCallback(
-    async (image: HTMLImageElement, crop: PixelCrop): Promise<Blob> => {
+    async (imageSrc: string, cropArea: Area): Promise<Blob> => {
+      const image = await createImage(imageSrc);
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
@@ -89,24 +103,19 @@ export function AvatarUploader({ className }: AvatarUploaderProps) {
         throw new Error('Failed to get canvas context');
       }
 
-      const scaleX = image.naturalWidth / image.width;
-      const scaleY = image.naturalHeight / image.height;
+      canvas.width = cropArea.width;
+      canvas.height = cropArea.height;
 
-      // Set canvas size to crop size
-      canvas.width = crop.width;
-      canvas.height = crop.height;
-
-      // Draw cropped image
       ctx.drawImage(
         image,
-        crop.x * scaleX,
-        crop.y * scaleY,
-        crop.width * scaleX,
-        crop.height * scaleY,
+        cropArea.x,
+        cropArea.y,
+        cropArea.width,
+        cropArea.height,
         0,
         0,
-        crop.width,
-        crop.height
+        cropArea.width,
+        cropArea.height
       );
 
       return new Promise((resolve, reject) => {
@@ -123,19 +132,19 @@ export function AvatarUploader({ className }: AvatarUploaderProps) {
         );
       });
     },
-    []
+    [createImage]
   );
 
   // Handle crop confirmation
   const handleCropConfirm = useCallback(async () => {
-    if (!completedCrop || !imageRef.current || !imageFile) return;
+    if (!croppedAreaPixels || !imageFile || !imageSrc) return;
 
     console.log('✂️ [AvatarUploader] Starting crop and upload');
-    console.log('   Crop dimensions:', completedCrop);
+    console.log('   Crop dimensions:', croppedAreaPixels);
 
     try {
       // Get cropped image blob
-      const croppedBlob = await getCroppedImage(imageRef.current, completedCrop);
+      const croppedBlob = await getCroppedImage(imageSrc, croppedAreaPixels);
       console.log('✅ [AvatarUploader] Image cropped successfully');
       console.log('   Blob size:', (croppedBlob.size / 1024).toFixed(2), 'KB');
 
@@ -157,7 +166,9 @@ export function AvatarUploader({ className }: AvatarUploaderProps) {
       setShowCropModal(false);
       setImageSrc('');
       setImageFile(null);
-      setCompletedCrop(null);
+      setCroppedAreaPixels(null);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
 
       // Force a re-render by checking the current user
       const currentUser = useAuthStore.getState().user;
@@ -167,14 +178,16 @@ export function AvatarUploader({ className }: AvatarUploaderProps) {
     } catch (error) {
       console.error('[AvatarUploader] Crop error:', error);
     }
-  }, [completedCrop, imageFile, uploadMutation, getCroppedImage]);
+  }, [croppedAreaPixels, imageFile, imageSrc, uploadMutation, getCroppedImage]);
 
   // Handle crop cancel
   const handleCropCancel = useCallback(() => {
     setShowCropModal(false);
     setImageSrc('');
     setImageFile(null);
-    setCompletedCrop(null);
+    setCroppedAreaPixels(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
   }, []);
 
   const isLoading = uploadMutation.isPending;
@@ -189,9 +202,16 @@ export function AvatarUploader({ className }: AvatarUploaderProps) {
   }, [user?.avatarUrl]);
 
   return (
-    <div className={cn('flex flex-col items-center gap-3', className)}>
+    <div
+      className={cn(
+        layout === 'row'
+          ? 'flex items-center justify-between gap-4'
+          : 'flex flex-col items-center gap-3',
+        className
+      )}
+    >
       {/* Avatar Display */}
-      <div className="relative">
+      <div className={cn('relative', layout === 'row' && 'flex items-center')}>
         <Avatar
           key={user?.avatarUrl || 'no-avatar'}
           src={user?.avatarUrl}
@@ -213,15 +233,17 @@ export function AvatarUploader({ className }: AvatarUploaderProps) {
         onChange={handleFileSelect}
         className="hidden"
       />
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isLoading}
-      >
-        {t('settings.changePhoto')}
-      </Button>
+      {showButton && (
+        <Button
+          type="button"
+          variant={buttonVariant}
+          size={buttonSize}
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isLoading}
+        >
+          {t('settings.changePhoto')}
+        </Button>
+      )}
 
       {/* Crop Modal */}
       <BaseModal
@@ -235,23 +257,36 @@ export function AvatarUploader({ className }: AvatarUploaderProps) {
       >
         <div className="space-y-4">
           {/* Crop Area */}
-          <div className="flex justify-center bg-neutral-50 rounded-lg p-4">
-            {imageSrc && (
-              <ReactCrop
-                crop={crop}
-                onChange={(c) => setCrop(c)}
-                onComplete={(c) => setCompletedCrop(c)}
-                aspect={1}
-                circularCrop
-              >
-                <img
-                  ref={imageRef}
-                  src={imageSrc}
-                  alt="Crop preview"
-                  className="max-h-[400px] object-contain"
+          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+            <div className="relative h-80 w-full overflow-hidden rounded-xl bg-neutral-900/5">
+              {imageSrc && (
+                <Cropper
+                  image={imageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="round"
+                  showGrid={false}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={(_, areaPixels) => setCroppedAreaPixels(areaPixels)}
                 />
-              </ReactCrop>
-            )}
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-neutral-700">Zoom</span>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.1}
+              value={zoom}
+              onChange={(event) => setZoom(Number(event.target.value))}
+              className="w-full accent-brand-cyan"
+              aria-label="Zoom"
+            />
           </div>
 
           {/* Action Buttons */}
@@ -268,7 +303,7 @@ export function AvatarUploader({ className }: AvatarUploaderProps) {
               type="button"
               variant="primary"
               onClick={handleCropConfirm}
-              disabled={!completedCrop || uploadMutation.isPending}
+              disabled={!croppedAreaPixels || uploadMutation.isPending}
               isLoading={uploadMutation.isPending}
             >
               {uploadMutation.isPending ? t('common.uploading') : t('common.upload')}

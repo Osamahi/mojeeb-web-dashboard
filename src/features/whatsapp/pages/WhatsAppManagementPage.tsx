@@ -6,6 +6,7 @@
 import { useState, useMemo } from 'react';
 import { Plus, MessageSquare, CheckCircle2, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -19,6 +20,7 @@ import type { MessageTemplate } from '../types/whatsapp.types';
 import type { PlatformConnection } from '@/features/connections/types';
 
 export default function WhatsAppManagementPage() {
+  const { t } = useTranslation();
   useDocumentTitle('WhatsApp Management');
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -68,7 +70,7 @@ export default function WhatsAppManagementPage() {
       <div className="p-4 sm:p-6 flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <MessageSquare className="w-8 h-8 text-neutral-400 mx-auto mb-2 animate-pulse" />
-          <p className="text-sm text-neutral-500">Loading WhatsApp connections...</p>
+          <p className="text-sm text-neutral-500">{t('whatsapp.loading')}</p>
         </div>
       </div>
     );
@@ -79,16 +81,16 @@ export default function WhatsAppManagementPage() {
     return (
       <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <BaseHeader
-          title="WhatsApp Management"
-          subtitle="Manage your WhatsApp Business templates"
+          title={t('whatsapp.title')}
+          subtitle={t('whatsapp.subtitle')}
         />
         <EmptyState
           icon={<MessageSquare className="w-12 h-12 text-neutral-400" />}
-          title="No WhatsApp Connections"
-          description="Connect a WhatsApp Business account to manage templates."
+          title={t('whatsapp.no_connections_title')}
+          description={t('whatsapp.no_connections_description')}
           action={
             <Button asChild>
-              <Link to="/connections">Go to Connections</Link>
+              <Link to="/connections">{t('whatsapp.go_to_connections')}</Link>
             </Button>
           }
         />
@@ -100,10 +102,10 @@ export default function WhatsAppManagementPage() {
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <BaseHeader
-        title="WhatsApp Management"
-        subtitle="Manage message templates and phone numbers"
+        title={t('whatsapp.title')}
+        subtitle={t('whatsapp.subtitle')}
         primaryAction={{
-          label: 'Add Template',
+          label: t('whatsapp.add_template'),
           icon: Plus,
           onClick: () => setIsAddModalOpen(true),
         }}
@@ -116,9 +118,9 @@ export default function WhatsAppManagementPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-neutral-900 flex items-center gap-2">
               <Phone className="w-5 h-5 text-neutral-600" />
-              WhatsApp Phone Numbers
+              {t('whatsapp.phone_numbers')}
             </h2>
-            <Badge variant="default">{whatsappConnections.length} Connected</Badge>
+            <Badge variant="default">{t('whatsapp.connected_count', { count: whatsappConnections.length })}</Badge>
           </div>
 
           <div className="space-y-3">
@@ -126,7 +128,7 @@ export default function WhatsAppManagementPage() {
               const isSelected = selectedPhoneNumber?.id === connection.id;
               const verifiedName = (connection.platformMetadata as any)?.verified_name ||
                 connection.platformAccountName ||
-                'WhatsApp Business';
+                t('whatsapp.verified_name');
               const displayPhone = (connection.platformMetadata as any)?.display_phone_number ||
                 connection.platformAccountHandle ||
                 connection.platformAccountId;
@@ -163,7 +165,7 @@ export default function WhatsAppManagementPage() {
                       {connection.isActive && (
                         <>
                           <span>•</span>
-                          <span className="whitespace-nowrap text-green-600 font-medium">Connected</span>
+                          <span className="whitespace-nowrap text-green-600 font-medium">{t('whatsapp.connected')}</span>
                         </>
                       )}
                     </div>
@@ -186,10 +188,10 @@ export default function WhatsAppManagementPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-neutral-900">
-                Message Templates
+                {t('whatsapp.message_templates')}
               </h2>
               <Badge variant="default">
-                {templates?.length || 0} Templates
+                {t('whatsapp.templates_count', { count: templates?.length || 0 })}
               </Badge>
             </div>
 
@@ -252,12 +254,12 @@ export default function WhatsAppManagementPage() {
             ) : (
               <EmptyState
                 icon={<MessageSquare className="w-12 h-12 text-neutral-400" />}
-                title="No Templates Found"
-                description="Create your first WhatsApp message template to get started."
+                title={t('whatsapp.no_templates_title')}
+                description={t('whatsapp.no_templates_description')}
                 action={
                   <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Template
+                    {t('whatsapp.add_template')}
                   </Button>
                 }
               />

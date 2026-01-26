@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { whatsappService } from '../services/whatsappService';
@@ -25,6 +26,7 @@ const SAMPLE_TEMPLATE = {
 };
 
 export function AddTemplateModal({ isOpen, onClose, connectionId }: AddTemplateModalProps) {
+  const { t } = useTranslation();
   const [templateName, setTemplateName] = useState(SAMPLE_TEMPLATE.name);
   const [language, setLanguage] = useState(SAMPLE_TEMPLATE.language);
   const [category, setCategory] = useState(SAMPLE_TEMPLATE.category);
@@ -41,21 +43,21 @@ export function AddTemplateModal({ isOpen, onClose, connectionId }: AddTemplateM
     }),
     onSuccess: (data) => {
       if (data.success) {
-        toast.success(`Template "${templateName}" created successfully! Status: ${data.status || 'PENDING'}`);
+        toast.success(t('whatsapp.template_created_success', { name: templateName, status: data.status || 'PENDING' }));
         queryClient.invalidateQueries({ queryKey: ['whatsapp', 'templates', connectionId] });
         onClose();
       } else {
-        toast.error(data.error || 'Failed to create template');
+        toast.error(data.error || t('whatsapp.template_created_error'));
       }
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.error || 'Failed to create template');
+      toast.error(error?.response?.data?.error || t('whatsapp.template_created_error'));
     },
   });
 
   const handleSubmit = () => {
     if (!templateName || !language || !category || !body) {
-      toast.error('All fields are required');
+      toast.error(t('whatsapp.all_fields_required'));
       return;
     }
     createMutation.mutate();
@@ -65,8 +67,8 @@ export function AddTemplateModal({ isOpen, onClose, connectionId }: AddTemplateM
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create WhatsApp Template"
-      subtitle="Create a new message template"
+      title={t('whatsapp.create_template_title')}
+      subtitle={t('whatsapp.create_template_subtitle')}
       maxWidth="2xl"
       isLoading={createMutation.isPending}
       closable={!createMutation.isPending}
@@ -78,71 +80,71 @@ export function AddTemplateModal({ isOpen, onClose, connectionId }: AddTemplateM
           {/* Template Name */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Template Name
+              {t('whatsapp.template_name')}
             </label>
             <input
               type="text"
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="my_custom_template"
+              placeholder={t('whatsapp.template_name_placeholder')}
             />
             <p className="mt-1 text-xs text-neutral-500">
-              Use lowercase letters, numbers, and underscores only
+              {t('whatsapp.template_name_hint')}
             </p>
           </div>
 
           {/* Language */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Language
+              {t('whatsapp.language')}
             </label>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="en_US">English (US)</option>
-              <option value="en_GB">English (UK)</option>
-              <option value="ar">Arabic</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
+              <option value="en_US">{t('whatsapp.language_en_us')}</option>
+              <option value="en_GB">{t('whatsapp.language_en_gb')}</option>
+              <option value="ar">{t('whatsapp.language_ar')}</option>
+              <option value="es">{t('whatsapp.language_es')}</option>
+              <option value="fr">{t('whatsapp.language_fr')}</option>
             </select>
           </div>
 
           {/* Category */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Category
+              {t('whatsapp.category')}
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as 'UTILITY' | 'MARKETING' | 'AUTHENTICATION')}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="UTILITY">Utility (Recommended)</option>
-              <option value="MARKETING">Marketing</option>
-              <option value="AUTHENTICATION">Authentication</option>
+              <option value="UTILITY">{t('whatsapp.category_utility')}</option>
+              <option value="MARKETING">{t('whatsapp.category_marketing')}</option>
+              <option value="AUTHENTICATION">{t('whatsapp.category_authentication')}</option>
             </select>
             <p className="mt-1 text-xs text-neutral-500">
-              UTILITY templates have the fastest approval time
+              {t('whatsapp.category_hint')}
             </p>
           </div>
 
           {/* Body Text */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-2">
-              Message Body
+              {t('whatsapp.message_body')}
             </label>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={4}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-              placeholder="Enter your template message..."
+              placeholder={t('whatsapp.message_body_placeholder')}
             />
             <p className="mt-1 text-xs text-neutral-500">
-              Avoid adding variables or footers for faster approval
+              {t('whatsapp.message_body_hint')}
             </p>
           </div>
         </div>
@@ -154,14 +156,14 @@ export function AddTemplateModal({ isOpen, onClose, connectionId }: AddTemplateM
             onClick={onClose}
             disabled={createMutation.isPending}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="primary"
             onClick={handleSubmit}
             disabled={createMutation.isPending}
           >
-            {createMutation.isPending ? 'Creating...' : 'Submit'}
+            {createMutation.isPending ? t('whatsapp.creating') : t('whatsapp.submit')}
           </Button>
         </div>
       </div>
