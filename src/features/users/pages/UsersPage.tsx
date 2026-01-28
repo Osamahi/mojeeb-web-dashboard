@@ -57,7 +57,7 @@ export default function UsersPage() {
       id: result.id,
       email: result.email,
       name: result.name,
-      phone: null,
+      phone: result.phone || null,
       avatar_url: null,
       role: 'Customer' as const, // Search doesn't return role, default to Customer
       role_value: 0,

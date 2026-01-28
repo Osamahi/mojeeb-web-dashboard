@@ -57,6 +57,7 @@ export interface UserSearchResult {
   id: string;
   email: string;
   name: string | null;
+  phone: string | null;
   currentOrganization: {
     id: string;
     name: string;

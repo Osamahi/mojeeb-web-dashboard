@@ -35,6 +35,7 @@ interface ApiUserSearchResult {
   id: string;
   email: string;
   name: string | null;
+  phone: string | null;
   current_organization: {
     id: string;
     name: string;
@@ -83,6 +84,7 @@ function transformUserSearchResult(apiUser: ApiUserSearchResult): UserSearchResu
     id: apiUser.id,
     email: apiUser.email,
     name: apiUser.name,
+    phone: apiUser.phone,
     currentOrganization: apiUser.current_organization ? {
       id: apiUser.current_organization.id,
       name: apiUser.current_organization.name
