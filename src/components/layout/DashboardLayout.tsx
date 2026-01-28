@@ -7,6 +7,7 @@ import { Header } from './Header';
 import { OnboardingPromptBanner } from './OnboardingPromptBanner';
 import { PhoneCollectionModal } from '@/features/auth/components/PhoneCollectionModal';
 import { PendingInvitationModal } from '@/features/organizations/components/PendingInvitationModal';
+import { useCheckPendingInvitations } from '@/features/organizations/hooks/useCheckPendingInvitations';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useAuthStore } from '@/features/auth/stores/authStore';
@@ -24,6 +25,10 @@ export const DashboardLayout = () => {
   const hasInitialized = useRef(false);
   const hasProcessedPhoneCheck = useRef<string | null>(null); // Track which user we've processed
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+
+  // Check for pending invitations when dashboard loads
+  // This ensures invitations are displayed even when user navigates directly
+  useCheckPendingInvitations();
 
   // Determine if header should be hidden
   // Hide on mobile when on conversations page AND a conversation is selected
