@@ -6,6 +6,7 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { invitationService } from '../services/invitationService';
 import { authService } from '@/features/auth/services/authService';
@@ -23,6 +24,7 @@ interface AcceptInvitationParams {
 
 export function useAcceptInvitationMutation() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: async ({ token }: AcceptInvitationParams) => {
@@ -65,22 +67,17 @@ export function useAcceptInvitationMutation() {
         useInvitationStore.getState().clearInvitations();
 
         // Show success message
-        toast.success(`Successfully joined ${organizationName}! Refreshing...`);
+        toast.success(`Successfully joined ${organizationName}!`);
 
         logger.info('[useAcceptInvitationMutation] ✅ Organization switch complete');
 
-        // 6. Auto-reload page to ensure all data is fresh
-        logger.info('[useAcceptInvitationMutation] Step 6/5: Auto-reloading page');
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000); // Give user 1 second to see success message
+        // Navigate to conversations page (data already refreshed, no reload needed)
+        navigate('/conversations', { replace: true });
       } catch (error) {
         logger.error('[useAcceptInvitationMutation] Error during data refresh', error as Error);
-        toast.error('Invitation accepted, but some data may not have refreshed. Reloading page...');
-        // Still reload even on error since backend succeeded
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        toast.error('Invitation accepted, but some data may not have refreshed. Please refresh the page.');
+        // Still navigate away from invitation page
+        navigate('/conversations', { replace: true });
       }
     },
 
