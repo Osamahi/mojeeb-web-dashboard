@@ -77,8 +77,15 @@ export const invitationService = {
       const response = await api.get<ApiResponse<ApiPendingInvitation[]>>(
         '/api/invitations/my-pending'
       );
-      logger.info('[invitationService] Fetched pending invitations', { count: response.data.data.length });
-      return response.data.data.map(transformPendingInvitation);
+      logger.info('[invitationService] Fetched pending invitations', {
+        count: response.data.data.length,
+        rawFirstInvitation: response.data.data[0],
+      });
+      const transformed = response.data.data.map(transformPendingInvitation);
+      logger.info('[invitationService] Transformed invitations', {
+        transformedFirstInvitation: transformed[0],
+      });
+      return transformed;
     } catch (error) {
       logger.error('[invitationService] Failed to fetch pending invitations', error as Error);
       throw error;
