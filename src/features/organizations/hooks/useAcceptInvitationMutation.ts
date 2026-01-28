@@ -44,26 +44,25 @@ export function useAcceptInvitationMutation() {
       logger.info('[useAcceptInvitationMutation] Invitation accepted, refreshing data...');
 
       try {
-        // 1. Refresh user profile to get new organization
-        logger.info('[useAcceptInvitationMutation] Step 1/5: Refreshing user profile');
-        await authService.getCurrentUser();
+        // Note: Skipping user profile refresh - backend already handled organization transfer
+        // The user's organization_id was updated on the backend when invitation was accepted
 
-        // 2. Clear selected conversation (from old org)
-        logger.info('[useAcceptInvitationMutation] Step 2/5: Clearing conversation selection');
+        // 1. Clear selected conversation (from old org)
+        logger.info('[useAcceptInvitationMutation] Step 1/4: Clearing conversation selection');
         useConversationStore.getState().selectConversation(null);
 
-        // 3. Fetch and set new organization's agents
-        logger.info('[useAcceptInvitationMutation] Step 3/5: Fetching new agents');
+        // 2. Fetch and set new organization's agents
+        logger.info('[useAcceptInvitationMutation] Step 2/4: Fetching new agents');
         const agents = await agentService.getAgents();
         useAgentStore.getState().setAgents(agents);
         useAgentStore.getState().initializeAgentSelection();
 
-        // 4. Invalidate all organization-scoped queries
-        logger.info('[useAcceptInvitationMutation] Step 4/5: Invalidating queries');
+        // 3. Invalidate all organization-scoped queries
+        logger.info('[useAcceptInvitationMutation] Step 3/4: Invalidating queries');
         await refreshOrganizationData(queryClient);
 
-        // 5. Clear pending invitations from store
-        logger.info('[useAcceptInvitationMutation] Step 5/5: Clearing invitations');
+        // 4. Clear pending invitations from store
+        logger.info('[useAcceptInvitationMutation] Step 4/4: Clearing invitations');
         useInvitationStore.getState().clearInvitations();
 
         // Show success message
