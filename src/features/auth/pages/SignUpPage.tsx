@@ -3,118 +3,69 @@
  * Clean registration experience matching login page style
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { AxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { authService } from '../services/authService';
-import { toast } from 'sonner';
 import { AuthPageLayout } from '../components/AuthPageLayout';
 import { AuthFooterLink } from '../components/AuthFooterLink';
-import { logger } from '@/lib/logger';
 import { useAuthStore } from '../stores/authStore';
 import { useOnboardingStore } from '@/features/onboarding/stores/onboardingStore';
-import { useAnalytics } from '@/lib/analytics';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLanguageFromUrl } from '@/hooks/useLanguageFromUrl';
-
-type SignUpForm = {
-  name: string;
-  email: string;
-  password: string;
-};
+import { useAuthFormSubmit } from '../hooks/useAuthFormSubmit';
+import { createSignUpSchema, type SignUpFormData } from '../schemas/validation.schemas';
 
 export const SignUpPage = () => {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_signup');
   useLanguageFromUrl(); // Apply language from URL parameter (from landing page)
   const navigate = useNavigate();
-  const { track } = useAnalytics();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+
+  // CRITICAL: Use ref instead of state for synchronous guard flag
+  // Prevents React batching race condition where setIsSubmitting(true) + setIsAuthenticated(true)
+  // are batched together, causing useEffect to see isAuthenticated=true while isSubmitting=false
+  const isSubmittingRef = useRef(false);
+
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const signUpSchema = z.object({
-    name: z.string().min(2, t('auth.name_min_length', { min: 2 })),
-    email: z.string().email(t('auth.email_invalid')),
-    password: z.string().min(8, t('auth.password_min_length', { min: 8 })).max(100, t('auth.password_max_length', { max: 100 })),
-  });
+  // Memoize schema to prevent recreation on every render (performance optimization)
+  const signUpSchema = useMemo(() => createSignUpSchema(t), [t]);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<SignUpForm>({
+  const { register, handleSubmit, formState: { errors } } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
   });
 
-  // Redirect already-authenticated users who visit /signup directly
-  useEffect(() => {
-    if (isAuthenticated && !hasSubmitted) {
-      navigate('/conversations', { replace: true });
-    }
-  }, [isAuthenticated, hasSubmitted, navigate]); // React to state changes
-
-  const onSubmit = async (data: SignUpForm) => {
-    setIsLoading(true);
-    setError(null);
-
-    // Mark submission BEFORE register to prevent useEffect redirect race condition
-    // (authService.register sets isAuthenticated=true, which would trigger the useEffect)
-    setHasSubmitted(true);
-
-    try {
-      // Register the user
-      console.time('⏱️ SIGNUP-TOTAL');
-      console.time('⏱️ SIGNUP-API');
-      const authResponse = await authService.register({
-        name: data.name,
-        email: data.email,
-        password: data.password,
-      });
-      console.timeEnd('⏱️ SIGNUP-API');
-
-      // Track signup completion - sends to all analytics providers
-      track('signup_completed', {
-        userId: authResponse.user.id,
-        email: authResponse.user.email,
-        name: authResponse.user.name,
-        signupMethod: 'email',
-      });
-
+  // Unified form submission logic (loading, errors, analytics, navigation)
+  const { handleSubmit: onSubmit, isLoading, error, isNavigating } = useAuthFormSubmit({
+    authAction: (data: SignUpFormData) => authService.register(data),
+    errorKey: 'auth.signup_failed',
+    trackingEvent: 'signup_completed',
+    trackingData: (response) => ({
+      userId: response.user.id,
+      email: response.user.email,
+      name: response.user.name,
+      signupMethod: 'email',
+    }),
+    onSuccess: () => {
       // Clear any stale onboarding state before starting fresh
       // Ensures new signups always begin onboarding from step 0 with clean form data
       useOnboardingStore.getState().resetOnboarding();
+    },
+    guardRef: isSubmittingRef,
+  });
 
-      // New signups always go to onboarding (they won't have any agents yet)
-      // This saves an extra API call and improves perceived performance
-      console.time('⏱️ SIGNUP-NAVIGATE');
-      navigate('/onboarding', { replace: true });
-      console.timeEnd('⏱️ SIGNUP-NAVIGATE');
-      console.timeEnd('⏱️ SIGNUP-TOTAL');
-    } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string; error?: string; errors?: Array<{ message: string }> }>;
-      logger.error('Registration error', error);
-      logger.error('Error response', axiosError.response?.data);
-
-      // Extract detailed error message
-      const errorMessage =
-        axiosError.response?.data?.message ||
-        axiosError.response?.data?.error ||
-        axiosError.response?.data?.errors?.[0]?.message ||
-        axiosError.message ||
-        t('auth.signup_failed');
-
-      setError(errorMessage);
-      toast.error(errorMessage);
-      // Reset hasSubmitted so user can retry (and useEffect guard works correctly)
-      setHasSubmitted(false);
-    } finally {
-      setIsLoading(false);
+  // Redirect already-authenticated users who visit /signup directly
+  // Guard with isSubmittingRef to prevent race condition during registration flow
+  useEffect(() => {
+    if (isAuthenticated && !isSubmittingRef.current) {
+      navigate('/conversations', { replace: true });
     }
-  };
+  }, [isAuthenticated, navigate]); // isSubmittingRef not needed in deps (it's a ref)
 
   return (
     <AuthPageLayout
@@ -158,8 +109,8 @@ export const SignUpPage = () => {
         <Button
           type="submit"
           className="w-full h-11"
-          isLoading={isLoading}
-          disabled={isLoading}
+          isLoading={isLoading || isNavigating}
+          disabled={isLoading || isNavigating}
         >
           {t('auth.signup_button')}
         </Button>

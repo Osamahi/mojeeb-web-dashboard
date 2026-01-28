@@ -70,3 +70,12 @@ export interface ChangePasswordRequest {
   oldPassword: string;
   newPassword: string;
 }
+
+// Post-authentication navigation types
+export type NavigationDestination = '/onboarding' | '/conversations';
+export type NavigationReason = 'no_agents' | 'has_invitations' | 'has_agents';
+
+export interface PostAuthNavigationResult {
+  destination: NavigationDestination;
+  reason: NavigationReason;
+}

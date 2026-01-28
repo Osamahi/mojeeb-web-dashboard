@@ -10,6 +10,7 @@ import type {
   ResetPasswordRequest,
   ChangePasswordRequest,
   User,
+  PostAuthNavigationResult,
 } from '../types/auth.types';
 import { useAuthStore } from '../stores/authStore';
 import { agentService } from '@/features/agents/services/agentService';
@@ -48,33 +49,177 @@ class AuthService {
   private refreshPromise: Promise<{ accessToken: string; refreshToken: string }> | null = null;
 
   /**
-   * Initialize agent data after successful authentication
-   * Fetches agents and initializes agent selection
-   * @private
+   * Complete post-authentication flow
+   * Unified business logic for all auth methods (login, signup, Google, Apple)
+   *
+   * Responsibilities:
+   * 1. Fetch user's agents and initialize agent selection
+   * 2. Check for pending invitations
+   * 3. Determine navigation destination based on state
+   *
+   * Navigation Logic:
+   * - Has pending invitations → /conversations (modal auto-shows)
+   * - Has agents but no invitations → /conversations
+   * - No agents and no invitations → /onboarding (agent creation)
+   *
+   * Error Handling:
+   * - Agent fetch failures: Non-fatal, continues with hasAgents=false
+   * - Invitation check failures: Non-fatal, continues without invitations
+   * - Component unmount (AbortError): Immediately returns fallback destination
+   *
+   * @param userEmail - Email of authenticated user
+   * @param signal - Optional AbortSignal to cancel flow on component unmount
+   * @returns Navigation destination and reason
    */
-  private async initializeAgentData(): Promise<void> {
+  async completeAuthFlow(
+    userEmail: string,
+    signal?: AbortSignal
+  ): Promise<PostAuthNavigationResult> {
+    logger.info('Starting post-auth flow', {
+      component: 'AuthService',
+      method: 'completeAuthFlow',
+      userEmail,
+    });
+
+    // Check if already aborted
+    if (signal?.aborted) {
+      logger.info('Auth flow aborted before start', {
+        component: 'AuthService',
+        method: 'completeAuthFlow',
+      });
+      return { destination: '/conversations', reason: 'has_agents' };
+    }
+
+    // 1. Fetch and initialize agents
+    logger.info('Fetching user agents', {
+      component: 'AuthService',
+      method: 'completeAuthFlow',
+      step: 'fetch_agents',
+    });
+    let hasAgents = false;
+
     try {
       const agents = await agentService.getAgents();
 
-      if (!agents || agents.length === 0) {
-        logger.warn('User has no agents - needs onboarding or agent creation');
-        // User authenticated successfully but has no agents
-        // This is a valid state - they may need to create their first agent
-        return;
+      // Check abort after async operation
+      if (signal?.aborted) {
+        logger.info('Auth flow aborted after agent fetch', {
+          component: 'AuthService',
+          method: 'completeAuthFlow',
+        });
+        return { destination: '/conversations', reason: 'has_agents' };
       }
 
-      useAgentStore.getState().setAgents(agents);
-      useAgentStore.getState().initializeAgentSelection();
+      hasAgents = agents && agents.length > 0;
 
-      logger.info('Agent selection initialized successfully', {
-        selectedAgentId: agents[0]?.id,
-        totalAgents: agents.length,
-      });
+      if (hasAgents) {
+        useAgentStore.getState().setAgents(agents);
+        useAgentStore.getState().initializeAgentSelection();
+        logger.info('Agent selection initialized', {
+          component: 'AuthService',
+          method: 'completeAuthFlow',
+          selectedAgentId: agents[0]?.id,
+          totalAgents: agents.length,
+        });
+      } else {
+        logger.info('User has no agents', {
+          component: 'AuthService',
+          method: 'completeAuthFlow',
+        });
+      }
     } catch (error) {
-      logger.error('Failed to initialize agent selection', error instanceof Error ? error : new Error(String(error)));
-      // Don't fail the authentication if agent initialization fails
-      // The user can still access the app and retry manually or create an agent
+      logger.error('Error fetching agents (non-fatal, continuing)', error instanceof Error ? error : new Error(String(error)), {
+        component: 'AuthService',
+        method: 'completeAuthFlow',
+      });
+      // Continue with hasAgents = false
     }
+
+    // 2. Check for pending invitations
+    logger.info('Checking for pending invitations', {
+      component: 'AuthService',
+      method: 'completeAuthFlow',
+      step: 'check_invitations',
+    });
+    const { invitationService } = await import('@/features/organizations/services/invitationService');
+    const { useInvitationStore } = await import('@/features/organizations/stores/invitationStore');
+
+    // Check abort after dynamic imports
+    if (signal?.aborted) {
+      logger.info('Auth flow aborted after invitation import', {
+        component: 'AuthService',
+        method: 'completeAuthFlow',
+      });
+      return { destination: '/conversations', reason: 'has_agents' };
+    }
+
+    let hasInvitations = false;
+
+    try {
+      const invitations = await invitationService.getMyPendingInvitations();
+
+      // Check abort after async operation
+      if (signal?.aborted) {
+        logger.info('Auth flow aborted after invitation fetch', {
+          component: 'AuthService',
+          method: 'completeAuthFlow',
+        });
+        return { destination: '/conversations', reason: 'has_agents' };
+      }
+
+      if (invitations && invitations.length > 0) {
+        hasInvitations = true;
+        useInvitationStore.getState().setPendingInvitations(invitations);
+        useInvitationStore.getState().setShowModal(true);
+
+        logger.info('Found pending invitations', {
+          component: 'AuthService',
+          method: 'completeAuthFlow',
+          count: invitations.length,
+          organizations: invitations.map((inv) => inv.organizationName),
+        });
+      } else {
+        logger.info('No pending invitations found', {
+          component: 'AuthService',
+          method: 'completeAuthFlow',
+        });
+      }
+    } catch (error) {
+      logger.error('Error checking invitations (non-fatal, continuing)', error instanceof Error ? error : new Error(String(error)), {
+        component: 'AuthService',
+        method: 'completeAuthFlow',
+      });
+      // Don't fail the auth flow if invitation check fails
+    }
+
+    // 3. Determine navigation based on state
+    if (hasInvitations) {
+      logger.info('Navigating to conversations (has invitations)', {
+        component: 'AuthService',
+        method: 'completeAuthFlow',
+        destination: '/conversations',
+        reason: 'has_invitations',
+      });
+      return { destination: '/conversations', reason: 'has_invitations' };
+    }
+
+    if (hasAgents) {
+      logger.info('Navigating to conversations (has agents)', {
+        component: 'AuthService',
+        method: 'completeAuthFlow',
+        destination: '/conversations',
+        reason: 'has_agents',
+      });
+      return { destination: '/conversations', reason: 'has_agents' };
+    }
+
+    logger.info('Navigating to onboarding (no agents)', {
+      component: 'AuthService',
+      method: 'completeAuthFlow',
+      destination: '/onboarding',
+      reason: 'no_agents',
+    });
+    return { destination: '/onboarding', reason: 'no_agents' };
   }
 
   /**
@@ -98,6 +243,7 @@ class AuthService {
 
   /**
    * Login with email and password
+   * Note: Post-auth flow (agents, invitations, navigation) handled by usePostAuthNavigation hook
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const { data } = await api.post<ApiAuthResponse>('/api/auth/login', credentials);
@@ -112,14 +258,12 @@ class AuthService {
     // Update auth store
     useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
 
-    // After successful login, fetch agents and initialize selection
-    await this.initializeAgentData();
-
     return authResponse;
   }
 
   /**
    * Login with Google OAuth
+   * Note: Post-auth flow (agents, invitations, navigation) handled by usePostAuthNavigation hook
    */
   async loginWithGoogle(
     accessToken: string,
@@ -146,15 +290,13 @@ class AuthService {
     // Update auth store
     useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
 
-    // After successful login, fetch agents and initialize selection
-    await this.initializeAgentData();
-
     return authResponse;
   }
 
   /**
    * Login with Google using authorization code (redirect flow)
    * Backend will exchange code for tokens and fetch user info
+   * Note: Post-auth flow (agents, invitations, navigation) handled by usePostAuthNavigation hook
    */
   async loginWithGoogleCode(authorizationCode: string): Promise<AuthResponse> {
     const { data } = await api.post<ApiAuthResponse>('/api/auth/google/code', {
@@ -172,14 +314,12 @@ class AuthService {
     // Update auth store
     useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
 
-    // After successful login, fetch agents and initialize selection
-    await this.initializeAgentData();
-
     return authResponse;
   }
 
   /**
    * Login with Apple Sign-In
+   * Note: Post-auth flow (agents, invitations, navigation) handled by usePostAuthNavigation hook
    */
   async loginWithApple(idToken: string): Promise<AuthResponse> {
     const { data } = await api.post<ApiAuthResponse>('/api/auth/oauth', {
@@ -201,14 +341,12 @@ class AuthService {
     // Update auth store
     useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
 
-    // After successful login, fetch agents and initialize selection
-    await this.initializeAgentData();
-
     return authResponse;
   }
 
   /**
    * Register new user
+   * Note: Post-auth flow (agents, invitations, navigation) handled by usePostAuthNavigation hook
    */
   async register(registerData: RegisterData): Promise<AuthResponse> {
     if (import.meta.env.DEV) {
@@ -234,9 +372,6 @@ class AuthService {
     if (import.meta.env.DEV) {
       console.timeEnd('⏱️ AUTH-SERVICE: setAuth');
     }
-
-    // Note: Agent checking is handled in SignUpPage component for new users
-    // Existing users logging in will have agents fetched via initializeAgentData() in login()
 
     return authResponse;
   }

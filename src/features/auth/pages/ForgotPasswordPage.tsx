@@ -1,9 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { AxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -12,10 +10,8 @@ import { authService } from '../services/authService';
 import { toast } from 'sonner';
 import { AuthPageLayout } from '../components/AuthPageLayout';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-
-type ForgotPasswordForm = {
-  email: string;
-};
+import { extractAuthError } from '../utils/errorHandler';
+import { createForgotPasswordSchema, type ForgotPasswordFormData } from '../schemas/validation.schemas';
 
 export const ForgotPasswordPage = () => {
   const { t } = useTranslation();
@@ -24,15 +20,14 @@ export const ForgotPasswordPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const forgotPasswordSchema = z.object({
-    email: z.string().email(t('auth.email_invalid')),
-  });
+  // Memoize schema to prevent recreation on every render (performance optimization)
+  const forgotPasswordSchema = useMemo(() => createForgotPasswordSchema(t), [t]);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ForgotPasswordForm>({
+  const { register, handleSubmit, formState: { errors } } = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
   });
 
-  const onSubmit = async (data: ForgotPasswordForm) => {
+  const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true);
 
     try {
@@ -40,12 +35,18 @@ export const ForgotPasswordPage = () => {
       setIsSuccess(true);
       toast.success(t('auth.reset_link_sent'));
     } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      toast.error(axiosError.response?.data?.message || t('auth.reset_link_failed'));
+      // Use extractAuthError utility for consistent error handling
+      const errorMessage = extractAuthError(error, 'auth.reset_link_failed', t);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Memoize back to login handler to prevent recreation on every render
+  const handleBackToLogin = useCallback(() => {
+    navigate('/login');
+  }, [navigate]);
 
   if (isSuccess) {
     return (
@@ -61,7 +62,7 @@ export const ForgotPasswordPage = () => {
             {t('auth.check_email_description')}
           </p>
           <Button
-            onClick={() => navigate('/login')}
+            onClick={handleBackToLogin}
             className="w-full h-11"
           >
             {t('auth.back_to_login')}
@@ -78,7 +79,7 @@ export const ForgotPasswordPage = () => {
       footerContent={
         <div className="mt-6">
           <button
-            onClick={() => navigate('/login')}
+            onClick={handleBackToLogin}
             className="flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 transition-colors mx-auto"
             disabled={isLoading}
           >

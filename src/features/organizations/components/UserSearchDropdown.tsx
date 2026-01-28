@@ -2,18 +2,16 @@
  * User Search Dropdown Component
  * Allows searching and selecting a user
  * Shows current organization for validation
- * PATTERN: Follows EditOrganizationModal approach - fetch all users, filter client-side
+ * PATTERN: Server-side search with debouncing for scalability
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Search, Check, User as UserIcon, AlertCircle, Loader2 } from 'lucide-react';
-import { userService } from '@/features/users/services/userService';
 import { organizationService } from '../services/organizationService';
 import { Input } from '@/components/ui/Input';
 import type { UserSearchResult } from '../types';
-import type { User } from '@/features/users/types';
 
 interface UserSearchDropdownProps {
   selectedUser: UserSearchResult | null;
@@ -30,36 +28,26 @@ export default function UserSearchDropdown({
 }: UserSearchDropdownProps) {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const placeholderText = placeholder || t('user_search_dropdown.placeholder');
 
-  // Fetch all users upfront (following EditOrganizationModal pattern)
-  const { data: allUsers = [], isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => userService.getUsers(),
+  // Debounce search query (300ms delay to prevent excessive API calls)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Server-side search with debounced query
+  const { data: searchResults = [], isLoading } = useQuery({
+    queryKey: ['user-search', debouncedQuery],
+    queryFn: () => organizationService.searchUsers(debouncedQuery),
+    enabled: debouncedQuery.length >= 2, // Only query if 2+ characters
+    staleTime: 30000, // Cache for 30 seconds
   });
-
-  // Client-side filtering with organization enrichment
-  const searchResults = useMemo<UserSearchResult[]>(() => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
-      return [];
-    }
-
-    const query = searchQuery.toLowerCase();
-    return allUsers
-      .filter((user: User) => {
-        const matchesEmail = user.email?.toLowerCase().includes(query);
-        const matchesName = user.name?.toLowerCase().includes(query);
-        return matchesEmail || matchesName;
-      })
-      .slice(0, 20) // Limit to 20 results
-      .map((user: User) => ({
-        id: user.id,
-        email: user.email || '',
-        name: user.name,
-        currentOrganization: null, // Will be enriched on demand if needed
-      }));
-  }, [allUsers, searchQuery]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);

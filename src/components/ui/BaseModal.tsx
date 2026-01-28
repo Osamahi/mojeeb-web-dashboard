@@ -138,7 +138,7 @@ export const BaseModal = ({
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-neutral-200 flex-shrink-0">
-                <div className="flex-1 pr-8">
+                <div className="flex-1 pe-8">
                   <h2
                     id="modal-title"
                     className="text-xl font-semibold text-neutral-950"
@@ -159,7 +159,7 @@ export const BaseModal = ({
                     onClick={handleClose}
                     disabled={isLoading}
                     className={cn(
-                      'p-2 hover:bg-neutral-100 rounded-lg transition-colors',
+                      'p-2 hover:bg-neutral-100 rounded-lg transition-colors flex-shrink-0',
                       'disabled:opacity-50 disabled:pointer-events-none'
                     )}
                     aria-label={t('common.close')}

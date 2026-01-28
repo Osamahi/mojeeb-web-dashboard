@@ -1,64 +1,46 @@
 /**
  * Mojeeb Minimal Login Page
  * Ultra-clean login experience with Mojeeb brand identity
- * NO animations, NO gradients (except logo), just professional simplicity
  */
 
-import { useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { AxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { authService } from '../services/authService';
-import { toast } from 'sonner';
 import { AuthPageLayout } from '../components/AuthPageLayout';
 import { AuthFooterLink } from '../components/AuthFooterLink';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLanguageFromUrl } from '@/hooks/useLanguageFromUrl';
-
-type LoginForm = {
-  email: string;
-  password: string;
-};
+import { useAuthFormSubmit } from '../hooks/useAuthFormSubmit';
+import { createLoginSchema, type LoginFormData } from '../schemas/validation.schemas';
 
 export const LoginPage = () => {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_login');
   useLanguageFromUrl(); // Apply language from URL parameter (from landing page)
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const loginSchema = z.object({
-    email: z.string().email(t('auth.email_invalid')),
-    password: z.string().min(6, t('auth.password_min_length', { min: 6 })),
-  });
+  // Memoize schema to prevent recreation on every render (performance optimization)
+  const loginSchema = useMemo(() => createLoginSchema(t), [t]);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginForm) => {
-    setIsLoading(true);
-    setError(null);
+  // Unified form submission logic (loading, errors, navigation)
+  const { handleSubmit: onSubmit, isLoading, error, isNavigating } = useAuthFormSubmit({
+    authAction: (data: LoginFormData) => authService.login(data),
+    errorKey: 'auth.login_failed',
+  });
 
-    try {
-      await authService.login(data);
-      // Phone modal will auto-show in DashboardLayout if needed
-      navigate('/conversations');
-    } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string }>;
-      const errorMessage = axiosError.response?.data?.message || t('auth.login_failed');
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Memoize forgot password handler to prevent recreation on every render
+  const handleForgotPassword = useCallback(() => {
+    navigate('/forgot-password');
+  }, [navigate]);
 
   return (
     <AuthPageLayout
@@ -94,7 +76,7 @@ export const LoginPage = () => {
           <div className="flex justify-end">
             <button
               type="button"
-              onClick={() => navigate('/forgot-password')}
+              onClick={handleForgotPassword}
               className="text-sm text-brand-cyan hover:text-brand-cyan/80 transition-colors"
               disabled={isLoading}
             >
@@ -106,8 +88,8 @@ export const LoginPage = () => {
         <Button
           type="submit"
           className="w-full h-11"
-          isLoading={isLoading}
-          disabled={isLoading}
+          isLoading={isLoading || isNavigating}
+          disabled={isLoading || isNavigating}
         >
           {t('auth.login_button')}
         </Button>

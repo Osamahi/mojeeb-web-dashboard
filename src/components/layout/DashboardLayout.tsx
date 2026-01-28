@@ -6,6 +6,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { OnboardingPromptBanner } from './OnboardingPromptBanner';
 import { PhoneCollectionModal } from '@/features/auth/components/PhoneCollectionModal';
+import { PendingInvitationModal } from '@/features/organizations/components/PendingInvitationModal';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useAuthStore } from '@/features/auth/stores/authStore';
@@ -119,6 +120,9 @@ export const DashboardLayout = () => {
         onSuccess={() => setShowPhoneModal(false)}
         onSkip={() => setShowPhoneModal(false)}
       />
+
+      {/* Pending Invitation Modal - Auto-shows after authentication if user has pending invitations */}
+      <PendingInvitationModal />
     </>
   );
 };

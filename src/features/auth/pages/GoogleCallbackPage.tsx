@@ -6,7 +6,7 @@
  * fetches user info, and completes the authentication flow.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -15,9 +15,13 @@ import { logger } from '@/lib/logger';
 import { useAnalytics } from '@/lib/analytics';
 import { authService } from '../services/authService';
 import { toast } from 'sonner';
-import { AxiosError } from 'axios';
+import { usePostAuthNavigation } from '../hooks/usePostAuthNavigation';
+import { extractAuthError } from '../utils/errorHandler';
 
 type CallbackStatus = 'processing' | 'success' | 'error';
+
+// UX delay before redirecting after successful authentication
+const UX_DELAY_MS = 1500;
 
 export default function GoogleCallbackPage() {
   const { t } = useTranslation();
@@ -25,12 +29,40 @@ export default function GoogleCallbackPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { track } = useAnalytics();
+  const { navigateAfterAuth } = usePostAuthNavigation();
   const [status, setStatus] = useState<CallbackStatus>('processing');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
+  // CRITICAL: Use useRef for atomic idempotency guard (prevents race condition in React Strict Mode)
+  // useState would allow both effect invocations to read false before either sets true
+  const hasProcessedRef = useRef(false);
+
   useEffect(() => {
+    // Atomic idempotency guard: prevent processing callback multiple times
+    if (hasProcessedRef.current) {
+      logger.info('Google OAuth callback already processed, skipping', {
+        component: 'GoogleCallbackPage',
+      });
+      return;
+    }
+
+    // Mark as processed IMMEDIATELY (synchronous, atomic)
+    // This prevents race condition in React Strict Mode where both invocations
+    // could pass the guard check before either sets the flag
+    hasProcessedRef.current = true;
+
+    // AbortController for canceling async operations on unmount
+    const abortController = new AbortController();
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const handleCallback = async () => {
       try {
+        // Check if operation was aborted
+        if (abortController.signal.aborted) {
+          logger.info('Google OAuth callback aborted (component unmounted)');
+          return;
+        }
+
         // Extract parameters from URL
         const code = searchParams.get('code');
         const error = searchParams.get('error');
@@ -66,6 +98,12 @@ export default function GoogleCallbackPage() {
         logger.info('Sending authorization code to backend for exchange');
         const authResponse = await authService.loginWithGoogleCode(code);
 
+        // Check abort again after async operation
+        if (abortController.signal.aborted) {
+          logger.info('Google OAuth callback aborted after token exchange (component unmounted)');
+          return;
+        }
+
         // Track signup/login completion
         track('signup_completed', {
           userId: authResponse.user.id,
@@ -77,14 +115,31 @@ export default function GoogleCallbackPage() {
         setStatus('success');
         toast.success(t('social_login.google_success'));
 
-        // Redirect to conversations after brief delay
-        setTimeout(() => {
-          navigate('/conversations');
-        }, 1500);
+        // Unified post-auth flow (agents + invitations + navigation) after brief delay for UX
+        timeoutId = setTimeout(async () => {
+          // Final abort check before navigation
+          if (!abortController.signal.aborted) {
+            await navigateAfterAuth(authResponse.user.email);
+          } else {
+            logger.info('Navigation aborted (component unmounted)', {
+              component: 'GoogleCallbackPage',
+            });
+          }
+        }, UX_DELAY_MS);
       } catch (err) {
-        const axiosError = err as AxiosError<{ message?: string }>;
-        logger.error('Error processing Google OAuth callback', { error: err });
-        const message = axiosError?.response?.data?.message || t('social_login.google_error');
+        // Don't update state if component unmounted
+        if (abortController.signal.aborted) {
+          logger.info('Error handling skipped (component unmounted)', {
+            component: 'GoogleCallbackPage',
+          });
+          return;
+        }
+
+        logger.error('Error processing Google OAuth callback', err instanceof Error ? err : new Error(String(err)), {
+          component: 'GoogleCallbackPage',
+        });
+
+        const message = extractAuthError(err, 'social_login.google_error', t);
         setErrorMessage(message);
         setStatus('error');
         toast.error(message);
@@ -92,7 +147,20 @@ export default function GoogleCallbackPage() {
     };
 
     handleCallback();
-  }, [searchParams, navigate, track, t]);
+
+    // Cleanup: abort in-flight operations and clear timeout if component unmounts
+    return () => {
+      abortController.abort();
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        logger.info('Google OAuth callback: cleared pending navigation timeout and aborted async operations', {
+          component: 'GoogleCallbackPage',
+        });
+      }
+    };
+    // Note: t and track are stable functions, safe to omit from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, navigate, navigateAfterAuth]);
 
   const handleRetry = () => {
     navigate('/auth/login');

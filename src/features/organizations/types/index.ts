@@ -106,3 +106,19 @@ export interface AssignUserToOrganizationRequest {
   role?: 'owner' | 'admin' | 'member';
   removeFromCurrent?: boolean;
 }
+
+/**
+ * Pending invitation (matches backend PendingInvitation model)
+ */
+export interface PendingInvitation {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: 'owner' | 'admin' | 'member';
+  invitedBy: string;
+  invitationToken: string;
+  expiresAt: string;
+  status: 'pending' | 'accepted' | 'expired' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+}

@@ -165,6 +165,10 @@ export const useAuthStore = create<AuthState>()(
           console.log(`   📡 Logout listener re-initialized`);
         });
 
+        // NOTE: Invitation checking is now handled by usePostAuthNavigation hook
+        // (called after auth methods in LoginPage, SignUpPage, GoogleCallbackPage)
+        // This ensures invitations are checked in a unified way with proper navigation
+
         console.log(`   ✅ Auth state set, isAuthenticated = true`);
       },
 

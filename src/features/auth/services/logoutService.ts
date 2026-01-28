@@ -164,6 +164,15 @@ async function executeLogout(options: Required<LogoutOptions>): Promise<void> {
     usePlanStore.getState().clearPlans();
     logger.debug('[LogoutService]', '  ✓ Plan store cleared');
 
+    // Clear invitation store to prevent stale invitations for next user
+    try {
+      const { useInvitationStore } = await import('@/features/organizations/stores/invitationStore');
+      useInvitationStore.getState().clearInvitations();
+      logger.debug('[LogoutService]', '  ✓ Invitation store cleared');
+    } catch (error) {
+      logger.debug('[LogoutService]', '  ⊘ Invitation store not found (OK if not using)');
+    }
+
     // Step 9: Clear chatStore and userStore (if they exist)
     try {
       const { useChatStore } = await import('@/features/conversations/stores/chatStore');

@@ -11,7 +11,8 @@ import type {
   UpdateOrganizationRequest,
   UserSearchResult,
   AssignUserToOrganizationRequest,
-  OrganizationMember
+  OrganizationMember,
+  PendingInvitation
 } from '../types';
 import type { ApiResponse } from '@/types/api';
 import { logger } from '@/lib/logger';
@@ -322,6 +323,169 @@ export const organizationService = {
       logger.error('[organizationService] Failed to remove user from organization', error as Error, {
         organizationId,
         userId
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Invite or assign user by email (Smart endpoint)
+   * - If user exists → assign directly
+   * - If user doesn't exist → create invitation and send email
+   */
+  async inviteOrAssignUser(
+    organizationId: string,
+    data: {
+      email: string;
+      role?: 'owner' | 'admin' | 'member';
+      removeFromCurrent?: boolean;
+    }
+  ): Promise<{ type: 'invited' | 'assigned'; invitation?: { id: string; email: string; invitationToken: string; expiresAt: string } }> {
+    try {
+      // Transform camelCase to snake_case for backend
+      const snakeCaseData = {
+        email: data.email.toLowerCase().trim(),
+        role: data.role || 'member',
+        remove_from_current: data.removeFromCurrent || false
+      };
+
+      const response = await api.post<ApiResponse<{
+        type: 'invited' | 'assigned';
+        message: string;
+        invitation?: {
+          id: string;
+          email: string;
+          invitation_token: string;
+          expires_at: string;
+        };
+      }>>(
+        `/api/organization/${organizationId}/send-invitation`,
+        snakeCaseData
+      );
+
+      logger.info('[organizationService] Invited or assigned user', {
+        organizationId,
+        email: data.email,
+        type: response.data.data.type
+      });
+
+      // Transform invitation response from snake_case to camelCase
+      if (response.data.data.type === 'invited' && response.data.data.invitation) {
+        return {
+          type: 'invited',
+          invitation: {
+            id: response.data.data.invitation.id,
+            email: response.data.data.invitation.email,
+            invitationToken: response.data.data.invitation.invitation_token,
+            expiresAt: response.data.data.invitation.expires_at
+          }
+        };
+      }
+
+      return { type: 'assigned' };
+    } catch (error) {
+      logger.error('[organizationService] Failed to invite or assign user', error as Error, {
+        organizationId,
+        email: data.email
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Get pending invitations for an organization
+   * Returns list of pending invitations with their status
+   */
+  async getPendingInvitations(organizationId: string): Promise<PendingInvitation[]> {
+    try {
+      const response = await api.get<ApiResponse<any[]>>(
+        `/api/invitations/organization/${organizationId}`
+      );
+      logger.info('[organizationService] Fetched pending invitations', {
+        organizationId,
+        count: response.data.data.length
+      });
+
+      // Transform snake_case to camelCase
+      return response.data.data.map((invitation: any) => ({
+        id: invitation.id,
+        organizationId: invitation.organization_id,
+        email: invitation.email,
+        role: invitation.role,
+        invitedBy: invitation.invited_by,
+        invitationToken: invitation.invitation_token,
+        expiresAt: invitation.expires_at,
+        status: invitation.status,
+        createdAt: invitation.created_at,
+        updatedAt: invitation.updated_at
+      }));
+    } catch (error) {
+      logger.error('[organizationService] Failed to fetch pending invitations', error as Error, {
+        organizationId
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Cancel a pending invitation
+   */
+  async cancelInvitation(invitationId: string): Promise<void> {
+    try {
+      await api.delete(`/api/invitations/${invitationId}`);
+      logger.info('[organizationService] Cancelled invitation', { invitationId });
+    } catch (error) {
+      logger.error('[organizationService] Failed to cancel invitation', error as Error, {
+        invitationId
+      });
+      throw error;
+    }
+  },
+
+  /**
+   * Resend a pending invitation
+   * Generates a new token and extends expiration by 7 days
+   * Returns the updated invitation with the new token
+   */
+  async resendInvitation(invitationId: string): Promise<{
+    id: string;
+    email: string;
+    invitationToken: string;
+    expiresAt: string;
+    role: string;
+  }> {
+    try {
+      const { data } = await api.post<
+        ApiResponse<{
+          type: string;
+          invitation: {
+            id: string;
+            email: string;
+            invitation_token: string;
+            expires_at: string;
+            role: string;
+          };
+        }>
+      >(`/api/invitations/${invitationId}/resend`);
+
+      // Transform snake_case to camelCase
+      const invitation = {
+        id: data.data.invitation.id,
+        email: data.data.invitation.email,
+        invitationToken: data.data.invitation.invitation_token,
+        expiresAt: data.data.invitation.expires_at,
+        role: data.data.invitation.role,
+      };
+
+      logger.info('[organizationService] Resent invitation', {
+        invitationId,
+        email: invitation.email,
+      });
+
+      return invitation;
+    } catch (error) {
+      logger.error('[organizationService] Failed to resend invitation', error as Error, {
+        invitationId,
       });
       throw error;
     }
