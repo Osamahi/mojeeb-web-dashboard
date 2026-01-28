@@ -144,8 +144,15 @@ export default function UsersPage() {
             </div>
           )}
 
-          {/* Table or Empty State */}
-          {displayUsers && displayUsers.length > 0 ? (
+          {/* Table, Loading, or Empty State */}
+          {isSearching ? (
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-center">
+                <Spinner size="lg" />
+                <p className="mt-4 text-neutral-600">{t('users.searching')}</p>
+              </div>
+            </div>
+          ) : displayUsers && displayUsers.length > 0 ? (
             <UsersTable users={displayUsers} />
           ) : isSearchMode ? (
             <EmptyState
