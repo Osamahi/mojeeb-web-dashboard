@@ -168,11 +168,26 @@ export interface CreateFieldDefinitionRequest {
 // Statistics & Analytics
 // ========================================
 
+/**
+ * Dynamic Lead Statistics
+ *
+ * Structure:
+ * - total: Total count of all leads
+ * - [status]: Dynamic key-value pairs for each status (e.g., new, processing, completed, cancelled, etc.)
+ *
+ * Example response:
+ * {
+ *   total: 150,
+ *   new: 45,
+ *   processing: 80,
+ *   completed: 25
+ * }
+ *
+ * Future-proof: Automatically supports new status values without code changes
+ */
 export interface LeadStatistics {
-  new: number;
-  processing: number;
-  completed: number;
   total: number;
+  [status: string]: number; // Dynamic status counts (new, processing, completed, cancelled, etc.)
 }
 
 // ========================================
