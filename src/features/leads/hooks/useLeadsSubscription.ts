@@ -115,66 +115,9 @@ export function useLeadsSubscription() {
       return;
     }
 
-    console.log('========================================');
-    console.log('[Leads Subscription] 🚀 INITIALIZING SUBSCRIPTION');
-    console.log('[Leads Subscription] Agent ID:', agentId);
-    console.log('[Leads Subscription] Filter:', `agent_id=eq.${agentId}`);
-    console.log('[Leads Subscription] Timestamp:', new Date().toISOString());
-    console.log('========================================');
-
     const handleChange = (payload: any) => {
-      console.log('========================================');
-      console.log('[Leads Subscription] 🎉 EVENT RECEIVED!');
-      console.log('[Leads Subscription] Event Type:', payload.eventType);
-      console.log('[Leads Subscription] Timestamp:', new Date().toISOString());
-      const payloadLatestNote = payload.new?.notes?.[payload.new.notes.length - 1];
-      console.log('[Leads Subscription] Payload (basic):', {
-        eventType: payload.eventType,
-        leadId: payload.new?.id,
-        leadName: payload.new?.name,
-        notesCount: payload.new?.notes?.length,
-      });
-      console.log('[Leads Subscription] 📝 Payload Latest Note (DETAILED):', {
-        id: payloadLatestNote?.id,
-        text: payloadLatestNote?.text,
-        user_id: payloadLatestNote?.user_id,
-        user_name: payloadLatestNote?.user_name,
-        created_at: payloadLatestNote?.created_at,
-        updated_at: payloadLatestNote?.updated_at,
-        note_type: payloadLatestNote?.note_type,
-        is_deleted: payloadLatestNote?.is_deleted,
-        allKeys: Object.keys(payloadLatestNote || {}),
-      });
-
-      if (payload.eventType === 'INSERT') {
-        const newLead = payload.new as LeadRow;
-        console.log('[Leads Subscription] NEW Lead:', newLead);
-        console.log('[Leads Subscription] Lead Name:', newLead.name);
-        console.log('[Leads Subscription] Lead Agent ID:', newLead.agent_id);
-      } else if (payload.eventType === 'UPDATE') {
-        const oldLead = payload.old as LeadRow;
-        const newLead = payload.new as LeadRow;
-        console.log('[Leads Subscription] OLD Lead:', oldLead);
-        console.log('[Leads Subscription] NEW Lead:', newLead);
-        console.log('[Leads Subscription] Changed fields:', {
-          name: oldLead?.name !== newLead.name ? { old: oldLead?.name, new: newLead.name } : 'unchanged',
-          status: oldLead?.status !== newLead.status ? { old: oldLead?.status, new: newLead.status } : 'unchanged',
-          phone: oldLead?.phone !== newLead.phone ? { old: oldLead?.phone, new: newLead.phone } : 'unchanged',
-        });
-      } else if (payload.eventType === 'DELETE') {
-        const deletedLead = payload.old as LeadRow;
-        console.log('[Leads Subscription] DELETED Lead:', deletedLead);
-        console.log('[Leads Subscription] Lead Name:', deletedLead.name);
-      }
-
-      console.log('[Leads Subscription] 🔄 Updating cache...');
-      console.log('========================================');
-
       if (payload.eventType === 'UPDATE') {
-        // For UPDATE: Update all leads queries (they have different filters in the key)
         const updatedLeadRow = payload.new as LeadRow;
-
-        console.log('[Leads Subscription] 📦 Updating all leads query variants...');
 
         // Convert snake_case to camelCase
         const updatedLead: any = {
@@ -188,42 +131,17 @@ export function useLeadsSubscription() {
           conversationId: updatedLeadRow.conversation_id,
           createdAt: updatedLeadRow.created_at,
           updatedAt: updatedLeadRow.updated_at,
-          // Transform notes from snake_case to camelCase
           notes: ((updatedLeadRow as any).notes || []).map((note: NoteRow) => transformNote(note)),
         };
-
-        const convertedLatestNote = updatedLead.notes?.[updatedLead.notes.length - 1];
-        console.log('[Leads Subscription] 📝 Converted updatedLead:', {
-          id: updatedLead.id,
-          notesCount: updatedLead.notes?.length,
-          allFieldsPresent: Object.keys(updatedLead),
-        });
-        console.log('[Leads Subscription] 📝 Converted Latest Note (DETAILED):', {
-          id: convertedLatestNote?.id,
-          text: convertedLatestNote?.text,
-          userId: convertedLatestNote?.userId,
-          userName: convertedLatestNote?.userName,
-          createdAt: convertedLatestNote?.createdAt,
-          updatedAt: convertedLatestNote?.updatedAt,
-          noteType: convertedLatestNote?.noteType,
-          isDeleted: convertedLatestNote?.isDeleted,
-          allKeys: Object.keys(convertedLatestNote || {}),
-        });
 
         // Update all query variants (different filter combinations)
         queryClient.setQueriesData(
           { queryKey: queryKeys.leads(agentId) },
           (oldData: any) => {
-            console.log('[Leads Subscription] 🔍 setQueriesData callback - oldData:', oldData);
-            if (!oldData) {
-              console.log('[Leads Subscription] ⚠️ No oldData for this query variant');
-              return oldData;
-            }
+            if (!oldData) return oldData;
 
             // Check if this is an infinite query structure
             if (oldData.pages && Array.isArray(oldData.pages)) {
-              console.log('[Leads Subscription] 📚 Infinite query structure detected - updating pages');
-
               // Update lead within the infinite query pages
               const newPages = oldData.pages.map((page: any) => {
                 if (!page.leads || !Array.isArray(page.leads)) {
@@ -235,100 +153,35 @@ export function useLeadsSubscription() {
                   return page; // Lead not in this page
                 }
 
-                console.log('[Leads Subscription] 🔍 Found lead in page, updating...');
-                const cachedLead = page.leads.find((l: any) => l.id === updatedLead.id);
-                const cachedLatestNote = cachedLead?.notes?.[cachedLead.notes.length - 1];
-                console.log('[Leads Subscription] 📋 Cached lead data:', {
-                  id: cachedLead?.id,
-                  status: cachedLead?.status,
-                  notesCount: cachedLead?.notes?.length,
-                  createdAt: cachedLead?.createdAt,
-                });
-                console.log('[Leads Subscription] 📋 Cached Latest Note (DETAILED):', {
-                  id: cachedLatestNote?.id,
-                  text: cachedLatestNote?.text,
-                  userId: cachedLatestNote?.userId,
-                  userName: cachedLatestNote?.userName,
-                  createdAt: cachedLatestNote?.createdAt,
-                  updatedAt: cachedLatestNote?.updatedAt,
-                  noteType: cachedLatestNote?.noteType,
-                  isDeleted: cachedLatestNote?.isDeleted,
-                  allKeys: Object.keys(cachedLatestNote || {}),
-                });
-
                 // Update the lead in this page
                 const updatedLeads = page.leads.map((lead: any) => {
                   if (lead.id === updatedLead.id) {
-                    // ✅ SELECTIVE MERGE: Only update fields that are actually present in the payload
-                    // This prevents overwriting cached data (like notes, createdAt) with undefined values
-
-                    // 🔍 SMART NOTES MERGE: Compare cached vs payload notes
-                    // If cached has MORE notes, it's likely newer (note was just added locally)
-                    // This prevents race condition where status update overwrites freshly added notes
-                    let finalNotes = lead.notes; // Default to cached notes
+                    // SMART NOTES MERGE: Compare cached vs payload notes
+                    let finalNotes = lead.notes;
                     if (updatedLead.notes && updatedLead.notes.length > 0) {
                       const cachedCount = lead.notes?.length || 0;
                       const payloadCount = updatedLead.notes.length;
 
                       if (payloadCount > cachedCount) {
-                        // Payload has more notes - it's fresher from DB
                         finalNotes = updatedLead.notes;
-                        console.log('[Leads Subscription] 📝 Using payload notes (newer):', {
-                          cachedCount,
-                          payloadCount,
-                        });
                       } else if (cachedCount > payloadCount) {
-                        // Cached has more notes - likely just added locally
                         finalNotes = lead.notes;
-                        console.log('[Leads Subscription] ⚠️ Preserving cached notes (newer):', {
-                          cachedCount,
-                          payloadCount,
-                          reason: 'Cached has more notes - likely race condition with recent note addition',
-                        });
                       } else {
-                        // Same count - use payload (fresher from DB)
                         finalNotes = updatedLead.notes;
-                        console.log('[Leads Subscription] 📝 Using payload notes (same count):', {
-                          count: payloadCount,
-                        });
                       }
                     }
 
-                    const mergedLead = {
-                      ...lead, // Start with all existing data
-                      // Only spread fields from updatedLead that are not undefined/null
+                    return {
+                      ...lead,
                       ...(updatedLead.name !== undefined && { name: updatedLead.name }),
                       ...(updatedLead.phone !== undefined && { phone: updatedLead.phone }),
                       ...(updatedLead.status !== undefined && { status: updatedLead.status }),
                       ...(updatedLead.summary !== undefined && { summary: updatedLead.summary }),
                       ...(updatedLead.customFields !== undefined && { customFields: updatedLead.customFields }),
                       ...(updatedLead.conversationId !== undefined && { conversationId: updatedLead.conversationId }),
-                      // Always update updatedAt if present
                       ...(updatedLead.updatedAt !== undefined && { updatedAt: updatedLead.updatedAt }),
-                      // Use smart notes merge result
                       notes: finalNotes,
-                      // NEVER overwrite createdAt from payload - always preserve from cache
                     };
-                    const mergedLatestNote = mergedLead.notes?.[mergedLead.notes.length - 1];
-                    console.log('[Leads Subscription] ✨ Merged lead result:', {
-                      id: mergedLead.id,
-                      status: mergedLead.status,
-                      notesCount: mergedLead.notes?.length,
-                      createdAt: mergedLead.createdAt,
-                      fieldsUpdated: Object.keys(updatedLead).filter(k => updatedLead[k] !== undefined),
-                    });
-                    console.log('[Leads Subscription] ✨ Merged Latest Note (DETAILED):', {
-                      id: mergedLatestNote?.id,
-                      text: mergedLatestNote?.text,
-                      userId: mergedLatestNote?.userId,
-                      userName: mergedLatestNote?.userName,
-                      createdAt: mergedLatestNote?.createdAt,
-                      updatedAt: mergedLatestNote?.updatedAt,
-                      noteType: mergedLatestNote?.noteType,
-                      isDeleted: mergedLatestNote?.isDeleted,
-                      allKeys: Object.keys(mergedLatestNote || {}),
-                    });
-                    return mergedLead;
                   }
                   return lead;
                 });
@@ -339,7 +192,6 @@ export function useLeadsSubscription() {
                 };
               });
 
-              console.log('[Leads Subscription] 📤 Returning updated infinite query structure');
               return {
                 ...oldData,
                 pages: newPages,
@@ -347,54 +199,29 @@ export function useLeadsSubscription() {
             }
 
             // Fallback: Flat array structure (for non-infinite queries)
-            console.log('[Leads Subscription] 📄 Flat array structure - updating directly');
             if (!Array.isArray(oldData)) {
-              console.log('[Leads Subscription] ⚠️ oldData is not an array, returning as-is');
               return oldData;
             }
 
-            const existingLead = oldData.find((lead: any) => lead.id === updatedLead.id);
-            console.log('[Leads Subscription] 🔍 Existing lead in cache:', existingLead);
-
             const newData = oldData.map((lead: any) => {
               if (lead.id === updatedLead.id) {
-                // ✅ SELECTIVE MERGE: Only update fields that are actually present in the payload
-
-                // 🔍 SMART NOTES MERGE: Compare cached vs payload notes
-                // If cached has MORE notes, it's likely newer (note was just added locally)
-                // This prevents race condition where status update overwrites freshly added notes
-                let finalNotes = lead.notes; // Default to cached notes
+                // SMART NOTES MERGE: Compare cached vs payload notes
+                let finalNotes = lead.notes;
                 if (updatedLead.notes && updatedLead.notes.length > 0) {
                   const cachedCount = lead.notes?.length || 0;
                   const payloadCount = updatedLead.notes.length;
 
                   if (payloadCount > cachedCount) {
-                    // Payload has more notes - it's fresher from DB
                     finalNotes = updatedLead.notes;
-                    console.log('[Leads Subscription] 📝 Using payload notes (newer):', {
-                      cachedCount,
-                      payloadCount,
-                    });
                   } else if (cachedCount > payloadCount) {
-                    // Cached has more notes - likely just added locally
                     finalNotes = lead.notes;
-                    console.log('[Leads Subscription] ⚠️ Preserving cached notes (newer):', {
-                      cachedCount,
-                      payloadCount,
-                      reason: 'Cached has more notes - likely race condition with recent note addition',
-                    });
                   } else {
-                    // Same count - use payload (fresher from DB)
                     finalNotes = updatedLead.notes;
-                    console.log('[Leads Subscription] 📝 Using payload notes (same count):', {
-                      count: payloadCount,
-                    });
                   }
                 }
 
-                const mergedLead = {
-                  ...lead, // Start with all existing data
-                  // Only spread fields from updatedLead that are not undefined/null
+                return {
+                  ...lead,
                   ...(updatedLead.name !== undefined && { name: updatedLead.name }),
                   ...(updatedLead.phone !== undefined && { phone: updatedLead.phone }),
                   ...(updatedLead.status !== undefined && { status: updatedLead.status }),
@@ -402,24 +229,16 @@ export function useLeadsSubscription() {
                   ...(updatedLead.customFields !== undefined && { customFields: updatedLead.customFields }),
                   ...(updatedLead.conversationId !== undefined && { conversationId: updatedLead.conversationId }),
                   ...(updatedLead.updatedAt !== undefined && { updatedAt: updatedLead.updatedAt }),
-                  // Use smart notes merge result
                   notes: finalNotes,
-                  // NEVER overwrite createdAt from payload - always preserve from cache
                 };
-                console.log('[Leads Subscription] ✨ Merged lead (selective):', mergedLead);
-                return mergedLead;
               }
               return lead;
             });
 
-            console.log('[Leads Subscription] 📤 Returning new data array (length:', newData.length, ')');
             return newData;
           }
         );
-
-        console.log('[Leads Subscription] ✅ Row updated in all query caches (no refetch)');
       } else if (payload.eventType === 'INSERT') {
-        // For INSERT: Invalidate to refetch with proper formatting
         queryClient.invalidateQueries({
           queryKey: queryKeys.leads(agentId),
           refetchType: 'active'
@@ -427,28 +246,22 @@ export function useLeadsSubscription() {
 
         const newLead = payload.new as LeadRow;
         toast.success(`New lead: ${newLead.name}`);
-        console.log('[Leads Subscription] ✅ New lead - cache invalidated');
       } else if (payload.eventType === 'DELETE') {
-        // For DELETE: Remove lead from the list
         const deletedLead = payload.old as LeadRow;
 
         queryClient.setQueryData(
           queryKeys.leads(agentId),
           (oldData: any[] | undefined) => {
             if (!oldData) return oldData;
-            // Create new array reference to trigger re-render
             return oldData.filter(lead => lead.id !== deletedLead.id);
           }
         );
 
         toast.info(`Lead deleted: ${deletedLead.name}`);
-        console.log('[Leads Subscription] ✅ Lead removed from cache');
       }
 
-      // Always invalidate stats (lightweight query)
+      // Always invalidate stats
       queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
-
-      console.log('========================================');
     };
 
     const channel = supabase
@@ -484,38 +297,22 @@ export function useLeadsSubscription() {
         handleChange
       )
       .subscribe((status) => {
-        console.log('[Leads Subscription] 📡 Channel Status:', status);
-
-        if (status === 'SUBSCRIBED') {
-          console.log('[Leads Subscription] ✅ Successfully subscribed to leads updates');
-          console.log('[Leads Subscription] Listening for events on table: leads');
-          console.log('[Leads Subscription] Filter: agent_id =', agentId);
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('[Leads Subscription] ❌ CHANNEL ERROR - Subscription failed');
-
-          // Retry connection after a delay
+        if (status === 'CHANNEL_ERROR') {
+          console.error('[Leads Subscription] Channel error - retrying in 2s');
           setTimeout(() => {
-            console.log('[Leads Subscription] 🔄 Retrying connection...');
             queryClient.invalidateQueries({
               queryKey: queryKeys.leads(agentId),
               refetchType: 'active'
             });
           }, 2000);
-        } else if (status === 'TIMED_OUT') {
-          console.error('[Leads Subscription] ⏱️ TIMED OUT - Connection timeout');
-        } else if (status === 'CLOSED') {
-          console.log('[Leads Subscription] 🔒 Channel closed');
         }
       });
-
-    console.log('[Leads Subscription] 📺 Channel created:', channel);
 
     // Register channel for cleanup on logout
     channelRegistry.register(channel, `leads-${agentId}`);
 
     // Cleanup on unmount or agentId change
     return () => {
-      console.log('[Leads Subscription] 🧹 Cleaning up subscription for agent:', agentId);
       channelRegistry.unregister(channel);
       supabase.removeChannel(channel);
     };
@@ -545,8 +342,6 @@ export function useLeadSubscription(leadId: string | undefined, enabled = true) 
   useEffect(() => {
     if (!leadId || !enabled) return;
 
-    console.log('[Lead Subscription] Setting up subscription for lead:', leadId);
-
     const channel = supabase
       .channel(`lead-${leadId}`)
       .on(
@@ -558,14 +353,9 @@ export function useLeadSubscription(leadId: string | undefined, enabled = true) 
           filter: `id=eq.${leadId}`,
         },
         (payload) => {
-          console.log('[Lead Subscription] Lead updated:', payload);
-
-          // Invalidate query to trigger refetch with new data
           queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
 
           const updatedLead = payload.new as LeadRow;
-
-          // Also invalidate all leads queries (including all filter variations)
           queryClient.invalidateQueries({
             queryKey: queryKeys.leads(updatedLead.agent_id),
             refetchType: 'active'
@@ -574,11 +364,9 @@ export function useLeadSubscription(leadId: string | undefined, enabled = true) 
       )
       .subscribe();
 
-    // Register channel for cleanup on logout
     channelRegistry.register(channel, `lead-${leadId}`);
 
     return () => {
-      console.log('[Lead Subscription] Cleaning up subscription for lead:', leadId);
       channelRegistry.unregister(channel);
       supabase.removeChannel(channel);
     };
