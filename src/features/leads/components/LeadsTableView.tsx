@@ -438,7 +438,7 @@ export function LeadsTableView({
       render: (_: unknown, lead: Lead) => {
         const latestNote = lead.notes && lead.notes.length > 0
           ? [...lead.notes]
-              .filter(note => note.noteType === 'user_note')
+              .filter(note => note.noteType === 'user_note' && !note.isDeleted)
               .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
           : null;
 
