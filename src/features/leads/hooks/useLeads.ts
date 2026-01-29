@@ -149,8 +149,8 @@ export function useCreateLead() {
 
 /**
  * Update an existing lead
- * Uses optimistic updates for instant UI feedback
- * Invalidates leads list, specific lead, and stats on success
+ * Relies on Supabase realtime subscription to update cache automatically
+ * No invalidation needed - subscription handler updates React Query cache immediately
  */
 export function useUpdateLead() {
   const { agentId } = useAgentContext();
@@ -160,15 +160,17 @@ export function useUpdateLead() {
     mutationFn: ({ leadId, request }: { leadId: string; request: UpdateLeadRequest }) =>
       leadService.updateLead(leadId, request),
 
-    onSuccess: (_, { leadId }) => {
-      // Invalidate all leads queries (including all filter variations)
+    onSuccess: () => {
+      // ✅ NO invalidation/refetch needed - Supabase subscription updates cache automatically
+      // This prevents notes from reloading unnecessarily
+      // Stats still need invalidation since they're not updated by subscription
       queryClient.invalidateQueries({
-        queryKey: queryKeys.leads(agentId),
+        queryKey: queryKeys.leadStats(agentId),
         refetchType: 'active'
       });
-      queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
-      toast.success('Lead updated successfully');
+
+      console.log('✅ [useUpdateLead] Mutation succeeded - cache updated by Supabase subscription');
+      // Note: Success toast removed to avoid duplicate toasts (subscription may show one)
     },
 
     onError: (error: any) => {
