@@ -136,20 +136,69 @@ export function useLeadsSubscription() {
         // Update all query variants (different filter combinations)
         queryClient.setQueriesData(
           { queryKey: queryKeys.leads(agentId) },
-          (oldData: any[] | undefined) => {
+          (oldData: any) => {
             console.log('[Leads Subscription] 🔍 setQueriesData callback - oldData:', oldData);
             if (!oldData) {
               console.log('[Leads Subscription] ⚠️ No oldData for this query variant');
               return oldData;
             }
 
-            const existingLead = oldData.find(lead => lead.id === updatedLead.id);
+            // Check if this is an infinite query structure
+            if (oldData.pages && Array.isArray(oldData.pages)) {
+              console.log('[Leads Subscription] 📚 Infinite query structure detected - updating pages');
+
+              // Update lead within the infinite query pages
+              const newPages = oldData.pages.map((page: any) => {
+                if (!page.leads || !Array.isArray(page.leads)) {
+                  return page;
+                }
+
+                const existingLead = page.leads.find((lead: any) => lead.id === updatedLead.id);
+                if (!existingLead) {
+                  return page; // Lead not in this page
+                }
+
+                console.log('[Leads Subscription] 🔍 Found lead in page, updating...');
+
+                // Update the lead in this page
+                const updatedLeads = page.leads.map((lead: any) => {
+                  if (lead.id === updatedLead.id) {
+                    const mergedLead = {
+                      ...lead,
+                      ...updatedLead,
+                      notes: updatedLead.notes.length > 0 ? updatedLead.notes : lead.notes,
+                    };
+                    console.log('[Leads Subscription] ✨ Merged lead:', mergedLead);
+                    return mergedLead;
+                  }
+                  return lead;
+                });
+
+                return {
+                  ...page,
+                  leads: updatedLeads,
+                };
+              });
+
+              console.log('[Leads Subscription] 📤 Returning updated infinite query structure');
+              return {
+                ...oldData,
+                pages: newPages,
+              };
+            }
+
+            // Fallback: Flat array structure (for non-infinite queries)
+            console.log('[Leads Subscription] 📄 Flat array structure - updating directly');
+            if (!Array.isArray(oldData)) {
+              console.log('[Leads Subscription] ⚠️ oldData is not an array, returning as-is');
+              return oldData;
+            }
+
+            const existingLead = oldData.find((lead: any) => lead.id === updatedLead.id);
             console.log('[Leads Subscription] 🔍 Existing lead in cache:', existingLead);
 
-            // Create new array reference to trigger re-render
-            const newData = oldData.map(lead => {
+            const newData = oldData.map((lead: any) => {
               if (lead.id === updatedLead.id) {
-                // Preserve notes from existing lead if not in payload
                 const mergedLead = {
                   ...lead,
                   ...updatedLead,

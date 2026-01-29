@@ -4,11 +4,10 @@
  * Switches layout based on screen size
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Copy, MessageSquare, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
-import { AnimatePresence, motion } from 'framer-motion';
 import { useUpdateLead, useDeleteLead } from '../hooks/useLeads';
 import { DataTable } from '@/components/ui/DataTable/DataTable';
 import { InlineEditField } from '@/components/ui/InlineEditField';
@@ -63,6 +62,49 @@ export function LeadsTableView({
   const isMobile = useIsMobile();
   const { toLocaleDateString, toLocaleTimeString } = useDateLocale();
 
+  // ✅ PERFORMANCE FIX: Create stable refs to prevent callback recreation
+  // React Query mutations return new objects on every render, causing callbacks
+  // with mutation in dependencies to be recreated, leading to unnecessary re-renders
+  const mutateLeadRef = useRef(updateMutation.mutate);
+  mutateLeadRef.current = updateMutation.mutate;
+
+  const tRef = useRef(t);
+  tRef.current = t;
+
+  // 🔍 DEBUGGING: Track component renders and state changes
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+
+  useEffect(() => {
+    console.log('🔄 [LeadsTableView] Render #', renderCount.current, {
+      leadsCount: leads?.length || 0,
+      isLoading,
+      isFetching,
+      error: !!error,
+      isMobile,
+      updatePending: updateMutation.isPending,
+    });
+  });
+
+  // Track data changes
+  useEffect(() => {
+    console.log('📊 [LeadsTableView] Data changed:', {
+      leadsCount: leads?.length || 0,
+      firstLeadId: leads?.[0]?.id,
+      firstLeadStatus: leads?.[0]?.status,
+    });
+  }, [leads]);
+
+  // Track loading states
+  useEffect(() => {
+    console.log('⏳ [LeadsTableView] Loading state changed:', {
+      isLoading,
+      isFetching,
+      isPending: updateMutation.isPending,
+      showOverlay: isFetching && !isLoading,
+    });
+  }, [isLoading, isFetching, updateMutation.isPending]);
+
   // Server-side infinite scroll handler with Intersection Observer
   useEffect(() => {
     // Use Intersection Observer for reliable scroll detection
@@ -103,172 +145,80 @@ export function LeadsTableView({
     };
   }, [fetchNextPage, hasMore, isFetchingNextPage]);
 
-  // Event handlers
+  // Event handlers with stable references (using refs to avoid recreation)
   const handleStatusChange = useCallback((leadId: string, newStatus: LeadStatus, e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();
-    updateMutation.mutate({
+    console.log('🔄 [LeadsTableView] Status change triggered:', { leadId, newStatus });
+    mutateLeadRef.current({
       leadId,
       request: { status: newStatus },
     });
-  }, [updateMutation]);
+  }, []); // ✅ Empty deps = truly stable callback
+
+  // Mobile view uses simplified signature (no event parameter)
+  const handleStatusChangeMobile = useCallback((leadId: string, newStatus: LeadStatus) => {
+    mutateLeadRef.current({
+      leadId,
+      request: { status: newStatus },
+    });
+  }, []); // ✅ Empty deps = truly stable callback
 
   const handleNameSave = useCallback(async (leadId: string, newName: string) => {
     return new Promise<void>((resolve, reject) => {
-      updateMutation.mutate(
+      mutateLeadRef.current(
         { leadId, request: { name: newName } },
         {
           onSuccess: () => {
-            toast.success(t('leads.lead_name_updated'));
+            toast.success(tRef.current('leads.lead_name_updated'));
             resolve();
           },
           onError: (error) => {
-            toast.error(t('leads.update_failed_name'));
+            toast.error(tRef.current('leads.update_failed_name'));
             reject(error);
           },
         }
       );
     });
-  }, [updateMutation, t]);
+  }, []); // ✅ Empty deps = truly stable callback
 
   const handlePhoneSave = useCallback(async (leadId: string, newPhone: string) => {
     return new Promise<void>((resolve, reject) => {
-      updateMutation.mutate(
+      mutateLeadRef.current(
         { leadId, request: { phone: newPhone } },
         {
           onSuccess: () => {
-            toast.success(t('leads.lead_phone_updated'));
+            toast.success(tRef.current('leads.lead_phone_updated'));
             resolve();
           },
           onError: (error) => {
-            toast.error(t('leads.update_failed_phone'));
+            toast.error(tRef.current('leads.update_failed_phone'));
             reject(error);
           },
         }
       );
     });
-  }, [updateMutation, t]);
+  }, []); // ✅ Empty deps = truly stable callback
 
   const handleCopyPhone = useCallback((phone: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const formattedPhone = formatPhoneNumber(phone);
     navigator.clipboard.writeText(formattedPhone).then(() => {
-      toast.success(t('leads.copied_to_clipboard'));
+      toast.success(tRef.current('leads.copied_to_clipboard'));
     }).catch(() => {
-      toast.error(t('leads.failed_to_copy'));
+      toast.error(tRef.current('leads.failed_to_copy'));
     });
-  }, [t]);
+  }, []); // ✅ Empty deps = truly stable callback
 
   const handleCardClick = useCallback((lead: Lead) => {
     // Open the lead detail drawer by triggering edit
     onEditClick(lead.id);
   }, [onEditClick]);
 
-  // Show skeleton only on initial load
-  if (isLoading) {
-    return (
-      <div>
-        {/* Mobile card skeleton (< 768px) */}
-        <div className="block md:hidden space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-white border border-neutral-200 rounded-lg p-4 animate-pulse"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="h-5 bg-neutral-200 rounded w-32"></div>
-                <div className="flex gap-1">
-                  <div className="w-10 h-10 bg-neutral-200 rounded-lg"></div>
-                  <div className="w-10 h-10 bg-neutral-200 rounded-lg"></div>
-                </div>
-              </div>
-              <div className="h-4 bg-neutral-200 rounded w-40 mb-3"></div>
-              <div className="h-4 bg-neutral-200 rounded w-full mb-2"></div>
-              <div className="h-4 bg-neutral-200 rounded w-3/4 mb-3"></div>
-              <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
-                <div className="h-8 bg-neutral-200 rounded w-28"></div>
-                <div className="h-4 bg-neutral-200 rounded w-20"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Desktop table skeleton (≥ 768px) */}
-        <div className="hidden md:block">
-          <LeadsTableSkeleton />
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="bg-white rounded-lg border border-neutral-200 p-12">
-        <EmptyState
-          icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
-          title={t('leads.error_loading')}
-          description={t('leads.error_loading_description')}
-        />
-      </div>
-    );
-  }
-
-  // Determine if we have filters active
-  const hasActiveFilters = filters.search || filters.status !== 'all' || filters.dateFrom || filters.dateTo;
-
-  // Empty state
-  if (!leads || leads.length === 0) {
-    return (
-      <div className="bg-white rounded-lg border border-neutral-200 p-12">
-        <EmptyState
-          icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
-          title={hasActiveFilters ? t('leads.no_clients_found') : t('leads.no_clients_yet')}
-          description={
-            hasActiveFilters
-              ? t('leads.no_clients_found_description')
-              : t('leads.no_clients_yet_description')
-          }
-          action={
-            !hasActiveFilters ? (
-              <Button onClick={onAddLeadClick}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                {t('leads.add_client')}
-              </Button>
-            ) : undefined
-          }
-        />
-      </div>
-    );
-  }
-
-  // Render mobile card view
-  if (isMobile) {
-    return (
-      <LeadsMobileCardView
-        leads={leads}
-        isLoading={isLoading}
-        isFetching={isFetching}
-        error={error}
-        filters={filters}
-        onRowClick={handleCardClick}
-        onEditClick={onEditClick}
-        onDeleteClick={onDeleteClick}
-        onViewConversation={onViewConversation}
-        onAddLeadClick={onAddLeadClick}
-        onStatusChange={(leadId, newStatus) => {
-          updateMutation.mutate({
-            leadId,
-            request: { status: newStatus },
-          });
-        }}
-        onCopyPhone={handleCopyPhone}
-        isUpdating={updateMutation.isPending}
-      />
-    );
-  }
-
   // Table columns configuration (only for desktop)
-  const columns = [
+  // ✅ PERFORMANCE FIX: Memoize columns array to prevent recreation on every render
+  // This prevents all 50+ cells from re-rendering when only one cell should update
+  // NOTE: Defined here (before conditional returns) to comply with Rules of Hooks
+  const columns = useMemo(() => [
     {
       key: 'name',
       label: t('leads.table_name'),
@@ -503,41 +453,137 @@ export function LeadsTableView({
         </div>
       ),
     },
-  ];
+  ], [
+    t, // Only include `t` - render functions are closures that capture current values
+    // Callbacks are stable (empty deps), so no need to include them here
+    // updateMutation.isPending, user.id, etc. are captured by closures - not needed as deps
+  ]);
+
+  // Track when columns are recreated (AFTER columns definition)
+  const columnsRef = useRef(null);
+  const columnsRecreateCount = useRef(0);
+  if (columnsRef.current !== columns) {
+    columnsRecreateCount.current += 1;
+    columnsRef.current = columns;
+    console.log('🔄 [LeadsTableView] Columns recreated', columnsRecreateCount.current, 'times');
+  }
+
+  // Show skeleton only on initial load
+  if (isLoading) {
+    return (
+      <div>
+        {/* Mobile card skeleton (< 768px) */}
+        <div className="block md:hidden space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-white border border-neutral-200 rounded-lg p-4 animate-pulse"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="h-5 bg-neutral-200 rounded w-32"></div>
+                <div className="flex gap-1">
+                  <div className="w-10 h-10 bg-neutral-200 rounded-lg"></div>
+                  <div className="w-10 h-10 bg-neutral-200 rounded-lg"></div>
+                </div>
+              </div>
+              <div className="h-4 bg-neutral-200 rounded w-40 mb-3"></div>
+              <div className="h-4 bg-neutral-200 rounded w-full mb-2"></div>
+              <div className="h-4 bg-neutral-200 rounded w-3/4 mb-3"></div>
+              <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+                <div className="h-8 bg-neutral-200 rounded w-28"></div>
+                <div className="h-4 bg-neutral-200 rounded w-20"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop table skeleton (≥ 768px) */}
+        <div className="hidden md:block">
+          <LeadsTableSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg border border-neutral-200 p-12">
+        <EmptyState
+          icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
+          title={t('leads.error_loading')}
+          description={t('leads.error_loading_description')}
+        />
+      </div>
+    );
+  }
+
+  // Determine if we have filters active
+  const hasActiveFilters = filters.search || filters.status !== 'all' || filters.dateFrom || filters.dateTo;
+
+  // Empty state
+  if (!leads || leads.length === 0) {
+    return (
+      <div className="bg-white rounded-lg border border-neutral-200 p-12">
+        <EmptyState
+          icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
+          title={hasActiveFilters ? t('leads.no_clients_found') : t('leads.no_clients_yet')}
+          description={
+            hasActiveFilters
+              ? t('leads.no_clients_found_description')
+              : t('leads.no_clients_yet_description')
+          }
+          action={
+            !hasActiveFilters ? (
+              <Button onClick={onAddLeadClick}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                {t('leads.add_client')}
+              </Button>
+            ) : undefined
+          }
+        />
+      </div>
+    );
+  }
+
+  // Render mobile card view
+  if (isMobile) {
+    return (
+      <LeadsMobileCardView
+        leads={leads}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        error={error}
+        filters={filters}
+        onRowClick={handleCardClick}
+        onEditClick={onEditClick}
+        onDeleteClick={onDeleteClick}
+        onViewConversation={onViewConversation}
+        onAddLeadClick={onAddLeadClick}
+        onStatusChange={handleStatusChangeMobile}
+        onCopyPhone={handleCopyPhone}
+        isUpdating={updateMutation.isPending}
+      />
+    );
+  }
 
   // Render desktop table view
   return (
     <div data-leads-container>
-      {/* Table with smooth content transition */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={`leads-${filters.search}-${filters.status}-${filters.dateFrom}-${filters.dateTo}`}
-          initial={{ opacity: 0.7 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0.7 }}
-          transition={{ duration: 0.15 }}
-          className="relative"
-        >
-          <div className="relative bg-white rounded-lg border border-neutral-200">
-            {/* Subtle loading overlay during filter changes */}
-            {isFetching && !isLoading && (
-              <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] z-10 rounded-lg flex items-center justify-center">
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-md border border-neutral-200 shadow-sm">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-neutral-600" />
-                  <span className="text-xs text-neutral-600 font-medium">{t('leads.updating')}</span>
-                </div>
-              </div>
-            )}
+      {/* Table without blur overlay - updates happen seamlessly via Supabase realtime */}
+      <div className="relative">
+        <div className="relative bg-white rounded-lg border border-neutral-200">
+          {/* NO loading overlay during refetches - causes blur effect
+              Background refetches from Supabase updates should be seamless */}
 
-            <DataTable
-              data={leads || []}
-              rowKey="id"
-              paginated={false}
-              columns={columns}
-            />
-          </div>
-        </motion.div>
-      </AnimatePresence>
+          <DataTable
+            data={leads || []}
+            rowKey="id"
+            paginated={false}
+            columns={columns}
+          />
+        </div>
+      </div>
 
       {/* Loading More Indicator (server-side pagination) - Smooth skeleton rows */}
       {isFetchingNextPage && (
