@@ -63,9 +63,9 @@ export function LeadsTableView({
   const isMobile = useIsMobile();
   const { toLocaleDateString, toLocaleTimeString } = useDateLocale();
 
-  // Server-side infinite scroll handler with Intersection Observer (more reliable)
+  // Server-side infinite scroll handler with Intersection Observer
   useEffect(() => {
-    // Use Intersection Observer for more reliable detection
+    // Use Intersection Observer for reliable scroll detection
     const observerTarget = document.createElement('div');
     observerTarget.id = 'leads-scroll-trigger';
     observerTarget.style.height = '1px';
@@ -95,29 +95,13 @@ export function LeadsTableView({
       observer.observe(observerTarget);
     }
 
-    // Fallback: Also keep window scroll listener for extra safety
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
-
-      // Trigger when within 500px of bottom
-      if (distanceFromBottom < 500 && hasMore && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
     return () => {
       observer.disconnect();
       if (observerTarget && observerTarget.parentNode) {
         observerTarget.parentNode.removeChild(observerTarget);
       }
-      window.removeEventListener('scroll', handleScroll);
     };
-  }, [fetchNextPage, hasMore, isFetchingNextPage, leads]);
+  }, [fetchNextPage, hasMore, isFetchingNextPage]);
 
   // Event handlers
   const handleStatusChange = useCallback((leadId: string, newStatus: LeadStatus, e: React.ChangeEvent<HTMLSelectElement>) => {
