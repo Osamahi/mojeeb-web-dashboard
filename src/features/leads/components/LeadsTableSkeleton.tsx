@@ -4,27 +4,35 @@
  * Follows Chatbase-inspired minimal design system
  */
 
-export function LeadsTableSkeleton() {
-  // Generate 10 skeleton rows
-  const rows = Array.from({ length: 10 }, (_, i) => i);
+interface LeadsTableSkeletonProps {
+  /** Number of skeleton rows to display */
+  rows?: number;
+  /** Whether to show table header (for full page loading) */
+  showHeader?: boolean;
+}
+
+export function LeadsTableSkeleton({ rows = 10, showHeader = true }: LeadsTableSkeletonProps) {
+  const skeletonRows = Array.from({ length: rows }, (_, i) => i);
 
   return (
     <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
       {/* Table Header */}
-      <div className="border-b border-neutral-200 bg-neutral-50">
-        <div className="grid grid-cols-[1fr_1.5fr_0.8fr_0.6fr_0.8fr_auto] gap-4 px-6 py-3">
-          <div className="h-4 bg-neutral-200 rounded w-16 animate-pulse" />
-          <div className="h-4 bg-neutral-200 rounded w-20 animate-pulse" />
-          <div className="h-4 bg-neutral-200 rounded w-16 animate-pulse" />
-          <div className="h-4 bg-neutral-200 rounded w-20 animate-pulse" />
-          <div className="h-4 bg-neutral-200 rounded w-16 animate-pulse" />
-          <div className="h-4 bg-neutral-200 rounded w-16 animate-pulse" />
+      {showHeader && (
+        <div className="border-b border-neutral-200 bg-neutral-50">
+          <div className="grid grid-cols-[1fr_1.5fr_0.8fr_0.6fr_0.8fr_auto] gap-4 px-6 py-3">
+            <div className="h-4 bg-neutral-200 rounded w-16 animate-pulse" />
+            <div className="h-4 bg-neutral-200 rounded w-20 animate-pulse" />
+            <div className="h-4 bg-neutral-200 rounded w-16 animate-pulse" />
+            <div className="h-4 bg-neutral-200 rounded w-20 animate-pulse" />
+            <div className="h-4 bg-neutral-200 rounded w-16 animate-pulse" />
+            <div className="h-4 bg-neutral-200 rounded w-16 animate-pulse" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Table Body */}
       <div className="divide-y divide-neutral-200">
-        {rows.map((i) => (
+        {skeletonRows.map((i) => (
           <div
             key={i}
             className="grid grid-cols-[1fr_1.5fr_0.8fr_0.6fr_0.8fr_auto] gap-4 px-6 py-4 hover:bg-neutral-50 transition-colors"

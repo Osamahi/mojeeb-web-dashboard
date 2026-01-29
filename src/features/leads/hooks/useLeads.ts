@@ -4,7 +4,7 @@
  * Follows Knowledge Base architecture patterns
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { leadService } from '../services/leadService';
@@ -16,7 +16,8 @@ import type {
   LeadFieldDefinition,
   CreateFieldDefinitionRequest,
   CreateNoteRequest,
-  UpdateNoteRequest
+  UpdateNoteRequest,
+  Lead
 } from '../types';
 
 // ========================================
@@ -36,6 +37,44 @@ export function useLeads(filters?: Partial<LeadFilters>) {
     queryFn: () => leadService.getLeads(agentId!, filters),
     enabled: !!agentId,
     placeholderData: undefined, // Prevent flash of old data
+  });
+}
+
+/**
+ * Fetch paginated leads with infinite scroll support
+ * Auto-scoped to selected agent from context
+ * Loads 50 leads per page for optimal performance with 2000+ leads
+ */
+export function useInfiniteLeads(filters?: Partial<LeadFilters>) {
+  const { agentId } = useAgentContext();
+
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.leads(agentId), 'infinite', filters],
+    queryFn: ({ pageParam = 1 }) =>
+      leadService.getPaginatedLeads(agentId!, {
+        ...filters,
+        page: pageParam,
+        pageSize: 50, // Load 50 leads per batch
+      }),
+    enabled: !!agentId,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      // Return next page number if there are more pages, otherwise undefined
+      return lastPage.pagination.has_more
+        ? lastPage.pagination.current_page + 1
+        : undefined;
+    },
+    // Flatten all pages into a single array for easy consumption
+    select: (data) => {
+      const lastPage = data.pages[data.pages.length - 1];
+      const hasMore = lastPage?.pagination.has_more ?? false;
+
+      return {
+        leads: data.pages.flatMap((page) => page.leads),
+        pagination: lastPage?.pagination,
+        hasMore,
+      };
+    },
   });
 }
 

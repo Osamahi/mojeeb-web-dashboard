@@ -9,7 +9,7 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
-import { useLeads } from '../hooks/useLeads';
+import { useInfiniteLeads } from '../hooks/useLeads';
 import { useLeadsSubscription } from '../hooks/useLeadsSubscription';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -50,8 +50,19 @@ export default function LeadsPage() {
   });
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
-  // Fetch data with filters (server-side filtering)
-  const { data: leads, isLoading, error, isFetching } = useLeads(filters);
+  // Fetch data with filters (server-side pagination + filtering)
+  const {
+    data,
+    isLoading,
+    error,
+    isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteLeads(filters);
+
+  const leads = data?.leads;
+  const hasMore = data?.hasMore ?? false;
 
   // Subscribe to real-time updates
   useLeadsSubscription();
@@ -173,6 +184,9 @@ export default function LeadsPage() {
         onAddLeadClick={handleAddLeadClick}
         onAddNoteClick={handleAddNoteClick}
         onAddSummaryClick={handleAddSummaryClick}
+        fetchNextPage={fetchNextPage}
+        hasMore={hasMore}
+        isFetchingNextPage={isFetchingNextPage}
       />
 
       {/* Modals & Drawers */}

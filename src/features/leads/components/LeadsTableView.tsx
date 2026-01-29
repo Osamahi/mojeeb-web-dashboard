@@ -36,6 +36,9 @@ interface LeadsTableViewProps {
   onAddLeadClick: () => void;
   onAddNoteClick: (leadId: string, name: string) => void;
   onAddSummaryClick: (leadId: string, name: string, summary: string) => void;
+  fetchNextPage: () => void;
+  hasMore: boolean;
+  isFetchingNextPage: boolean;
 }
 
 export function LeadsTableView({
@@ -50,6 +53,9 @@ export function LeadsTableView({
   onAddLeadClick,
   onAddNoteClick,
   onAddSummaryClick,
+  fetchNextPage,
+  hasMore,
+  isFetchingNextPage,
 }: LeadsTableViewProps) {
   const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
@@ -57,41 +63,61 @@ export function LeadsTableView({
   const isMobile = useIsMobile();
   const { toLocaleDateString, toLocaleTimeString } = useDateLocale();
 
-  // Infinite scroll state
-  const [displayCount, setDisplayCount] = useState(50);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  // Displayed leads with infinite scroll
-  const displayedLeads = useMemo(() => {
-    return leads?.slice(0, displayCount);
-  }, [leads, displayCount]);
-
-  // Reset display count when filters change
+  // Server-side infinite scroll handler with Intersection Observer (more reliable)
   useEffect(() => {
-    setDisplayCount(50);
-  }, [filters]);
+    // Use Intersection Observer for more reliable detection
+    const observerTarget = document.createElement('div');
+    observerTarget.id = 'leads-scroll-trigger';
+    observerTarget.style.height = '1px';
+    observerTarget.style.width = '100%';
 
-  // Infinite scroll handler
-  useEffect(() => {
+    // Find the parent container and append the trigger
+    const container = document.querySelector('[data-leads-container]');
+    if (container) {
+      container.appendChild(observerTarget);
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasMore && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      {
+        root: null, // viewport
+        rootMargin: '500px', // Trigger 500px before reaching the element
+        threshold: 0.1,
+      }
+    );
+
+    if (observerTarget) {
+      observer.observe(observerTarget);
+    }
+
+    // Fallback: Also keep window scroll listener for extra safety
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
+      const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
 
-      if (scrollTop + windowHeight >= documentHeight * 0.8) {
-        if (!isLoadingMore && leads && displayCount < leads.length) {
-          setIsLoadingMore(true);
-          setTimeout(() => {
-            setDisplayCount(prev => Math.min(prev + 50, leads.length));
-            setIsLoadingMore(false);
-          }, 300);
-        }
+      // Trigger when within 500px of bottom
+      if (distanceFromBottom < 500 && hasMore && !isFetchingNextPage) {
+        fetchNextPage();
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [displayCount, leads, isLoadingMore]);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      if (observerTarget && observerTarget.parentNode) {
+        observerTarget.parentNode.removeChild(observerTarget);
+      }
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [fetchNextPage, hasMore, isFetchingNextPage, leads]);
 
   // Event handlers
   const handleStatusChange = useCallback((leadId: string, newStatus: LeadStatus, e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -497,7 +523,7 @@ export function LeadsTableView({
 
   // Render desktop table view
   return (
-    <>
+    <div data-leads-container>
       {/* Table with smooth content transition */}
       <AnimatePresence mode="wait">
         <motion.div
@@ -520,7 +546,7 @@ export function LeadsTableView({
             )}
 
             <DataTable
-              data={displayedLeads || []}
+              data={leads || []}
               rowKey="id"
               paginated={false}
               columns={columns}
@@ -529,20 +555,19 @@ export function LeadsTableView({
         </motion.div>
       </AnimatePresence>
 
-      {/* Loading More Indicator */}
-      {isLoadingMore && (
-        <div className="flex justify-center items-center py-8 bg-white rounded-lg border border-neutral-200 mt-4">
-          <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
-          <span className="ml-2 text-sm text-neutral-600">{t('leads.loading_more')}</span>
+      {/* Loading More Indicator (server-side pagination) - Smooth skeleton rows */}
+      {isFetchingNextPage && (
+        <div className="mt-4">
+          <LeadsTableSkeleton rows={3} showHeader={false} />
         </div>
       )}
 
       {/* End of results indicator */}
-      {displayedLeads && leads && displayedLeads.length >= leads.length && leads.length > 50 && (
+      {!hasMore && leads && leads.length > 50 && (
         <div className="flex justify-center items-center py-6 bg-white rounded-lg border border-neutral-200 mt-4">
           <span className="text-sm text-neutral-500">{t('leads.all_leads_loaded', { count: leads.length })}</span>
         </div>
       )}
-    </>
+    </div>
   );
 }
