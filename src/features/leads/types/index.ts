@@ -6,18 +6,23 @@
 export type {
   // Main Types
   Lead,
+  LeadNote,
   LeadStatus,
   LeadSource,
   FieldType,
+  NoteType,
 
   // API Types
   ApiLeadResponse,
+  ApiLeadNoteResponse,
   ApiLeadFieldDefinitionResponse,
 
   // Request DTOs
   CreateLeadRequest,
   UpdateLeadRequest,
   CreateFieldDefinitionRequest,
+  CreateNoteRequest,
+  UpdateNoteRequest,
 
   // Custom Fields
   LeadFieldDefinition,

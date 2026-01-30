@@ -18,7 +18,8 @@ import type {
   CreateFieldDefinitionRequest,
   CreateNoteRequest,
   UpdateNoteRequest,
-  Lead
+  Lead,
+  LeadNote
 } from '../types';
 
 // ========================================
@@ -285,31 +286,75 @@ export function useLeadNotes(leadId: string | undefined, includeDeleted = false)
 }
 
 /**
- * Add a note to a lead
- * Invalidates lead notes, lead details, and leads list on success
+ * Add a note to a lead (OPTIMISTIC UPDATE)
+ * Note appears instantly in UI before server confirms
+ * Rolls back automatically if server request fails
  */
 export function useCreateLeadNote() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ['createLeadNote'],
     mutationFn: ({ leadId, request }: { leadId: string; request: CreateNoteRequest }) =>
       leadService.createLeadNote(leadId, request),
-    onSuccess: (_, { leadId }) => {
-      // Invalidate notes query
+
+    // 🚀 OPTIMISTIC UPDATE: Add note immediately to cache before server responds
+    onMutate: async ({ leadId, request }) => {
+      // Cancel any outgoing refetches to prevent overwriting our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['leads', leadId, 'notes'] });
+
+      // Snapshot the previous notes (for rollback on error)
+      const previousNotes = queryClient.getQueryData<LeadNote[]>(['leads', leadId, 'notes']);
+
+      // Create optimistic note with temporary ID
+      const optimisticNote: LeadNote = {
+        id: `temp-${Date.now()}`, // Temporary ID (replaced by server response)
+        userId: '', // Will be populated by server
+        userName: 'You', // Current user (will be replaced by server)
+        text: request.text,
+        noteType: request.noteType || 'user_note',
+        isEdited: false,
+        isDeleted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Optimistically update the notes cache
+      queryClient.setQueryData<LeadNote[]>(
+        ['leads', leadId, 'notes'],
+        (old) => (old ? [optimisticNote, ...old] : [optimisticNote])
+      );
+
+      // Return snapshot for rollback
+      return { previousNotes };
+    },
+
+    // ❌ ROLLBACK: Restore previous state if mutation fails
+    onError: (error: any, { leadId }, context) => {
+      // Restore the snapshot
+      if (context?.previousNotes) {
+        queryClient.setQueryData(['leads', leadId, 'notes'], context.previousNotes);
+      }
+
+      const message = error?.response?.data?.message || 'Failed to add note';
+      toast.error(message);
+    },
+
+    // ✅ FINAL UPDATE: Refetch to ensure consistency with server
+    onSettled: (_, __, { leadId }) => {
+      // Replace optimistic note with real server data
       queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'notes'] });
-      // Invalidate lead detail (to show updated notes)
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
       // Invalidate all leads queries (including all filter variations)
       queryClient.invalidateQueries({
         queryKey: queryKeys.leads(agentId),
         refetchType: 'active'
       });
-      toast.success('Note added successfully');
     },
-    onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to add note';
-      toast.error(message);
+
+    onSuccess: () => {
+      toast.success('Note added successfully');
     },
   });
 }

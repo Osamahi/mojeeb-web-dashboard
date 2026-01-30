@@ -46,27 +46,22 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
     textareaRef.current?.focus();
   }, []);
 
-  // Handle adding a new note
+  // Handle adding a new note (OPTIMISTIC UI)
   const handleAddNote = () => {
     if (!newNoteText.trim()) return;
 
-    createMutation.mutate(
-      {
-        leadId,
-        request: { text: newNoteText, noteType: 'user_note' },
-      },
-      {
-        onSuccess: () => {
-          setNewNoteText('');
-          // Close modal after a brief delay for smooth UX
-          if (onNoteAdded) {
-            setTimeout(() => {
-              onNoteAdded();
-            }, 800);
-          }
-        },
-      }
-    );
+    // ✅ OPTIMISTIC UI: Clear input and close modal IMMEDIATELY (before server responds)
+    const noteText = newNoteText;
+    setNewNoteText('');
+    if (onNoteAdded) {
+      onNoteAdded();
+    }
+
+    // 🚀 Background: Send request to server (user doesn't wait for this)
+    createMutation.mutate({
+      leadId,
+      request: { text: noteText, noteType: 'user_note' },
+    });
   };
 
   // Handle editing a note
@@ -149,10 +144,10 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
         />
         <button
           onClick={handleAddNote}
-          disabled={!newNoteText.trim() || createMutation.isPending}
+          disabled={!newNoteText.trim()}
           className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {createMutation.isPending ? t('lead_notes.adding') : t('lead_notes.add_note')}
+          {t('lead_notes.add_note')}
         </button>
       </div>
 

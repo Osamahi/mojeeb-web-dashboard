@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { LeadsTableSkeleton } from './LeadsTableSkeleton';
 import { LeadsMobileCardView } from './LeadsMobileCardView';
+import { LatestNoteCell } from './LatestNoteCell';
 import { validateName, validatePhone } from '../utils/validation';
 import { formatPhoneNumber, getNoteAuthorName, formatNoteDate } from '../utils/formatting';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
@@ -369,68 +370,9 @@ export function LeadsTableView({
       sortable: false,
       width: '18%',
       cellClassName: 'w-[18%]',
-      render: (_: unknown, lead: Lead) => {
-        // 🔍 DIAGNOSTIC: Log all notes for this lead
-        if (lead.notes && lead.notes.length > 0) {
-          console.log(`[LeadsTableView] Lead ${lead.id} has ${lead.notes.length} notes:`,
-            lead.notes.map(n => ({
-              id: n.id,
-              userId: n.userId,
-              userName: n.userName,
-              text: n.text?.substring(0, 20),
-              noteType: n.noteType,
-              isDeleted: n.isDeleted
-            }))
-          );
-        }
-
-        const latestNote = lead.notes && lead.notes.length > 0
-          ? [...lead.notes]
-              .filter(note => note.noteType === 'user_note' && !note.isDeleted)
-              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
-          : null;
-
-        // 🔍 DIAGNOSTIC: Log the latest note after filtering
-        if (latestNote) {
-          console.log(`[LeadsTableView] Latest note for lead ${lead.id}:`, {
-            id: latestNote.id,
-            userId: latestNote.userId,
-            userName: latestNote.userName, // ← Key field
-            text: latestNote.text?.substring(0, 20)
-          });
-        }
-
-        return (
-          <div className="py-1 max-w-xs">
-            {latestNote ? (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddNoteClick(lead.id, lead.name || '');
-                }}
-                className="ltr:text-left rtl:text-right w-full hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[13px] text-neutral-900 truncate">{latestNote.text}</span>
-                  <span className="text-[12px] text-neutral-500">
-                    {getNoteAuthorName(latestNote.userName, latestNote.userId, user?.id)} · {formatNoteDate(latestNote.createdAt, true)}
-                  </span>
-                </div>
-              </button>
-            ) : (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddNoteClick(lead.id, lead.name || '');
-                }}
-                className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors ltr:text-left rtl:text-right w-full"
-              >
-                {t('leads.add_note')}
-              </button>
-            )}
-          </div>
-        );
-      },
+      render: (_: unknown, lead: Lead) => (
+        <LatestNoteCell lead={lead} onAddNoteClick={onAddNoteClick} />
+      ),
     },
     {
       key: 'actions' as keyof Lead,
