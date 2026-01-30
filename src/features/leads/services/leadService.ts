@@ -40,6 +40,13 @@ class LeadService {
    * Transform note API response (snake_case) to frontend model (camelCase)
    */
   private transformNote(apiNote: ApiLeadNoteResponse): LeadNote {
+    console.log('[leadService.transformNote] Raw API note:', {
+      id: apiNote.id,
+      user_id: apiNote.user_id,
+      user_name: apiNote.user_name, // ← Key field to check
+      text: apiNote.text?.substring(0, 20) + '...'
+    });
+
     // Parse metadata if it's a JSON string
     let parsedMetadata = apiNote.metadata;
     if (typeof apiNote.metadata === 'string' && apiNote.metadata) {
@@ -50,7 +57,7 @@ class LeadService {
       }
     }
 
-    return {
+    const transformed = {
       id: apiNote.id,
       userId: apiNote.user_id,
       userName: apiNote.user_name,
@@ -62,6 +69,15 @@ class LeadService {
       createdAt: apiNote.created_at,
       updatedAt: apiNote.updated_at,
     };
+
+    console.log('[leadService.transformNote] Transformed to:', {
+      id: transformed.id,
+      userId: transformed.userId,
+      userName: transformed.userName, // ← Key field to check
+      text: transformed.text?.substring(0, 20) + '...'
+    });
+
+    return transformed;
   }
 
   /**

@@ -120,10 +120,10 @@ export default function LeadDetailsDrawer({
       {
         leadId,
         request: {
-          name: name.trim(),
+          name: name.trim() || undefined,
           phone: phone.trim() || undefined,
           status,
-          notes: notes.trim() || undefined,
+          summary: notes.trim() || undefined,
           customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
         },
       },

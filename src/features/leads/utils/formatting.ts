@@ -48,19 +48,33 @@ export function getNoteAuthorName(
   currentUserId?: string,
   youLabel: string = 'You'
 ): string {
-  if (!userName) return 'Unknown';
+  console.log('[getNoteAuthorName] Input:', {
+    userName,
+    userId,
+    currentUserId,
+    youLabel
+  });
+
+  if (!userName) {
+    console.log('[getNoteAuthorName] userName is empty/null/undefined → returning "Unknown"');
+    return 'Unknown';
+  }
 
   // If it's the current user, use the provided label (translated)
   if (currentUserId && userId === currentUserId) {
+    console.log('[getNoteAuthorName] Current user detected → returning:', youLabel);
     return youLabel;
   }
 
   // Extract full name first
   const fullName = extractNameFromEmail(userName);
+  console.log('[getNoteAuthorName] Extracted full name:', fullName);
 
   // Return only the first name
   const firstName = fullName.split(' ')[0];
-  return firstName || fullName;
+  const result = firstName || fullName;
+  console.log('[getNoteAuthorName] Final result:', result);
+  return result;
 }
 
 /**

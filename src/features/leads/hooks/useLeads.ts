@@ -6,6 +6,7 @@
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { leadService } from '../services/leadService';
 import { queryKeys } from '@/lib/queryKeys';
@@ -155,6 +156,7 @@ export function useCreateLead() {
 export function useUpdateLead() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: ({ leadId, request }: { leadId: string; request: UpdateLeadRequest }) =>
@@ -169,11 +171,22 @@ export function useUpdateLead() {
         refetchType: 'active'
       });
 
+      toast.success(t('leads.lead_updated'));
+
       console.log('✅ [useUpdateLead] Mutation succeeded - cache updated by Supabase subscription');
-      // Note: Success toast removed to avoid duplicate toasts (subscription may show one)
     },
 
     onError: (error: any) => {
+      console.error('❌ [useUpdateLead] Error details:', {
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
+
+      // Log nested validation errors separately for visibility
+      if (error?.response?.data?.errors) {
+        console.error('❌ Validation errors:', JSON.stringify(error.response.data.errors, null, 2));
+      }
+
       const message = error?.response?.data?.message || 'Failed to update lead';
       toast.error(message);
     },

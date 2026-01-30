@@ -271,6 +271,7 @@
     "add_note": "Add note",
     "lead_name_updated": "Lead name updated",
     "lead_phone_updated": "Lead phone updated",
+    "lead_updated": "Lead updated successfully",
     "update_failed_name": "Failed to update name",
     "update_failed_phone": "Failed to update phone",
     "copied_to_clipboard": "Copied to clipboard",

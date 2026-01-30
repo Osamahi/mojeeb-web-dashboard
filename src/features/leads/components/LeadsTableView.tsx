@@ -370,11 +370,35 @@ export function LeadsTableView({
       width: '18%',
       cellClassName: 'w-[18%]',
       render: (_: unknown, lead: Lead) => {
+        // 🔍 DIAGNOSTIC: Log all notes for this lead
+        if (lead.notes && lead.notes.length > 0) {
+          console.log(`[LeadsTableView] Lead ${lead.id} has ${lead.notes.length} notes:`,
+            lead.notes.map(n => ({
+              id: n.id,
+              userId: n.userId,
+              userName: n.userName,
+              text: n.text?.substring(0, 20),
+              noteType: n.noteType,
+              isDeleted: n.isDeleted
+            }))
+          );
+        }
+
         const latestNote = lead.notes && lead.notes.length > 0
           ? [...lead.notes]
               .filter(note => note.noteType === 'user_note' && !note.isDeleted)
               .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
           : null;
+
+        // 🔍 DIAGNOSTIC: Log the latest note after filtering
+        if (latestNote) {
+          console.log(`[LeadsTableView] Latest note for lead ${lead.id}:`, {
+            id: latestNote.id,
+            userId: latestNote.userId,
+            userName: latestNote.userName, // ← Key field
+            text: latestNote.text?.substring(0, 20)
+          });
+        }
 
         return (
           <div className="py-1 max-w-xs">
