@@ -26,7 +26,7 @@ interface LeadNotesSectionProps {
 
 export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps) {
   const { t } = useTranslation();
-  const { formatDistanceToNow } = useDateLocale();
+  const { formatSmartTimestamp } = useDateLocale();
   const user = useAuthStore((state) => state.user);
   const { data: notes, isLoading } = useLeadNotes(leadId);
   const createMutation = useCreateLeadNote();
@@ -245,9 +245,7 @@ export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps)
 
                 {/* Timestamp */}
                 <p className="text-xs text-neutral-400 mt-1">
-                  {formatDistanceToNow(new Date(note.createdAt), {
-                    addSuffix: true
-                  })}
+                  {formatSmartTimestamp(note.createdAt)}
                 </p>
                   </div>
                 ))}

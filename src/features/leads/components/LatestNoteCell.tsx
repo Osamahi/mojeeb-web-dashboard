@@ -5,8 +5,9 @@
 
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useTranslation } from 'react-i18next';
+import { useDateLocale } from '@/lib/dateConfig';
 import { useIsAddingNote } from '../hooks/useNoteLoadingState';
-import { getNoteAuthorName, formatNoteDate } from '../utils/formatting';
+import { getNoteAuthorName } from '../utils/formatting';
 import type { Lead } from '../types';
 
 interface LatestNoteCellProps {
@@ -16,6 +17,7 @@ interface LatestNoteCellProps {
 
 export function LatestNoteCell({ lead, onAddNoteClick }: LatestNoteCellProps) {
   const { t } = useTranslation();
+  const { formatSmartTimestamp } = useDateLocale();
   const user = useAuthStore((state) => state.user);
   const isAddingNote = useIsAddingNote(lead.id);
 
@@ -48,7 +50,7 @@ export function LatestNoteCell({ lead, onAddNoteClick }: LatestNoteCellProps) {
           <div className="flex flex-col gap-0.5">
             <span className="text-[13px] text-neutral-900 truncate">{latestNote.text}</span>
             <span className="text-[12px] text-neutral-500">
-              {getNoteAuthorName(latestNote.userName, latestNote.userId, user?.id)} · {formatNoteDate(latestNote.createdAt, true)}
+              {getNoteAuthorName(latestNote.userName, latestNote.userId, user?.id)} · {formatSmartTimestamp(latestNote.createdAt)}
             </span>
           </div>
         </button>

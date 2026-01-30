@@ -17,7 +17,7 @@ import { LeadsTableSkeleton } from './LeadsTableSkeleton';
 import { LeadsMobileCardView } from './LeadsMobileCardView';
 import { LatestNoteCell } from './LatestNoteCell';
 import { validateName, validatePhone } from '../utils/validation';
-import { formatPhoneNumber, getNoteAuthorName, formatNoteDate } from '../utils/formatting';
+import { formatPhoneNumber, getNoteAuthorName } from '../utils/formatting';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -61,7 +61,7 @@ export function LeadsTableView({
   const user = useAuthStore((state) => state.user);
   const updateMutation = useUpdateLead();
   const isMobile = useIsMobile();
-  const { toLocaleDateString, toLocaleTimeString } = useDateLocale();
+  const { toLocaleDateString, toLocaleTimeString, formatSmartTimestamp } = useDateLocale();
 
   // ✅ PERFORMANCE FIX: Create stable refs to prevent callback recreation
   // React Query mutations return new objects on every render, causing callbacks
@@ -349,15 +349,10 @@ export function LeadsTableView({
       cellClassName: 'w-[14%]',
       render: (_: unknown, lead: Lead) => {
         try {
-          const dateStr = lead.createdAt.toString();
-          const date = new Date(dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`);
-          if (isNaN(date.getTime())) return <span className="text-neutral-700">—</span>;
-
           return (
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[13px] text-neutral-900">{toLocaleDateString(date)}</span>
-              <span className="text-[12px] text-neutral-500">{toLocaleTimeString(date)}</span>
-            </div>
+            <span className="text-[13px] text-neutral-900">
+              {formatSmartTimestamp(lead.createdAt)}
+            </span>
           );
         } catch {
           return <span className="text-neutral-700">—</span>;

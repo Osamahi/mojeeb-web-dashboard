@@ -8,6 +8,7 @@ import { Copy, MessageSquare, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatPhoneNumber } from '../utils/formatting';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
+import { useDateLocale } from '@/lib/dateConfig';
 import type { Lead, LeadStatus } from '../types';
 
 interface LeadCardProps {
@@ -32,6 +33,7 @@ export function LeadCard({
   isUpdating = false,
 }: LeadCardProps) {
   const { t } = useTranslation();
+  const { formatSmartTimestamp } = useDateLocale();
 
   return (
     <div
@@ -143,16 +145,7 @@ export function LeadCard({
         <div className="text-xs text-neutral-500 text-right">
           {(() => {
             try {
-              const dateStr = lead.createdAt.toString();
-              const date = new Date(dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`);
-              if (isNaN(date.getTime())) return '—';
-
-              return (
-                <>
-                  <div>{date.toLocaleDateString()}</div>
-                  <div>{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                </>
-              );
+              return formatSmartTimestamp(lead.createdAt);
             } catch {
               return '—';
             }

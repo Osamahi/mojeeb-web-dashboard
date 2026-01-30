@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { CustomFieldsSection } from './CustomFieldsSection';
 import { LeadNotesSection } from './LeadNotesSection';
+import { useDateLocale } from '@/lib/dateConfig';
 import type { Lead, LeadFieldDefinition } from '../types';
 
 interface LeadViewModeProps {
@@ -27,6 +28,7 @@ export function LeadViewMode({
   onViewConversation,
 }: LeadViewModeProps) {
   const { t } = useTranslation();
+  const { formatSmartTimestamp } = useDateLocale();
   const [notesExpanded, setNotesExpanded] = useState(true);
 
   return (
@@ -82,10 +84,7 @@ export function LeadViewMode({
           <p className="text-xs text-neutral-400">
             {(() => {
               try {
-                const date = new Date(lead.createdAt);
-                return !isNaN(date.getTime())
-                  ? date.toLocaleString()
-                  : t('lead_details.invalid_date');
+                return formatSmartTimestamp(lead.createdAt);
               } catch {
                 return t('lead_details.invalid_date');
               }
@@ -104,7 +103,7 @@ export function LeadViewMode({
                   <label className="block text-sm font-medium text-neutral-500 mb-1">
                     {t('lead_details.updated_label')}
                   </label>
-                  <p className="text-xs text-neutral-400">{new Date(lead.updatedAt).toLocaleString()}</p>
+                  <p className="text-xs text-neutral-400">{formatSmartTimestamp(lead.updatedAt)}</p>
                 </div>
               );
             }

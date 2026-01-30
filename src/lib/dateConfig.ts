@@ -23,6 +23,16 @@ import { enUS } from 'date-fns/locale/en-US';
 import type { Locale } from 'date-fns';
 import * as dateFns from 'date-fns';
 import { toArabicNumerals } from './arabicNumerals';
+import {
+  formatSmartTimestamp,
+  formatInUserTimezone,
+  getUserTimezone,
+  getTimezoneAbbreviation,
+  isTimestampToday,
+  isTimestampYesterday,
+  getRelativeTime,
+  type FormatTimestampOptions,
+} from './timeUtils';
 
 /**
  * Converts date-fns format strings to Intl.DateTimeFormat options
@@ -213,6 +223,48 @@ export function useDateLocale() {
     startOfMonth: dateFns.startOfMonth,
     endOfMonth: dateFns.endOfMonth,
 
+    // Smart timestamp formatting (new centralized time management)
+    /**
+     * Format timestamp with smart relative/absolute logic
+     * - Recent: "2 hours ago"
+     * - Yesterday: "Yesterday at 3:30 PM"
+     * - This week: "Monday at 10:15 AM"
+     * - Older: "Jan 30, 2025 12:32 PM"
+     */
+    formatSmartTimestamp: (date: string | Date, options?: FormatTimestampOptions) =>
+      formatSmartTimestamp(date, { ...options, locale: i18n.language }),
+
+    /**
+     * Format timestamp in user's browser timezone with custom pattern
+     */
+    formatInUserTimezone: (date: string | Date, pattern: string = 'PPpp') =>
+      formatInUserTimezone(date, pattern, i18n.language),
+
+    /**
+     * Get user's browser timezone (e.g., "Africa/Cairo")
+     */
+    getUserTimezone,
+
+    /**
+     * Get timezone abbreviation (e.g., "EET", "UTC+2")
+     */
+    getTimezoneAbbreviation,
+
+    /**
+     * Check if timestamp is today in user's timezone
+     */
+    isTimestampToday,
+
+    /**
+     * Check if timestamp is yesterday in user's timezone
+     */
+    isTimestampYesterday,
+
+    /**
+     * Get relative time ("2 hours ago", "in 3 days")
+     */
+    getRelativeTime: (date: string | Date) => getRelativeTime(date, i18n.language),
+
     // Export the current locale for manual use if needed
     locale,
   };
@@ -271,6 +323,18 @@ export function getDateFns(language: string) {
     endOfDay: dateFns.endOfDay,
     startOfMonth: dateFns.startOfMonth,
     endOfMonth: dateFns.endOfMonth,
+
+    // Smart timestamp formatting (new centralized time management)
+    formatSmartTimestamp: (date: string | Date, options?: FormatTimestampOptions) =>
+      formatSmartTimestamp(date, { ...options, locale: language }),
+    formatInUserTimezone: (date: string | Date, pattern: string = 'PPpp') =>
+      formatInUserTimezone(date, pattern, language),
+    getUserTimezone,
+    getTimezoneAbbreviation,
+    isTimestampToday,
+    isTimestampYesterday,
+    getRelativeTime: (date: string | Date) => getRelativeTime(date, language),
+
     locale,
   };
 }
