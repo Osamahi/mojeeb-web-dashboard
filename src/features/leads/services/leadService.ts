@@ -42,7 +42,7 @@ class LeadService {
   private transformNote(apiNote: ApiLeadNoteResponse): LeadNote {
     console.log('[leadService.transformNote] Raw API note:', {
       id: apiNote.id,
-      user_id: apiNote.user_id,
+      created_by: apiNote.created_by,  // Updated from user_id to created_by
       user_name: apiNote.user_name, // ← Key field to check
       text: apiNote.text?.substring(0, 20) + '...'
     });
@@ -59,7 +59,7 @@ class LeadService {
 
     const transformed = {
       id: apiNote.id,
-      userId: apiNote.user_id,
+      userId: apiNote.created_by,  // Updated from user_id to created_by
       userName: apiNote.user_name,
       text: apiNote.text,
       noteType: apiNote.note_type,

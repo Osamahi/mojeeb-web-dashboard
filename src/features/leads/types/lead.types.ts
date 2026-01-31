@@ -60,7 +60,7 @@ export interface Lead {
 
 export interface ApiLeadNoteResponse {
   id: string;
-  user_id: string;
+  created_by: string;  // Changed from user_id to match backend DTO
   user_name: string;
   text: string;
   note_type: NoteType;
