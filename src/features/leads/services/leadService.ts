@@ -5,6 +5,7 @@
  */
 
 import api from '@/lib/api';
+import { parseNoteMetadata } from '../utils/noteHelpers';
 import type {
   Lead,
   LeadNote,
@@ -40,41 +41,33 @@ class LeadService {
    * Transform note API response (snake_case) to frontend model (camelCase)
    */
   private transformNote(apiNote: ApiLeadNoteResponse): LeadNote {
-    console.log('[leadService.transformNote] Raw API note:', {
+    console.log('[transformNote] 🔍 DEBUG: Received API note:', {
       id: apiNote.id,
-      created_by: apiNote.created_by,  // Updated from user_id to created_by
-      user_name: apiNote.user_name, // ← Key field to check
-      text: apiNote.text?.substring(0, 20) + '...'
+      note_type: apiNote.note_type,
+      is_deleted: apiNote.is_deleted,
+      is_edited: apiNote.is_edited,
+      text: apiNote.text?.substring(0, 30)
     });
-
-    // Parse metadata if it's a JSON string
-    let parsedMetadata = apiNote.metadata;
-    if (typeof apiNote.metadata === 'string' && apiNote.metadata) {
-      try {
-        parsedMetadata = JSON.parse(apiNote.metadata);
-      } catch (e) {
-        console.error('[leadService] Failed to parse metadata:', apiNote.metadata, e);
-      }
-    }
 
     const transformed = {
       id: apiNote.id,
-      userId: apiNote.created_by,  // Updated from user_id to created_by
+      userId: apiNote.created_by,
       userName: apiNote.user_name,
       text: apiNote.text,
       noteType: apiNote.note_type,
       isEdited: apiNote.is_edited,
       isDeleted: apiNote.is_deleted,
-      metadata: parsedMetadata,
+      metadata: parseNoteMetadata(apiNote.metadata),
       createdAt: apiNote.created_at,
       updatedAt: apiNote.updated_at,
     };
 
-    console.log('[leadService.transformNote] Transformed to:', {
+    console.log('[transformNote] 🔍 DEBUG: Transformed to frontend note:', {
       id: transformed.id,
-      userId: transformed.userId,
-      userName: transformed.userName, // ← Key field to check
-      text: transformed.text?.substring(0, 20) + '...'
+      noteType: transformed.noteType,
+      isDeleted: transformed.isDeleted,
+      isEdited: transformed.isEdited,
+      text: transformed.text?.substring(0, 30)
     });
 
     return transformed;
@@ -84,7 +77,19 @@ class LeadService {
    * Transform API response (snake_case) to frontend model (camelCase)
    */
   private transformLead(apiLead: ApiLeadResponse): Lead {
-    return {
+    console.log('[transformLead] 🔍 DEBUG: Received API lead:', {
+      id: apiLead.id,
+      name: apiLead.name,
+      notes_count: apiLead.notes?.length || 0,
+      first_note: apiLead.notes?.[0] ? {
+        id: apiLead.notes[0].id,
+        note_type: (apiLead.notes[0] as any).note_type,
+        is_deleted: (apiLead.notes[0] as any).is_deleted,
+        text: apiLead.notes[0].text?.substring(0, 20)
+      } : null
+    });
+
+    const transformed = {
       id: apiLead.id,
       agentId: apiLead.agent_id,
       name: apiLead.name,
@@ -97,6 +102,20 @@ class LeadService {
       createdAt: apiLead.created_at,
       updatedAt: apiLead.updated_at,
     };
+
+    console.log('[transformLead] 🔍 DEBUG: Transformed lead:', {
+      id: transformed.id,
+      name: transformed.name,
+      notes_count: transformed.notes?.length || 0,
+      first_note: transformed.notes?.[0] ? {
+        id: transformed.notes[0].id,
+        noteType: transformed.notes[0].noteType,
+        isDeleted: transformed.notes[0].isDeleted,
+        text: transformed.notes[0].text?.substring(0, 20)
+      } : null
+    });
+
+    return transformed;
   }
 
   /**

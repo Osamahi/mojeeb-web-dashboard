@@ -22,6 +22,7 @@ import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useDateLocale } from '@/lib/dateConfig';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { Lead, LeadStatus, LeadFilters } from '../types';
 
 interface LeadsTableViewProps {
@@ -72,84 +73,17 @@ export function LeadsTableView({
   const tRef = useRef(t);
   tRef.current = t;
 
-  // 🔍 DEBUGGING: Track component renders and state changes
-  const renderCount = useRef(0);
-  renderCount.current += 1;
-
-  useEffect(() => {
-    console.log('🔄 [LeadsTableView] Render #', renderCount.current, {
-      leadsCount: leads?.length || 0,
-      isLoading,
-      isFetching,
-      error: !!error,
-      isMobile,
-      updatePending: updateMutation.isPending,
-    });
+  // Server-side infinite scroll handler
+  useInfiniteScroll({
+    fetchNextPage,
+    hasMore,
+    isFetching: isFetchingNextPage,
+    containerSelector: '[data-leads-container]',
   });
-
-  // Track data changes
-  useEffect(() => {
-    console.log('📊 [LeadsTableView] Data changed:', {
-      leadsCount: leads?.length || 0,
-      firstLeadId: leads?.[0]?.id,
-      firstLeadStatus: leads?.[0]?.status,
-    });
-  }, [leads]);
-
-  // Track loading states
-  useEffect(() => {
-    console.log('⏳ [LeadsTableView] Loading state changed:', {
-      isLoading,
-      isFetching,
-      isPending: updateMutation.isPending,
-      showOverlay: isFetching && !isLoading,
-    });
-  }, [isLoading, isFetching, updateMutation.isPending]);
-
-  // Server-side infinite scroll handler with Intersection Observer
-  useEffect(() => {
-    // Use Intersection Observer for reliable scroll detection
-    const observerTarget = document.createElement('div');
-    observerTarget.id = 'leads-scroll-trigger';
-    observerTarget.style.height = '1px';
-    observerTarget.style.width = '100%';
-
-    // Find the parent container and append the trigger
-    const container = document.querySelector('[data-leads-container]');
-    if (container) {
-      container.appendChild(observerTarget);
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (entry.isIntersecting && hasMore && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      {
-        root: null, // viewport
-        rootMargin: '500px', // Trigger 500px before reaching the element
-        threshold: 0.1,
-      }
-    );
-
-    if (observerTarget) {
-      observer.observe(observerTarget);
-    }
-
-    return () => {
-      observer.disconnect();
-      if (observerTarget && observerTarget.parentNode) {
-        observerTarget.parentNode.removeChild(observerTarget);
-      }
-    };
-  }, [fetchNextPage, hasMore, isFetchingNextPage]);
 
   // Event handlers with stable references (using refs to avoid recreation)
   const handleStatusChange = useCallback((leadId: string, newStatus: LeadStatus, e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();
-    console.log('🔄 [LeadsTableView] Status change triggered:', { leadId, newStatus });
     mutateLeadRef.current({
       leadId,
       request: { status: newStatus },
@@ -419,15 +353,6 @@ export function LeadsTableView({
     // Callbacks are stable (empty deps), so no need to include them here
     // updateMutation.isPending, user.id, etc. are captured by closures - not needed as deps
   ]);
-
-  // Track when columns are recreated (AFTER columns definition)
-  const columnsRef = useRef(null);
-  const columnsRecreateCount = useRef(0);
-  if (columnsRef.current !== columns) {
-    columnsRecreateCount.current += 1;
-    columnsRef.current = columns;
-    console.log('🔄 [LeadsTableView] Columns recreated', columnsRecreateCount.current, 'times');
-  }
 
   // Show skeleton only on initial load
   if (isLoading) {

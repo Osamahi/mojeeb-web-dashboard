@@ -1,5 +1,9 @@
 /**
  * Validation utilities for lead fields
+ *
+ * IMPORTANT: Frontend validation provides immediate UX feedback only.
+ * Backend performs authoritative validation.
+ * Keep validation rules synchronized with: MojeebBackEnd/Services/Leads/Domain/Services/LeadValidationService.cs
  */
 
 export interface ValidationResult {

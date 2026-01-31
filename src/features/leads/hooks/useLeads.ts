@@ -173,19 +173,12 @@ export function useUpdateLead() {
       });
 
       toast.success(t('leads.lead_updated'));
-
-      console.log('✅ [useUpdateLead] Mutation succeeded - cache updated by Supabase subscription');
     },
 
     onError: (error: any) => {
-      console.error('❌ [useUpdateLead] Error details:', {
-        status: error?.response?.status,
-        data: error?.response?.data,
-      });
-
-      // Log nested validation errors separately for visibility
-      if (error?.response?.data?.errors) {
-        console.error('❌ Validation errors:', JSON.stringify(error.response.data.errors, null, 2));
+      // Development-only error logging
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[useUpdateLead] Error:', error?.response?.data);
       }
 
       const message = error?.response?.data?.message || 'Failed to update lead';
