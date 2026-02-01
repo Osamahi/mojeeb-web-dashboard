@@ -38,7 +38,7 @@ export default function LeadsPage() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<string | null>(null);
   const [openInEditMode, setOpenInEditMode] = useState(false);
-  const [notesLead, setNotesLead] = useState<{ id: string; name: string } | null>(null);
+  const [notesLead, setNotesLead] = useState<{ id: string; name: string; agentId: string } | null>(null);
   const [summaryLead, setSummaryLead] = useState<{ id: string; name: string; summary: string } | null>(null);
 
   // Filter state
@@ -122,8 +122,8 @@ export default function LeadsPage() {
     setSelectedConversationId(conversationId);
   }, []);
 
-  const handleAddNoteClick = useCallback((leadId: string, name: string) => {
-    setNotesLead({ id: leadId, name });
+  const handleAddNoteClick = useCallback((leadId: string, name: string, agentId: string) => {
+    setNotesLead({ id: leadId, name, agentId });
   }, []);
 
   const handleAddSummaryClick = useCallback((leadId: string, name: string, summary: string) => {
@@ -214,6 +214,7 @@ export default function LeadsPage() {
           isOpen={true}
           onClose={() => setNotesLead(null)}
           leadId={notesLead.id}
+          agentId={notesLead.agentId}
           leadName={notesLead.name}
         />
       )}

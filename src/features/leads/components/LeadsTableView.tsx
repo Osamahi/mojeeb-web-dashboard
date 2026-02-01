@@ -35,7 +35,7 @@ interface LeadsTableViewProps {
   onDeleteClick: (leadId: string) => void;
   onViewConversation: (conversationId: string) => void;
   onAddLeadClick: () => void;
-  onAddNoteClick: (leadId: string, name: string) => void;
+  onAddNoteClick: (leadId: string, name: string, agentId: string) => void;
   onAddSummaryClick: (leadId: string, name: string, summary: string) => void;
   fetchNextPage: () => void;
   hasMore: boolean;

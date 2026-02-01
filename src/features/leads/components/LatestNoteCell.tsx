@@ -12,7 +12,7 @@ import type { Lead } from '../types';
 
 interface LatestNoteCellProps {
   lead: Lead;
-  onAddNoteClick: (leadId: string, name: string) => void;
+  onAddNoteClick: (leadId: string, name: string, agentId: string) => void;
 }
 
 export function LatestNoteCell({ lead, onAddNoteClick }: LatestNoteCellProps) {
@@ -43,7 +43,7 @@ export function LatestNoteCell({ lead, onAddNoteClick }: LatestNoteCellProps) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onAddNoteClick(lead.id, lead.name || '');
+            onAddNoteClick(lead.id, lead.name || '', lead.agentId);
           }}
           className="ltr:text-left rtl:text-right w-full hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
         >
@@ -59,7 +59,7 @@ export function LatestNoteCell({ lead, onAddNoteClick }: LatestNoteCellProps) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onAddNoteClick(lead.id, lead.name || '');
+            onAddNoteClick(lead.id, lead.name || '', lead.agentId);
           }}
           className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors ltr:text-left rtl:text-right w-full"
         >
