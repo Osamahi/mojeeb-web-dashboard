@@ -218,6 +218,16 @@ export interface PaginatedLeadsResponse {
   pagination: PaginationMetadata;
 }
 
+/**
+ * Cursor-based pagination response (for infinite scroll)
+ * No total count - optimized for constant-time performance
+ */
+export interface CursorPaginatedLeadsResponse {
+  items: ApiLeadResponse[];
+  next_cursor: string | null;  // Base64-encoded cursor for next page (null on last page)
+  has_more: boolean;  // True if there are more pages available
+}
+
 export interface LeadFormData {
   name: string;
   phone: string;

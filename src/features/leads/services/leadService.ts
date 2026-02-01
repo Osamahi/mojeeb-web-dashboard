@@ -22,6 +22,7 @@ import type {
   UpdateNoteRequest,
   PaginatedLeadsResponse,
   PaginationMetadata,
+  CursorPaginatedLeadsResponse,
 } from '../types';
 
 // Backend API Response Wrapper
@@ -181,6 +182,55 @@ class LeadService {
       }
     } catch (error) {
       console.error('[LeadService] Error fetching paginated leads:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get leads with cursor-based pagination (optimized for infinite scroll)
+   * Returns next_cursor and has_more for efficient pagination without COUNT(*)
+   */
+  async getLeadsCursor(
+    agentId: string,
+    limit: number = 50,
+    cursor?: string,
+    filters?: Partial<LeadFilters>
+  ): Promise<{ leads: Lead[]; nextCursor: string | null; hasMore: boolean }> {
+    try {
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append('agentId', agentId);
+      params.append('limit', limit.toString());
+
+      if (cursor) {
+        params.append('cursor', cursor);
+      }
+
+      if (filters) {
+        if (filters.status && filters.status !== 'all') {
+          params.append('status', filters.status);
+        }
+        if (filters.dateFrom) {
+          params.append('dateFrom', filters.dateFrom);
+        }
+        if (filters.dateTo) {
+          params.append('dateTo', filters.dateTo);
+        }
+        if (filters.search && filters.search.trim()) {
+          params.append('search', filters.search.trim());
+        }
+      }
+
+      const url = `/api/lead/cursor?${params.toString()}`;
+      const { data } = await api.get<ApiResponse<CursorPaginatedLeadsResponse>>(url);
+
+      return {
+        leads: data.data.items.map(lead => this.transformLead(lead)),
+        nextCursor: data.data.next_cursor,
+        hasMore: data.data.has_more,
+      };
+    } catch (error) {
+      console.error('[LeadService] Error fetching leads with cursor:', error);
       throw error;
     }
   }

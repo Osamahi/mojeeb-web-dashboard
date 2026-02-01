@@ -43,38 +43,37 @@ export function useLeads(filters?: Partial<LeadFilters>) {
 }
 
 /**
- * Fetch paginated leads with infinite scroll support
+ * Fetch paginated leads with infinite scroll support (cursor-based)
  * Auto-scoped to selected agent from context
- * Loads 50 leads per page for optimal performance with 2000+ leads
+ * Uses cursor pagination for constant-time performance with any data size
+ * No COUNT(*) queries - optimal for infinite scroll UX
  */
 export function useInfiniteLeads(filters?: Partial<LeadFilters>) {
   const { agentId } = useAgentContext();
 
   return useInfiniteQuery({
-    queryKey: [...queryKeys.leads(agentId), 'infinite', filters],
-    queryFn: ({ pageParam = 1 }) =>
-      leadService.getPaginatedLeads(agentId!, {
-        ...filters,
-        page: pageParam,
-        pageSize: 50, // Load 50 leads per batch
-      }),
+    queryKey: [...queryKeys.leads(agentId), 'infinite-cursor', filters],
+    queryFn: ({ pageParam }) =>
+      leadService.getLeadsCursor(
+        agentId!,
+        50, // Load 50 leads per batch
+        pageParam, // Base64-encoded cursor (undefined for first page)
+        filters
+      ),
     enabled: !!agentId,
-    initialPageParam: 1,
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => {
-      // Return next page number if there are more pages, otherwise undefined
-      return lastPage.pagination.has_more
-        ? lastPage.pagination.current_page + 1
-        : undefined;
+      // Return next_cursor if there are more pages, otherwise undefined
+      return lastPage.hasMore ? lastPage.nextCursor : undefined;
     },
     // Flatten all pages into a single array for easy consumption
     select: (data) => {
       const lastPage = data.pages[data.pages.length - 1];
-      const hasMore = lastPage?.pagination.has_more ?? false;
 
       return {
         leads: data.pages.flatMap((page) => page.leads),
-        pagination: lastPage?.pagination,
-        hasMore,
+        hasMore: lastPage?.hasMore ?? false,
+        nextCursor: lastPage?.nextCursor ?? null,
       };
     },
   });
