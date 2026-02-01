@@ -80,7 +80,6 @@ export const PLATFORMS: PlatformMetadata[] = [
     category: 'messaging',
     brandColor: '#25D366',
     brandBgColor: '#E8F8EE',
-    requiresSuperAdmin: true, // Only SuperAdmins can access WhatsApp for now
   },
   {
     id: 'tiktok',

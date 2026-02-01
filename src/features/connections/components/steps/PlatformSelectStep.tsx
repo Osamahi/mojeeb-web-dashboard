@@ -14,7 +14,7 @@ type PlatformSelectStepProps = {
 };
 
 type PlatformOption = {
-  id: OAuthIntegrationType | 'whatsapp';
+  id: OAuthIntegrationType;
   nameKey: string;
   descKey: string;
   comingSoon?: boolean;
@@ -34,16 +34,10 @@ export function PlatformSelectStep({ onSelect, existingConnections }: PlatformSe
       nameKey: 'connections.instagram',
       descKey: 'connections.instagram_desc',
     },
-    {
-      id: 'whatsapp',
-      nameKey: 'connections.whatsapp',
-      descKey: 'connections.whatsapp_desc',
-      comingSoon: true,
-    },
   ];
 
   // Count connections for each platform
-  const getConnectionCount = (platform: OAuthIntegrationType | 'whatsapp') =>
+  const getConnectionCount = (platform: OAuthIntegrationType) =>
     existingConnections.filter(c => c.platform === platform && c.isActive).length;
 
   return (
@@ -63,8 +57,7 @@ export function PlatformSelectStep({ onSelect, existingConnections }: PlatformSe
             <button
               key={platform.id}
               onClick={() => {
-                // Type guard to ensure only valid OAuth platforms are passed
-                if (!isDisabled && platform.id !== 'whatsapp') {
+                if (!isDisabled) {
                   onSelect(platform.id);
                 }
               }}
