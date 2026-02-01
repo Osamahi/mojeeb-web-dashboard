@@ -157,7 +157,7 @@ export function LeadViewMode({
               <ChevronDown className="w-4 h-4 text-neutral-500" />
             )}
           </button>
-          {notesExpanded && <LeadNotesSection leadId={lead.id} />}
+          {notesExpanded && <LeadNotesSection leadId={lead.id} agentId={lead.agentId} />}
         </div>
       </div>
 

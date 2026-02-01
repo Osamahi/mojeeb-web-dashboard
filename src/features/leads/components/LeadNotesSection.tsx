@@ -21,14 +21,15 @@ import type { LeadNote } from '../types';
 
 interface LeadNotesSectionProps {
   leadId: string;
+  agentId: string;
   onNoteAdded?: () => void;
 }
 
-export function LeadNotesSection({ leadId, onNoteAdded }: LeadNotesSectionProps) {
+export function LeadNotesSection({ leadId, agentId, onNoteAdded }: LeadNotesSectionProps) {
   const { t } = useTranslation();
   const { formatSmartTimestamp } = useDateLocale();
   const user = useAuthStore((state) => state.user);
-  const { data: notes, isLoading } = useLeadNotes(leadId);
+  const { data: notes, isLoading } = useLeadNotes(leadId, agentId);
   const createMutation = useCreateLeadNote();
   const updateMutation = useUpdateLeadNote();
   const deleteMutation = useDeleteLeadNote();

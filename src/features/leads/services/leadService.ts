@@ -265,7 +265,7 @@ class LeadService {
   /**
    * Update an existing lead
    */
-  async updateLead(leadId: string, request: UpdateLeadRequest): Promise<Lead> {
+  async updateLead(leadId: string, agentId: string, request: UpdateLeadRequest): Promise<Lead> {
     // Transform to snake_case for backend
     const payload: Partial<Record<string, any>> = {};
 
@@ -275,15 +275,18 @@ class LeadService {
     if (request.customFields !== undefined) payload.custom_fields = request.customFields;
     if (request.summary !== undefined) payload.summary = request.summary;
 
-    const { data } = await api.put<ApiResponse<ApiLeadResponse>>(`/api/lead/${leadId}`, payload);
+    const { data } = await api.put<ApiResponse<ApiLeadResponse>>(
+      `/api/lead/${leadId}?agentId=${agentId}`,
+      payload
+    );
     return this.transformLead(data.data);
   }
 
   /**
    * Delete a lead
    */
-  async deleteLead(leadId: string): Promise<void> {
-    await api.delete(`/api/lead/${leadId}`);
+  async deleteLead(leadId: string, agentId: string): Promise<void> {
+    await api.delete(`/api/lead/${leadId}?agentId=${agentId}`);
   }
 
   // ========================================
@@ -356,10 +359,10 @@ class LeadService {
   /**
    * Get all notes for a lead (excludes soft-deleted by default)
    */
-  async getLeadNotes(leadId: string, includeDeleted = false): Promise<LeadNote[]> {
+  async getLeadNotes(leadId: string, agentId: string, includeDeleted = false): Promise<LeadNote[]> {
     const { data } = await api.get<ApiResponse<ApiLeadNoteResponse[]>>(
       `/api/lead/${leadId}/notes`,
-      { params: { includeDeleted } }
+      { params: { agentId, includeDeleted } }
     );
     return data.data.map(note => this.transformNote(note));
   }
@@ -367,7 +370,7 @@ class LeadService {
   /**
    * Add a note to a lead
    */
-  async createLeadNote(leadId: string, request: CreateNoteRequest): Promise<LeadNote> {
+  async createLeadNote(leadId: string, agentId: string, request: CreateNoteRequest): Promise<LeadNote> {
     // Transform to snake_case for backend
     const payload = {
       text: request.text,
@@ -375,7 +378,7 @@ class LeadService {
     };
 
     const { data } = await api.post<ApiResponse<ApiLeadNoteResponse>>(
-      `/api/lead/${leadId}/notes`,
+      `/api/lead/${leadId}/notes?agentId=${agentId}`,
       payload
     );
     return this.transformNote(data.data);
@@ -387,6 +390,7 @@ class LeadService {
   async updateLeadNote(
     leadId: string,
     noteId: string,
+    agentId: string,
     request: UpdateNoteRequest
   ): Promise<LeadNote> {
     // Transform to snake_case for backend
@@ -395,7 +399,7 @@ class LeadService {
     };
 
     const { data } = await api.put<ApiResponse<ApiLeadNoteResponse>>(
-      `/api/lead/${leadId}/notes/${noteId}`,
+      `/api/lead/${leadId}/notes/${noteId}?agentId=${agentId}`,
       payload
     );
     return this.transformNote(data.data);
@@ -404,8 +408,8 @@ class LeadService {
   /**
    * Delete a note (soft delete, only by note owner)
    */
-  async deleteLeadNote(leadId: string, noteId: string): Promise<void> {
-    await api.delete(`/api/lead/${leadId}/notes/${noteId}`);
+  async deleteLeadNote(leadId: string, noteId: string, agentId: string): Promise<void> {
+    await api.delete(`/api/lead/${leadId}/notes/${noteId}?agentId=${agentId}`);
   }
 }
 

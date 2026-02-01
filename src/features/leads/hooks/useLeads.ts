@@ -160,7 +160,7 @@ export function useUpdateLead() {
 
   return useMutation({
     mutationFn: ({ leadId, request }: { leadId: string; request: UpdateLeadRequest }) =>
-      leadService.updateLead(leadId, request),
+      leadService.updateLead(leadId, agentId!, request),
 
     onSuccess: () => {
       // ✅ NO invalidation/refetch needed - Supabase subscription updates cache automatically
@@ -195,7 +195,7 @@ export function useDeleteLead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (leadId: string) => leadService.deleteLead(leadId),
+    mutationFn: (leadId: string) => leadService.deleteLead(leadId, agentId!),
     onSuccess: () => {
       // Invalidate all leads queries (including all filter variations)
       queryClient.invalidateQueries({
@@ -266,13 +266,18 @@ export function useDeleteFieldDefinition() {
 /**
  * Fetch all notes for a lead (excludes soft-deleted by default)
  * @param leadId - The lead ID to fetch notes for
+ * @param agentId - The agent ID that owns the lead
  * @param includeDeleted - Whether to include soft-deleted notes
  */
-export function useLeadNotes(leadId: string | undefined, includeDeleted = false) {
+export function useLeadNotes(
+  leadId: string | undefined,
+  agentId: string | undefined,
+  includeDeleted = false
+) {
   return useQuery({
     queryKey: ['leads', leadId, 'notes', includeDeleted],
-    queryFn: () => leadService.getLeadNotes(leadId!, includeDeleted),
-    enabled: !!leadId,
+    queryFn: () => leadService.getLeadNotes(leadId!, agentId!, includeDeleted),
+    enabled: !!leadId && !!agentId,
     staleTime: 30000, // 30 seconds - notes don't change frequently
   });
 }
@@ -289,7 +294,7 @@ export function useCreateLeadNote() {
   return useMutation({
     mutationKey: ['createLeadNote'],
     mutationFn: ({ leadId, request }: { leadId: string; request: CreateNoteRequest }) =>
-      leadService.createLeadNote(leadId, request),
+      leadService.createLeadNote(leadId, agentId!, request),
 
     // 🚀 OPTIMISTIC UPDATE: Add note immediately to cache before server responds
     onMutate: async ({ leadId, request }) => {
@@ -356,6 +361,7 @@ export function useCreateLeadNote() {
  * Invalidates lead notes on success
  */
 export function useUpdateLeadNote() {
+  const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -367,7 +373,7 @@ export function useUpdateLeadNote() {
       leadId: string;
       noteId: string;
       request: UpdateNoteRequest;
-    }) => leadService.updateLeadNote(leadId, noteId, request),
+    }) => leadService.updateLeadNote(leadId, noteId, agentId!, request),
     onSuccess: (_, { leadId }) => {
       queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'notes'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
@@ -390,7 +396,7 @@ export function useDeleteLeadNote() {
 
   return useMutation({
     mutationFn: ({ leadId, noteId }: { leadId: string; noteId: string }) =>
-      leadService.deleteLeadNote(leadId, noteId),
+      leadService.deleteLeadNote(leadId, noteId, agentId!),
     onSuccess: (_, { leadId }) => {
       queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'notes'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });

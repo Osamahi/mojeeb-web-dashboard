@@ -12,6 +12,7 @@ interface LeadNotesModalProps {
   isOpen: boolean;
   onClose: () => void;
   leadId: string;
+  agentId: string;
   leadName?: string;
 }
 
@@ -19,6 +20,7 @@ export function LeadNotesModal({
   isOpen,
   onClose,
   leadId,
+  agentId,
   leadName,
 }: LeadNotesModalProps) {
   const { t } = useTranslation();
@@ -30,7 +32,7 @@ export function LeadNotesModal({
       title={leadName ? t('lead_notes.title_with_name', { name: leadName }) : t('lead_notes.title')}
       maxWidth="md"
     >
-      <LeadNotesSection leadId={leadId} onNoteAdded={onClose} />
+      <LeadNotesSection leadId={leadId} agentId={agentId} onNoteAdded={onClose} />
     </BaseModal>
   );
 }
