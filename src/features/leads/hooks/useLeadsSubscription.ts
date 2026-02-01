@@ -60,14 +60,6 @@ interface NoteRow {
  * Transform note from snake_case (Supabase) to camelCase (frontend)
  */
 function transformNote(apiNote: NoteRow): any {
-  console.log('[useLeadsSubscription.transformNote] 🔍 DEBUG: Supabase note received:', {
-    id: apiNote.id,
-    note_type: apiNote.note_type,
-    is_deleted: apiNote.is_deleted,
-    is_edited: apiNote.is_edited,
-    text: apiNote.text?.substring(0, 30)
-  });
-
   const transformed = {
     id: apiNote.id,
     userId: apiNote.user_id,
@@ -80,14 +72,6 @@ function transformNote(apiNote: NoteRow): any {
     createdAt: apiNote.created_at,
     updatedAt: apiNote.updated_at,
   };
-
-  console.log('[useLeadsSubscription.transformNote] 🔍 DEBUG: Transformed note:', {
-    id: transformed.id,
-    noteType: transformed.noteType,
-    isDeleted: transformed.isDeleted,
-    isEdited: transformed.isEdited,
-    text: transformed.text?.substring(0, 30)
-  });
 
   return transformed;
 }
@@ -129,12 +113,6 @@ export function useLeadsSubscription() {
         const updatedLeadRow = payload.new as LeadRow;
 
         // Convert snake_case to camelCase
-        console.log('[useLeadsSubscription] 🔍 DEBUG: Supabase UPDATE event received:', {
-          leadId: updatedLeadRow.id,
-          name: updatedLeadRow.name,
-          notesCount: ((updatedLeadRow as any).notes || []).length
-        });
-
         const updatedLead: any = {
           id: updatedLeadRow.id,
           agentId: updatedLeadRow.agent_id,
@@ -148,18 +126,6 @@ export function useLeadsSubscription() {
           updatedAt: updatedLeadRow.updated_at,
           notes: ((updatedLeadRow as any).notes || []).map((note: NoteRow) => transformNote(note)),
         };
-
-        console.log('[useLeadsSubscription] 🔍 DEBUG: Transformed updatedLead:', {
-          leadId: updatedLead.id,
-          name: updatedLead.name,
-          notesCount: updatedLead.notes?.length || 0,
-          firstNote: updatedLead.notes?.[0] ? {
-            id: updatedLead.notes[0].id,
-            noteType: updatedLead.notes[0].noteType,
-            isDeleted: updatedLead.notes[0].isDeleted,
-            text: updatedLead.notes[0].text?.substring(0, 20)
-          } : null
-        });
 
         // Update all query variants (different filter combinations)
         queryClient.setQueriesData(

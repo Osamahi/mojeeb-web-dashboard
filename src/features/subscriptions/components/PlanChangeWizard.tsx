@@ -125,32 +125,26 @@ export function PlanChangeWizard({
   }, [selectedPlan, currentSubscription.planCode, currentSubscription.messageLimit, currentSubscription.currency, billingInterval, handleBack, onSuccess, onClose, t]);
 
   const getPriceAndCurrency = (plan: SubscriptionPlan): { price: number; currency: string } => {
-    console.log('[PlanChangeWizard] getPrice called for plan:', plan.code);
-    console.log('[PlanChangeWizard] Current subscription currency:', currentSubscription.currency);
-    console.log('[PlanChangeWizard] Plan pricing object:', plan.pricing);
-    console.log('[PlanChangeWizard] Available currency keys:', Object.keys(plan.pricing));
-
-    // Original logic - try current subscription currency
+    // Try current subscription currency
     const currency = currentSubscription.currency;
     const pricingByCurrency = plan.pricing[currency];
-    console.log('[PlanChangeWizard] Pricing for', currency, ':', pricingByCurrency);
 
     // Fallback - try first available currency
     const availableCurrencyKey = Object.keys(plan.pricing)[0];
     const pricingByFirstKey = plan.pricing[availableCurrencyKey];
-    console.log('[PlanChangeWizard] Pricing for first key', availableCurrencyKey, ':', pricingByFirstKey);
 
     // Use whichever works
     const pricing = pricingByCurrency || pricingByFirstKey;
     const actualCurrency = pricingByCurrency ? currency : availableCurrencyKey;
 
     if (!pricing) {
-      console.error('[PlanChangeWizard] No pricing found for plan', plan.code);
+      if (import.meta.env.DEV) {
+        console.error('[PlanChangeWizard] No pricing found for plan', plan.code);
+      }
       return { price: 0, currency: currentSubscription.currency };
     }
 
     const price = pricing.monthly || 0;
-    console.log('[PlanChangeWizard] Final price:', price, 'Currency:', actualCurrency);
     return { price, currency: actualCurrency };
   };
 

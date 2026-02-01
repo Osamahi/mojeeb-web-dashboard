@@ -32,19 +32,12 @@ export default function WhatsAppManagementPage() {
   const { data: connections, isLoading: connectionsLoading } = useConnections();
 
   const whatsappConnections = useMemo(() => {
-    const whatsappConns = connections?.filter(conn => conn.platform === 'whatsapp') || [];
-    console.log('🔍 [WhatsApp Management] WhatsApp connections:', whatsappConns);
-    return whatsappConns;
+    return connections?.filter(conn => conn.platform === 'whatsapp') || [];
   }, [connections]);
 
   // Get templates for selected phone number
   // SECURITY: Access token retrieved from backend using connectionId
   const connectionId = selectedPhoneNumber?.id;
-
-  console.log('🔍 [WhatsApp Management] Template query params:', {
-    connectionId,
-    selectedPhoneNumber: selectedPhoneNumber?.id,
-  });
 
   const {
     data: templates,
@@ -52,15 +45,12 @@ export default function WhatsAppManagementPage() {
     error: templatesError
   } = useWhatsAppTemplates(connectionId);
 
-  if (templatesError) {
-    console.error('❌ [WhatsApp Management] Templates error:', templatesError);
+  if (templatesError && import.meta.env.DEV) {
+    console.error('[WhatsApp Management] Templates error:', templatesError);
   }
 
   // Auto-select first WhatsApp connection if available
   if (whatsappConnections.length > 0 && !selectedPhoneNumber) {
-    console.log('🔍 [WhatsApp Management] Auto-selecting first connection:', whatsappConnections[0]);
-    console.log('   - platform_metadata:', whatsappConnections[0].platform_metadata);
-    console.log('   - access_token:', whatsappConnections[0].access_token ? 'EXISTS' : 'MISSING');
     setSelectedPhoneNumber(whatsappConnections[0]);
   }
 

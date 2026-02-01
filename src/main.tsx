@@ -24,11 +24,8 @@ initializeVerificationHelpers(); // Add browser console helpers for debugging
 // Initialize multi-tab logout propagation
 initializeLogoutListener(); // Listen for logout events from other tabs
 
-// DIAGNOSTIC: Monitor localStorage changes to track auth issues
-if (import.meta.env.DEV) {
-  console.log('🔍 [Development] Initializing storage monitoring for auth debugging...');
-  startStorageMonitoring();
-}
+// DIAGNOSTIC: Monitor localStorage changes (DEV only - storageMonitor guards itself)
+startStorageMonitoring();
 
 const googleClientId = env.VITE_GOOGLE_CLIENT_ID || ''
 

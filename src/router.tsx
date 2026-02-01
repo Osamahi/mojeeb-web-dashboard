@@ -43,17 +43,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const user = useAuthStore((state) => state.user);
 
-  // DIAGNOSTIC: Log protected route access attempts
-  console.log(`\n🛡️ [ProtectedRoute] Access check at ${new Date().toISOString()}`);
-  console.log(`   isAuthenticated: ${isAuthenticated}`);
-  console.log(`   refreshToken: ${refreshToken ? 'EXISTS' : 'MISSING'}`);
-  console.log(`   user: ${user ? user.email : 'MISSING'}`);
-  console.log(`   Current URL: ${window.location.pathname}`);
-
   // CRITICAL: Handle edge case - isAuthenticated but no refreshToken (corrupted state)
   if (isAuthenticated && !refreshToken) {
-    console.log(`   ⚠️ [ProtectedRoute] CORRUPTED STATE - isAuthenticated=true but no refreshToken!`);
-    console.log(`   🔧 Clearing auth state and redirecting to /login`);
     // Clear the corrupted state immediately
     useAuthStore.setState({
       user: null,
@@ -67,12 +58,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   // DEFENSIVE CHECK: Don't redirect if we have a refreshToken
   // Even if isAuthenticated is false (due to race condition), AuthInitializer will handle token validation
   if (!isAuthenticated && !refreshToken) {
-    console.log(`   ⚠️ [ProtectedRoute] NOT AUTHENTICATED - Redirecting to /login`);
-    console.log(`   📍 Redirect triggered from: ${window.location.pathname}`);
     return <Navigate to="/login" replace />;
   }
-
-  console.log(`   ✅ [ProtectedRoute] Access granted - rendering protected content`);
 
   // Wrap with AuthInitializer to validate tokens before rendering
   return (
@@ -90,18 +77,8 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const refreshToken = useAuthStore((state) => state.refreshToken);
   const user = useAuthStore((state) => state.user);
 
-  // DIAGNOSTIC: Log SuperAdmin route access attempts
-  console.log(`\n👑 [SuperAdminRoute] Access check at ${new Date().toISOString()}`);
-  console.log(`   isAuthenticated: ${isAuthenticated}`);
-  console.log(`   refreshToken: ${refreshToken ? 'EXISTS' : 'MISSING'}`);
-  console.log(`   user: ${user ? user.email : 'MISSING'}`);
-  console.log(`   user.role: ${user?.role || 'MISSING'}`);
-  console.log(`   Current URL: ${window.location.pathname}`);
-
   // CRITICAL: Handle corrupted state - isAuthenticated but no refreshToken
   if (isAuthenticated && !refreshToken) {
-    console.log(`   ⚠️ [SuperAdminRoute] CORRUPTED STATE - isAuthenticated=true but no refreshToken!`);
-    console.log(`   🔧 Clearing auth state and redirecting to /login`);
     useAuthStore.setState({
       user: null,
       accessToken: null,
@@ -113,18 +90,13 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
 
   // DEFENSIVE CHECK: Don't redirect if we have a refreshToken
   if (!isAuthenticated && !refreshToken) {
-    console.log(`   ⚠️ [SuperAdminRoute] NOT AUTHENTICATED - Redirecting to /login`);
     return <Navigate to="/login" replace />;
   }
 
   // CRITICAL: Check role BEFORE mounting children to prevent API calls
   if (user?.role !== Role.SuperAdmin) {
-    console.log(`   ⚠️ [SuperAdminRoute] INSUFFICIENT PRIVILEGES - User role is ${user?.role}, requires SuperAdmin`);
-    console.log(`   🔄 Redirecting to /conversations`);
     return <Navigate to="/conversations" replace />;
   }
-
-  console.log(`   ✅ [SuperAdminRoute] Access granted - rendering SuperAdmin content`);
 
   // CRITICAL FIX: Wrap with AuthInitializer like ProtectedRoute does
   // This ensures user data is loaded before children components mount
@@ -144,18 +116,8 @@ const PublicRoute = ({ children, allowAuthenticatedAccess = false }: { children:
   const user = useAuthStore((state) => state.user);
   const refreshToken = useAuthStore((state) => state.refreshToken);
 
-  // DIAGNOSTIC: Log public route access
-  console.log(`\n🌐 [PublicRoute] Access check at ${new Date().toISOString()}`);
-  console.log(`   isAuthenticated: ${isAuthenticated}`);
-  console.log(`   user: ${user ? user.email : 'MISSING'}`);
-  console.log(`   refreshToken: ${refreshToken ? 'EXISTS' : 'MISSING'}`);
-  console.log(`   allowAuthenticatedAccess: ${allowAuthenticatedAccess}`);
-  console.log(`   Current URL: ${window.location.pathname}`);
-
   // CRITICAL: Handle corrupted state - isAuthenticated but no refreshToken
   if (isAuthenticated && !refreshToken) {
-    console.log(`   ⚠️ [PublicRoute] CORRUPTED STATE - isAuthenticated=true but no refreshToken!`);
-    console.log(`   🔧 Clearing auth state to allow login`);
     // Clear the corrupted state immediately
     useAuthStore.setState({
       user: null,
@@ -170,12 +132,8 @@ const PublicRoute = ({ children, allowAuthenticatedAccess = false }: { children:
   // This prevents redirect loops during logout when isAuthenticated is briefly true
   // but refreshToken has already been cleared
   if (isAuthenticated && refreshToken && !allowAuthenticatedAccess) {
-    console.log(`   ⚠️ [PublicRoute] User already authenticated with valid tokens - Redirecting to /conversations`);
-    console.log(`   📍 Redirect triggered from: ${window.location.pathname}`);
     return <Navigate to="/conversations" replace />;
   }
-
-  console.log(`   ✅ [PublicRoute] Access granted - rendering public content`);
 
   return (
     <Suspense fallback={<PageSkeleton />}>

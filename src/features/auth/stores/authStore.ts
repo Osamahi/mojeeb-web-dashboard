@@ -43,80 +43,11 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user, isAuthenticated: true }),
 
       setTokens: (accessToken, refreshToken) => {
-        console.log(`\n📦 [AuthStore] setTokens called at ${new Date().toISOString()}`);
-        console.log(`   Old Access Token: ${get().accessToken ? `EXISTS (${get().accessToken.length} chars)` : 'MISSING'}`);
-        console.log(`   New Access Token: ${accessToken ? `EXISTS (${accessToken.length} chars)` : 'MISSING'}`);
-        console.log(`   New Refresh Token: ${refreshToken ? `EXISTS (${refreshToken.length} chars)` : 'MISSING'}`);
-
-        // DIAGNOSTIC: Token expiration tracking (decode JWT if possible)
-        try {
-          if (accessToken) {
-            const parts = accessToken.split('.');
-            if (parts.length === 3) {
-              const payload = JSON.parse(atob(parts[1]));
-              if (payload.exp) {
-                const expiresAt = new Date(payload.exp * 1000);
-                const now = new Date();
-                const minutesUntilExpiry = Math.floor((expiresAt.getTime() - now.getTime()) / 60000);
-
-                console.log(`   ⏰ Access Token Expiration:`);
-                console.log(`      Expires at: ${expiresAt.toISOString()}`);
-                console.log(`      Time until expiry: ${minutesUntilExpiry} minutes`);
-
-                if (minutesUntilExpiry < 0) {
-                  console.warn(`      ⚠️ WARNING: Token is already EXPIRED by ${Math.abs(minutesUntilExpiry)} minutes!`);
-                } else if (minutesUntilExpiry < 5) {
-                  console.warn(`      ⚠️ WARNING: Token expires in less than 5 minutes!`);
-                } else if (minutesUntilExpiry < 15) {
-                  console.log(`      ✅ Token is valid (expires in ${minutesUntilExpiry} minutes)`);
-                }
-              }
-            }
-          }
-        } catch (e) {
-          // Silently ignore JWT decode errors - not all tokens are JWTs
-        }
-
-        // DIAGNOSTIC: Check localStorage BEFORE state update
-        const beforePersist = localStorage.getItem('mojeeb-auth-storage');
-        console.log(`   📊 BEFORE set(): localStorage['mojeeb-auth-storage'] = ${beforePersist ? 'EXISTS' : 'MISSING'} (${beforePersist?.length || 0} chars)`);
-
         setApiTokens(accessToken, refreshToken);
         set({ accessToken, refreshToken });
-
-        // DIAGNOSTIC: Check localStorage AFTER state update (allow 100ms for persist middleware)
-        setTimeout(() => {
-          const afterPersist = localStorage.getItem('mojeeb-auth-storage');
-          console.log(`   📊 AFTER set() +100ms: localStorage['mojeeb-auth-storage'] = ${afterPersist ? 'EXISTS' : 'MISSING'} (${afterPersist?.length || 0} chars)`);
-          if (afterPersist) {
-            try {
-              const parsed = JSON.parse(afterPersist);
-              console.log(`   📊 Persisted data contains:`);
-              console.log(`      - user: ${parsed?.state?.user ? 'YES' : 'NO'}`);
-              console.log(`      - refreshToken: ${parsed?.state?.refreshToken ? 'YES (' + parsed.state.refreshToken.substring(0, 10) + '...)' : 'NO'}`);
-              console.log(`      - isAuthenticated: ${parsed?.state?.isAuthenticated}`);
-            } catch (e) {
-              console.error(`   ❌ Failed to parse persisted data:`, e);
-            }
-          } else {
-            console.warn(`   ⚠️ WARNING: Persist middleware did NOT write to localStorage!`);
-          }
-        }, 100);
-
-        console.log(`   ✅ AuthStore state updated`);
       },
 
       setAuth: (user, accessToken, refreshToken) => {
-        console.log(`\n🔐 [AuthStore] setAuth called at ${new Date().toISOString()}`);
-        console.log(`   User: ${user.email}`);
-        console.log(`   User ID: ${user.id}`);
-        console.log(`   Access Token: EXISTS (${accessToken.length} chars)`);
-        console.log(`   Refresh Token: EXISTS (${refreshToken.length} chars)`);
-
-        // DIAGNOSTIC: Check localStorage BEFORE state update
-        const beforePersist = localStorage.getItem('mojeeb-auth-storage');
-        console.log(`   📊 BEFORE set(): localStorage['mojeeb-auth-storage'] = ${beforePersist ? 'EXISTS' : 'MISSING'} (${beforePersist?.length || 0} chars)`);
-
         setApiTokens(accessToken, refreshToken);
 
         // Set Sentry user context for error tracking
@@ -132,44 +63,19 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
         });
 
-        // DIAGNOSTIC: Check localStorage AFTER state update (allow 100ms for persist middleware)
-        setTimeout(() => {
-          const afterPersist = localStorage.getItem('mojeeb-auth-storage');
-          console.log(`   📊 AFTER set() +100ms: localStorage['mojeeb-auth-storage'] = ${afterPersist ? 'EXISTS' : 'MISSING'} (${afterPersist?.length || 0} chars)`);
-          if (afterPersist) {
-            try {
-              const parsed = JSON.parse(afterPersist);
-              console.log(`   📊 Persisted data contains:`);
-              console.log(`      - user: ${parsed?.state?.user ? `YES (${parsed.state.user.email})` : 'NO'}`);
-              console.log(`      - refreshToken: ${parsed?.state?.refreshToken ? 'YES (' + parsed.state.refreshToken.substring(0, 10) + '...)' : 'NO'}`);
-              console.log(`      - isAuthenticated: ${parsed?.state?.isAuthenticated}`);
-              console.log(`   ✅ Authentication data successfully persisted to localStorage!`);
-            } catch (e) {
-              console.error(`   ❌ Failed to parse persisted data:`, e);
-            }
-          } else {
-            console.error(`   ❌ CRITICAL: Persist middleware did NOT write to localStorage!`);
-            console.error(`   ❌ This will cause user to be logged out on page refresh!`);
-          }
-        }, 100);
-
         // Start proactive token refresh service
         import('./../../auth/services/tokenRefreshService').then(({ tokenRefreshService }) => {
           tokenRefreshService.start();
-          console.log(`   🔄 Token refresh service started`);
         });
 
         // Re-initialize logout listener (may have been closed during previous logout)
         import('./../../auth/services/logoutService').then(({ initializeLogoutListener }) => {
           initializeLogoutListener();
-          console.log(`   📡 Logout listener re-initialized`);
         });
 
         // NOTE: Invitation checking is now handled by usePostAuthNavigation hook
         // (called after auth methods in LoginPage, SignUpPage, GoogleCallbackPage)
         // This ensures invitations are checked in a unified way with proper navigation
-
-        console.log(`   ✅ Auth state set, isAuthenticated = true`);
       },
 
       updateUserPhone: (phone) => {
@@ -217,139 +123,79 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => ({
         getItem: (name) => {
           try {
-            const item = localStorage.getItem(name);
-            console.log(`   📖 [Persist.storage.getItem] Reading from localStorage['${name}']`);
-            console.log(`      Result: ${item ? 'EXISTS (' + item.length + ' chars)' : 'MISSING'}`);
-            return item;
+            return localStorage.getItem(name);
           } catch (error) {
-            console.error(`   ❌ [Persist.storage.getItem] ERROR reading from localStorage:`, error);
-            console.error(`      Error type: ${error instanceof Error ? error.name : 'Unknown'}`);
-            console.error(`      Error message: ${error instanceof Error ? error.message : String(error)}`);
+            if (import.meta.env.DEV) {
+              console.error('[Persist.storage.getItem] Error:', error);
+            }
             return null;
           }
         },
         setItem: (name, value) => {
           try {
-            console.log(`   💾 [Persist.storage.setItem] Writing to localStorage['${name}']`);
-            console.log(`      Data size: ${value.length} chars`);
-
-            // Attempt write
             localStorage.setItem(name, value);
-
-            // DIAGNOSTIC: Immediate read-back verification
-            const verification = localStorage.getItem(name);
-            if (verification === value) {
-              console.log(`      ✅ Write verified - data persisted successfully`);
-            } else if (verification === null) {
-              console.error(`      ❌ CRITICAL: Write appeared to succeed but read-back returned NULL!`);
-              console.error(`      Possible causes: storage quota exceeded, privacy mode, browser blocking`);
-            } else {
-              console.error(`      ❌ CRITICAL: Write succeeded but data was CORRUPTED!`);
-              console.error(`      Expected length: ${value.length}, Got length: ${verification?.length || 0}`);
-            }
           } catch (error) {
-            console.error(`   ❌ [Persist.storage.setItem] ERROR writing to localStorage:`, error);
-            console.error(`      Error type: ${error instanceof Error ? error.name : 'Unknown'}`);
-            console.error(`      Error message: ${error instanceof Error ? error.message : String(error)}`);
-
-            if (error instanceof Error && error.name === 'QuotaExceededError') {
-              console.error(`      💾 QUOTA EXCEEDED: localStorage is full!`);
-              console.error(`      Current usage: Try clearing old data or increasing quota`);
-            } else if (error instanceof Error && error.message.includes('private browsing')) {
-              console.error(`      🔒 PRIVATE MODE: localStorage disabled in incognito/private browsing`);
+            if (import.meta.env.DEV) {
+              console.error('[Persist.storage.setItem] Error:', error);
+              if (error instanceof Error && error.name === 'QuotaExceededError') {
+                console.error('localStorage quota exceeded');
+              }
             }
-
-            // Don't throw - persist middleware handles it gracefully
           }
         },
         removeItem: (name) => {
           try {
-            console.log(`   🗑️ [Persist.storage.removeItem] Removing localStorage['${name}']`);
             localStorage.removeItem(name);
-            console.log(`      ✅ Removal complete`);
           } catch (error) {
-            console.error(`   ❌ [Persist.storage.removeItem] ERROR removing from localStorage:`, error);
+            if (import.meta.env.DEV) {
+              console.error('[Persist.storage.removeItem] Error:', error);
+            }
           }
         },
       })),
-      partialize: (state) => {
-        // DIAGNOSTIC: Log what we're attempting to persist
-        const dataToPartialize = {
-          user: state.user,
-          refreshToken: state.refreshToken,
-          isAuthenticated: state.isAuthenticated,
-        };
-        console.log(`   📝 [Persist.partialize] Selecting data to persist:`);
-        console.log(`      - user: ${dataToPartialize.user ? `YES (${dataToPartialize.user.email})` : 'NO'}`);
-        console.log(`      - refreshToken: ${dataToPartialize.refreshToken ? `YES (${dataToPartialize.refreshToken.substring(0, 10)}...)` : 'NO'}`);
-        console.log(`      - isAuthenticated: ${dataToPartialize.isAuthenticated}`);
-        return dataToPartialize;
-      },
+      partialize: (state) => ({
+        user: state.user,
+        refreshToken: state.refreshToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
       onRehydrateStorage: () => {
-        console.log(`\n💧 [Persist.onRehydrateStorage] Starting rehydration process...`);
-
-        // DIAGNOSTIC: Check what's in localStorage before rehydration
-        const rawStorage = localStorage.getItem('mojeeb-auth-storage');
-        console.log(`   📊 Raw localStorage value: ${rawStorage ? 'EXISTS' : 'MISSING'} (${rawStorage?.length || 0} chars)`);
-        if (rawStorage) {
-          try {
-            const parsed = JSON.parse(rawStorage);
-            console.log(`   📊 Parsed localStorage structure:`);
-            console.log(`      - state: ${parsed?.state ? 'EXISTS' : 'MISSING'}`);
-            console.log(`      - state.user: ${parsed?.state?.user ? `EXISTS (${parsed.state.user.email})` : 'MISSING'}`);
-            console.log(`      - state.refreshToken: ${parsed?.state?.refreshToken ? `EXISTS (${parsed.state.refreshToken.substring(0, 10)}...)` : 'MISSING'}`);
-            console.log(`      - state.isAuthenticated: ${parsed?.state?.isAuthenticated}`);
-          } catch (e) {
-            console.error(`   ❌ Failed to parse localStorage JSON:`, e);
-          }
-        }
-
         return (state) => {
-          console.log(`\n💧 [AuthStore] Rehydration callback executing at ${new Date().toISOString()}`);
-          console.log(`   📊 Rehydrated state received:`);
-          console.log(`      - state object: ${state ? 'EXISTS' : 'NULL'}`);
-          console.log(`      - user: ${state?.user ? `EXISTS (${state.user.email})` : 'MISSING'}`);
-          console.log(`      - refreshToken: ${state?.refreshToken ? `EXISTS (${state.refreshToken.substring(0, 10)}...)` : 'MISSING'}`);
-          console.log(`      - isAuthenticated: ${state?.isAuthenticated}`);
-
           // CRITICAL FIX: Validate refresh token before trusting it
           // This prevents false positive authentication state from expired/invalid tokens
           if (state?.refreshToken && state?.user) {
-          console.log(`   ✅ Found persisted refreshToken and user`);
-          console.log(`      User: ${state.user.email}`);
-          console.log(`      User ID: ${state.user.id}`);
-          console.log(`      Refresh Token: EXISTS (${state.refreshToken.length} chars)`);
-          console.log(`   🔍 Validating refresh token with backend...`);
+            // Validate the token asynchronously - don't block rehydration
+            (async () => {
+              try {
+                const { validateRefreshToken } = await import('@/lib/tokenManager');
+                const validation = await validateRefreshToken(state.refreshToken!);
 
-          // Validate the token asynchronously - don't block rehydration
-          (async () => {
-            try {
-              const { validateRefreshToken } = await import('@/lib/tokenManager');
-              const validation = await validateRefreshToken(state.refreshToken!);
+                if (validation.isValid && validation.tokens) {
+                  // Update tokens in store with fresh tokens from validation
+                  useAuthStore.getState().setTokens(validation.tokens.accessToken, validation.tokens.refreshToken);
 
-              if (validation.isValid && validation.tokens) {
-                console.log(`   ✅ Token validation SUCCEEDED - user is authenticated`);
-                console.log(`      New Access Token: EXISTS (${validation.tokens.accessToken.length} chars)`);
-                console.log(`      New Refresh Token: EXISTS (${validation.tokens.refreshToken.length} chars)`);
+                  // Ensure isAuthenticated is true
+                  if (!useAuthStore.getState().isAuthenticated) {
+                    useAuthStore.setState({ isAuthenticated: true });
+                  }
 
-                // Update tokens in store with fresh tokens from validation
-                useAuthStore.getState().setTokens(validation.tokens.accessToken, validation.tokens.refreshToken);
+                  // Start proactive token refresh service
+                  const { tokenRefreshService } = await import('./../../auth/services/tokenRefreshService');
+                  tokenRefreshService.start();
+                } else {
+                  // Clear all auth state - token is invalid
+                  useAuthStore.getState().logout();
 
-                // Ensure isAuthenticated is true
-                if (!useAuthStore.getState().isAuthenticated) {
-                  console.log(`   🔧 Setting isAuthenticated = true after successful validation`);
-                  useAuthStore.setState({ isAuthenticated: true });
+                  // Redirect to login page if not already there
+                  if (window.location.pathname !== '/login') {
+                    window.location.href = '/login';
+                  }
+                }
+              } catch (error) {
+                if (import.meta.env.DEV) {
+                  console.error('Token validation error:', error);
                 }
 
-                // Start proactive token refresh service
-                const { tokenRefreshService } = await import('./../../auth/services/tokenRefreshService');
-                tokenRefreshService.start();
-                console.log(`   🔄 Token refresh service started after validation`);
-              } else {
-                console.log(`   ❌ Token validation FAILED - token is invalid/expired`);
-                console.log(`   🧹 Clearing invalid auth state and redirecting to login`);
-
-                // Clear all auth state - token is invalid
+                // Clear all auth state on validation error
                 useAuthStore.getState().logout();
 
                 // Redirect to login page if not already there
@@ -357,257 +203,29 @@ export const useAuthStore = create<AuthState>()(
                   window.location.href = '/login';
                 }
               }
-            } catch (error) {
-              console.error(`   ❌ Token validation ERROR:`, error);
-              console.log(`   🧹 Clearing auth state due to validation error`);
+            })();
 
-              // Clear all auth state on validation error
-              useAuthStore.getState().logout();
-
-              // Redirect to login page if not already there
-              if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-              }
-            }
-          })();
-
-          // Temporarily set authenticated to true to prevent flash of login page
-          // Will be corrected by validation above if token is invalid
-          state.isAuthenticated = true;
-        } else {
-          console.log(`   ❌ No refresh token or user found in persisted state`);
-          console.log(`      Refresh Token: ${state?.refreshToken ? 'exists' : 'missing'}`);
-          console.log(`      User: ${state?.user ? 'exists' : 'missing'}`);
-          console.log(`   ❌ Setting isAuthenticated = false`);
-
-          // No refresh token or user - definitely not authenticated
-          state.isAuthenticated = false;
-        }
-
-          console.log(`   🏁 Rehydration complete: isAuthenticated = ${state?.isAuthenticated}`);
+            // Temporarily set authenticated to true to prevent flash of login page
+            // Will be corrected by validation above if token is invalid
+            state.isAuthenticated = true;
+          } else {
+            // No refresh token or user - definitely not authenticated
+            state.isAuthenticated = false;
+          }
         };
       },
     }
   )
 );
 
-// DIAGNOSTIC: Subscribe to isAuthenticated changes to track unexpected sign-outs
+// DIAGNOSTIC: Subscribe to isAuthenticated changes to track unexpected sign-outs (DEV only)
 if (import.meta.env.DEV) {
   useAuthStore.subscribe(
     (state) => state.isAuthenticated,
     (isAuthenticated, previousIsAuthenticated) => {
       if (previousIsAuthenticated && !isAuthenticated) {
-        const stack = new Error().stack;
-        console.error(`\n🚨 [AuthStore] UNEXPECTED SIGN-OUT DETECTED at ${new Date().toISOString()}`);
-        console.error(`   isAuthenticated changed: true → false`);
-        console.error(`   Current user: ${useAuthStore.getState().user?.email || 'null'}`);
-        console.error(`   Current refreshToken: ${useAuthStore.getState().refreshToken ? 'EXISTS' : 'MISSING'}`);
-        console.error(`   📍 Sign-out triggered from:\n${stack}`);
-        console.error(`   ⚠️ This might indicate a bug - check the stack trace above!`);
+        console.error('[AuthStore] Unexpected sign-out detected');
       }
     }
   );
-  console.log('🔍 [AuthStore] Monitoring isAuthenticated for unexpected sign-outs...');
-}
-
-// DIAGNOSTIC: Global helper to verify auth persistence (available in browser console)
-if (typeof window !== 'undefined') {
-  (window as any).verifyAuthPersistence = () => {
-    console.log('\n🔍 [DIAGNOSTIC] Auth Persistence Verification Report');
-    console.log('================================================\n');
-
-    const currentState = useAuthStore.getState();
-    const rawStorage = localStorage.getItem('mojeeb-auth-storage');
-    const accessTokenLS = localStorage.getItem('accessToken');
-    const refreshTokenLS = localStorage.getItem('refreshToken');
-
-    console.log('1️⃣ ZUSTAND STORE STATE:');
-    console.log(`   - user: ${currentState.user ? `EXISTS (${currentState.user.email})` : 'MISSING'}`);
-    console.log(`   - accessToken: ${currentState.accessToken ? `EXISTS (${currentState.accessToken.substring(0, 10)}...)` : 'MISSING'}`);
-    console.log(`   - refreshToken: ${currentState.refreshToken ? `EXISTS (${currentState.refreshToken.substring(0, 10)}...)` : 'MISSING'}`);
-    console.log(`   - isAuthenticated: ${currentState.isAuthenticated}`);
-    console.log(`   - isLoading: ${currentState.isLoading}\n`);
-
-    console.log('2️⃣ LOCALSTORAGE - ZUSTAND PERSIST:');
-    console.log(`   - mojeeb-auth-storage: ${rawStorage ? `EXISTS (${rawStorage.length} chars)` : 'MISSING'}`);
-    if (rawStorage) {
-      try {
-        const parsed = JSON.parse(rawStorage);
-        console.log(`   - Persisted user: ${parsed?.state?.user ? `YES (${parsed.state.user.email})` : 'NO'}`);
-        console.log(`   - Persisted refreshToken: ${parsed?.state?.refreshToken ? `YES (${parsed.state.refreshToken.substring(0, 10)}...)` : 'NO'}`);
-        console.log(`   - Persisted isAuthenticated: ${parsed?.state?.isAuthenticated}`);
-      } catch (e) {
-        console.error(`   ❌ ERROR: Failed to parse - ${e}`);
-      }
-    }
-    console.log('');
-
-    console.log('3️⃣ LOCALSTORAGE - TOKEN MANAGER:');
-    console.log(`   - accessToken: ${accessTokenLS ? `EXISTS (${accessTokenLS.substring(0, 10)}...)` : 'MISSING'}`);
-    console.log(`   - refreshToken: ${refreshTokenLS ? `EXISTS (${refreshTokenLS.substring(0, 10)}...)` : 'MISSING'}\n`);
-
-    console.log('4️⃣ CONSISTENCY CHECK:');
-    const storeHasAuth = currentState.isAuthenticated && currentState.user && currentState.refreshToken;
-    const persistHasAuth = rawStorage && JSON.parse(rawStorage)?.state?.user && JSON.parse(rawStorage)?.state?.refreshToken;
-    const tokenManagerHasTokens = accessTokenLS && refreshTokenLS;
-
-    console.log(`   - Store has auth: ${storeHasAuth ? '✅ YES' : '❌ NO'}`);
-    console.log(`   - Persist has auth: ${persistHasAuth ? '✅ YES' : '❌ NO'}`);
-    console.log(`   - TokenManager has tokens: ${tokenManagerHasTokens ? '✅ YES' : '❌ NO'}`);
-
-    if (storeHasAuth && persistHasAuth && tokenManagerHasTokens) {
-      console.log('\n✅ VERDICT: All systems consistent - auth should persist correctly');
-    } else if (!storeHasAuth && !persistHasAuth && !tokenManagerHasTokens) {
-      console.log('\n✅ VERDICT: User is not logged in - this is correct');
-    } else {
-      console.warn('\n⚠️ VERDICT: INCONSISTENT STATE DETECTED!');
-      console.warn('   This indicates a bug in the auth system.');
-      console.warn('   Expected all three to match (all YES or all NO)');
-    }
-
-    console.log('\n================================================');
-  };
-
-  console.log('💡 [AuthStore] Type verifyAuthPersistence() in console to check auth state');
-
-  // DIAGNOSTIC: Global helper to run storage health check
-  (window as any).runStorageHealthCheck = async () => {
-    console.log('\n🏥 Running manual storage health check...\n');
-    const report = await runStorageHealthCheck();
-    return report;
-  };
-
-  console.log('💡 [AuthStore] Type runStorageHealthCheck() in console to test localStorage health');
-
-  // DIAGNOSTIC: Listen for localStorage changes from other tabs/sources
-  window.addEventListener('storage', (event) => {
-    if (event.key === 'mojeeb-auth-storage') {
-      console.warn(`\n🔄 [Storage Event] localStorage['mojeeb-auth-storage'] changed externally at ${new Date().toISOString()}`);
-      console.warn(`   Triggered by: ${event.url || 'unknown source'}`);
-      console.warn(`   Old value: ${event.oldValue ? 'EXISTS (' + event.oldValue.length + ' chars)' : 'MISSING'}`);
-      console.warn(`   New value: ${event.newValue ? 'EXISTS (' + event.newValue.length + ' chars)' : 'MISSING'}`);
-
-      if (!event.newValue && event.oldValue) {
-        console.error(`   ❌ CRITICAL: Auth storage was DELETED externally!`);
-        console.error(`   This will cause logout on next page refresh.`);
-        console.error(`   Possible causes: other tab, browser extension, privacy settings`);
-      } else if (event.newValue && !event.oldValue) {
-        console.log(`   ✅ Auth storage was CREATED externally (login from another tab)`);
-      } else if (event.newValue && event.oldValue) {
-        console.log(`   🔄 Auth storage was UPDATED externally (token refresh from another tab)`);
-      }
-    }
-  });
-
-  // DIAGNOSTIC: Track window lifecycle events that might affect auth
-  window.addEventListener('beforeunload', () => {
-    const finalState = localStorage.getItem('mojeeb-auth-storage');
-    console.log(`\n👋 [Window Lifecycle] beforeunload event at ${new Date().toISOString()}`);
-    console.log(`   Final localStorage state: ${finalState ? 'EXISTS (' + finalState.length + ' chars)' : 'MISSING'}`);
-    if (finalState) {
-      console.log(`   ✅ Auth data preserved for next session`);
-    } else {
-      console.warn(`   ⚠️ WARNING: No auth data in localStorage - user will be logged out`);
-    }
-  });
-
-  window.addEventListener('pagehide', () => {
-    const currentState = useAuthStore.getState();
-    console.log(`\n📤 [Window Lifecycle] pagehide event at ${new Date().toISOString()}`);
-    console.log(`   Store isAuthenticated: ${currentState.isAuthenticated}`);
-    console.log(`   Store has user: ${currentState.user ? 'YES' : 'NO'}`);
-  });
-
-  window.addEventListener('pageshow', (event) => {
-    console.log(`\n📥 [Window Lifecycle] pageshow event at ${new Date().toISOString()}`);
-    console.log(`   From cache (bfcache): ${event.persisted}`);
-    console.log(`   Current isAuthenticated: ${useAuthStore.getState().isAuthenticated}`);
-  });
-
-  console.log('🔍 [AuthStore] Storage and lifecycle event listeners registered');
-
-  // DIAGNOSTIC: Browser environment diagnostics (one-time on init)
-  console.log('\n🌐 [Browser Environment] Diagnostics:');
-  console.log(`   Browser: ${navigator.userAgent}`);
-  console.log(`   Platform: ${navigator.platform}`);
-  console.log(`   Language: ${navigator.language}`);
-
-  // Check localStorage availability
-  try {
-    const testKey = '__localStorage_test__';
-    localStorage.setItem(testKey, 'test');
-    localStorage.removeItem(testKey);
-    console.log(`   ✅ localStorage: Available`);
-  } catch (e) {
-    console.error(`   ❌ localStorage: UNAVAILABLE or BLOCKED`);
-    console.error(`   This will cause all auth persistence to fail!`);
-  }
-
-  // Check storage quota
-  if (navigator.storage && navigator.storage.estimate) {
-    navigator.storage.estimate().then((estimate) => {
-      const usageInMB = ((estimate.usage || 0) / 1024 / 1024).toFixed(2);
-      const quotaInMB = ((estimate.quota || 0) / 1024 / 1024).toFixed(2);
-      const percentUsed = ((estimate.usage || 0) / (estimate.quota || 1) * 100).toFixed(1);
-
-      console.log(`   💾 Storage Quota:`);
-      console.log(`      Used: ${usageInMB} MB / ${quotaInMB} MB (${percentUsed}%)`);
-
-      if (parseFloat(percentUsed) > 80) {
-        console.warn(`      ⚠️ WARNING: Storage is ${percentUsed}% full - may cause persistence issues`);
-      }
-    });
-  }
-
-  // COMPREHENSIVE STORAGE HEALTH CHECK
-  // Run comprehensive health check on app initialization
-  // This will detect incognito mode, clear-on-close settings, and other issues
-  console.log('   🏥 Running comprehensive storage health check...');
-  console.log('   (This will take ~5 seconds to test persistence)\n');
-
-  runStorageHealthCheck().then((healthReport) => {
-    // Health report is already printed to console by the utility
-    // Store globally for debugging if needed
-    if (typeof window !== 'undefined') {
-      (window as any).__storageHealthReport__ = healthReport;
-      console.log('   💡 Access detailed report via: window.__storageHealthReport__');
-    }
-
-    // Critical warnings
-    if (healthReport.incognitoDetected) {
-      console.error('\n⚠️ ⚠️ ⚠️  CRITICAL WARNING  ⚠️ ⚠️ ⚠️');
-      console.error('Browser is in INCOGNITO/PRIVATE MODE!');
-      console.error('Authentication WILL NOT persist across browser restarts!');
-      console.error('Exit private browsing mode to enable auth persistence.');
-      console.error('⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️\n');
-    }
-
-    if (healthReport.verdict === 'FAILED') {
-      console.error('\n❌ localStorage is in FAILED state!');
-      console.error('Authentication persistence will NOT work!');
-      console.error('Check the health report above for recommendations.\n');
-    } else if (healthReport.verdict === 'DEGRADED') {
-      console.warn('\n⚠️ localStorage is DEGRADED!');
-      console.warn('Authentication may not persist reliably.');
-      console.warn('Check the health report above for recommendations.\n');
-    }
-  }).catch((error) => {
-    console.error('❌ Storage health check failed:', error);
-  });
-
-  // Check for service workers
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      console.log(`   👷 Service Workers: ${registrations.length} registered`);
-      if (registrations.length > 0) {
-        registrations.forEach((reg, index) => {
-          console.log(`      ${index + 1}. Scope: ${reg.scope}, State: ${reg.active?.state || 'inactive'}`);
-        });
-      }
-    });
-  } else {
-    console.log(`   👷 Service Workers: Not supported`);
-  }
-
-  console.log('');
 }

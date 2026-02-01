@@ -21,11 +21,6 @@ export function LatestNoteCell({ lead, onAddNoteClick }: LatestNoteCellProps) {
   const user = useAuthStore((state) => state.user);
   const isAddingNote = useIsAddingNote(lead.id);
 
-  // 🔍 DEBUG: Check note types
-  if (lead.notes && lead.notes.length > 0) {
-    console.log('[LatestNoteCell] Lead notes:', lead.notes.map(n => ({ text: n.text?.substring(0, 20), noteType: n.noteType, isDeleted: n.isDeleted })));
-  }
-
   // Find the latest user note (non-deleted)
   const latestNote = lead.notes && lead.notes.length > 0
     ? [...lead.notes]

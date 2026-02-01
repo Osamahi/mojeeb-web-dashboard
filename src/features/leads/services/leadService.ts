@@ -41,14 +41,6 @@ class LeadService {
    * Transform note API response (snake_case) to frontend model (camelCase)
    */
   private transformNote(apiNote: ApiLeadNoteResponse): LeadNote {
-    console.log('[transformNote] 🔍 DEBUG: Received API note:', {
-      id: apiNote.id,
-      note_type: apiNote.note_type,
-      is_deleted: apiNote.is_deleted,
-      is_edited: apiNote.is_edited,
-      text: apiNote.text?.substring(0, 30)
-    });
-
     const transformed = {
       id: apiNote.id,
       userId: apiNote.created_by,
@@ -62,14 +54,6 @@ class LeadService {
       updatedAt: apiNote.updated_at,
     };
 
-    console.log('[transformNote] 🔍 DEBUG: Transformed to frontend note:', {
-      id: transformed.id,
-      noteType: transformed.noteType,
-      isDeleted: transformed.isDeleted,
-      isEdited: transformed.isEdited,
-      text: transformed.text?.substring(0, 30)
-    });
-
     return transformed;
   }
 
@@ -77,18 +61,6 @@ class LeadService {
    * Transform API response (snake_case) to frontend model (camelCase)
    */
   private transformLead(apiLead: ApiLeadResponse): Lead {
-    console.log('[transformLead] 🔍 DEBUG: Received API lead:', {
-      id: apiLead.id,
-      name: apiLead.name,
-      notes_count: apiLead.notes?.length || 0,
-      first_note: apiLead.notes?.[0] ? {
-        id: apiLead.notes[0].id,
-        note_type: (apiLead.notes[0] as any).note_type,
-        is_deleted: (apiLead.notes[0] as any).is_deleted,
-        text: apiLead.notes[0].text?.substring(0, 20)
-      } : null
-    });
-
     const transformed = {
       id: apiLead.id,
       agentId: apiLead.agent_id,
@@ -102,18 +74,6 @@ class LeadService {
       createdAt: apiLead.created_at,
       updatedAt: apiLead.updated_at,
     };
-
-    console.log('[transformLead] 🔍 DEBUG: Transformed lead:', {
-      id: transformed.id,
-      name: transformed.name,
-      notes_count: transformed.notes?.length || 0,
-      first_note: transformed.notes?.[0] ? {
-        id: transformed.notes[0].id,
-        noteType: transformed.notes[0].noteType,
-        isDeleted: transformed.notes[0].isDeleted,
-        text: transformed.notes[0].text?.substring(0, 20)
-      } : null
-    });
 
     return transformed;
   }

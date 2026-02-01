@@ -57,10 +57,6 @@ export async function getWidgetByAgentId(agentId: string): Promise<WidgetConfigu
     // Backend sends snake_case, convert to camelCase
     const widgetData = toCamelCase(response.data.data);
 
-    // Debug logging
-    console.log('🔍 Widget API Response (snake_case):', response.data.data);
-    console.log('🔍 Converted Widget (camelCase):', widgetData);
-
     return widgetData as WidgetConfiguration;
   } catch (error) {
     console.error('Error fetching widget configuration:', error);
@@ -79,9 +75,6 @@ export async function updateWidget(
     // Convert camelCase request to snake_case for backend
     const snakeCaseConfig = toSnakeCase(config);
 
-    console.log('🔄 Update Request (camelCase):', config);
-    console.log('🔄 Update Request (snake_case):', snakeCaseConfig);
-
     // Backend wraps response in { success, data, message, timestamp }
     const response = await api.put<{ success: boolean; data: any }>(
       `/api/widget/${widgetId}`,
@@ -90,8 +83,6 @@ export async function updateWidget(
 
     // Convert response from snake_case to camelCase
     const widgetData = toCamelCase(response.data.data);
-
-    console.log('✅ Update Response (camelCase):', widgetData);
 
     return widgetData as WidgetConfiguration;
   } catch (error) {
