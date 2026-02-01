@@ -96,14 +96,6 @@ export const useAuthStore = create<AuthState>()(
        * @param options - Optional logout configuration
        */
       logout: async (options?: { redirect?: boolean; reason?: string }) => {
-        // DIAGNOSTIC: Log logout trigger
-        if (import.meta.env.DEV) {
-          const logoutStack = new Error().stack;
-          console.log(`\n🚪 [AuthStore] logout called at ${new Date().toISOString()}`);
-          console.log(`   Current user: ${get().user?.email || 'null'}`);
-          console.log(`   📍 Triggered from:\n${logoutStack}`);
-        }
-
         // Use centralized logout service (dynamic import to avoid circular dependencies)
         const { performLogout } = await import('./../../auth/services/logoutService');
 

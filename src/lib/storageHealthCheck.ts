@@ -58,7 +58,9 @@ export async function runStorageHealthCheck(): Promise<StorageHealthReport> {
     verdict: 'UNKNOWN',
   };
 
-  console.log('\n🏥 [Storage Health Check] Starting comprehensive diagnostics...\n');
+  if (import.meta.env.DEV) {
+    console.log('\n🏥 [Storage Health Check] Starting comprehensive diagnostics...\n');
+  }
 
   // Test 1: Availability
   report.available = testAvailability(report);
@@ -112,15 +114,21 @@ function testAvailability(report: StorageHealthReport): boolean {
                        window.localStorage !== null;
 
     if (isAvailable) {
-      console.log('✅ Test 1: localStorage API is available');
+      if (import.meta.env.DEV) {
+        console.log('✅ Test 1: localStorage API is available');
+      }
     } else {
-      console.error('❌ Test 1: localStorage API is NOT available');
+      if (import.meta.env.DEV) {
+        console.error('❌ Test 1: localStorage API is NOT available');
+      }
       report.errors.push('localStorage API is not available in this environment');
     }
 
     return isAvailable;
   } catch (error) {
-    console.error('❌ Test 1: FAILED - Error checking availability:', error);
+    if (import.meta.env.DEV) {
+      console.error('❌ Test 1: FAILED - Error checking availability:', error);
+    }
     report.errors.push(`Availability check failed: ${error}`);
     return false;
   }
@@ -138,10 +146,14 @@ function testWrite(report: StorageHealthReport): boolean {
     });
 
     localStorage.setItem(TEST_KEY, testValue);
-    console.log('✅ Test 2: Successfully wrote to localStorage');
+    if (import.meta.env.DEV) {
+      console.log('✅ Test 2: Successfully wrote to localStorage');
+    }
     return true;
   } catch (error) {
-    console.error('❌ Test 2: FAILED - Cannot write to localStorage:', error);
+    if (import.meta.env.DEV) {
+      console.error('❌ Test 2: FAILED - Cannot write to localStorage:', error);
+    }
 
     if (error instanceof Error) {
       if (error.name === 'QuotaExceededError') {
@@ -169,7 +181,9 @@ function testRead(report: StorageHealthReport): boolean {
     const value = localStorage.getItem(TEST_KEY);
 
     if (value === null) {
-      console.error('❌ Test 3: FAILED - Wrote data but read returned null');
+      if (import.meta.env.DEV) {
+        console.error('❌ Test 3: FAILED - Wrote data but read returned null');
+      }
       report.errors.push('Data was written but immediately lost (possible privacy mode)');
       return false;
     }
@@ -178,23 +192,31 @@ function testRead(report: StorageHealthReport): boolean {
     try {
       const parsed = JSON.parse(value);
       if (parsed.test === true && parsed.message === 'Mojeeb storage health check') {
-        console.log('✅ Test 3: Successfully read and verified data from localStorage');
+        if (import.meta.env.DEV) {
+          console.log('✅ Test 3: Successfully read and verified data from localStorage');
+        }
 
         // Clean up
         localStorage.removeItem(TEST_KEY);
         return true;
       } else {
-        console.error('❌ Test 3: FAILED - Data corrupted during read');
+        if (import.meta.env.DEV) {
+          console.error('❌ Test 3: FAILED - Data corrupted during read');
+        }
         report.errors.push('Data corruption detected during read operation');
         return false;
       }
     } catch (parseError) {
-      console.error('❌ Test 3: FAILED - Could not parse stored data');
+      if (import.meta.env.DEV) {
+        console.error('❌ Test 3: FAILED - Could not parse stored data');
+      }
       report.errors.push('Stored data is not valid JSON - corruption detected');
       return false;
     }
   } catch (error) {
-    console.error('❌ Test 3: FAILED - Error reading from localStorage:', error);
+    if (import.meta.env.DEV) {
+      console.error('❌ Test 3: FAILED - Error reading from localStorage:', error);
+    }
     report.errors.push(`Read failed: ${error}`);
     return false;
   }
@@ -213,7 +235,9 @@ async function testPersistence(report: StorageHealthReport): Promise<boolean> {
 
     // Write test data
     localStorage.setItem(PERSISTENCE_TEST_KEY, testValue);
-    console.log(`⏳ Test 4: Testing persistence over ${PERSISTENCE_TEST_DURATION}ms...`);
+    if (import.meta.env.DEV) {
+      console.log(`⏳ Test 4: Testing persistence over ${PERSISTENCE_TEST_DURATION}ms...`);
+    }
 
     // Wait 5 seconds
     await new Promise(resolve => setTimeout(resolve, PERSISTENCE_TEST_DURATION));
@@ -222,17 +246,23 @@ async function testPersistence(report: StorageHealthReport): Promise<boolean> {
     const readValue = localStorage.getItem(PERSISTENCE_TEST_KEY);
 
     if (readValue === testValue) {
-      console.log(`✅ Test 4: Data persisted successfully over ${PERSISTENCE_TEST_DURATION}ms`);
+      if (import.meta.env.DEV) {
+        console.log(`✅ Test 4: Data persisted successfully over ${PERSISTENCE_TEST_DURATION}ms`);
+      }
       localStorage.removeItem(PERSISTENCE_TEST_KEY);
       return true;
     } else {
-      console.error('❌ Test 4: FAILED - Data did not persist over time');
+      if (import.meta.env.DEV) {
+        console.error('❌ Test 4: FAILED - Data did not persist over time');
+      }
       report.errors.push('Data does not persist over time (possible privacy mode)');
       report.warnings.push('localStorage may clear data unexpectedly');
       return false;
     }
   } catch (error) {
-    console.error('❌ Test 4: FAILED - Error during persistence test:', error);
+    if (import.meta.env.DEV) {
+      console.error('❌ Test 4: FAILED - Error during persistence test:', error);
+    }
     report.errors.push(`Persistence test failed: ${error}`);
     return false;
   }
@@ -244,7 +274,9 @@ async function testPersistence(report: StorageHealthReport): Promise<boolean> {
 async function testQuota(report: StorageHealthReport): Promise<StorageHealthReport['quota']> {
   try {
     if (!navigator.storage || !navigator.storage.estimate) {
-      console.warn('⚠️ Test 5: Storage quota API not available');
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ Test 5: Storage quota API not available');
+      }
       report.warnings.push('Cannot check storage quota (older browser)');
       return null;
     }
@@ -256,8 +288,10 @@ async function testQuota(report: StorageHealthReport): Promise<StorageHealthRepo
       percentUsed: Number((((estimate.usage || 0) / (estimate.quota || 1)) * 100).toFixed(1)),
     };
 
-    console.log(`✅ Test 5: Storage quota check completed`);
-    console.log(`   Used: ${quota.used} MB / ${quota.total} MB (${quota.percentUsed}%)`);
+    if (import.meta.env.DEV) {
+      console.log(`✅ Test 5: Storage quota check completed`);
+      console.log(`   Used: ${quota.used} MB / ${quota.total} MB (${quota.percentUsed}%)`);
+    }
 
     if (quota.percentUsed > 90) {
       report.errors.push('Storage is critically full (>90%)');
@@ -269,7 +303,9 @@ async function testQuota(report: StorageHealthReport): Promise<StorageHealthRepo
 
     return quota;
   } catch (error) {
-    console.error('❌ Test 5: FAILED - Error checking quota:', error);
+    if (import.meta.env.DEV) {
+      console.error('❌ Test 5: FAILED - Error checking quota:', error);
+    }
     report.warnings.push('Could not determine storage quota');
     return null;
   }
@@ -280,7 +316,9 @@ async function testQuota(report: StorageHealthReport): Promise<StorageHealthRepo
  * Uses multiple heuristics for better accuracy
  */
 function detectIncognito(report: StorageHealthReport): boolean {
-  console.log('🔍 Test 6: Enhanced incognito/private mode detection...');
+  if (import.meta.env.DEV) {
+    console.log('🔍 Test 6: Enhanced incognito/private mode detection...');
+  }
 
   let incognitoDetected = false;
   const indicators: string[] = [];
@@ -327,16 +365,22 @@ function detectIncognito(report: StorageHealthReport): boolean {
   }
 
   if (incognitoDetected) {
-    console.error('🔒 Test 6: Incognito/Private mode DETECTED');
-    console.error(`   Indicators: ${indicators.join(', ')}`);
+    if (import.meta.env.DEV) {
+      console.error('🔒 Test 6: Incognito/Private mode DETECTED');
+      console.error(`   Indicators: ${indicators.join(', ')}`);
+    }
     report.errors.push('Browser is in incognito/private mode');
     report.recommendations.push('Exit private browsing mode for auth persistence');
   } else if (indicators.length > 0) {
-    console.warn('⚠️ Test 6: Possible incognito mode (inconclusive)');
-    console.warn(`   Indicators: ${indicators.join(', ')}`);
+    if (import.meta.env.DEV) {
+      console.warn('⚠️ Test 6: Possible incognito mode (inconclusive)');
+      console.warn(`   Indicators: ${indicators.join(', ')}`);
+    }
     report.warnings.push('Possible incognito mode detected (inconclusive)');
   } else {
-    console.log('✅ Test 6: Normal browsing mode detected');
+    if (import.meta.env.DEV) {
+      console.log('✅ Test 6: Normal browsing mode detected');
+    }
   }
 
   return incognitoDetected;
@@ -347,7 +391,9 @@ function detectIncognito(report: StorageHealthReport): boolean {
  * This is a heuristic - cannot be 100% accurate without browser cooperation
  */
 function detectClearOnClose(report: StorageHealthReport): boolean {
-  console.log('🔍 Test 7: Clear-on-close detection (heuristic)...');
+  if (import.meta.env.DEV) {
+    console.log('🔍 Test 7: Clear-on-close detection (heuristic)...');
+  }
 
   // Check if there's a test marker from a previous session
   const previousTestMarker = localStorage.getItem('__mojeeb_session_persistence_marker__');
@@ -361,13 +407,17 @@ function detectClearOnClose(report: StorageHealthReport): boolean {
     // Set a marker for next session
     localStorage.setItem('__mojeeb_session_persistence_marker__', Date.now().toString());
 
-    console.warn('⚠️ Test 7: Cannot determine clear-on-close (first run)');
+    if (import.meta.env.DEV) {
+      console.warn('⚠️ Test 7: Cannot determine clear-on-close (first run)');
+    }
     report.warnings.push('First run - will test persistence in next session');
     return false;
   } else {
     // Marker exists - localStorage persisted across sessions
-    console.log('✅ Test 7: localStorage persisted from previous session');
-    console.log(`   Previous marker: ${new Date(parseInt(previousTestMarker)).toISOString()}`);
+    if (import.meta.env.DEV) {
+      console.log('✅ Test 7: localStorage persisted from previous session');
+      console.log(`   Previous marker: ${new Date(parseInt(previousTestMarker)).toISOString()}`);
+    }
 
     // Update marker for next check
     localStorage.setItem('__mojeeb_session_persistence_marker__', Date.now().toString());
@@ -431,6 +481,8 @@ function generateRecommendations(report: StorageHealthReport): void {
  * Print detailed report to console
  */
 function printDetailedReport(report: StorageHealthReport): void {
+  if (!import.meta.env.DEV) return; // Skip console output in production
+
   console.log('\n═══════════════════════════════════════════════════════════');
   console.log('🏥 STORAGE HEALTH CHECK REPORT');
   console.log('═══════════════════════════════════════════════════════════\n');

@@ -349,13 +349,7 @@ class AuthService {
    * Note: Post-auth flow (agents, invitations, navigation) handled by usePostAuthNavigation hook
    */
   async register(registerData: RegisterData): Promise<AuthResponse> {
-    if (import.meta.env.DEV) {
-      console.time('⏱️ AUTH-SERVICE: api.post');
-    }
     const { data } = await api.post<ApiAuthResponse>('/api/auth/register', registerData);
-    if (import.meta.env.DEV) {
-      console.timeEnd('⏱️ AUTH-SERVICE: api.post');
-    }
 
     // Backend returns snake_case, convert to camelCase
     const authResponse: AuthResponse = {
@@ -365,13 +359,7 @@ class AuthService {
     };
 
     // Update auth store
-    if (import.meta.env.DEV) {
-      console.time('⏱️ AUTH-SERVICE: setAuth');
-    }
     useAuthStore.getState().setAuth(authResponse.user, authResponse.accessToken, authResponse.refreshToken);
-    if (import.meta.env.DEV) {
-      console.timeEnd('⏱️ AUTH-SERVICE: setAuth');
-    }
 
     return authResponse;
   }
@@ -434,16 +422,7 @@ class AuthService {
   async refreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
     // If a refresh is already in progress, return that promise
     if (this.refreshPromise) {
-      if (import.meta.env.DEV) {
-        console.log('[AuthService] Token refresh already in progress, reusing promise');
-      }
       return this.refreshPromise;
-    }
-
-    if (import.meta.env.DEV) {
-      const timestamp = new Date().toISOString();
-      console.log(`\n🔄 [AuthService] refreshToken() called at ${timestamp}`);
-      console.log(`   📤 Sending refresh token (length: ${refreshToken.length} chars)`);
     }
 
     // Create the refresh promise
@@ -453,34 +432,14 @@ class AuthService {
           refreshToken: refreshToken,
         });
 
-        if (import.meta.env.DEV) {
-          console.log(`   📥 Backend response received:`, data);
-          console.log(`   🔍 Raw response keys:`, Object.keys(data));
-          console.log(`   🔍 access_token (snake_case): ${data.access_token ? 'EXISTS' : 'MISSING'} (${data.access_token?.length || 0} chars)`);
-          console.log(`   🔍 refresh_token (snake_case): ${data.refresh_token ? 'EXISTS' : 'MISSING'} (${data.refresh_token?.length || 0} chars)`);
-        }
-
         // Backend returns snake_case, convert to camelCase
         const result = {
           accessToken: data.access_token,
           refreshToken: data.refresh_token,
         };
 
-        if (import.meta.env.DEV) {
-          console.log(`   ✅ Transformation to camelCase complete:`);
-          console.log(`      accessToken: ${result.accessToken ? 'EXISTS' : 'UNDEFINED'} (${result.accessToken?.length || 0} chars)`);
-          console.log(`      refreshToken: ${result.refreshToken ? 'EXISTS' : 'UNDEFINED'} (${result.refreshToken?.length || 0} chars)`);
-        }
-
         return result;
       } catch (error) {
-        if (import.meta.env.DEV) {
-          console.error(`   ❌ [AuthService] refreshToken() FAILED:`, error);
-          if (axios.isAxiosError(error)) {
-            console.error(`      Status: ${error.response?.status}`);
-            console.error(`      Response data:`, error.response?.data);
-          }
-        }
         throw error;
       }
     })();
