@@ -62,40 +62,6 @@ class ChatApiService {
   }
 
   /**
-   * Upload media (images/files)
-   */
-  async uploadMedia(params: {
-    file: File;
-    conversationId: string;
-    messageId: string;
-  }): Promise<{ url: string; type: string; filename: string }> {
-    try {
-      const formData = new FormData();
-      formData.append('File', params.file); // Capital 'F' for backend
-      formData.append('ConversationId', params.conversationId);
-      formData.append('MessageId', params.messageId);
-
-      const { data } = await api.post<{
-        success: boolean;
-        attachment: { url: string; type: string; filename: string };
-      }>('/api/chat/upload-media', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      if (!data.success) {
-        throw new Error('Upload failed');
-      }
-
-      return data.attachment;
-    } catch (error) {
-      logger.error('Error uploading media', error instanceof Error ? error : new Error(String(error)));
-      throw error;
-    }
-  }
-
-  /**
    * Upload single image to backend and return MediaAttachment
    */
   async uploadImage(params: {
@@ -172,65 +138,6 @@ class ChatApiService {
       return data.attachment;
     } catch (error) {
       logger.error('Error uploading image with progress', error instanceof Error ? error : new Error(String(error)));
-      throw error;
-    }
-  }
-
-  /**
-   * Upload multiple images and return attachments JSON string
-   * Format: { "Images": [MediaAttachment[], ...] }
-   */
-  async uploadImagesAndBuildJSON(params: {
-    files: File[];
-    conversationId: string;
-    messageId: string;
-  }): Promise<string> {
-    try {
-      const uploadPromises = params.files.map((file) => {
-        return this.uploadImage({
-          file,
-          conversationId: params.conversationId,
-          messageId: params.messageId,
-        });
-      });
-
-      const attachments = await Promise.all(uploadPromises);
-
-      // Build AttachmentsWrapper JSON: { "Images": [...] }
-      const json = JSON.stringify({ Images: attachments });
-
-      return json;
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('[uploadImagesAndBuildJSON] Upload error:', error);
-      }
-      logger.error('Error uploading images', error instanceof Error ? error : new Error(String(error)));
-      throw error;
-    }
-  }
-
-  /**
-   * Upload multiple images and return attachments JSON
-   */
-  async uploadImages(params: {
-    files: File[];
-    conversationId: string;
-    messageId: string;
-  }): Promise<string> {
-    try {
-      const uploadPromises = params.files.map((file) =>
-        this.uploadMedia({
-          file,
-          conversationId: params.conversationId,
-          messageId: params.messageId,
-        })
-      );
-
-      const attachments = await Promise.all(uploadPromises);
-
-      return JSON.stringify({ images: attachments });
-    } catch (error) {
-      logger.error('Error uploading images', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }
   }
