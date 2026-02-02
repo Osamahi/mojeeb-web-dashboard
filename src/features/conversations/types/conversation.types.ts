@@ -3,6 +3,8 @@
  * Matching Supabase database schema
  */
 
+import { logger } from '@/lib/logger';
+
 // === Conversation Types ===
 
 export enum ConversationStatus {
@@ -196,6 +198,7 @@ export interface CreateConversationRequest {
 
 export const parseAttachments = (attachmentsJson: string | object | null): MessageAttachments | null => {
   if (!attachmentsJson) {
+    // Don't log for null/empty - it's the normal case for text-only messages
     return null;
   }
 
@@ -207,17 +210,65 @@ export const parseAttachments = (attachmentsJson: string | object | null): Messa
       ? JSON.parse(attachmentsJson)
       : attachmentsJson;
 
+    // Log parsed structure for debugging
+    logger.debug('[parseAttachments]', 'Parsed structure:', {
+      hasImages: !!parsed.images,
+      hasAudio: !!parsed.audio,
+      hasFiles: !!parsed.files,
+      imageCount: parsed.images?.length ?? 0,
+      audioCount: parsed.audio?.length ?? 0,
+      fileCount: parsed.files?.length ?? 0,
+      rawKeys: Object.keys(parsed),
+    });
+
+    // Extract and validate arrays
+    const images = parsed.images || [];
+    const audio = parsed.audio || [];
+    const files = parsed.files || [];
+
+    // Validate image URLs
+    images.forEach((img: any, idx: number) => {
+      if (!img?.url) {
+        logger.warn('[parseAttachments]', 'Missing URL for image', { index: idx, img });
+      } else {
+        logger.debug('[parseAttachments]', 'Image URL:', { index: idx, url: img.url, filename: img.filename });
+      }
+    });
+
+    // Validate audio URLs
+    audio.forEach((aud: any, idx: number) => {
+      if (!aud?.url) {
+        logger.warn('[parseAttachments]', 'Missing URL for audio', { index: idx, aud });
+      } else {
+        logger.debug('[parseAttachments]', 'Audio URL:', { index: idx, url: aud.url, filename: aud.filename });
+      }
+    });
+
+    // Validate file URLs
+    files.forEach((file: any, idx: number) => {
+      if (!file?.url) {
+        logger.warn('[parseAttachments]', 'Missing URL for file', { index: idx, file });
+      } else {
+        logger.debug('[parseAttachments]', 'File URL:', { index: idx, url: file.url, filename: file.filename });
+      }
+    });
+
     const result = {
-      images: parsed.images || [],
-      audio: parsed.audio || [],
-      files: parsed.files || [],
+      images,
+      audio,
+      files,
     };
 
     return result;
   } catch (error) {
-    if (import.meta.env.DEV) {
-      console.error('[parseAttachments] Parse error:', error);
-    }
+    // Always log parse errors (not just in DEV) - critical for debugging multimedia issues
+    logger.error('[parseAttachments]', 'Parse error:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      rawInput: typeof attachmentsJson === 'string'
+        ? attachmentsJson.substring(0, 500) // Log first 500 chars
+        : JSON.stringify(attachmentsJson).substring(0, 500),
+    });
     return null;
   }
 };

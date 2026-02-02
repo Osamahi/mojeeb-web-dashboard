@@ -9,6 +9,7 @@ import { Play, Pause, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { CHAT_BUBBLE_COLORS, MINIMAL_COLORS } from '../../constants/chatBubbleColors';
+import { logger } from '@/lib/logger';
 
 interface AudioPlayerProps {
   url: string;
@@ -96,9 +97,13 @@ export function AudioPlayer({
       // Don't show error if request was aborted
       if (signal?.aborted) return;
 
-      if (import.meta.env.DEV) {
-        console.error('Error extracting waveform:', error);
-      }
+      // Always log waveform extraction errors (not just DEV)
+      logger.error('[AudioPlayer]', 'Waveform extraction failed', {
+        url: audioUrl,
+        filename: filename,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
       // Fallback to static waveform
       if (!signal?.aborted) {
         setWaveformData(Array.from({ length: 40 }, (_, i) => Math.sin(i * 0.5) * 40 + 50));
@@ -140,9 +145,12 @@ export function AudioPlayer({
         setIsPlaying(true);
       }
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Audio playback error:', error);
-      }
+      // Always log playback errors (not just DEV)
+      logger.error('[AudioPlayer]', 'Audio playback error', {
+        url: url,
+        filename: filename,
+        error: error instanceof Error ? error.message : String(error),
+      });
       setHasError(true);
     }
   };
@@ -156,6 +164,11 @@ export function AudioPlayer({
 
   // Handle audio error
   const handleError = () => {
+    logger.error('[AudioPlayer]', 'Audio load failed', {
+      url: url,
+      filename: filename,
+      isAssistantMessage: isAssistantMessage,
+    });
     setHasError(true);
     setIsLoading(false);
   };

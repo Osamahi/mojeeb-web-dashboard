@@ -50,12 +50,12 @@ class Logger {
   }
 
   warn(component: string, message: string, ...args: unknown[]): void {
-    if (!this.config.enabled) return;
+    // Always log warnings in production for critical issues
     console.warn(this.formatMessage('warn', component, message), ...args);
   }
 
   error(component: string, message: string, ...args: unknown[]): void {
-    if (!this.config.enabled) return;
+    // Always log errors in production for critical issues
     console.error(this.formatMessage('error', component, message), ...args);
   }
 

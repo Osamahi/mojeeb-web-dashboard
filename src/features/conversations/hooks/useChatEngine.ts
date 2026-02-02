@@ -303,10 +303,24 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
 
         // If not an optimistic reconciliation, add as new message
         if (!reconciledOptimistic) {
+          logger.info('[useChatEngine]', 'New message received from real-time INSERT', {
+            messageId: newMessage.id,
+            conversationId: newMessage.conversation_id,
+            senderRole: newMessage.sender_role,
+            messageType: newMessage.message_type,
+            hasAttachments: !!newMessage.attachments,
+            messagePreview: newMessage.message?.substring(0, 50) || '(no text)',
+          });
+
           storage.addMessage(newMessage);
 
           // If this is an AI response, clear sending state
           if (newMessage.sender_role === SenderRole.AiAgent) {
+            logger.info('[useChatEngine]', 'AI response received - clearing sending state', {
+              messageId: newMessage.id,
+              conversationId,
+            });
+
             setIsSending(false);
             clearAITimeout();
           }
@@ -321,6 +335,14 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
 
       try {
         const updatedMessage = transformMessage(payload.new);
+
+        logger.info('[useChatEngine]', 'Message updated via real-time UPDATE', {
+          messageId: updatedMessage.id,
+          conversationId: updatedMessage.conversation_id,
+          status: updatedMessage.status,
+          senderRole: updatedMessage.sender_role,
+        });
+
         storage.updateMessage(updatedMessage.id, updatedMessage);
       } catch (error) {
         logger.error('Error processing real-time UPDATE', error);
@@ -338,15 +360,31 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
 
         // Auto-hide typing indicator after 3 seconds of no updates
         if (is_typing) {
+          logger.debug('[useChatEngine]', 'AI typing indicator started', {
+            conversationId,
+            userId: user_id,
+          });
+
           if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
           }
           typingTimeoutRef.current = setTimeout(() => {
             if (!isMountedRef.current) return; // Prevent setState on unmounted component
+
+            logger.debug('[useChatEngine]', 'AI typing indicator auto-cleared (timeout)', {
+              conversationId,
+              duration: `${CHAT_TIMEOUTS.TYPING_INDICATOR}ms`,
+            });
+
             setIsAITyping(false);
             typingTimeoutRef.current = null; // Clear ref to prevent memory leak
           }, CHAT_TIMEOUTS.TYPING_INDICATOR);
         } else {
+          logger.debug('[useChatEngine]', 'AI typing indicator stopped', {
+            conversationId,
+            userId: user_id,
+          });
+
           if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
             typingTimeoutRef.current = null; // Clear ref to prevent memory leak
@@ -426,6 +464,12 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       const correlationId = generateCorrelationId();
       const tempId = generateTempId(correlationId);
 
+      logger.info('[useChatEngine]', 'Generating correlation ID for outgoing message', {
+        correlationId,
+        tempId,
+        conversationId,
+      });
+
       // Detect message type from attachments
       const detectMessageType = (attachmentsJson?: string): MessageType => {
         if (!attachmentsJson) return MessageType.Text;
@@ -465,8 +509,26 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       setIsSending(true);
       startAITimeout();
 
+      logger.info('[useChatEngine]', 'Optimistic message created and added to UI', {
+        tempId,
+        correlationId,
+        messageType: optimisticMessage.message_type,
+        hasAttachments: !!attachments,
+        messagePreview: content.substring(0, 50),
+        timestamp: optimisticMessage.created_at,
+      });
+
       try {
+        const sendStartTime = Date.now();
+
         // 3. Send to backend (non-blocking for UI)
+        logger.info('[useChatEngine]', 'Sending message to backend', {
+          conversationId,
+          agentId,
+          tempId,
+          correlationId,
+        });
+
         const backendMessage = await sendMessageFn({
           conversationId,
           message: content,
@@ -477,10 +539,16 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
 
         if (!isMountedRef.current) return;
 
+        const sendLatency = Date.now() - sendStartTime;
+
         // 4. Backend returns real message - reconciliation happens in real-time handler
-        logger.info('Message sent successfully', {
+        logger.info('[useChatEngine]', 'Message sent successfully to backend', {
           tempId,
           realId: backendMessage.id,
+          correlationId,
+          sendLatency: `${sendLatency}ms`,
+          messageType: backendMessage.message_type,
+          conversationId,
         });
 
         // Note: We don't update storage here - real-time INSERT handler will reconcile
@@ -524,15 +592,29 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
   const retryMessage = useCallback(
     async (messageId: string) => {
       const message = storage.messages.find((m) => m.id === messageId);
-      if (!message || !message.message) return;
+
+      if (!message || !message.message) {
+        logger.warn('[useChatEngine]', 'retryMessage() - message not found or has no content', {
+          messageId,
+          conversationId,
+        });
+        return;
+      }
+
+      logger.info('[useChatEngine]', 'Retrying failed message', {
+        messageId,
+        conversationId,
+        originalTimestamp: message.created_at,
+        messagePreview: message.message.substring(0, 50),
+      });
 
       // Remove failed message
       storage.removeMessage(messageId);
 
       // Resend
-      await sendMessage(message.message);
+      await sendMessage(message.message, message.attachments ? String(message.attachments) : undefined);
     },
-    [storage, sendMessage]
+    [storage, sendMessage, conversationId]
   );
 
   // === Clear Messages ===

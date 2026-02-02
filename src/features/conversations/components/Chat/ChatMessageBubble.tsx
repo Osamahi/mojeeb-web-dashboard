@@ -19,6 +19,7 @@ import { chatToasts } from '../../utils/chatToasts';
 import { CHAT_BUBBLE_COLORS } from '../../constants/chatBubbleColors';
 import { ImageModal } from './ImageModal';
 import { AudioPlayer } from './AudioPlayer';
+import { logger } from '@/lib/logger';
 
 interface ChatMessageBubbleProps {
   message: ChatMessage;
@@ -90,11 +91,28 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
 
   // Handle image load success (smooth fade-in UX)
   const handleImageLoad = (index: number) => {
+    const img = images[index];
+    logger.debug('[ChatMessageBubble]', 'Image loaded successfully', {
+      messageId: message.id,
+      index,
+      url: img?.url,
+      filename: img?.filename,
+    });
     setLoadedImages(prev => new Set(prev).add(index));
   };
 
   // Handle image load error (show error icon)
   const handleImageError = (index: number) => {
+    const img = images[index];
+    logger.error('[ChatMessageBubble]', 'Image load failed', {
+      messageId: message.id,
+      conversationId: message.conversation_id,
+      index,
+      url: img?.url,
+      filename: img?.filename,
+      type: img?.type,
+      isUser,
+    });
     setErrorImages(prev => new Set(prev).add(index));
   };
 
