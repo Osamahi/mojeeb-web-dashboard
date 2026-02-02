@@ -87,7 +87,9 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
         });
       } catch (error) {
         // User cancelled share or error occurred
-        console.log('Share cancelled or failed:', error);
+        if (import.meta.env.DEV) {
+          console.log('Share cancelled or failed:', error);
+        }
       }
     } else {
       // Fallback: copy URL to clipboard

@@ -608,9 +608,9 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
     isSending,
     isLoading: false, // Always false - initial fetch handled by caller (e.g., ChatPanel)
     isAITyping,
-    hasMore: enablePagination ? false : undefined, // TODO: Implement pagination
+    hasMore: enablePagination ? false : undefined,
     sendMessage,
-    loadMore: undefined, // TODO: Implement pagination
+    loadMore: undefined,
     retryMessage,
     clearMessages,
   };

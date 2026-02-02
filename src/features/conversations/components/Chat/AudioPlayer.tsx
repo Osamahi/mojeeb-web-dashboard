@@ -96,7 +96,9 @@ export function AudioPlayer({
       // Don't show error if request was aborted
       if (signal?.aborted) return;
 
-      console.error('Error extracting waveform:', error);
+      if (import.meta.env.DEV) {
+        console.error('Error extracting waveform:', error);
+      }
       // Fallback to static waveform
       if (!signal?.aborted) {
         setWaveformData(Array.from({ length: 40 }, (_, i) => Math.sin(i * 0.5) * 40 + 50));
@@ -138,7 +140,9 @@ export function AudioPlayer({
         setIsPlaying(true);
       }
     } catch (error) {
-      console.error('Audio playback error:', error);
+      if (import.meta.env.DEV) {
+        console.error('Audio playback error:', error);
+      }
       setHasError(true);
     }
   };

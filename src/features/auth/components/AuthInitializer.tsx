@@ -8,6 +8,7 @@ import { useOnAppResume } from '@/contexts/AppLifecycleContext';
 import { SubscriptionInitializer } from '@/features/subscriptions/components/SubscriptionInitializer';
 import { PlanInitializer } from '@/features/subscriptions/components/PlanInitializer';
 import { useAnalytics } from '@/lib/analytics';
+import { isTokenExpired, getTokenRemainingTime } from '../utils/tokenUtils';
 
 interface AuthInitializerProps {
   children: ReactNode;
@@ -176,9 +177,20 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
       const accessToken = getAccessToken();
       const refreshToken = getRefreshToken();
 
-      // If access token is missing but refresh token exists, refresh proactively
-      if (!accessToken && refreshToken) {
-        logger.info('AuthInitializer', 'Token refresh on app resume');
+      // Check if access token is missing OR expired
+      const shouldRefresh = (!accessToken && refreshToken) ||
+                           (accessToken && refreshToken && isTokenExpired(accessToken));
+
+      if (shouldRefresh) {
+        if (accessToken) {
+          const remainingTime = getTokenRemainingTime(accessToken);
+          logger.info(
+            'AuthInitializer',
+            `Token expired or expiring soon on app resume (remaining: ${Math.floor(remainingTime / 1000)}s)`
+          );
+        } else {
+          logger.info('AuthInitializer', 'Token missing on app resume');
+        }
 
         try {
           // Use centralized refresh method that handles token storage and Supabase auth
@@ -190,6 +202,12 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
           // Don't logout immediately - let the user try to interact
           // The API interceptor will handle 401s if tokens are truly invalid
         }
+      } else if (accessToken) {
+        const remainingTime = getTokenRemainingTime(accessToken);
+        logger.info(
+          'AuthInitializer',
+          `Token still valid on app resume (remaining: ${Math.floor(remainingTime / 1000)}s)`
+        );
       }
     } catch (error) {
       logger.error('AuthInitializer', 'Error during app resume', error);

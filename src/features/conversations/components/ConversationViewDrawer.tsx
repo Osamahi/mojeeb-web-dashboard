@@ -9,7 +9,7 @@ import { X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { fetchConversationById } from '../services/conversationService';
+import { fetchConversationById } from '../services/conversationApi';
 import ChatPanel from './Chat/ChatPanel';
 import type { Conversation } from '../types';
 
@@ -45,7 +45,9 @@ export default function ConversationViewDrawer({
         setConversation(data);
       })
       .catch((err) => {
-        console.error('Error loading conversation:', err);
+        if (import.meta.env.DEV) {
+          console.error('Error loading conversation:', err);
+        }
         setError(t('conversation_drawer.failed_message'));
         toast.error(t('conversation_drawer.failed_title'));
       })

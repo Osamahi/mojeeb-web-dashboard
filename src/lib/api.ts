@@ -10,6 +10,7 @@ import {
 import { env } from '@/config/env';
 import { shouldRetry, calculateExponentialDelay, sleep } from './retryConfig';
 import { logger } from './logger';
+import { isTokenExpired } from '@/features/auth/utils/tokenUtils';
 
 // Re-export token management functions for backward compatibility
 export { setTokens, getAccessToken, getRefreshToken, clearTokens };
@@ -39,13 +40,45 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - Add JWT token (read from localStorage each time to avoid race conditions)
+// Request interceptor - Add JWT token and check expiration
+// This provides a defensive layer to prevent 401 errors from expired tokens
 api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = getAccessToken();
+  async (config: InternalAxiosRequestConfig) => {
+    let token = getAccessToken();
+    const refreshToken = getRefreshToken();
+
+    // If token exists, check if it's expired
+    if (token && isTokenExpired(token)) {
+      logger.info('[API Interceptor] Access token expired, attempting refresh before request');
+
+      // If we have a refresh token, try to get a new access token
+      if (refreshToken) {
+        try {
+          // Import authService dynamically to avoid circular dependency
+          const { authService } = await import('@/features/auth/services/authService');
+
+          // Refresh the token
+          const newTokens = await authService.refreshAndUpdateSession(refreshToken);
+
+          // Use the new token for this request
+          token = newTokens.accessToken;
+
+          logger.info('[API Interceptor] Token refreshed successfully before request');
+        } catch (error) {
+          logger.error('[API Interceptor] Failed to refresh expired token', error);
+          // Don't reject here - let the request proceed and let the response interceptor handle 401
+          // This prevents double logout if the refresh token is also invalid
+        }
+      } else {
+        logger.warn('[API Interceptor] No refresh token available for expired access token');
+      }
+    }
+
+    // Add token to request if available
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error)

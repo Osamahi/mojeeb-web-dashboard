@@ -6,7 +6,7 @@
 
 import { create } from 'zustand';
 import type { ChatMessage } from '../types';
-import { fetchMessages } from '../services/conversationService';
+import { getMessages } from '../services/messageApi';
 import type { CatchError } from '@/lib/errors';
 import { handleMessageFetchError } from '../utils/chatErrorHandler';
 import { CHAT_PAGINATION } from '../constants/chatConstants';
@@ -62,7 +62,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     try {
       const offset = refresh ? 0 : messages.length;
-      const data = await fetchMessages({ conversationId, offset, limit: CHAT_PAGINATION.PAGE_SIZE });
+      const data = await getMessages({ conversationId, offset, limit: CHAT_PAGINATION.PAGE_SIZE });
 
       // If refreshing, replace all. Otherwise, prepend older messages
       const newMessages = refresh ? data : [...data, ...messages];

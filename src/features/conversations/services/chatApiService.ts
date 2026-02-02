@@ -201,7 +201,9 @@ class ChatApiService {
 
       return json;
     } catch (error) {
-      console.error('[uploadImagesAndBuildJSON] Upload error:', error);
+      if (import.meta.env.DEV) {
+        console.error('[uploadImagesAndBuildJSON] Upload error:', error);
+      }
       logger.error('Error uploading images', error instanceof Error ? error : new Error(String(error)));
       throw error;
     }

@@ -215,7 +215,9 @@ export const parseAttachments = (attachmentsJson: string | object | null): Messa
 
     return result;
   } catch (error) {
-    console.error('[parseAttachments] Parse error:', error);
+    if (import.meta.env.DEV) {
+      console.error('[parseAttachments] Parse error:', error);
+    }
     return null;
   }
 };

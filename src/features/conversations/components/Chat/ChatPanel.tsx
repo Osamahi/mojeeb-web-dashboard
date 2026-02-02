@@ -12,7 +12,7 @@ import type { Conversation } from '../../types';
 import { useChatStore } from '../../stores/chatStore';
 import { useConversationStore } from '../../stores/conversationStore';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
-import { toggleAIMode } from '../../services/conversationService';
+import { toggleAIMode } from '../../services/conversationApi';
 import { queryKeys } from '@/lib/queryKeys';
 import { useChatEngine } from '../../hooks/useChatEngine';
 import { useZustandChatStorage } from '../../hooks/useChatStorage';

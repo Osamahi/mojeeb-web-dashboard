@@ -189,7 +189,9 @@ export function VoiceRecorder({
       }, 100); // Update every 100ms for smoother display, but only show full seconds
 
     } catch (error) {
-      console.error('[VoiceRecorder] Failed to start recording:', error);
+      if (import.meta.env.DEV) {
+        console.error('[VoiceRecorder] Failed to start recording:', error);
+      }
       toast.error(t('voice_recorder.microphone_error'));
       onCancel();
     }
