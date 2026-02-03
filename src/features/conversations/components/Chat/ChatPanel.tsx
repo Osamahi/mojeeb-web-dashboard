@@ -59,7 +59,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
     agentId: globalSelectedAgent?.id,
     storage,
     enablePagination: true,
-    senderRole: conversation.is_ai ? SenderRole.Customer : SenderRole.HumanAgent, // Set correct role for optimistic messages
+    senderRole: SenderRole.HumanAgent, // Always send as admin in conversations view
     onError: (err) => {
       logger.error('Chat error', err, {
         conversationId: conversation.id,
