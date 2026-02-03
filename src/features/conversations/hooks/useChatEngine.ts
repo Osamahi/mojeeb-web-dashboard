@@ -41,6 +41,9 @@ export interface ChatEngineConfig {
   /** Custom error handler */
   onError?: (error: Error) => void;
 
+  /** Sender role for optimistic messages (defaults to Customer) */
+  senderRole?: SenderRole;
+
   /** API service for sending messages */
   sendMessageFn: (params: {
     conversationId: string;
@@ -492,7 +495,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
         message_type: detectMessageType(attachments),
         attachments: attachments || null,
         sender_id: null,
-        sender_role: SenderRole.Customer,
+        sender_role: config.senderRole || SenderRole.Customer, // Use config or default to Customer
         status: MessageStatus.Active,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

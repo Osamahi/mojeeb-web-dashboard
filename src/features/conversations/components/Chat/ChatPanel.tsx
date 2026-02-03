@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, User, MoreVertical, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '../../types';
+import { SenderRole, MessageType } from '../../types/conversation.types';
 import { useChatStore } from '../../stores/chatStore';
 import { useConversationStore } from '../../stores/conversationStore';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
@@ -58,6 +59,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
     agentId: globalSelectedAgent?.id,
     storage,
     enablePagination: true,
+    senderRole: conversation.is_ai ? SenderRole.Customer : SenderRole.HumanAgent, // Set correct role for optimistic messages
     onError: (err) => {
       logger.error('Chat error', err, {
         conversationId: conversation.id,
@@ -71,17 +73,30 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         throw new Error('Agent ID is required to send messages');
       }
 
-      // Send message with AI response
-      const response = await chatApiService.sendMessageWithAI({
-        conversationId: params.conversationId,
-        message: params.message,
-        agentId: params.agentId,
-        messageType: params.messageType,
-        attachments: params.attachments,
-      });
-
-      // Return as ChatMessage format (backend returns user message)
-      return response;
+      // Check conversation mode: AI vs Human
+      if (conversation.is_ai) {
+        // AI Mode: Send message and trigger AI response
+        // Used when customer sends message or testing AI agent
+        const response = await chatApiService.sendMessageWithAI({
+          conversationId: params.conversationId,
+          message: params.message,
+          agentId: params.agentId,
+          messageType: params.messageType,
+          attachments: params.attachments,
+        });
+        return response;
+      } else {
+        // Human Mode: Send admin message directly to customer
+        // No AI response generation, just platform delivery
+        const response = await chatApiService.sendMessage({
+          conversationId: params.conversationId,
+          message: params.message,
+          senderRole: SenderRole.HumanAgent, // Mark as admin message
+          messageType: params.messageType || MessageType.Text,
+          attachments: params.attachments,
+        });
+        return response;
+      }
     },
   });
 
