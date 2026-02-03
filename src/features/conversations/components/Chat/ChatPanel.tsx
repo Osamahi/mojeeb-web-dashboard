@@ -73,30 +73,16 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         throw new Error('Agent ID is required to send messages');
       }
 
-      // Check conversation mode: AI vs Human
-      if (conversation.is_ai) {
-        // AI Mode: Send message and trigger AI response
-        // Used when customer sends message or testing AI agent
-        const response = await chatApiService.sendMessageWithAI({
-          conversationId: params.conversationId,
-          message: params.message,
-          agentId: params.agentId,
-          messageType: params.messageType,
-          attachments: params.attachments,
-        });
-        return response;
-      } else {
-        // Human Mode: Send admin message directly to customer
-        // No AI response generation, just platform delivery
-        const response = await chatApiService.sendMessage({
-          conversationId: params.conversationId,
-          message: params.message,
-          senderRole: SenderRole.HumanAgent, // Mark as admin message
-          messageType: params.messageType || MessageType.Text,
-          attachments: params.attachments,
-        });
-        return response;
-      }
+      // Conversations view: Always send as admin message
+      // No AI response generation, just platform delivery
+      const response = await chatApiService.sendMessage({
+        conversationId: params.conversationId,
+        message: params.message,
+        senderRole: SenderRole.HumanAgent, // Mark as admin message
+        messageType: params.messageType || MessageType.Text,
+        attachments: params.attachments,
+      });
+      return response;
     },
   });
 
