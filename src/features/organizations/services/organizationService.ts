@@ -331,6 +331,40 @@ export const organizationService = {
   },
 
   /**
+   * Update organization member role
+   * Authorization: SuperAdmin, Organization Owner, or Admin
+   */
+  async updateMemberRole(
+    organizationId: string,
+    userId: string,
+    newRole: 'owner' | 'admin' | 'member'
+  ): Promise<void> {
+    try {
+      // Transform camelCase to snake_case for backend
+      const snakeCaseData = {
+        new_role: newRole
+      };
+
+      await api.put(
+        `/api/organization/${organizationId}/members/${userId}/role`,
+        snakeCaseData
+      );
+      logger.info('[organizationService] Updated member role', {
+        organizationId,
+        userId,
+        newRole
+      });
+    } catch (error) {
+      logger.error('[organizationService] Failed to update member role', error as Error, {
+        organizationId,
+        userId,
+        newRole
+      });
+      throw error;
+    }
+  },
+
+  /**
    * Invite or assign user by email (Smart endpoint)
    * - If user exists → assign directly
    * - If user doesn't exist → create invitation and send email

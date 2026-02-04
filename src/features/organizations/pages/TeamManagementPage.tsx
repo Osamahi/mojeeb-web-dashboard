@@ -7,14 +7,17 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { UserPlus, Trash2, Mail, Calendar, Clock, RotateCw } from 'lucide-react';
+import { UserPlus, Trash2, Mail, Calendar, Clock, RotateCw, Pen } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useAuthStore } from '@/features/auth/stores/authStore';
+import { Role } from '@/features/auth/types/auth.types';
 import { organizationService } from '../services/organizationService';
+import { useOrganizationAuth } from '../hooks/useOrganizationAuth';
 import AssignUserToOrgModal from '../components/AssignUserToOrgModal';
 import InviteTeamMemberModal from '../components/InviteTeamMemberModal';
 import InvitationSentModal from '../components/InvitationSentModal';
+import EditMemberRoleModal from '../components/EditMemberRoleModal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TeamTableSkeleton } from '../components/TeamTableSkeleton';
 import { BaseHeader } from '@/components/ui/BaseHeader';
@@ -27,8 +30,12 @@ export default function TeamManagementPage() {
   useDocumentTitle('pages.title_team_management');
   const { agent } = useAgentContext();
   const user = useAuthStore((state) => state.user);
-  const isSuperAdmin = user?.role === 'SuperAdmin';
+  const isSuperAdmin = user?.role === Role.SuperAdmin;
+  const { canEditMember } = useOrganizationAuth();
+
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isEditRoleModalOpen, setIsEditRoleModalOpen] = useState(false);
+  const [memberToEdit, setMemberToEdit] = useState<OrganizationMember | null>(null);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<OrganizationMember & { user?: { name: string | null; email: string | null; phone?: string | null } } | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
@@ -75,6 +82,16 @@ export default function TeamManagementPage() {
     refetch(); // Refresh the members list
     refetchInvitations(); // Refresh invitations list
     // Toast message already shown by InviteTeamMemberModal
+  };
+
+  const handleEditRole = (member: OrganizationMember) => {
+    setMemberToEdit(member);
+    setIsEditRoleModalOpen(true);
+  };
+
+  const handleCloseEditRoleModal = () => {
+    setIsEditRoleModalOpen(false);
+    setMemberToEdit(null);
   };
 
   const handleRemoveMember = (member: OrganizationMember & { user?: { name: string | null; email: string | null; phone?: string | null } }) => {
@@ -247,13 +264,24 @@ export default function TeamManagementPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button
-                        onClick={() => handleRemoveMember(member)}
-                        className="text-neutral-900 hover:text-neutral-700 transition-colors p-2"
-                        title={t('team.remove_button_title')}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        {canEditMember(member) && (
+                          <button
+                            onClick={() => handleEditRole(member)}
+                            className="text-neutral-900 hover:text-neutral-700 transition-colors p-2"
+                            title={t('team.edit_role_button_title') || 'Edit role'}
+                          >
+                            <Pen className="h-4 w-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleRemoveMember(member)}
+                          className="text-neutral-900 hover:text-neutral-700 transition-colors p-2"
+                          title={t('team.remove_button_title')}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -367,6 +395,14 @@ export default function TeamManagementPage() {
           onSuccess={handleAssignSuccess}
         />
       )}
+
+      {/* Edit Member Role Modal */}
+      <EditMemberRoleModal
+        isOpen={isEditRoleModalOpen}
+        onClose={handleCloseEditRoleModal}
+        member={memberToEdit}
+        organizationId={agent?.organizationId || ''}
+      />
 
       {/* Remove Member Confirmation Dialog */}
       <ConfirmDialog
