@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Filter, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Filter, X, TestTube2 } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { AdminConnectionsTable } from '../components/AdminConnectionsTable';
 import { ConnectionDetailsModal } from '../components/ConnectionDetailsModal';
@@ -26,6 +27,7 @@ const STATUS_OPTIONS = [
 
 export default function AdminConnectionsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   useDocumentTitle('pages.title_admin_connections');
 
   const [filters, setFilters] = useState<AdminConnectionFilters>({
@@ -71,6 +73,10 @@ export default function AdminConnectionsPage() {
     setSelectedConnection(null);
   }, []);
 
+  const handleTestToken = useCallback(() => {
+    navigate('/meta-token-examiner');
+  }, [navigate]);
+
   const activeFilterCount = [
     filters.platform,
     filters.isActive !== undefined,
@@ -86,6 +92,11 @@ export default function AdminConnectionsPage() {
         showFilterButton
         activeFilterCount={activeFilterCount}
         onFilterClick={() => setShowFilters(!showFilters)}
+        primaryAction={{
+          label: 'Test Token',
+          icon: TestTube2,
+          onClick: handleTestToken,
+        }}
       />
 
       {/* Filters */}
