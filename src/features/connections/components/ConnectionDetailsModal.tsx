@@ -56,7 +56,67 @@ export function ConnectionDetailsModal({
       maxWidth="2xl"
       isLoading={isLoading}
     >
-      {connection && (
+      {isLoading ? (
+        <div className="space-y-6 animate-pulse">
+          {/* Platform Info Skeleton */}
+          <div>
+            <div className="h-4 bg-neutral-200 rounded w-32 mb-3"></div>
+            <div className="bg-neutral-50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 bg-neutral-200 rounded-full"></div>
+                <div className="flex-1">
+                  <div className="h-6 bg-neutral-200 rounded w-24 mb-2"></div>
+                  <div className="h-8 bg-neutral-200 rounded w-48"></div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-3 border-t border-neutral-200">
+                <div>
+                  <div className="h-3 bg-neutral-200 rounded w-20 mb-2"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-32"></div>
+                </div>
+                <div>
+                  <div className="h-3 bg-neutral-200 rounded w-16 mb-2"></div>
+                  <div className="h-6 bg-neutral-200 rounded w-20"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Agent & Organization Skeleton */}
+          <div>
+            <div className="h-4 bg-neutral-200 rounded w-40 mb-3"></div>
+            <div className="bg-neutral-50 rounded-lg p-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="h-3 bg-neutral-200 rounded w-16 mb-2"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-32"></div>
+                </div>
+                <div>
+                  <div className="h-3 bg-neutral-200 rounded w-24 mb-2"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-32"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Timestamps Skeleton */}
+          <div>
+            <div className="h-4 bg-neutral-200 rounded w-24 mb-3"></div>
+            <div className="bg-neutral-50 rounded-lg p-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="h-3 bg-neutral-200 rounded w-20 mb-2"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-40"></div>
+                </div>
+                <div>
+                  <div className="h-3 bg-neutral-200 rounded w-20 mb-2"></div>
+                  <div className="h-4 bg-neutral-200 rounded w-40"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : connection ? (
         <div className="space-y-6">
           {/* Platform Info */}
           <div>
@@ -252,6 +312,10 @@ export function ConnectionDetailsModal({
               {t('connections.details.test_token')}
             </button>
           </div>
+        </div>
+      ) : (
+        <div className="p-8 text-center text-neutral-500">
+          <p>{t('connections.no_connections_found')}</p>
         </div>
       )}
     </BaseModal>
