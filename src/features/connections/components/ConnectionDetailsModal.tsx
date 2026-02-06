@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { TestTube2 } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { adminConnectionService } from '../services/adminConnectionService';
 
@@ -25,6 +27,7 @@ export function ConnectionDetailsModal({
   onClose,
 }: ConnectionDetailsModalProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const { data: connection, isLoading } = useQuery({
     queryKey: ['admin-connection-details', connectionId],
@@ -39,6 +42,11 @@ export function ConnectionDetailsModal({
         label: connection.platform,
       }
     : null;
+
+  const handleTestToken = () => {
+    navigate(`/meta-token-examiner?connectionId=${connectionId}`);
+    onClose();
+  };
 
   return (
     <BaseModal
@@ -232,6 +240,17 @@ export function ConnectionDetailsModal({
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end pt-4 border-t border-neutral-200">
+            <button
+              onClick={handleTestToken}
+              className="px-4 py-2 bg-black text-white rounded-md hover:bg-neutral-800 transition-colors flex items-center gap-2"
+            >
+              <TestTube2 className="w-4 h-4" />
+              {t('connections.details.test_token')}
+            </button>
           </div>
         </div>
       )}

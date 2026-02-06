@@ -103,7 +103,11 @@ export function AdminConnectionsTable({
               };
 
               return (
-                <tr key={connection.id} className="hover:bg-neutral-50 transition-colors">
+                <tr
+                  key={connection.id}
+                  onClick={() => onViewDetails(connection)}
+                  className="hover:bg-neutral-50 transition-colors cursor-pointer"
+                >
                   {/* Platform */}
                   <td className="px-4 py-4 whitespace-nowrap">
                     <span
@@ -178,7 +182,10 @@ export function AdminConnectionsTable({
                   {/* Actions */}
                   <td className="px-4 py-4 whitespace-nowrap text-right">
                     <button
-                      onClick={() => onViewDetails(connection)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onViewDetails(connection);
+                      }}
                       className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-medium"
                     >
                       <Eye className="w-4 h-4" />

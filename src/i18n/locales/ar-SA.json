@@ -349,7 +349,8 @@
       "token_info": "معلومات الرمز",
       "token_expires_at": "تنتهي صلاحية الرمز في",
       "webhook_secret": "سر الويب هوك",
-      "timestamps": "الطوابع الزمنية"
+      "timestamps": "الطوابع الزمنية",
+      "test_token": "اختبار الرمز"
     },
     "add_title": "إضافة اتصال",
     "connect_platform": "ربط {{platform}}",

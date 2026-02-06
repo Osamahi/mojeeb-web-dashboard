@@ -187,6 +187,24 @@ class AdminConnectionService {
       throw error;
     }
   }
+
+  /**
+   * Get access token for a specific connection (SuperAdmin only - for token examination)
+   */
+  async getConnectionToken(connectionId: string): Promise<{ accessToken: string | null }> {
+    try {
+      const { data: response } = await api.get<{ data: { access_token: string | null } }>(
+        `/api/admin/connections/${connectionId}/token`
+      );
+
+      return {
+        accessToken: response.data.access_token,
+      };
+    } catch (error) {
+      console.error(`[AdminConnectionService] Failed to fetch connection token for ${connectionId}:`, error);
+      throw error;
+    }
+  }
 }
 
 export const adminConnectionService = new AdminConnectionService();
