@@ -4,9 +4,10 @@
  * Used in the "Connected Platforms" section
  */
 
-import { MoreVertical, AlertCircle, Users } from 'lucide-react';
+import { MoreVertical, AlertCircle, Users, HelpCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { PlatformIcon } from '../PlatformIcon';
 import { getPlatformById } from '../../constants/platforms';
 import type { PlatformConnection } from '../../types';
@@ -87,6 +88,17 @@ export function ConnectedPlatformCard({
 
   const handleViewHealth = () => {
     onViewHealth?.(connection);
+  };
+
+  const handleOpenSupport = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    if (window.MojeebWidget) {
+      window.MojeebWidget.open({
+        message: 'I need help with WhatsApp number verification.'
+      });
+    } else {
+      console.warn('[ConnectedPlatformCard] Mojeeb Widget is not loaded yet.');
+    }
   };
 
   return (
@@ -183,7 +195,21 @@ export function ConnectedPlatformCard({
             <>
               <span>•</span>
               {connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED' ? (
-                <span className="whitespace-nowrap text-yellow-600 font-medium">{t('connections.details.pending_verification')}</span>
+                <Tooltip delayDuration={200}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={handleOpenSupport}
+                      className="whitespace-nowrap text-yellow-600 font-medium inline-flex items-center gap-1 cursor-pointer hover:text-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1 rounded px-1 -mx-1"
+                      aria-label={t('connections.details.contact_support')}
+                    >
+                      {t('connections.details.pending_verification')}
+                      <HelpCircle className="w-3.5 h-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="center">
+                    {t('connections.details.verification_help_tooltip')}
+                  </TooltipContent>
+                </Tooltip>
               ) : (
                 <span className="whitespace-nowrap text-green-600 font-medium">{t('connections.status_connected')}</span>
               )}

@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { TestTube2 } from 'lucide-react';
+import { TestTube2, HelpCircle } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { adminConnectionService } from '../services/adminConnectionService';
 
 interface ConnectionDetailsModalProps {
@@ -47,6 +48,17 @@ export function ConnectionDetailsModal({
   const handleTestToken = () => {
     navigate(`/meta-token-examiner?connectionId=${connectionId}`);
     onClose();
+  };
+
+  const handleOpenSupport = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.MojeebWidget) {
+      window.MojeebWidget.open({
+        message: 'I need help with WhatsApp number verification.'
+      });
+    } else {
+      console.warn('[ConnectionDetailsModal] Mojeeb Widget is not loaded yet.');
+    }
   };
 
   return (
@@ -165,9 +177,21 @@ export function ConnectionDetailsModal({
                     </div>
                     {connection.platform === 'whatsapp' &&
                      connection.platformMetadata?.code_verification_status !== 'VERIFIED' && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-300">
-                        {t('connections.details.pending_verification')}
-                      </span>
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={handleOpenSupport}
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-300 gap-1 cursor-pointer hover:bg-yellow-200 hover:border-yellow-400 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1"
+                            aria-label={t('connections.details.contact_support')}
+                          >
+                            {t('connections.details.pending_verification')}
+                            <HelpCircle className="w-3 h-3" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="center">
+                          {t('connections.details.verification_help_tooltip')}
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                   </div>
                 </div>

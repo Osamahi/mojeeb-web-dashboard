@@ -351,7 +351,9 @@
       "webhook_secret": "مفتاح الويبهوك",
       "timestamps": "التواريخ",
       "test_token": "اختبر الرمز",
-      "pending_verification": "مستني التحقق"
+      "pending_verification": "مستني التحقق",
+      "verification_help_tooltip": "تواصل مع الدعم",
+      "contact_support": "تواصل مع الدعم"
     },
     "add_title": "إضافة اتصال",
     "connect_platform": "ربط {{platform}}",

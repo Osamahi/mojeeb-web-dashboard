@@ -354,7 +354,9 @@
       "webhook_secret": "Webhook Secret",
       "timestamps": "Timestamps",
       "test_token": "Test Token",
-      "pending_verification": "Pending Verification"
+      "pending_verification": "Pending Verification",
+      "verification_help_tooltip": "Contact support",
+      "contact_support": "Contact Support"
     },
     "add_title": "Add Connection",
     "connect_platform": "Connect {{platform}}",
