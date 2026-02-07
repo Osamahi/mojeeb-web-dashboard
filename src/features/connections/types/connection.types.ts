@@ -135,6 +135,7 @@ export type PlatformConnection = {
   createdAt: string;
   updatedAt: string;
   platformMetadata: Record<string, unknown> | null;
+  codeVerificationStatus: string | null; // WhatsApp verification status
 };
 
 export type ConnectionHealthStatus = {
@@ -161,6 +162,7 @@ export interface ApiPlatformConnectionResponse {
   created_at: string;
   updated_at: string;
   last_sync_at?: string | null;
+  code_verification_status?: string | null; // WhatsApp verification status
   metadata?: {
     parent_page_id?: string;
     follower_count?: number;

@@ -119,9 +119,14 @@ export function ConnectedPlatformCard({
             showBackground
           />
         </div>
-        {/* Online/Connected Indicator - Green dot at bottom right */}
+        {/* Online/Connected Indicator - Colored dot at bottom right */}
         {connection.isActive && (
-          <div className="absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-white" />
+          <div className={cn(
+            "absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white",
+            connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED'
+              ? "bg-yellow-500"
+              : "bg-green-500"
+          )} />
         )}
       </div>
 
@@ -172,7 +177,11 @@ export function ConnectedPlatformCard({
           {connection.isActive && (
             <>
               <span>•</span>
-              <span className="whitespace-nowrap text-green-600 font-medium">{t('connections.status_connected')}</span>
+              {connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED' ? (
+                <span className="whitespace-nowrap text-yellow-600 font-medium">{t('connections.details.pending_verification')}</span>
+              ) : (
+                <span className="whitespace-nowrap text-green-600 font-medium">{t('connections.status_connected')}</span>
+              )}
             </>
           )}
         </div>

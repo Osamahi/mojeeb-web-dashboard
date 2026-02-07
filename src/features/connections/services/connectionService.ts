@@ -145,6 +145,7 @@ class ConnectionService {
       createdAt: apiConnection.created_at,
       updatedAt: apiConnection.updated_at,
       platformMetadata: apiConnection.metadata ?? null,
+      codeVerificationStatus: apiConnection.code_verification_status ?? null,
     };
   }
 
