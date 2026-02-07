@@ -407,6 +407,16 @@
     "instagram_desc": "Connect your Instagram Business Account to manage DMs and comments",
     "whatsapp_desc": "Connect your WhatsApp Business account to automate customer conversations",
     "connection_count": "{{count}} connected",
+    "platform_names": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "whatsapp": "WhatsApp Business",
+      "widget": "Website",
+      "tiktok": "TikTok",
+      "twitter": "Twitter/X",
+      "linkedin": "LinkedIn",
+      "web": "Web"
+    },
     "redirect_note": "You will be redirected to authorize access. Make sure pop-ups are enabled.",
     "loading_pages": "Loading Pages...",
     "fetching_available_pages": "Fetching your available pages",

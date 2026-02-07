@@ -144,7 +144,7 @@ export function ConnectedPlatformCard({
 
         {/* Super Minimal Metadata Labels - Brief on mobile, full on desktop */}
         <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] text-neutral-500 flex-wrap">
-          <span className="whitespace-nowrap">{platform?.name || 'Unknown'}</span>
+          <span className="whitespace-nowrap">{t(`connections.platform_names.${connection.platform}`, platform?.name || 'Unknown')}</span>
 
           {followerCount !== undefined && followerCount > 0 && (
             <>
