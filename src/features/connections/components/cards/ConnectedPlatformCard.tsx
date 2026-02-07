@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/Button';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 
 /**
  * Format follower count with K/M suffix (brief)
@@ -135,7 +136,11 @@ export function ConnectedPlatformCard({
         {/* Account Name & Warning */}
         <div className="flex items-center gap-1.5 mb-0.5">
           <h3 className="text-sm font-semibold text-neutral-900 truncate">
-            {displayName}
+            {connection.platform === 'whatsapp' ? (
+              <PhoneNumber value={displayName} className="inline" />
+            ) : (
+              displayName
+            )}
           </h3>
           {hasWarning && (
             <AlertCircle className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Badge } from '@/components/ui/Badge';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { cn } from '@/lib/utils';
 import { useFacebookPages, useWhatsAppAccounts } from '../../hooks/useAddConnection';
 import type { FacebookPage, InstagramAccount, WhatsAppPhoneNumber, OAuthIntegrationType } from '../../types';
@@ -228,7 +229,7 @@ export function AccountSelectStep({
                   {/* Phone info */}
                   <div className="flex-1 min-w-0">
                     <h4 className="truncate font-medium text-neutral-900">
-                      {phone.displayPhoneNumber}
+                      <PhoneNumber value={phone.displayPhoneNumber} className="inline" />
                     </h4>
                     {phone.verifiedName && (
                       <p className="text-xs text-neutral-500">{phone.verifiedName}</p>

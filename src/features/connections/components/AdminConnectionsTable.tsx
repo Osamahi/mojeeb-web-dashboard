@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import type { AdminConnectionListItem } from '../services/adminConnectionService';
 
 interface AdminConnectionsTableProps {
@@ -130,7 +131,11 @@ export function AdminConnectionsTable({
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <div className="text-sm font-medium text-neutral-900">
-                            {connection.platformAccountName || t('common.unknown')}
+                            {connection.platform === 'whatsapp' && connection.platformAccountName ? (
+                              <PhoneNumber value={connection.platformAccountName} className="inline" />
+                            ) : (
+                              connection.platformAccountName || t('common.unknown')
+                            )}
                           </div>
                           {connection.platform === 'whatsapp' &&
                            connection.codeVerificationStatus !== 'VERIFIED' && (

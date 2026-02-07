@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { TestTube2 } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { adminConnectionService } from '../services/adminConnectionService';
 
 interface ConnectionDetailsModalProps {
@@ -139,7 +140,11 @@ export function ConnectionDetailsModal({
                     {platformConfig?.label}
                   </span>
                   <div className="mt-2 text-lg font-semibold text-neutral-900">
-                    {connection.platformAccountName || t('common.unknown')}
+                    {connection.platform === 'whatsapp' && connection.platformAccountName ? (
+                      <PhoneNumber value={connection.platformAccountName} className="inline" />
+                    ) : (
+                      connection.platformAccountName || t('common.unknown')
+                    )}
                   </div>
                   {connection.platformAccountHandle && (
                     <div className="text-sm text-neutral-500">

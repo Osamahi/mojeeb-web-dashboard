@@ -11,6 +11,7 @@ import { BaseHeader } from '@/components/ui/BaseHeader';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Badge } from '@/components/ui/Badge';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { AddTemplateModal } from '../components/AddTemplateModal';
 import { TemplateDetailsModal } from '../components/TemplateDetailsModal';
 import { useWhatsAppTemplates } from '../hooks/useWhatsAppTemplates';
@@ -151,7 +152,7 @@ export default function WhatsAppManagementPage() {
                     <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] text-neutral-500">
                       <span className="whitespace-nowrap">WhatsApp</span>
                       <span>•</span>
-                      <span className="truncate">{displayPhone}</span>
+                      <PhoneNumber value={displayPhone} className="truncate" />
                       {connection.isActive && (
                         <>
                           <span>•</span>

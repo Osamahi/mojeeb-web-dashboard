@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BaseHeader } from '@/components/ui/BaseHeader';
+import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useExamineTokenMutation } from '../hooks/useExamineTokenMutation';
 import { adminConnectionService } from '@/features/connections/services/adminConnectionService';
@@ -254,9 +255,7 @@ export function MetaTokenExaminerPage() {
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-medium text-neutral-900">
-                                    {phone.displayPhoneNumber}
-                                  </span>
+                                  <PhoneNumber value={phone.displayPhoneNumber} className="font-medium text-neutral-900" />
                                   {phone.isOfficialBusinessAccount && (
                                     <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded border border-blue-300">
                                       Official
