@@ -6,14 +6,14 @@
  * - LeadsTableView: Only re-renders when data changes
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useInfiniteLeads } from '../hooks/useLeads';
 import { useLeadsSubscription } from '../hooks/useLeadsSubscription';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Download } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { LeadsFilterDrawer } from '../components/LeadsFilterDrawer';
 import { LeadsTableView } from '../components/LeadsTableView';
@@ -22,6 +22,7 @@ import LeadDetailsDrawer from '../components/LeadDetailsDrawer';
 import { LeadNotesModal } from '../components/LeadNotesModal';
 import { AddSummaryModal } from '../components/AddSummaryModal';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
+import { ExportLeadsModal, ExportProgressModal } from '@/features/exports/components';
 import { useDeleteLead } from '../hooks/useLeads';
 import type { Lead, LeadFilters } from '../types';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -29,7 +30,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 export default function LeadsPage() {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_leads');
-  const { isAgentSelected } = useAgentContext();
+  const { isAgentSelected, agentId } = useAgentContext();
   const deleteMutation = useDeleteLead();
 
   // Modal/Drawer state
@@ -40,6 +41,8 @@ export default function LeadsPage() {
   const [openInEditMode, setOpenInEditMode] = useState(false);
   const [notesLead, setNotesLead] = useState<{ id: string; name: string; agentId: string } | null>(null);
   const [summaryLead, setSummaryLead] = useState<{ id: string; name: string; summary: string } | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportJobId, setExportJobId] = useState<string | null>(null);
 
   // Filter state
   const [filters, setFilters] = useState<LeadFilters>({
@@ -130,6 +133,32 @@ export default function LeadsPage() {
     setSummaryLead({ id: leadId, name, summary });
   }, []);
 
+  const handleExportClick = useCallback(() => {
+    setIsExportModalOpen(true);
+  }, []);
+
+  const handleExportCreated = useCallback((jobId: string) => {
+    setExportJobId(jobId);
+  }, []);
+
+  const handleCloseExportProgress = useCallback(() => {
+    setExportJobId(null);
+  }, []);
+
+  // Memoize export button to prevent BaseHeader re-renders
+  const exportButton = useMemo(() => (
+    <button
+      onClick={handleExportClick}
+      className="px-4 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
+      title={t('leads.export')}
+    >
+      <Download className="w-4 h-4 text-neutral-700" />
+      <span className="text-sm font-medium text-neutral-900">
+        {t('leads.export')}
+      </span>
+    </button>
+  ), [handleExportClick, t]);
+
   // ========================================
   // Render Logic
   // ========================================
@@ -161,6 +190,7 @@ export default function LeadsPage() {
           icon: UserPlus,
           onClick: handleAddLeadClick
         }}
+        additionalActions={exportButton}
       />
 
       {/* Filter Drawer - slides in from right */}
@@ -237,6 +267,26 @@ export default function LeadsPage() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setLeadToDelete(null)}
         isLoading={deleteMutation.isPending}
+      />
+
+      {/* Export Modals */}
+      <ExportLeadsModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        agentId={agentId || ''}
+        filters={{
+          status: filters.status !== 'all' ? filters.status : undefined,
+          search: filters.search || undefined,
+          date_from: filters.dateFrom,
+          date_to: filters.dateTo,
+        }}
+        onExportCreated={handleExportCreated}
+      />
+
+      <ExportProgressModal
+        isOpen={!!exportJobId}
+        onClose={handleCloseExportProgress}
+        jobId={exportJobId}
       />
     </div>
   );

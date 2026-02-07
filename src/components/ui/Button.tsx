@@ -1,7 +1,7 @@
 /**
  * Mojeeb Minimal Button Component
  * Clean, professional buttons following Mojeeb brand guidelines
- * Variants: primary (cyan), secondary (outline), ghost (text-only)
+ * Variants: primary (mojeeb teal), secondary (outline), ghost (text-only), danger (destructive)
  */
 
 import { type ButtonHTMLAttributes, forwardRef } from 'react';
@@ -11,13 +11,13 @@ import { Loader2 } from 'lucide-react';
 
 const buttonVariants = cva(
   // Base styles - minimal, clean, professional
-  'inline-flex items-center justify-center rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
+  'inline-flex items-center justify-center rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
   {
     variants: {
       variant: {
-        // Primary - Brand Cyan (main CTA)
+        // Primary - Brand Mojeeb (main CTA)
         primary:
-          'bg-brand-cyan text-white hover:bg-brand-cyan/90 active:bg-brand-cyan/80',
+          'bg-brand-mojeeb text-white hover:bg-brand-mojeeb/90 active:bg-brand-mojeeb/80',
 
         // Secondary - White with border (alternative action)
         secondary:
