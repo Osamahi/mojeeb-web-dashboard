@@ -128,8 +128,16 @@ export function AdminConnectionsTable({
                         />
                       )}
                       <div>
-                        <div className="text-sm font-medium text-neutral-900">
-                          {connection.platformAccountName || t('common.unknown')}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="text-sm font-medium text-neutral-900">
+                            {connection.platformAccountName || t('common.unknown')}
+                          </div>
+                          {connection.platform === 'whatsapp' &&
+                           connection.codeVerificationStatus !== 'VERIFIED' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-300">
+                              {t('connections.details.pending_verification')}
+                            </span>
+                          )}
                         </div>
                         {connection.platformAccountHandle && (
                           <div className="text-xs text-neutral-500">

@@ -32,6 +32,7 @@ export interface AdminConnectionListItem {
   followerCount: number | null;
   businessCategory: string | null;
   parentPageId: string | null;
+  codeVerificationStatus: string | null;
   createdAt: string;
 }
 
@@ -72,6 +73,7 @@ interface ApiAdminConnectionListItem {
   follower_count: number | null;
   business_category: string | null;
   parent_page_id: string | null;
+  code_verification_status: string | null;
   created_at: string;
 }
 
@@ -118,6 +120,7 @@ class AdminConnectionService {
       followerCount: apiConnection.follower_count,
       businessCategory: apiConnection.business_category,
       parentPageId: apiConnection.parent_page_id,
+      codeVerificationStatus: apiConnection.code_verification_status,
       createdAt: apiConnection.created_at,
     };
   }

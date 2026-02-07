@@ -353,7 +353,8 @@
       "token_expires_at": "Token Expires At",
       "webhook_secret": "Webhook Secret",
       "timestamps": "Timestamps",
-      "test_token": "Test Token"
+      "test_token": "Test Token",
+      "pending_verification": "Pending Verification"
     },
     "add_title": "Add Connection",
     "connect_platform": "Connect {{platform}}",

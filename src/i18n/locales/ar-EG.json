@@ -350,7 +350,8 @@
       "token_expires_at": "تاريخ انتهاء الرمز",
       "webhook_secret": "مفتاح الويبهوك",
       "timestamps": "التواريخ",
-      "test_token": "اختبر الرمز"
+      "test_token": "اختبر الرمز",
+      "pending_verification": "مستني التحقق"
     },
     "add_title": "إضافة اتصال",
     "connect_platform": "ربط {{platform}}",
