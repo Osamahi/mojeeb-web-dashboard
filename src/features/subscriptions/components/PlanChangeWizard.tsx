@@ -264,6 +264,7 @@ export function PlanChangeWizard({
                       messageLimit={selectedPlan.messageLimit}
                       agentLimit={selectedPlan.agentLimit}
                       features={selectedPlan.features}
+                      planCode={selectedPlan.code}
                     />
                   </div>
 

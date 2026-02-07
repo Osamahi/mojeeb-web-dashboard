@@ -373,6 +373,7 @@
     "edit_button": "Edit",
     "connect_button_short": "Connect",
     "connect_button": "Connect",
+    "upgrade_button": "Upgrade",
     "fetching_pages": "Fetching your available pages",
     "failed_load_pages_title": "Failed to Load Pages",
     "retry_label": "Retry",
@@ -1400,7 +1401,8 @@
     "agent_plural": "{{count}} agents",
     "analytics": "Analytics",
     "priority_support": "Priority Support",
-    "api_access": "API Access"
+    "api_access": "API Access",
+    "whatsapp_integration": "WhatsApp Integration"
   },
   "plan_change_wizard": {
     "pay_with_stripe": "Next",

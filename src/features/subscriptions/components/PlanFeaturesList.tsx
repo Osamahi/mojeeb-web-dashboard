@@ -9,6 +9,8 @@ interface PlanFeaturesListProps {
   agentLimit: number;
   /** Optional features array (e.g., ['analytics', 'priority_support']) */
   features?: string[];
+  /** Plan code (used to determine static features like WhatsApp) */
+  planCode?: string;
 }
 
 /**
@@ -28,8 +30,12 @@ export const PlanFeaturesList = memo(({
   messageLimit,
   agentLimit,
   features = [],
+  planCode,
 }: PlanFeaturesListProps) => {
   const { t } = useTranslation();
+
+  // Determine if WhatsApp Integration should be shown (static, website-level feature)
+  const showWhatsAppIntegration = planCode === 'starter_production' || planCode === 'professional_production';
 
   return (
     <ul className="space-y-2 text-sm">
@@ -64,6 +70,14 @@ export const PlanFeaturesList = memo(({
         <li className="flex items-center gap-2">
           <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
           <span>{t('plan_features.api_access')}</span>
+        </li>
+      )}
+
+      {/* WhatsApp Integration - Static feature for Starter and Professional plans */}
+      {showWhatsAppIntegration && (
+        <li className="flex items-center gap-2">
+          <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+          <span>{t('plan_features.whatsapp_integration')}</span>
         </li>
       )}
     </ul>

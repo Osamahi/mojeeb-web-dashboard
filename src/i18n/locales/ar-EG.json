@@ -370,6 +370,7 @@
     "edit_button": "عدّل",
     "connect_button_short": "وصّل",
     "connect_button": "وصّل",
+    "upgrade_button": "رقّي",
     "fetching_pages": "بنجيب الصفحات...",
     "failed_load_pages_title": "مش قادرين نجيب الصفحات",
     "retry_label": "حاول تاني",
@@ -1394,7 +1395,8 @@
     "agent_plural": "{{count}} وكلاء",
     "analytics": "التحليلات",
     "priority_support": "الدعم المميز",
-    "api_access": "الوصول لل API"
+    "api_access": "الوصول لل API",
+    "whatsapp_integration": "ربط واتساب بزنس"
   },
   "plan_change_wizard": {
     "pay_with_stripe": "التالي",

@@ -128,6 +128,7 @@ export const PlanCard = memo(({
           messageLimit={plan.messageLimit}
           agentLimit={plan.agentLimit}
           features={plan.features}
+          planCode={plan.code}
         />
       </div>
 
