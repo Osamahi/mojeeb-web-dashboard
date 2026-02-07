@@ -82,12 +82,16 @@ export function useInfiniteLeads(filters?: Partial<LeadFilters>) {
 /**
  * Fetch a single lead by ID
  * @param leadId - The lead ID to fetch
+ * @param agentId - The agent ID (optional, defaults to current agent from context)
  */
-export function useLead(leadId: string | undefined) {
+export function useLead(leadId: string | undefined, agentId?: string) {
+  const { agentId: contextAgentId } = useAgentContext();
+  const effectiveAgentId = agentId || contextAgentId;
+
   return useQuery({
     queryKey: queryKeys.lead(leadId),
-    queryFn: () => leadService.getLead(leadId!),
-    enabled: !!leadId,
+    queryFn: () => leadService.getLead(leadId!, effectiveAgentId!),
+    enabled: !!leadId && !!effectiveAgentId,
   });
 }
 

@@ -238,8 +238,8 @@ class LeadService {
   /**
    * Get single lead by ID
    */
-  async getLead(leadId: string): Promise<Lead> {
-    const { data } = await api.get<ApiResponse<ApiLeadResponse>>(`/api/lead/${leadId}`);
+  async getLead(leadId: string, agentId: string): Promise<Lead> {
+    const { data } = await api.get<ApiResponse<ApiLeadResponse>>(`/api/lead/${leadId}?agentId=${agentId}`);
     return this.transformLead(data.data);
   }
 
