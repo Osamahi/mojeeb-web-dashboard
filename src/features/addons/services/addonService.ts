@@ -18,34 +18,9 @@ export const addonService = {
      * @param addonType Optional filter by type ('message_credits' or 'agent_slots')
      */
     async getAddonPlans(addonType?: string): Promise<AddonPlan[]> {
-        console.log('[addonService.getAddonPlans] Starting API call', {
-            addonType,
-            apiUrl: `${API_BASE}/plans`,
-        });
-
-        try {
-            const params = addonType ? { addon_type: addonType } : {};
-            console.log('[addonService.getAddonPlans] Making axios.get request', { params });
-
-            const { data } = await api.get(`${API_BASE}/plans`, { params });
-
-            console.log('[addonService.getAddonPlans] Axios response received', {
-                rawData: data,
-                dataData: data.data,
-                unwrappedCount: data.data?.length ?? 0,
-            });
-
-            const result = data.data ?? [];
-            console.log('[addonService.getAddonPlans] Returning result', {
-                resultCount: result.length,
-                result,
-            });
-
-            return result;
-        } catch (error) {
-            console.error('[addonService.getAddonPlans] API call FAILED', error);
-            throw error;
-        }
+        const params = addonType ? { addon_type: addonType } : {};
+        const { data } = await api.get(`${API_BASE}/plans`, { params });
+        return data.data ?? [];
     },
 
     /**
