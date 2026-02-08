@@ -20,6 +20,8 @@ import {
   BookOpen,
   Network,
   FileText,
+  Puzzle,
+  Layers,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -86,6 +88,20 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.subscriptions',
     href: '/subscriptions',
     icon: Receipt,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Add-on Plans',
+    translationKey: 'navigation.addon_plans',
+    href: '/addon-plans',
+    icon: Layers,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Add-ons',
+    translationKey: 'navigation.addons',
+    href: '/addons',
+    icon: Puzzle,
     requireSuperAdmin: true,
   },
   {
