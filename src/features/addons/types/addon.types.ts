@@ -42,6 +42,7 @@ export interface AddonOperation {
 export interface GrantAddonRequest {
   organization_id: string;
   addon_code: string;
+  quantity?: number; // Multiplier for addon quantity (default: 1, range: 1-100)
   notes?: string;
 }
 

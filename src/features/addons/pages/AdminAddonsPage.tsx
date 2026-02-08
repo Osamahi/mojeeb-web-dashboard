@@ -1,57 +1,36 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { Plus } from 'lucide-react';
+import { BaseHeader } from '@/components/ui/BaseHeader';
 import { useAddonOperations } from '../hooks/useAddonOperations';
 import { GrantAddonModal } from '../components/GrantAddonModal';
-import { formatDistanceToNow } from 'date-fns';
-import type { AddonType } from '../types/addon.types';
 
 export function AdminAddonsPage() {
     const [showGrantModal, setShowGrantModal] = useState(false);
-    const [addonTypeFilter, setAddonTypeFilter] = useState<AddonType | ''>('');
     const [page, setPage] = useState(1);
     const pageSize = 50;
 
     const { data: operations, isLoading, error } = useAddonOperations({
         page,
         page_size: pageSize,
-        addon_type: addonTypeFilter || undefined,
     });
 
+    const handleGrantClick = useCallback(() => {
+        setShowGrantModal(true);
+    }, []);
+
     return (
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="p-6 space-y-6">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-neutral-900">Add-ons Management</h1>
-                <p className="text-neutral-600 mt-2">
-                    Grant additional capacity to organizations and view operation history
-                </p>
-            </div>
-
-            {/* Actions Bar */}
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                    {/* Type Filter */}
-                    <select
-                        value={addonTypeFilter}
-                        onChange={(e) => {
-                            setAddonTypeFilter(e.target.value as AddonType | '');
-                            setPage(1); // Reset to first page when filtering
-                        }}
-                        className="px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    >
-                        <option value="">All Types</option>
-                        <option value="message_credits">Message Credits</option>
-                        <option value="agent_slots">Agent Slots</option>
-                    </select>
-                </div>
-
-                {/* Grant Add-on Button */}
-                <button
-                    onClick={() => setShowGrantModal(true)}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
-                >
-                    Grant Add-on
-                </button>
-            </div>
+            <BaseHeader
+                title="Add-ons Management"
+                subtitle="Grant additional capacity to organizations and view operation history"
+                primaryAction={{
+                    label: 'Grant Add-on',
+                    icon: Plus,
+                    onClick: handleGrantClick,
+                }}
+            />
 
             {/* Operations Table */}
             <div className="bg-white rounded-lg border border-neutral-200 shadow-sm">
