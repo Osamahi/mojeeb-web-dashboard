@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { formatDistanceToNow } from 'date-fns';
+import { useDateLocale } from '@/lib/dateConfig';
 import { Plus } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { useAddonOperations } from '../hooks/useAddonOperations';
@@ -9,6 +9,7 @@ export function AdminAddonsPage() {
     const [showGrantModal, setShowGrantModal] = useState(false);
     const [page, setPage] = useState(1);
     const pageSize = 50;
+    const { formatSmartTimestamp } = useDateLocale();
 
     const { data: operations, isLoading, error } = useAddonOperations({
         page,
@@ -105,9 +106,7 @@ export function AdminAddonsPage() {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <p className="text-sm text-neutral-600">
-                                                    {formatDistanceToNow(new Date(operation.granted_at), {
-                                                        addSuffix: true,
-                                                    })}
+                                                    {formatSmartTimestamp(operation.granted_at)}
                                                 </p>
                                             </td>
                                             <td className="px-4 py-3">

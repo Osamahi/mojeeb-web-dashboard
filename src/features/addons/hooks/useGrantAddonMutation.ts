@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { addonService } from '../services/addonService';
 import type { GrantAddonRequest, GrantAddonResult } from '../types/addon.types';
+import type { ApiError } from '../types/error.types';
 
 /**
  * Hook to grant an add-on to an organization
@@ -12,8 +14,7 @@ export function useGrantAddonMutation() {
     return useMutation<GrantAddonResult, Error, GrantAddonRequest>({
         mutationFn: (request) => addonService.grantAddon(request),
         onSuccess: (data, variables) => {
-            // Log success (toast notification can be added later)
-            console.log('Add-on granted successfully:', data.message);
+            toast.success(data.message || 'Add-on granted successfully');
 
             // Invalidate queries to refresh data
             queryClient.invalidateQueries({ queryKey: ['addon-operations'] });
@@ -24,9 +25,9 @@ export function useGrantAddonMutation() {
                 queryKey: ['subscription', variables.organization_id]
             });
         },
-        onError: (error) => {
-            // Log error (toast notification can be added later)
-            console.error('Failed to grant add-on:', error.message);
+        onError: (error: ApiError) => {
+            const message = error?.response?.data?.message || error?.message || 'Failed to grant add-on';
+            toast.error(message);
         },
     });
 }

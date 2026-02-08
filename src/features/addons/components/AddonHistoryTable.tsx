@@ -1,5 +1,5 @@
 import { useOrganizationAddonHistory } from '../hooks/useAddonOperations';
-import { formatDistanceToNow } from 'date-fns';
+import { useDateLocale } from '@/lib/dateConfig';
 import type { AddonOperation } from '../types/addon.types';
 
 interface AddonHistoryTableProps {
@@ -9,6 +9,7 @@ interface AddonHistoryTableProps {
 
 export function AddonHistoryTable({ organizationId, limit }: AddonHistoryTableProps) {
     const { data: operations, isLoading, error } = useOrganizationAddonHistory(organizationId);
+    const { formatSmartTimestamp } = useDateLocale();
 
     if (isLoading) {
         return (
@@ -60,7 +61,7 @@ export function AddonHistoryTable({ organizationId, limit }: AddonHistoryTablePr
                 </thead>
                 <tbody className="bg-white divide-y divide-neutral-200">
                     {displayedOperations.map((operation) => (
-                        <AddonOperationRow key={operation.id} operation={operation} />
+                        <AddonOperationRow key={operation.id} operation={operation} formatSmartTimestamp={formatSmartTimestamp} />
                     ))}
                 </tbody>
             </table>
@@ -76,7 +77,13 @@ export function AddonHistoryTable({ organizationId, limit }: AddonHistoryTablePr
     );
 }
 
-function AddonOperationRow({ operation }: { operation: AddonOperation }) {
+function AddonOperationRow({
+    operation,
+    formatSmartTimestamp
+}: {
+    operation: AddonOperation;
+    formatSmartTimestamp: (timestamp: string | Date) => string;
+}) {
     return (
         <tr className="hover:bg-neutral-50 transition-colors">
             <td className="px-4 py-3">
@@ -97,7 +104,7 @@ function AddonOperationRow({ operation }: { operation: AddonOperation }) {
             </td>
             <td className="px-4 py-3">
                 <p className="text-sm text-neutral-600">
-                    {formatDistanceToNow(new Date(operation.granted_at), { addSuffix: true })}
+                    {formatSmartTimestamp(operation.granted_at)}
                 </p>
             </td>
             <td className="px-4 py-3">

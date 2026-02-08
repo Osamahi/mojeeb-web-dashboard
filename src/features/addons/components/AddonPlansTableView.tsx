@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { Package, Check, X, Pencil, Trash2 } from 'lucide-react';
 import { DataTable } from '@/components/ui/DataTable/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';

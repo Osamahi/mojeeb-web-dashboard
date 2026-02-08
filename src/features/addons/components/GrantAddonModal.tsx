@@ -4,7 +4,7 @@
  * Shows current usage/limits and calculates total capacity after granting
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { MessageSquare, Users, Search, Building2 } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
@@ -29,6 +29,8 @@ export function GrantAddonModal({ isOpen, onClose }: GrantAddonModalProps) {
     const [selectedAddonCode, setSelectedAddonCode] = useState('');
     const [quantity, setQuantity] = useState(1);
     const [notes, setNotes] = useState('');
+    const [validationError, setValidationError] = useState<string | null>(null);
+    const [focusedIndex, setFocusedIndex] = useState(-1);
 
     // Fetch ALL organizations
     const { data: organizations, isLoading: loadingOrganizations } = useQuery({
@@ -97,19 +99,62 @@ export function GrantAddonModal({ isOpen, onClose }: GrantAddonModalProps) {
             setSelectedAddonCode('');
             setQuantity(1);
             setNotes('');
+            setValidationError(null);
+            setFocusedIndex(-1);
         }
     }, [isOpen]);
 
-    const handleOrganizationSelect = (orgId: string) => {
+    const handleOrganizationSelect = useCallback((orgId: string) => {
         setSelectedOrgId(orgId);
         setSearchQuery('');
         setShowDropdown(false);
-    };
+        setFocusedIndex(-1);
+    }, []);
+
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (!showDropdown || filteredOrganizations.length === 0) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setFocusedIndex((i) => Math.min(i + 1, filteredOrganizations.length - 1));
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setFocusedIndex((i) => Math.max(i - 1, 0));
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (focusedIndex >= 0) {
+                    handleOrganizationSelect(filteredOrganizations[focusedIndex].id);
+                }
+                break;
+            case 'Escape':
+                e.preventDefault();
+                setShowDropdown(false);
+                setFocusedIndex(-1);
+                break;
+        }
+    }, [showDropdown, filteredOrganizations, focusedIndex, handleOrganizationSelect]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setValidationError(null);
 
-        if (!selectedOrgId || !selectedAddonCode) return;
+        if (!selectedOrgId) {
+            setValidationError('Please select an organization');
+            return;
+        }
+
+        if (!selectedSubscription) {
+            setValidationError('Selected organization has no active subscription');
+            return;
+        }
+
+        if (!selectedAddonCode) {
+            setValidationError('Please select an add-on plan');
+            return;
+        }
 
         await grantMutation.mutateAsync({
             organization_id: selectedOrgId,
@@ -134,6 +179,13 @@ export function GrantAddonModal({ isOpen, onClose }: GrantAddonModalProps) {
             closable={!grantMutation.isPending}
         >
             <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Validation Error Display */}
+                {validationError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-sm text-red-800">{validationError}</p>
+                    </div>
+                )}
+
                 {/* Organization Selector */}
                 <div>
                     <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -144,33 +196,54 @@ export function GrantAddonModal({ isOpen, onClose }: GrantAddonModalProps) {
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 pointer-events-none" />
                             <input
                                 type="text"
+                                role="combobox"
+                                aria-autocomplete="list"
+                                aria-expanded={showDropdown && searchQuery.length > 0}
+                                aria-controls="organization-listbox"
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
                                     setShowDropdown(true);
+                                    setFocusedIndex(-1);
                                 }}
                                 onFocus={() => setShowDropdown(true)}
-                                onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+                                onKeyDown={handleKeyDown}
                                 placeholder="Search organizations..."
                                 className="w-full pl-10 pr-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                             />
                         </div>
 
                         {/* Dropdown */}
-                        {showDropdown && searchQuery.length >= 2 && (
-                            <div className="absolute z-50 w-full mt-2 bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                {loadingOrganizations ? (
+                        {showDropdown && searchQuery.length > 0 && (
+                            <div
+                                id="organization-listbox"
+                                role="listbox"
+                                className="absolute z-50 w-full mt-2 bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                            >
+                                {searchQuery.length < 2 ? (
+                                    <div className="p-4 text-center text-sm text-neutral-500">
+                                        Type at least 2 characters to search...
+                                    </div>
+                                ) : loadingOrganizations ? (
                                     <div className="p-4 text-center text-sm text-neutral-500">
                                         Loading...
                                     </div>
                                 ) : filteredOrganizations.length > 0 ? (
                                     <div className="py-2">
-                                        {filteredOrganizations.map((org) => (
+                                        {filteredOrganizations.map((org, index) => (
                                             <button
                                                 key={org.id}
                                                 type="button"
-                                                onClick={() => handleOrganizationSelect(org.id)}
-                                                className="w-full px-4 py-3 hover:bg-neutral-50 transition-colors flex items-start gap-3 text-left"
+                                                role="option"
+                                                aria-selected={selectedOrgId === org.id}
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    handleOrganizationSelect(org.id);
+                                                }}
+                                                onMouseEnter={() => setFocusedIndex(index)}
+                                                className={`w-full px-4 py-3 transition-colors flex items-start gap-3 text-left ${
+                                                    focusedIndex === index ? 'bg-primary-50' : 'hover:bg-neutral-50'
+                                                }`}
                                             >
                                                 <div className="h-8 w-8 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0 mt-1">
                                                     <Building2 className="h-4 w-4 text-neutral-400" />

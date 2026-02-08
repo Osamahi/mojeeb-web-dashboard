@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { useCreateAddonPlan } from '../hooks/useCreateAddonPlan';
@@ -22,6 +22,21 @@ export function AddAddonPlanModal({ isOpen, onClose }: AddAddonPlanModalProps) {
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Reset form when modal closes
+    useEffect(() => {
+        if (!isOpen) {
+            setFormData({
+                code: '',
+                name: '',
+                addon_type: 'message_credits',
+                quantity: 1000,
+                description: '',
+                is_active: true,
+            });
+            setErrors({});
+        }
+    }, [isOpen]);
 
     const validateForm = (): boolean => {
         const newErrors: Record<string, string> = {};
@@ -53,17 +68,7 @@ export function AddAddonPlanModal({ isOpen, onClose }: AddAddonPlanModalProps) {
 
         createMutation.mutate(formData, {
             onSuccess: () => {
-                onClose();
-                // Reset form
-                setFormData({
-                    code: '',
-                    name: '',
-                    addon_type: 'message_credits',
-                    quantity: 1000,
-                    description: '',
-                    is_active: true,
-                });
-                setErrors({});
+                onClose(); // Form will be reset via useEffect
             },
         });
     };

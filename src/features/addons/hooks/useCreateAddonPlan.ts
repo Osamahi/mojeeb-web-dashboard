@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addonService } from '../services/addonService';
 import type { AddonPlan } from '../types/addon.types';
+import type { ApiError } from '../types/error.types';
 import { toast } from 'sonner';
 
 /**
@@ -17,8 +18,8 @@ export function useCreateAddonPlan() {
             queryClient.invalidateQueries({ queryKey: ['addon-plans'] });
             toast.success('Add-on plan created successfully');
         },
-        onError: (error: any) => {
-            const message = error?.response?.data?.message || 'Failed to create add-on plan';
+        onError: (error: ApiError) => {
+            const message = error?.response?.data?.message || error?.message || 'Failed to create add-on plan';
             toast.error(message);
         },
     });
