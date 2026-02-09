@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Loader2, AlertCircle, ShoppingCart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -20,7 +21,8 @@ import { useAnalytics } from '@/lib/analytics';
  * 5. Show success message and redirect to my subscription
  */
 export default function AddonSuccessPage() {
-    useDocumentTitle('Add-on Purchase Successful');
+    const { t } = useTranslation();
+    useDocumentTitle('addons.success_page_title');
     const navigate = useNavigate();
     const { track } = useAnalytics();
     const [searchParams] = useSearchParams();
@@ -77,17 +79,17 @@ export default function AddonSuccessPage() {
                 </div>
 
                 {/* Title */}
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Purchase Successful!</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('addons.purchase_successful')}</h1>
 
                 {/* Message */}
                 <p className="text-gray-600 mb-6">
-                    Your add-on has been purchased successfully. Your subscription limits have been updated.
+                    {t('addons.purchase_success_message')}
                 </p>
 
                 {/* Session ID (for debugging) */}
                 {sessionId && (
                     <div className="text-xs text-gray-500 mb-6 p-3 bg-gray-50 rounded font-mono break-all">
-                        Session: {sessionId}
+                        {t('addons.session_label')} {sessionId}
                     </div>
                 )}
 
@@ -95,29 +97,29 @@ export default function AddonSuccessPage() {
                 {isLoadingSubscription ? (
                     <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-6">
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Updating your subscription...</span>
+                        <span>{t('addons.updating_subscription')}</span>
                     </div>
                 ) : subscription ? (
                     <div className="flex items-center justify-center gap-2 text-sm text-green-600 mb-6 p-3 bg-green-50 rounded">
                         <CheckCircle className="w-4 h-4" />
-                        <span>Add-on activated successfully</span>
+                        <span>{t('addons.addon_activated')}</span>
                     </div>
                 ) : (
                     <div className="flex items-center justify-center gap-2 text-sm text-amber-600 mb-6 p-3 bg-amber-50 rounded">
                         <AlertCircle className="w-4 h-4" />
-                        <span>Processing your purchase...</span>
+                        <span>{t('addons.processing_purchase')}</span>
                     </div>
                 )}
 
                 {/* Redirect countdown */}
                 <p className="text-sm text-gray-600 mb-6">
-                    Redirecting to your subscription in {countdown} seconds...
+                    {t('addons.redirecting_countdown', { countdown })}
                 </p>
 
                 {/* Manual navigation button */}
                 <Button onClick={() => navigate('/my-subscription')} className="w-full">
                     <ShoppingCart className="w-4 h-4 mr-2" />
-                    View My Subscription
+                    {t('addons.view_my_subscription')}
                 </Button>
             </div>
         </div>

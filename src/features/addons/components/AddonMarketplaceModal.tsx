@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { MessageSquare, Users, ShoppingCart, CreditCard } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
@@ -17,22 +18,23 @@ interface AddonMarketplaceModalProps {
     onClose: () => void;
 }
 
-const CURRENCIES = [
-    { code: 'USD', symbol: '$', name: 'US Dollar' },
-    { code: 'EGP', symbol: 'E£', name: 'Egyptian Pound' },
-    { code: 'SAR', symbol: 'SR', name: 'Saudi Riyal' },
-] as const;
-
-const BILLING_INTERVALS = [
-    { value: 'monthly' as const, label: 'Monthly' },
-    { value: 'annual' as const, label: 'Annual' },
-] as const;
-
 export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModalProps) {
+    const { t } = useTranslation();
     const { data: addons, isLoading: loadingAddons } = useAvailableAddons();
     const checkoutMutation = useCreateAddonCheckout();
     const subscription = useSubscriptionStore((state) => state.subscription);
     const usage = useSubscriptionStore((state) => state.usage);
+
+    const CURRENCIES = [
+        { code: 'USD', symbol: '$', name: t('addons.currencies.usd_name') },
+        { code: 'EGP', symbol: 'E£', name: t('addons.currencies.egp_name') },
+        { code: 'SAR', symbol: 'SR', name: t('addons.currencies.sar_name') },
+    ] as const;
+
+    const BILLING_INTERVALS = [
+        { value: 'monthly' as const, label: t('addons.monthly') },
+        { value: 'annual' as const, label: t('addons.annual') },
+    ] as const;
 
     const [selectedAddon, setSelectedAddon] = useState<AddonPlan | null>(null);
     const [currency, setCurrency] = useState<string>('USD');
@@ -128,7 +130,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                 {/* Quantity */}
                 <p className="text-sm font-medium text-neutral-700 mb-2">
                     +{addon.quantity.toLocaleString()}{' '}
-                    {addon.addon_type === 'message_credits' ? 'messages' : 'agents'}
+                    {addon.addon_type === 'message_credits' ? t('addons.messages_unit') : t('addons.agents_unit')}
                 </p>
 
                 {/* Price */}
@@ -138,11 +140,11 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                             {currencySymbol}{addonPrice.toFixed(2)}
                         </span>
                         <span className="text-sm text-neutral-500">
-                            /{billingInterval === 'monthly' ? 'mo' : 'yr'}
+                            /{billingInterval === 'monthly' ? t('addons.mo') : t('addons.yr')}
                         </span>
                     </div>
                 ) : (
-                    <p className="text-sm text-neutral-500">Not available in {currency}</p>
+                    <p className="text-sm text-neutral-500">{t('addons.not_available_currency', { currency })}</p>
                 )}
 
                 {/* Selected indicator */}
@@ -161,8 +163,8 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
         <BaseModal
             isOpen={isOpen}
             onClose={onClose}
-            title="Purchase Add-ons"
-            subtitle="Boost your subscription with extra capacity"
+            title={t('addons.marketplace_title')}
+            subtitle={t('addons.marketplace_subtitle')}
             maxWidth="2xl"
             isLoading={checkoutMutation.isPending}
             closable={!checkoutMutation.isPending}
@@ -171,7 +173,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                 {/* Current Usage */}
                 {usage && (
                     <div className="rounded-lg bg-neutral-50 border border-neutral-200 p-4">
-                        <h3 className="text-sm font-medium text-neutral-900 mb-3">Current Usage</h3>
+                        <h3 className="text-sm font-medium text-neutral-900 mb-3">{t('addons.current_usage')}</h3>
                         <div className="grid grid-cols-2 gap-4">
                             {/* Messages */}
                             <div className="flex items-center gap-3">
@@ -179,7 +181,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                                     <MessageSquare className="h-4 w-4 text-blue-600" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-neutral-600">Messages</p>
+                                    <p className="text-xs text-neutral-600">{t('addons.messages')}</p>
                                     <p className="text-sm font-semibold text-neutral-900">
                                         {usage.messagesUsed.toLocaleString()} / {usage.messagesLimit.toLocaleString()}
                                     </p>
@@ -191,7 +193,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                                     <Users className="h-4 w-4 text-purple-600" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-neutral-600">Agents</p>
+                                    <p className="text-xs text-neutral-600">{t('addons.agents')}</p>
                                     <p className="text-sm font-semibold text-neutral-900">
                                         {usage.agentsUsed} / {usage.agentsLimit}
                                     </p>
@@ -205,7 +207,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                 <div className="grid grid-cols-2 gap-4">
                     {/* Currency Selector */}
                     <div>
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">Currency</label>
+                        <label className="block text-sm font-medium text-neutral-700 mb-2">{t('addons.currency')}</label>
                         <select
                             value={currency}
                             onChange={(e) => setCurrency(e.target.value)}
@@ -223,7 +225,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                     {/* Billing Interval Selector */}
                     <div>
                         <label className="block text-sm font-medium text-neutral-700 mb-2">
-                            Billing Period
+                            {t('addons.billing_period')}
                         </label>
                         <select
                             value={billingInterval}
@@ -245,7 +247,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                     <div>
                         <h3 className="text-sm font-semibold text-neutral-900 mb-3 flex items-center gap-2">
                             <MessageSquare className="h-4 w-4 text-blue-600" />
-                            Message Credits
+                            {t('addons.message_credits')}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {messageAddons.map(renderAddonCard)}
@@ -258,7 +260,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                     <div>
                         <h3 className="text-sm font-semibold text-neutral-900 mb-3 flex items-center gap-2">
                             <Users className="h-4 w-4 text-purple-600" />
-                            Agent Slots
+                            {t('addons.agent_slots')}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {agentAddons.map(renderAddonCard)}
@@ -276,14 +278,14 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                                 </h4>
                                 <p className="text-xs text-neutral-600">
                                     {selectedAddon.quantity.toLocaleString()} {' '}
-                                    {selectedAddon.addon_type === 'message_credits' ? 'messages' : 'agents'} per unit
+                                    {selectedAddon.addon_type === 'message_credits' ? t('addons.messages_unit') : t('addons.agents_unit')} {t('addons.per_unit')}
                                 </p>
                             </div>
                         </div>
 
                         {/* Quantity Picker */}
                         <div className="flex items-center gap-4">
-                            <label className="text-sm font-medium text-neutral-700">Quantity:</label>
+                            <label className="text-sm font-medium text-neutral-700">{t('addons.quantity')}</label>
                             <div className="flex items-center border border-neutral-300 rounded-lg bg-white">
                                 <button
                                     type="button"
@@ -316,21 +318,21 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                             </div>
                             <div className="flex-1 text-right">
                                 <p className="text-sm font-medium text-neutral-900">
-                                    Total: {(selectedAddon.quantity * quantity).toLocaleString()}{' '}
-                                    {selectedAddon.addon_type === 'message_credits' ? 'messages' : 'agents'}
+                                    {t('addons.total')} {(selectedAddon.quantity * quantity).toLocaleString()}{' '}
+                                    {selectedAddon.addon_type === 'message_credits' ? t('addons.messages_unit') : t('addons.agents_unit')}
                                 </p>
                             </div>
                         </div>
 
                         {/* Total Price */}
                         <div className="mt-4 pt-4 border-t border-primary-200 flex items-center justify-between">
-                            <span className="text-sm font-medium text-neutral-700">Total Price:</span>
+                            <span className="text-sm font-medium text-neutral-700">{t('addons.total_price')}</span>
                             <div className="flex items-baseline gap-1">
                                 <span className="text-3xl font-bold text-neutral-900">
                                     {currencySymbol}{totalPrice.toFixed(2)}
                                 </span>
                                 <span className="text-sm text-neutral-600">
-                                    /{billingInterval === 'monthly' ? 'month' : 'year'}
+                                    /{billingInterval === 'monthly' ? t('addons.month') : t('addons.year')}
                                 </span>
                             </div>
                         </div>
@@ -341,7 +343,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                 {!loadingAddons && (!addons || addons.length === 0) && (
                     <div className="text-center py-8">
                         <ShoppingCart className="h-12 w-12 text-neutral-400 mx-auto mb-3" />
-                        <p className="text-neutral-600">No add-ons available for purchase</p>
+                        <p className="text-neutral-600">{t('addons.no_addons_available')}</p>
                     </div>
                 )}
 
@@ -353,7 +355,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                         onClick={onClose}
                         disabled={checkoutMutation.isPending}
                     >
-                        Cancel
+                        {t('addons.cancel')}
                     </Button>
                     <Button
                         type="button"
@@ -363,7 +365,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                         className="bg-primary-600 text-white hover:bg-primary-700"
                     >
                         <CreditCard className="h-4 w-4 mr-2" />
-                        Pay with Stripe
+                        {t('addons.pay_with_stripe')}
                     </Button>
                 </div>
             </div>
