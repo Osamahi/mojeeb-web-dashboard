@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ConversationResponse } from '../../services/conversationApi';
 import { useMarkConversationAsUnread } from '../../hooks/useMarkConversationAsUnread';
 
@@ -24,6 +25,7 @@ export function ConversationContextMenu({
   position,
   onClose,
 }: ConversationContextMenuProps) {
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
   const { mutate: markAsUnread, isPending } = useMarkConversationAsUnread();
 
@@ -127,12 +129,12 @@ export function ConversationContextMenu({
             }`}
             title={
               isDisabled
-                ? 'This conversation is already unread'
-                : 'Mark as unread'
+                ? t('conversation_context_menu.already_unread')
+                : t('conversation_context_menu.mark_as_unread_tooltip')
             }
             role="menuitem"
           >
-            Mark as Unread
+            {t('conversation_context_menu.mark_as_unread')}
           </button>
         </div>
       </div>

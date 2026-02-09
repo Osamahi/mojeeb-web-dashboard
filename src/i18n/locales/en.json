@@ -1624,6 +1624,11 @@
     "urgent": "Urgent",
     "needs_attention": "Needs attention"
   },
+  "conversation_context_menu": {
+    "mark_as_unread": "Mark as Unread",
+    "already_unread": "This conversation is already unread",
+    "mark_as_unread_tooltip": "Mark as unread"
+  },
   "data_table": {
     "no_items_found": "No {{itemName}} found",
     "search_placeholder": "Search {{itemName}}...",

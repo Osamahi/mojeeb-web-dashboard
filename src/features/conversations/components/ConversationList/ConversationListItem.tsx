@@ -113,7 +113,7 @@ const ConversationListItem = memo(function ConversationListItem({
         </div>
 
         {/* Timestamp with unread indicator */}
-        <div className="flex-shrink-0 flex flex-col items-center gap-1">
+        <div className="flex-shrink-0 flex flex-col items-end gap-1">
           <div className="text-xs text-neutral-500">
             {formattedTime}
           </div>

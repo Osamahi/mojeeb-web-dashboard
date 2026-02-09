@@ -1619,6 +1619,11 @@
     "urgent": "عاجل",
     "needs_attention": "يحتاج إلى اهتمام"
   },
+  "conversation_context_menu": {
+    "mark_as_unread": "وضع علامة كغير مقروء",
+    "already_unread": "هذه المحادثة غير مقروءة بالفعل",
+    "mark_as_unread_tooltip": "وضع علامة كغير مقروء"
+  },
   "data_table": {
     "no_items_found": "لم يتم العثور على {{itemName}}",
     "search_placeholder": "بحث في {{itemName}}...",

@@ -1622,6 +1622,11 @@
     "urgent": "مستعجل",
     "needs_attention": "محتاج اهتمام"
   },
+  "conversation_context_menu": {
+    "mark_as_unread": "علّم كغير مقروء",
+    "already_unread": "المحادثة دي مش مقروءة أصلاً",
+    "mark_as_unread_tooltip": "علّم كغير مقروء"
+  },
   "data_table": {
     "no_items_found": "مفيش {{itemName}} اتلقت",
     "search_placeholder": "دور في {{itemName}}...",
