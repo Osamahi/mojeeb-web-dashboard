@@ -1,12 +1,15 @@
 import { useState, useCallback } from 'react';
-import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, ShoppingCart } from 'lucide-react';
+import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { PlanCode } from '../types/subscription.types';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { PlanChangeWizard } from '../components/PlanChangeWizard';
 import { CancelSubscriptionModal } from '@/features/billing/components/CancelSubscriptionModal';
-import { AddonMarketplaceModal } from '@/features/addons/components/AddonMarketplaceModal';
+import { AddonListItem, AddonQuantityModal } from '@/features/addons/components';
+import { useAvailableAddons, useCreateAddonCheckout } from '@/features/addons/hooks/useAddonPurchase';
+import { useCurrency } from '@/lib/currency';
+import type { AddonPlan } from '@/features/addons/types/addon.types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,11 +30,35 @@ export default function MySubscriptionPage() {
   const loading = useSubscriptionStore(state => state.isLoading);
   const [showWizard, setShowWizard] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showAddonMarketplace, setShowAddonMarketplace] = useState(false);
+  const [selectedAddon, setSelectedAddon] = useState<AddonPlan | null>(null);
+
+  // Add-ons data
+  const { data: addons } = useAvailableAddons();
+  const checkoutMutation = useCreateAddonCheckout();
+  const { currency } = useCurrency();
+
+  const messageAddons = addons?.filter(a => a.addon_type === 'message_credits') || [];
+  const agentAddons = addons?.filter(a => a.addon_type === 'agent_slots') || [];
 
   const handleUpgradeClick = useCallback(() => {
     setShowWizard(true);
   }, []);
+
+  const handleAddonClick = useCallback((addon: AddonPlan) => {
+    setSelectedAddon(addon);
+  }, []);
+
+  const handleCheckout = useCallback(async (quantity: number) => {
+    if (!selectedAddon) return;
+
+    await checkoutMutation.mutateAsync({
+      addon_code: selectedAddon.code,
+      quantity,
+      currency,
+    });
+
+    setSelectedAddon(null);
+  }, [selectedAddon, currency, checkoutMutation]);
 
   const handleWizardSuccess = useCallback(async () => {
     // Refresh subscription and usage from store
@@ -355,52 +382,41 @@ export default function MySubscriptionPage() {
           {/* Add-ons Section */}
           <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-gray-900">Add-ons</h2>
-                <button
-                  onClick={() => setShowAddonMarketplace(true)}
-                  className="inline-flex items-center gap-2 rounded-md bg-primary-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  Purchase Add-ons
-                </button>
-              </div>
+              <h2 className="text-lg font-medium text-gray-900">Add-ons</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Boost your subscription with additional message credits or agent slots. Add-ons provide extra capacity beyond your plan limits.
+              </p>
             </div>
             <div className="p-6">
               {loading ? (
                 /* Skeleton Loading State */
-                <div className="animate-pulse">
-                  <div className="h-4 w-full bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
+                <div className="space-y-3 animate-pulse">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-24 w-full bg-gray-200 rounded-lg"></div>
+                  ))}
                 </div>
               ) : (
-                /* Real Data */
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-600">
-                    Boost your subscription with additional message credits or agent slots. Add-ons provide extra capacity beyond your plan limits.
-                  </p>
+                /* Add-on List */
+                <div className="space-y-3">
+                  {messageAddons.map(addon => (
+                    <AddonListItem
+                      key={addon.id}
+                      addon={addon}
+                      onPurchase={() => handleAddonClick(addon)}
+                    />
+                  ))}
+                  {agentAddons.map(addon => (
+                    <AddonListItem
+                      key={addon.id}
+                      addon={addon}
+                      onPurchase={() => handleAddonClick(addon)}
+                    />
+                  ))}
 
-                  {/* Current Add-on Capacity (if any) */}
-                  {usage && (
-                    <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
-                      <h3 className="text-sm font-medium text-gray-900 mb-3">Current Capacity</h3>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="h-4 w-4 text-blue-600" />
-                          <span className="text-gray-700">
-                            <span className="font-semibold">{usage.messagesLimit.toLocaleString()}</span> messages/month
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-purple-600" />
-                          <span className="text-gray-700">
-                            <span className="font-semibold">{usage.agentsLimit}</span> agent slots
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Purchase add-ons to increase these limits instantly
-                      </p>
+                  {/* No addons available message */}
+                  {addons && addons.length === 0 && (
+                    <div className="text-center py-8 text-gray-600">
+                      <p className="text-sm">No add-ons available at this time.</p>
                     </div>
                   )}
                 </div>
@@ -426,10 +442,12 @@ export default function MySubscriptionPage() {
         onClose={() => setShowCancelModal(false)}
       />
 
-      {/* Addon Marketplace Modal */}
-      <AddonMarketplaceModal
-        isOpen={showAddonMarketplace}
-        onClose={() => setShowAddonMarketplace(false)}
+      {/* Addon Quantity Modal */}
+      <AddonQuantityModal
+        isOpen={!!selectedAddon}
+        onClose={() => setSelectedAddon(null)}
+        addon={selectedAddon}
+        onCheckout={handleCheckout}
       />
     </div>
   );
