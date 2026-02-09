@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { fetchConversationById } from '../services/conversationApi';
 import ChatPanel from './Chat/ChatPanel';
 import type { Conversation } from '../types';
+import { useMarkConversationAsRead } from '../hooks/useMarkConversationAsRead';
 
 interface ConversationViewDrawerProps {
   conversationId: string | null;
@@ -28,6 +29,7 @@ export default function ConversationViewDrawer({
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { mutate: markAsRead } = useMarkConversationAsRead();
 
   // Fetch conversation when drawer opens
   useEffect(() => {
@@ -54,7 +56,15 @@ export default function ConversationViewDrawer({
       .finally(() => {
         setIsLoading(false);
       });
-  }, [conversationId, isOpen]);
+  }, [conversationId, isOpen, t]);
+
+  // Smart read logic: Mark as read when drawer opens OR when becomes unread while open
+  // This ensures conversations stay read while user is viewing them, even if new messages arrive
+  useEffect(() => {
+    if (isOpen && conversation && !conversation.is_read) {
+      markAsRead(conversation.id);
+    }
+  }, [isOpen, conversation?.id, conversation?.is_read, markAsRead]);
 
   // ESC key to close
   useEffect(() => {

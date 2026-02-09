@@ -29,6 +29,8 @@ export interface ConversationResponse {
   am_not_sure_how_to_answer?: boolean;
   created_at: string;
   updated_at: string;
+  is_read: boolean;
+  read_at?: string;
 }
 
 export interface CursorPaginatedConversationsResponse {
@@ -148,4 +150,21 @@ export async function toggleAIMode(
   );
 
   return response.data;
+}
+
+/**
+ * Mark a conversation as read
+ *
+ * @param conversationId - Conversation ID
+ * @returns Success message
+ *
+ * @example
+ * ```ts
+ * await markConversationAsRead('abc-123');
+ * ```
+ */
+export async function markConversationAsRead(
+  conversationId: string
+): Promise<void> {
+  await api.post(`/api/v2/conversations/${conversationId}/mark-read`);
 }

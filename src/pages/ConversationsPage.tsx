@@ -16,6 +16,7 @@ import ConversationList from '@/features/conversations/components/ConversationLi
 import ChatPanel from '@/features/conversations/components/Chat/ChatPanel';
 import ConversationEmptyState from '@/features/conversations/components/shared/ConversationEmptyState';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useMarkConversationAsRead } from '@/features/conversations/hooks/useMarkConversationAsRead';
 
 export const ConversationsPage = () => {
   const { t } = useTranslation();
@@ -24,6 +25,7 @@ export const ConversationsPage = () => {
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const selectedConversation = useConversationStore((state) => state.selectedConversation);
   const selectConversation = useConversationStore((state) => state.selectConversation);
+  const { mutate: markAsRead } = useMarkConversationAsRead();
 
   const [showChat, setShowChat] = useState(false);
 
@@ -32,6 +34,14 @@ export const ConversationsPage = () => {
     selectConversation(null);
     setShowChat(false);
   }, [agentId, selectConversation]);
+
+  // Smart read logic: Mark as read when conversation is selected OR when becomes unread while selected
+  // This ensures conversations stay read while user is viewing them, even if new messages arrive
+  useEffect(() => {
+    if (selectedConversation && !selectedConversation.is_read) {
+      markAsRead(selectedConversation.id);
+    }
+  }, [selectedConversation?.id, selectedConversation?.is_read, markAsRead]);
 
   // Show empty state if no agent is selected
   if (!globalSelectedAgent) {

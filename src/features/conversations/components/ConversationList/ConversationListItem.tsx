@@ -65,7 +65,7 @@ const ConversationListItem = memo(function ConversationListItem({
       <div className="flex-1 min-w-0">
         {/* Name and indicators */}
         <div className="flex items-center gap-2 mb-1">
-          <span className="font-semibold text-neutral-950 text-sm truncate">
+          <span className="text-neutral-950 text-sm font-semibold truncate">
             {conversation.customer_name}
           </span>
 
@@ -94,7 +94,7 @@ const ConversationListItem = memo(function ConversationListItem({
 
         {/* Source and topic - matching chat header format */}
         {(conversation.topic || conversation.source !== 'web') && (
-          <p className="text-xs text-neutral-600 truncate">
+          <p className="text-xs text-neutral-600 font-normal truncate">
             {conversation.source !== 'web' && conversation.source}
             {conversation.source !== 'web' && conversation.topic && ' • '}
             {conversation.topic}
@@ -102,9 +102,15 @@ const ConversationListItem = memo(function ConversationListItem({
         )}
       </div>
 
-      {/* Timestamp */}
-      <div className="flex-shrink-0 text-xs text-neutral-500">
-        {formattedTime}
+      {/* Timestamp with unread indicator */}
+      <div className="flex-shrink-0 flex flex-col items-center gap-1">
+        <div className="text-xs text-neutral-500">
+          {formattedTime}
+        </div>
+        {/* Green dot for unread conversations */}
+        {!conversation.is_read && (
+          <div className="w-2 h-2 bg-green-500 rounded-full" />
+        )}
       </div>
     </div>
   );

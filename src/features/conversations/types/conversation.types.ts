@@ -55,6 +55,10 @@ export interface Conversation {
   platform_conversation_id: string | null;
   platform_customer_id: string | null;
   platform_connection_id: string | null;
+
+  // Read/Unread tracking (conversation-level)
+  is_read: boolean;
+  read_at: string | null;
 }
 
 // === Message Types ===
