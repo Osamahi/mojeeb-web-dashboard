@@ -131,12 +131,8 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
             }
 
             case 'UPDATE': {
-              // Conversation updated - move to top (remove + re-insert)
+              // Conversation updated
               const updatedConversation = transformToConversationResponse(payload.new);
-
-              if (import.meta.env.DEV) {
-                console.log('[Realtime] UPDATE: Moving conversation to top:', updatedConversation.id);
-              }
 
               queryClient.setQueryData(queryKey, (oldData: any) => {
                 if (!oldData?.pages) {
@@ -146,8 +142,66 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
                   return oldData;
                 }
 
+                // Find the old conversation in cache
+                let oldConversation: ConversationResponse | undefined;
+                for (const page of oldData.pages) {
+                  oldConversation = page.items.find((c: ConversationResponse) => c.id === updatedConversation.id);
+                  if (oldConversation) break;
+                }
+
+                // Check if ONLY read status changed (not conversation activity)
+                // IMPORTANT: Compare timestamps as Date objects, not strings
+                // RPC returns "2026-02-08T14:54:11Z" but realtime returns "2026-02-08T14:54:11+00:00"
+                const oldTimestamp = oldConversation?.last_message_at ? new Date(oldConversation.last_message_at).getTime() : null;
+                const newTimestamp = updatedConversation.last_message_at ? new Date(updatedConversation.last_message_at).getTime() : null;
+
+                const isOnlyReadStatusChange =
+                  oldConversation &&
+                  oldTimestamp === newTimestamp &&
+                  oldConversation.last_message === updatedConversation.last_message;
+
+                // DEBUG: Log comparison details
+                if (import.meta.env.DEV) {
+                  console.log('[Realtime] UPDATE comparison:', {
+                    conversationId: updatedConversation.id,
+                    oldExists: !!oldConversation,
+                    timestamp_match: oldTimestamp === newTimestamp,
+                    last_message_match: oldConversation?.last_message === updatedConversation.last_message,
+                    old_last_message_at: oldConversation?.last_message_at,
+                    new_last_message_at: updatedConversation.last_message_at,
+                    old_timestamp_ms: oldTimestamp,
+                    new_timestamp_ms: newTimestamp,
+                    old_last_message: oldConversation?.last_message?.substring(0, 30),
+                    new_last_message: updatedConversation.last_message?.substring(0, 30),
+                    isOnlyReadStatusChange,
+                  });
+                }
+
+                if (isOnlyReadStatusChange) {
+                  // Just update is_read in place, don't move conversation
+                  if (import.meta.env.DEV) {
+                    console.log('[Realtime] UPDATE: Read status only, updating in place:', updatedConversation.id);
+                  }
+
+                  return {
+                    ...oldData,
+                    pages: oldData.pages.map((page: any) => ({
+                      ...page,
+                      items: page.items.map((conv: ConversationResponse) =>
+                        conv.id === updatedConversation.id
+                          ? { ...conv, is_read: updatedConversation.is_read, read_at: updatedConversation.read_at }
+                          : conv
+                      ),
+                    })),
+                  };
+                }
+
+                // Real activity update - move to top
+                if (import.meta.env.DEV) {
+                  console.log('[Realtime] UPDATE: Activity change, moving to top:', updatedConversation.id);
+                }
+
                 // Step 1: Remove ALL instances of conversation from all pages (handles duplicates)
-                // ✨ CRITICAL: Use filter to ensure complete removal of any duplicates
                 let removedCount = 0;
                 const filteredPages = oldData.pages.map((page: any) => {
                   const beforeCount = page.items.length;
@@ -261,5 +315,7 @@ function transformToConversationResponse(data: Record<string, any>): Conversatio
     am_not_sure_how_to_answer: data.am_not_sure_how_to_answer,
     created_at: data.created_at,
     updated_at: data.updated_at,
+    is_read: data.is_read ?? false,
+    read_at: data.read_at ?? null,
   };
 }

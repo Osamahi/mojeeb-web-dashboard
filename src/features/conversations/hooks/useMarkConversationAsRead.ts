@@ -1,18 +1,15 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAgentContext } from '@/hooks/useAgentContext';
-import { queryKeys } from '@/lib/queryKeys';
+import { useMutation } from '@tanstack/react-query';
 import { markConversationAsRead } from '../services/conversationApi';
 
 /**
  * React Query mutation hook for marking a conversation as read.
  *
- * This hook automatically invalidates conversation queries to trigger UI updates.
- * It's designed to be called silently without showing toast notifications (automatic action).
+ * This hook silently marks a conversation as read without showing notifications.
+ * The realtime subscription (useConversationRealtime) handles UI updates automatically.
  *
  * Features:
- * - Silently marks conversation as read
- * - Invalidates conversations list to update bold text indicators
- * - Invalidates individual conversation query
+ * - Silently marks conversation as read (API call only)
+ * - No cache manipulation (realtime handles UI updates)
  * - No toast notifications (automatic action, not user-initiated)
  *
  * @returns {UseMutationResult} React Query mutation result object
@@ -35,25 +32,8 @@ import { markConversationAsRead } from '../services/conversationApi';
  * ```
  */
 export function useMarkConversationAsRead() {
-  const queryClient = useQueryClient();
-  const { agentId } = useAgentContext();
-
   return useMutation({
     mutationFn: markConversationAsRead,
-
-    onSuccess: (_, conversationId) => {
-      // Invalidate conversations list to update UI (bold text disappears)
-      if (agentId) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.conversations(agentId),
-        });
-      }
-
-      // Invalidate individual conversation query (if fetched separately)
-      queryClient.invalidateQueries({
-        queryKey: ['conversation', conversationId],
-      });
-    },
 
     onError: (error) => {
       // Silent failure - log error but don't show toast (automatic action)
