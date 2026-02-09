@@ -35,6 +35,7 @@ const AddonPlansPage = lazy(() => import('./features/addons/pages/AddonPlansPage
 const MySubscriptionPage = lazy(() => import('./features/subscriptions/pages/MySubscriptionPage'));
 const SubscriptionSuccessPage = lazy(() => import('./features/billing/pages/SubscriptionSuccessPage'));
 const SubscriptionCancelPage = lazy(() => import('./features/billing/pages/SubscriptionCancelPage'));
+const AddonSuccessPage = lazy(() => import('./features/addons/pages/AddonSuccessPage'));
 const AcceptInvitationPage = lazy(() => import('./features/organizations/pages/AcceptInvitationPage').then(m => ({ default: m.AcceptInvitationPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage').then(m => ({ default: m.ServerErrorPage })));
@@ -360,6 +361,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <SubscriptionCancelPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/addon-success',
+    element: (
+      <ProtectedRoute>
+        <AddonSuccessPage />
       </ProtectedRoute>
     ),
   },

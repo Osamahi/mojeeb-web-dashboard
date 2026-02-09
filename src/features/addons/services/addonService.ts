@@ -5,6 +5,8 @@ import type {
     GrantAddonRequest,
     GrantAddonResult,
     AddonOperationsFilters,
+    CreateAddonCheckoutRequest,
+    StripeCheckoutSessionResponse,
 } from '../types/addon.types';
 
 const API_BASE = '/api/admin/addons';
@@ -36,6 +38,10 @@ export const addonService = {
             quantity: plan.quantity,
             description: plan.description,
             is_active: plan.is_active,
+            display_order: plan.display_order,
+            pricing: plan.pricing,
+            stripe_livemode: plan.stripe_livemode,
+            stripe_price_ids: plan.stripe_price_ids,
         };
         const { data } = await api.post(`${API_BASE}/plans`, payload);
         return data.data;
@@ -48,7 +54,7 @@ export const addonService = {
      */
     async updateAddonPlan(
         id: string,
-        plan: Pick<AddonPlan, 'name' | 'quantity' | 'description' | 'is_active'>
+        plan: any // Allow dynamic fields including sync_to_stripe
     ): Promise<AddonPlan> {
         // Transform camelCase to snake_case for backend
         const payload = {
@@ -56,6 +62,11 @@ export const addonService = {
             quantity: plan.quantity,
             description: plan.description,
             is_active: plan.is_active,
+            display_order: plan.display_order,
+            pricing: plan.pricing,
+            stripe_price_ids: plan.stripe_price_ids,
+            stripe_livemode: plan.stripe_livemode,
+            sync_to_stripe: plan.sync_to_stripe,
         };
         const { data } = await api.put(`${API_BASE}/plans/${id}`, payload);
         return data.data;
@@ -97,5 +108,37 @@ export const addonService = {
             params: filters,
         });
         return data.data ?? []; // Unwrap from { success, data, message, timestamp }
+    },
+
+    // ==================== CUSTOMER-FACING METHODS ====================
+
+    /**
+     * Get available add-ons for customer purchase (non-admin endpoint)
+     * Only returns addons with pricing configured.
+     * @param addonType Optional filter by type ('message_credits' or 'agent_slots')
+     */
+    async getAvailableAddons(addonType?: string): Promise<AddonPlan[]> {
+        const params = addonType ? { addon_type: addonType } : {};
+        const { data } = await api.get('/api/addons/available', { params });
+        return data.data ?? [];
+    },
+
+    /**
+     * Get current user's addon purchase history (non-admin endpoint)
+     * Returns addon operations for the user's organization.
+     */
+    async getMyAddonHistory(): Promise<AddonOperation[]> {
+        const { data } = await api.get('/api/addons/my-history');
+        return data.data ?? [];
+    },
+
+    /**
+     * Create a Stripe checkout session for addon purchase
+     * @param request Checkout request with addon_code, quantity, currency, billing_interval
+     * @returns Stripe session with URL to redirect user to Stripe checkout
+     */
+    async createAddonCheckout(request: CreateAddonCheckoutRequest): Promise<StripeCheckoutSessionResponse> {
+        const { data } = await api.post('/api/stripe/checkout-addon', request);
+        return data.data; // Unwrap { session_id, session_url, expires_at }
     },
 };

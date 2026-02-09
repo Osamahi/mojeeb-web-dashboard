@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
-import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X } from 'lucide-react';
+import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, ShoppingCart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { PlanCode } from '../types/subscription.types';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { PlanChangeWizard } from '../components/PlanChangeWizard';
 import { CancelSubscriptionModal } from '@/features/billing/components/CancelSubscriptionModal';
+import { AddonMarketplaceModal } from '@/features/addons/components/AddonMarketplaceModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +27,7 @@ export default function MySubscriptionPage() {
   const loading = useSubscriptionStore(state => state.isLoading);
   const [showWizard, setShowWizard] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showAddonMarketplace, setShowAddonMarketplace] = useState(false);
 
   const handleUpgradeClick = useCallback(() => {
     setShowWizard(true);
@@ -349,6 +351,62 @@ export default function MySubscriptionPage() {
               ) : null}
             </div>
           </div>
+
+          {/* Add-ons Section */}
+          <div className="overflow-hidden rounded-lg bg-white shadow">
+            <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-medium text-gray-900">Add-ons</h2>
+                <button
+                  onClick={() => setShowAddonMarketplace(true)}
+                  className="inline-flex items-center gap-2 rounded-md bg-primary-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  Purchase Add-ons
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              {loading ? (
+                /* Skeleton Loading State */
+                <div className="animate-pulse">
+                  <div className="h-4 w-full bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
+                </div>
+              ) : (
+                /* Real Data */
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">
+                    Boost your subscription with additional message credits or agent slots. Add-ons provide extra capacity beyond your plan limits.
+                  </p>
+
+                  {/* Current Add-on Capacity (if any) */}
+                  {usage && (
+                    <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+                      <h3 className="text-sm font-medium text-gray-900 mb-3">Current Capacity</h3>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-blue-600" />
+                          <span className="text-gray-700">
+                            <span className="font-semibold">{usage.messagesLimit.toLocaleString()}</span> messages/month
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-purple-600" />
+                          <span className="text-gray-700">
+                            <span className="font-semibold">{usage.agentsLimit}</span> agent slots
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Purchase add-ons to increase these limits instantly
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </>
       )}
 
@@ -366,6 +424,12 @@ export default function MySubscriptionPage() {
       <CancelSubscriptionModal
         isOpen={showCancelModal}
         onClose={() => setShowCancelModal(false)}
+      />
+
+      {/* Addon Marketplace Modal */}
+      <AddonMarketplaceModal
+        isOpen={showAddonMarketplace}
+        onClose={() => setShowAddonMarketplace(false)}
       />
     </div>
   );

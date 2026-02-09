@@ -15,9 +15,18 @@ export interface AddonPlan {
   addon_type: AddonType;
   quantity: number;
   is_active: boolean;
+  pricing?: AddonPricing; // Multi-currency pricing (null for admin-only addons)
+  stripe_price_ids?: Record<string, string>; // Stripe Price IDs (null for admin-only addons)
+  display_order: number;
   created_at: string;
   updated_at: string;
 }
+
+/**
+ * Multi-currency pricing structure for add-on plans (one-time payment)
+ * Example: { "USD": 49.99, "EGP": 500, "SAR": 180 }
+ */
+export type AddonPricing = Record<string, number>;
 
 /**
  * Add-on operation (audit log entry)
@@ -66,4 +75,22 @@ export interface AddonOperationsFilters {
   organization_id?: string;
   addon_type?: AddonType;
   start_date?: string;
+}
+
+/**
+ * Request to create a Stripe checkout session for addon purchase (one-time payment)
+ */
+export interface CreateAddonCheckoutRequest {
+  addon_code: string;
+  quantity: number;
+  currency: string;
+}
+
+/**
+ * Response containing Stripe checkout session details
+ */
+export interface StripeCheckoutSessionResponse {
+  session_id: string;
+  session_url: string;
+  expires_at: string;
 }
