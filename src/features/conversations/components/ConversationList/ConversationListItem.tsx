@@ -3,7 +3,7 @@
  * WhatsApp-style conversation preview with avatar, name, last message, timestamp
  */
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { User, Bot } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Conversation } from '../../types';
@@ -12,6 +12,7 @@ import { truncateText, getInitials } from '../../utils/textFormatters';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
+import { ConversationContextMenu } from './ConversationContextMenu';
 
 interface ConversationListItemProps {
   conversation: Conversation;
@@ -25,6 +26,7 @@ const ConversationListItem = memo(function ConversationListItem({
   onSelect,
 }: ConversationListItemProps) {
   const { t } = useTranslation();
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   // Extract profile picture from metadata
   const profilePictureUrl = conversation.customer_metadata?.profile_picture;
@@ -42,77 +44,95 @@ const ConversationListItem = memo(function ConversationListItem({
   const showUrgent = conversation.urgent;
   const showNeedsAttention = conversation.requires_human_attention;
 
+  // Handle right-click
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  };
+
   return (
-    <div
-      onClick={onSelect}
-      className={cn(
-        'flex items-center gap-3 p-3 border border-neutral-200 rounded-lg cursor-pointer transition-colors',
-        isSelected
-          ? 'bg-brand-cyan/10 border-brand-cyan'
-          : 'bg-white hover:bg-neutral-50'
-      )}
-    >
-      {/* Avatar */}
-      <div className="flex-shrink-0">
-        <Avatar
-          src={profilePictureUrl}
-          name={conversation.customer_name}
-          size="lg"
+    <>
+      <div
+        onClick={onSelect}
+        onContextMenu={handleContextMenu}
+        className={cn(
+          'flex items-center gap-3 p-3 border border-neutral-200 rounded-lg cursor-pointer transition-colors',
+          isSelected
+            ? 'bg-brand-cyan/10 border-brand-cyan'
+            : 'bg-white hover:bg-neutral-50'
+        )}
+      >
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          <Avatar
+            src={profilePictureUrl}
+            name={conversation.customer_name}
+            size="lg"
+          />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          {/* Name and indicators */}
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-neutral-950 text-sm font-semibold truncate">
+              {conversation.customer_name}
+            </span>
+
+            {/* Human mode indicator */}
+            {showHumanMode && (
+              <User className="w-3.5 h-3.5 text-[#00D084] flex-shrink-0" />
+            )}
+
+            {/* Unhappy sentiment indicator */}
+            {showUnhappySentiment && (
+              <span className="text-xs flex-shrink-0">😟</span>
+            )}
+
+            {/* Urgent indicator */}
+            {showUrgent && (
+              <Badge variant="danger" className="text-xs">
+                {t('conversation_list_item.urgent')}
+              </Badge>
+            )}
+
+            {/* Needs attention indicator */}
+            {showNeedsAttention && (
+              <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0" title={t('conversation_list_item.needs_attention')} />
+            )}
+          </div>
+
+          {/* Source and topic - matching chat header format */}
+          {(conversation.topic || conversation.source !== 'web') && (
+            <p className="text-xs text-neutral-600 font-normal truncate">
+              {conversation.source !== 'web' && conversation.source}
+              {conversation.source !== 'web' && conversation.topic && ' • '}
+              {conversation.topic}
+            </p>
+          )}
+        </div>
+
+        {/* Timestamp with unread indicator */}
+        <div className="flex-shrink-0 flex flex-col items-center gap-1">
+          <div className="text-xs text-neutral-500">
+            {formattedTime}
+          </div>
+          {/* Green dot for unread conversations */}
+          {!conversation.is_read && (
+            <div className="w-2 h-2 bg-green-500 rounded-full" />
+          )}
+        </div>
+      </div>
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ConversationContextMenu
+          conversation={conversation}
+          position={contextMenu}
+          onClose={() => setContextMenu(null)}
         />
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        {/* Name and indicators */}
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-neutral-950 text-sm font-semibold truncate">
-            {conversation.customer_name}
-          </span>
-
-          {/* Human mode indicator */}
-          {showHumanMode && (
-            <User className="w-3.5 h-3.5 text-[#00D084] flex-shrink-0" />
-          )}
-
-          {/* Unhappy sentiment indicator */}
-          {showUnhappySentiment && (
-            <span className="text-xs flex-shrink-0">😟</span>
-          )}
-
-          {/* Urgent indicator */}
-          {showUrgent && (
-            <Badge variant="danger" className="text-xs">
-              {t('conversation_list_item.urgent')}
-            </Badge>
-          )}
-
-          {/* Needs attention indicator */}
-          {showNeedsAttention && (
-            <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0" title={t('conversation_list_item.needs_attention')} />
-          )}
-        </div>
-
-        {/* Source and topic - matching chat header format */}
-        {(conversation.topic || conversation.source !== 'web') && (
-          <p className="text-xs text-neutral-600 font-normal truncate">
-            {conversation.source !== 'web' && conversation.source}
-            {conversation.source !== 'web' && conversation.topic && ' • '}
-            {conversation.topic}
-          </p>
-        )}
-      </div>
-
-      {/* Timestamp with unread indicator */}
-      <div className="flex-shrink-0 flex flex-col items-center gap-1">
-        <div className="text-xs text-neutral-500">
-          {formattedTime}
-        </div>
-        {/* Green dot for unread conversations */}
-        {!conversation.is_read && (
-          <div className="w-2 h-2 bg-green-500 rounded-full" />
-        )}
-      </div>
-    </div>
+      )}
+    </>
   );
 });
 

@@ -168,3 +168,19 @@ export async function markConversationAsRead(
 ): Promise<void> {
   await api.post(`/api/v2/conversations/${conversationId}/mark-read`);
 }
+
+/**
+ * Mark a conversation as unread
+ *
+ * @param conversationId - The conversation ID to mark as unread
+ *
+ * @example
+ * ```ts
+ * await markConversationAsUnread('abc-123');
+ * ```
+ */
+export async function markConversationAsUnread(
+  conversationId: string
+): Promise<void> {
+  await api.post(`/api/v2/conversations/${conversationId}/mark-unread`);
+}
