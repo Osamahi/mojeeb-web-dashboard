@@ -828,6 +828,8 @@
     "organizations": "Organizations",
     "admin_connections": "All Connections",
     "subscriptions": "Subscriptions",
+    "addon_plans": "Add-on Catalogue",
+    "addons": "Add-ons",
     "pricing": "Pricing",
     "stripe_products": "Stripe Products",
     "plan_catalogue": "Plan Catalogue",
