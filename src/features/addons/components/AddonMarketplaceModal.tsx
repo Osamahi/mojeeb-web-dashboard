@@ -9,6 +9,7 @@ import { MessageSquare, Users, ShoppingCart, CreditCard } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
+import { useCurrency } from '@/lib/currency';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 import { useAvailableAddons, useCreateAddonCheckout } from '../hooks/useAddonPurchase';
 import type { AddonPlan, AddonType } from '../types/addon.types';
@@ -22,23 +23,12 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
     const { t } = useTranslation();
     const { data: addons, isLoading: loadingAddons } = useAvailableAddons();
     const checkoutMutation = useCreateAddonCheckout();
-    const subscription = useSubscriptionStore((state) => state.subscription);
     const usage = useSubscriptionStore((state) => state.usage);
 
-    const CURRENCIES = [
-        { code: 'USD', symbol: '$', name: t('addons.currencies.usd_name') },
-        { code: 'EGP', symbol: 'E£', name: t('addons.currencies.egp_name') },
-        { code: 'SAR', symbol: 'SR', name: t('addons.currencies.sar_name') },
-    ] as const;
-
-    const BILLING_INTERVALS = [
-        { value: 'monthly' as const, label: t('addons.monthly') },
-        { value: 'annual' as const, label: t('addons.annual') },
-    ] as const;
+    // Auto-detect currency using centralized service
+    const { currency, symbol: currencySymbol } = useCurrency();
 
     const [selectedAddon, setSelectedAddon] = useState<AddonPlan | null>(null);
-    const [currency, setCurrency] = useState<string>('USD');
-    const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual'>('monthly');
     const [quantity, setQuantity] = useState(1);
 
     // Group addons by type
@@ -55,8 +45,6 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
     useEffect(() => {
         if (!isOpen) {
             setSelectedAddon(null);
-            setCurrency('USD');
-            setBillingInterval('monthly');
             setQuantity(1);
         }
     }, [isOpen]);
@@ -64,16 +52,11 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
     // Get price for selected addon
     const price = useMemo(() => {
         if (!selectedAddon?.pricing) return null;
-        const currencyPricing = selectedAddon.pricing[currency];
-        if (!currencyPricing) return null;
-        return currencyPricing[billingInterval];
-    }, [selectedAddon, currency, billingInterval]);
+        return selectedAddon.pricing[currency] ?? null;
+    }, [selectedAddon, currency]);
 
     // Calculate total price
     const totalPrice = price ? price * quantity : 0;
-
-    // Get currency symbol
-    const currencySymbol = CURRENCIES.find((c) => c.code === currency)?.symbol || '$';
 
     // Handle addon selection
     const handleAddonSelect = useCallback((addon: AddonPlan) => {
@@ -89,15 +72,14 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
             addon_code: selectedAddon.code,
             quantity,
             currency,
-            billing_interval: billingInterval,
         });
         // Note: mutation will redirect to Stripe on success, so no need to close modal
-    }, [selectedAddon, quantity, currency, billingInterval, checkoutMutation]);
+    }, [selectedAddon, quantity, currency, checkoutMutation]);
 
     // Render addon card
     const renderAddonCard = (addon: AddonPlan) => {
         const isSelected = selectedAddon?.id === addon.id;
-        const addonPrice = addon.pricing?.[currency]?.[billingInterval];
+        const addonPrice = addon.pricing?.[currency];
         const icon = addon.addon_type === 'message_credits' ? MessageSquare : Users;
         const Icon = icon;
 
@@ -138,9 +120,6 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                     <div className="flex items-baseline gap-1">
                         <span className="text-2xl font-bold text-neutral-900">
                             {currencySymbol}{addonPrice.toFixed(2)}
-                        </span>
-                        <span className="text-sm text-neutral-500">
-                            /{billingInterval === 'monthly' ? t('addons.mo') : t('addons.yr')}
                         </span>
                     </div>
                 ) : (
@@ -202,45 +181,6 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                         </div>
                     </div>
                 )}
-
-                {/* Currency & Billing Interval */}
-                <div className="grid grid-cols-2 gap-4">
-                    {/* Currency Selector */}
-                    <div>
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">{t('addons.currency')}</label>
-                        <select
-                            value={currency}
-                            onChange={(e) => setCurrency(e.target.value)}
-                            disabled={checkoutMutation.isPending}
-                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        >
-                            {CURRENCIES.map((curr) => (
-                                <option key={curr.code} value={curr.code}>
-                                    {curr.symbol} {curr.name} ({curr.code})
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Billing Interval Selector */}
-                    <div>
-                        <label className="block text-sm font-medium text-neutral-700 mb-2">
-                            {t('addons.billing_period')}
-                        </label>
-                        <select
-                            value={billingInterval}
-                            onChange={(e) => setBillingInterval(e.target.value as 'monthly' | 'annual')}
-                            disabled={checkoutMutation.isPending}
-                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        >
-                            {BILLING_INTERVALS.map((interval) => (
-                                <option key={interval.value} value={interval.value}>
-                                    {interval.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
 
                 {/* Message Credits */}
                 {messageAddons.length > 0 && (
@@ -327,14 +267,9 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                         {/* Total Price */}
                         <div className="mt-4 pt-4 border-t border-primary-200 flex items-center justify-between">
                             <span className="text-sm font-medium text-neutral-700">{t('addons.total_price')}</span>
-                            <div className="flex items-baseline gap-1">
-                                <span className="text-3xl font-bold text-neutral-900">
-                                    {currencySymbol}{totalPrice.toFixed(2)}
-                                </span>
-                                <span className="text-sm text-neutral-600">
-                                    /{billingInterval === 'monthly' ? t('addons.month') : t('addons.year')}
-                                </span>
-                            </div>
+                            <span className="text-3xl font-bold text-neutral-900">
+                                {currencySymbol}{totalPrice.toFixed(2)}
+                            </span>
                         </div>
                     </div>
                 )}
