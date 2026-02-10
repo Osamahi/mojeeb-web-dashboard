@@ -45,6 +45,9 @@ export function AddonQuantityModal({
   const totalUnits = addon.quantity * quantity;
   const unitLabel = addon.addon_type === 'message_credits' ? t('addons.messages_unit') : t('addons.agent_slots_unit');
 
+  // Determine translation key based on addon type (same as AddonListItem)
+  const titleKey = addon.addon_type === 'message_credits' ? 'addons.quantity_messages' : 'addons.quantity_agents';
+
   const handleConfirm = async () => {
     setIsLoading(true);
     try {
@@ -63,7 +66,7 @@ export function AddonQuantityModal({
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={addon.name}
+      title={t(titleKey, { quantity: addon.quantity.toLocaleString() })}
       maxWidth="sm"
       isLoading={isLoading}
       closable={!isLoading}

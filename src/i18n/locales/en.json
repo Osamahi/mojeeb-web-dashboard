@@ -1037,6 +1037,8 @@
     "yr": "yr",
     "messages_unit": "messages",
     "agents_unit": "agents",
+    "quantity_messages": "Add {{quantity}} messages",
+    "quantity_agents": "Add {{quantity}} agents",
     "no_addons_available": "No add-ons available for purchase",
     "not_available_currency": "Not available in {{currency}}",
     "pay_with_stripe": "Confirm",

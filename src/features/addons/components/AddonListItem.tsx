@@ -17,7 +17,9 @@ export function AddonListItem({ addon, onPurchase }: AddonListItemProps) {
   const { t } = useTranslation();
   const { currency, symbol } = useCurrency();
   const price = addon.pricing?.[currency];
-  const unitLabel = addon.addon_type === 'message_credits' ? t('addons.messages_unit') : t('addons.agent_slots_unit');
+
+  // Determine translation key based on addon type
+  const titleKey = addon.addon_type === 'message_credits' ? 'addons.quantity_messages' : 'addons.quantity_agents';
 
   // Don't render if no price available for current currency
   if (!price) return null;
@@ -26,27 +28,20 @@ export function AddonListItem({ addon, onPurchase }: AddonListItemProps) {
     <button
       type="button"
       onClick={onPurchase}
-      className="w-full rounded-lg border border-neutral-200 bg-white p-6 text-left hover:border-neutral-300 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+      className="w-full rounded-lg border border-neutral-200 bg-white p-6 text-start hover:border-neutral-300 hover:shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
     >
       <div className="flex items-start justify-between gap-6">
         {/* Left: Content */}
         <div className="flex-1 min-w-0">
-          {/* Title */}
+          {/* Title - Dynamic based on addon type and quantity */}
           <h3 className="text-base font-semibold text-neutral-900 mb-1">
-            {addon.name}
+            {t(titleKey, { quantity: addon.quantity.toLocaleString() })}
           </h3>
 
           {/* Price */}
-          <p className="text-sm font-medium text-neutral-900 mb-2">
-            {symbol} {price.toFixed(2)} {t('addons.per')} {addon.quantity.toLocaleString()} {unitLabel}
+          <p className="text-sm font-medium text-neutral-900">
+            {symbol} {price.toFixed(2)}
           </p>
-
-          {/* Description */}
-          {addon.description && (
-            <p className="text-sm text-neutral-600 leading-relaxed">
-              {addon.description}
-            </p>
-          )}
         </div>
 
         {/* Right: Add Badge */}

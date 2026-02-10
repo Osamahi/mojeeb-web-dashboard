@@ -1034,6 +1034,8 @@
     "yr": "س",
     "messages_unit": "رسائل",
     "agents_unit": "وكلاء",
+    "quantity_messages": "اضافة {{quantity}} رسالة",
+    "quantity_agents": "اضافة {{quantity}} وكيل",
     "no_addons_available": "لا توجد إضافات متاحة للشراء",
     "not_available_currency": "غير متوفر في {{currency}}",
     "pay_with_stripe": "تأكيد",
