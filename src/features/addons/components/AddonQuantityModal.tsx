@@ -63,23 +63,11 @@ export function AddonQuantityModal({
       isOpen={isOpen}
       onClose={onClose}
       title={addon.name}
-      subtitle={addon.description}
       maxWidth="sm"
       isLoading={isLoading}
       closable={!isLoading}
     >
       <div className="space-y-4">
-        {/* Addon details */}
-        <div className="rounded-lg bg-neutral-50 border border-neutral-200 p-3 text-sm space-y-1">
-          <p className="text-neutral-600">
-            {addon.quantity.toLocaleString()} {unitLabel} per unit
-          </p>
-          <p className="text-neutral-600">
-            {symbol}
-            {price.toFixed(2)} per unit
-          </p>
-        </div>
-
         {/* Quantity input */}
         <div>
           <Input
@@ -91,13 +79,10 @@ export function AddonQuantityModal({
             max={100}
             disabled={isLoading}
           />
-          <p className="text-xs text-neutral-500 mt-1">
-            Select quantity (1-100 units)
-          </p>
         </div>
 
         {/* Total calculation */}
-        <div className="rounded-lg border-t border-neutral-200 pt-4 space-y-2">
+        <div className="rounded-lg pt-4 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-neutral-600">Total Units</span>
             <span className="font-semibold text-neutral-900">
