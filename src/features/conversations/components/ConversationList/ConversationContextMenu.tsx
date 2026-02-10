@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ConversationResponse } from '../../services/conversationApi';
+import { useMarkConversationAsRead } from '../../hooks/useMarkConversationAsRead';
 import { useMarkConversationAsUnread } from '../../hooks/useMarkConversationAsUnread';
 
 interface ConversationContextMenuProps {
@@ -27,9 +28,11 @@ export function ConversationContextMenu({
 }: ConversationContextMenuProps) {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
-  const { mutate: markAsUnread, isPending } = useMarkConversationAsUnread();
+  const { mutate: markAsRead, isPending: isPendingRead } = useMarkConversationAsRead();
+  const { mutate: markAsUnread, isPending: isPendingUnread } = useMarkConversationAsUnread();
 
-  const isDisabled = !conversation.is_read;
+  const isPending = isPendingRead || isPendingUnread;
+  const isUnread = !conversation.is_read;
 
   // Handle click outside
   useEffect(() => {
@@ -88,14 +91,18 @@ export function ConversationContextMenu({
     }
   }, [position]);
 
-  const handleMarkAsUnread = () => {
-    if (isDisabled || isPending) return;
+  const handleToggleReadStatus = () => {
+    if (isPending) return;
 
     // Close menu immediately (optimistic UX)
     onClose();
 
-    // Then execute mutation
-    markAsUnread(conversation.id);
+    // Execute the appropriate mutation based on current read status
+    if (isUnread) {
+      markAsRead(conversation.id);
+    } else {
+      markAsUnread(conversation.id);
+    }
   };
 
   return (
@@ -120,21 +127,23 @@ export function ConversationContextMenu({
       >
         <div className="py-1">
           <button
-            onClick={handleMarkAsUnread}
-            disabled={isDisabled || isPending}
+            onClick={handleToggleReadStatus}
+            disabled={isPending}
             className={`w-full px-4 py-2 text-left text-sm transition-colors ${
-              isDisabled || isPending
+              isPending
                 ? 'cursor-not-allowed text-neutral-400'
                 : 'text-neutral-700 hover:bg-neutral-50'
             }`}
             title={
-              isDisabled
-                ? t('conversation_context_menu.already_unread')
+              isUnread
+                ? t('conversation_context_menu.mark_as_read_tooltip')
                 : t('conversation_context_menu.mark_as_unread_tooltip')
             }
             role="menuitem"
           >
-            {t('conversation_context_menu.mark_as_unread')}
+            {isUnread
+              ? t('conversation_context_menu.mark_as_read')
+              : t('conversation_context_menu.mark_as_unread')}
           </button>
         </div>
       </div>

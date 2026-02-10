@@ -76,7 +76,7 @@ const ConversationListItem = memo(function ConversationListItem({
           {/* Name and indicators */}
           <div className="flex items-center gap-2 mb-1">
             <span className={cn(
-              "text-neutral-950 text-sm truncate",
+              "text-neutral-950 text-sm truncate transition-all duration-300 ease-in-out",
               !conversation.is_read ? "font-bold" : "font-normal"
             )}>
               {conversation.customer_name}

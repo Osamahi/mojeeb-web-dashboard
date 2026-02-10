@@ -1623,8 +1623,9 @@
     "needs_attention": "محتاج اهتمام"
   },
   "conversation_context_menu": {
+    "mark_as_read": "علّم كمقروء",
+    "mark_as_read_tooltip": "علّم كمقروء",
     "mark_as_unread": "علّم كغير مقروء",
-    "already_unread": "المحادثة دي مش مقروءة أصلاً",
     "mark_as_unread_tooltip": "علّم كغير مقروء"
   },
   "data_table": {
