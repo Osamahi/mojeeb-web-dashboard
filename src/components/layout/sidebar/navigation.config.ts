@@ -22,6 +22,7 @@ import {
   FileText,
   Puzzle,
   Layers,
+  Workflow,
 } from 'lucide-react';
 import type { NavigationItem } from './types';
 
@@ -129,6 +130,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.team',
     href: '/team-management',
     icon: UserPlus,
+  },
+  {
+    name: 'Actions',
+    translationKey: 'navigation.actions',
+    href: '/actions',
+    icon: Workflow,
+    requireSuperAdmin: true,
   },
   {
     name: 'WhatsApp',
