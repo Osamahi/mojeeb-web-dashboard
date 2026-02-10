@@ -75,7 +75,10 @@ const ConversationListItem = memo(function ConversationListItem({
         <div className="flex-1 min-w-0">
           {/* Name and indicators */}
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-neutral-950 text-sm font-semibold truncate">
+            <span className={cn(
+              "text-neutral-950 text-sm truncate",
+              !conversation.is_read ? "font-bold" : "font-normal"
+            )}>
               {conversation.customer_name}
             </span>
 
@@ -112,15 +115,9 @@ const ConversationListItem = memo(function ConversationListItem({
           )}
         </div>
 
-        {/* Timestamp with unread indicator */}
-        <div className="flex-shrink-0 flex flex-col items-end gap-1">
-          <div className="text-xs text-neutral-500">
-            {formattedTime}
-          </div>
-          {/* Green dot for unread conversations */}
-          {!conversation.is_read && (
-            <div className="w-2 h-2 bg-green-500 rounded-full" />
-          )}
+        {/* Timestamp */}
+        <div className="flex-shrink-0 text-xs text-neutral-500">
+          {formattedTime}
         </div>
       </div>
 
