@@ -93,8 +93,7 @@ export function AddonQuantityModal({
           <div className="flex justify-between text-sm">
             <span className="text-neutral-600">{t('addons.total_price').replace(':', '')}</span>
             <span className="font-semibold text-neutral-900">
-              {symbol}
-              {totalPrice.toFixed(2)}
+              {symbol} {totalPrice.toFixed(2)}
             </span>
           </div>
         </div>

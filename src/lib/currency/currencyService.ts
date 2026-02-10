@@ -87,7 +87,7 @@ export class CurrencyService {
   static getCurrencySymbol(currency: string): string {
     const symbols: Record<SupportedCurrency, string> = {
       USD: '$',
-      EGP: 'E£',
+      EGP: 'EGP',
       SAR: 'SR',
     };
 

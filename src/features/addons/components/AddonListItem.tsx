@@ -38,8 +38,7 @@ export function AddonListItem({ addon, onPurchase }: AddonListItemProps) {
 
           {/* Price */}
           <p className="text-sm font-medium text-neutral-900 mb-2">
-            {symbol}
-            {price.toFixed(2)} {t('addons.per')} {addon.quantity.toLocaleString()} {unitLabel}
+            {symbol} {price.toFixed(2)} {t('addons.per')} {addon.quantity.toLocaleString()} {unitLabel}
           </p>
 
           {/* Description */}
