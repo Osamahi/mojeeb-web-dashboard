@@ -4,6 +4,7 @@
  * Used on My Subscription page to show available add-ons
  */
 
+import { useTranslation } from 'react-i18next';
 import { useCurrency } from '@/lib/currency';
 import type { AddonPlan } from '../types/addon.types';
 
@@ -13,9 +14,10 @@ interface AddonListItemProps {
 }
 
 export function AddonListItem({ addon, onPurchase }: AddonListItemProps) {
+  const { t } = useTranslation();
   const { currency, symbol } = useCurrency();
   const price = addon.pricing?.[currency];
-  const unitLabel = addon.addon_type === 'message_credits' ? 'messages' : 'agent slots';
+  const unitLabel = addon.addon_type === 'message_credits' ? t('addons.messages_unit') : t('addons.agent_slots_unit');
 
   // Don't render if no price available for current currency
   if (!price) return null;
@@ -37,7 +39,7 @@ export function AddonListItem({ addon, onPurchase }: AddonListItemProps) {
           {/* Price */}
           <p className="text-sm font-medium text-neutral-900 mb-2">
             {symbol}
-            {price.toFixed(2)} per {addon.quantity.toLocaleString()} {unitLabel}
+            {price.toFixed(2)} {t('addons.per')} {addon.quantity.toLocaleString()} {unitLabel}
           </p>
 
           {/* Description */}
@@ -48,10 +50,10 @@ export function AddonListItem({ addon, onPurchase }: AddonListItemProps) {
           )}
         </div>
 
-        {/* Right: Purchase Badge */}
+        {/* Right: Add Badge */}
         <div className="flex-shrink-0">
           <span className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700">
-            Purchase
+            {t('addons.add_button')}
           </span>
         </div>
       </div>

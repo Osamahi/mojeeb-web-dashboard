@@ -382,10 +382,7 @@ export default function MySubscriptionPage() {
           {/* Add-ons Section */}
           <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-              <h2 className="text-lg font-medium text-gray-900">Add-ons</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Boost your subscription with additional message credits or agent slots. Add-ons provide extra capacity beyond your plan limits.
-              </p>
+              <h2 className="text-lg font-medium text-gray-900">{t('addons.section_title')}</h2>
             </div>
             <div className="p-6">
               {loading ? (
@@ -416,7 +413,7 @@ export default function MySubscriptionPage() {
                   {/* No addons available message */}
                   {addons && addons.length === 0 && (
                     <div className="text-center py-8 text-gray-600">
-                      <p className="text-sm">No add-ons available at this time.</p>
+                      <p className="text-sm">{t('addons.no_addons_available')}</p>
                     </div>
                   )}
                 </div>

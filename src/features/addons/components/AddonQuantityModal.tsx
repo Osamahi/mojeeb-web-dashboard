@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { CreditCard } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -25,6 +25,7 @@ export function AddonQuantityModal({
   addon,
   onCheckout,
 }: AddonQuantityModalProps) {
+  const { t } = useTranslation();
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const { currency, symbol } = useCurrency();
@@ -42,7 +43,7 @@ export function AddonQuantityModal({
   const price = addon.pricing?.[currency] || 0;
   const totalPrice = price * quantity;
   const totalUnits = addon.quantity * quantity;
-  const unitLabel = addon.addon_type === 'message_credits' ? 'messages' : 'agent slots';
+  const unitLabel = addon.addon_type === 'message_credits' ? t('addons.messages_unit') : t('addons.agent_slots_unit');
 
   const handleConfirm = async () => {
     setIsLoading(true);
@@ -72,7 +73,7 @@ export function AddonQuantityModal({
         <div>
           <Input
             type="number"
-            label="Quantity"
+            label={t('addons.quantity').replace(':', '')}
             value={quantity}
             onChange={handleQuantityChange}
             min={1}
@@ -84,14 +85,14 @@ export function AddonQuantityModal({
         {/* Total calculation */}
         <div className="rounded-lg pt-4 space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-neutral-600">Total Units</span>
+            <span className="text-neutral-600">{t('addons.total_units')}</span>
             <span className="font-semibold text-neutral-900">
               {totalUnits.toLocaleString()} {unitLabel}
             </span>
           </div>
-          <div className="flex justify-between items-baseline">
-            <span className="text-sm text-neutral-600">Total Price</span>
-            <span className="text-2xl font-bold text-neutral-900">
+          <div className="flex justify-between text-sm">
+            <span className="text-neutral-600">{t('addons.total_price').replace(':', '')}</span>
+            <span className="font-semibold text-neutral-900">
               {symbol}
               {totalPrice.toFixed(2)}
             </span>
@@ -101,7 +102,7 @@ export function AddonQuantityModal({
         {/* Actions */}
         <div className="flex gap-3 justify-end pt-4 border-t border-neutral-200">
           <Button variant="secondary" onClick={onClose} disabled={isLoading}>
-            Cancel
+            {t('addons.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -109,8 +110,7 @@ export function AddonQuantityModal({
             isLoading={isLoading}
             disabled={isLoading}
           >
-            <CreditCard className="h-4 w-4 mr-2" />
-            Pay with Stripe
+            {t('addons.pay_with_stripe')}
           </Button>
         </div>
       </div>
