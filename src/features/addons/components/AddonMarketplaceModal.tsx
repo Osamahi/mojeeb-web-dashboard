@@ -119,7 +119,10 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                 {addonPrice ? (
                     <div className="flex items-baseline gap-1">
                         <span className="text-2xl font-bold text-neutral-900">
-                            {currencySymbol} {addonPrice.toFixed(2)}
+                            {Math.round(addonPrice).toLocaleString()}
+                        </span>
+                        <span className="text-base text-neutral-500">
+                            {currencySymbol}{t('addons.per_month')}
                         </span>
                     </div>
                 ) : (
@@ -267,9 +270,14 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                         {/* Total Price */}
                         <div className="mt-4 pt-4 border-t border-primary-200 flex items-center justify-between">
                             <span className="text-sm font-medium text-neutral-700">{t('addons.total_price')}</span>
-                            <span className="text-3xl font-bold text-neutral-900">
-                                {currencySymbol} {totalPrice.toFixed(2)}
-                            </span>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-3xl font-bold text-neutral-900">
+                                    {Math.round(totalPrice).toLocaleString()}
+                                </span>
+                                <span className="text-lg text-neutral-500">
+                                    {currencySymbol}{t('addons.per_month')}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 )}

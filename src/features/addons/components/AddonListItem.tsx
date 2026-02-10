@@ -18,8 +18,11 @@ export function AddonListItem({ addon, onPurchase }: AddonListItemProps) {
   const { currency, symbol } = useCurrency();
   const price = addon.pricing?.[currency];
 
-  // Determine translation key based on addon type
-  const titleKey = addon.addon_type === 'message_credits' ? 'addons.quantity_messages' : 'addons.quantity_agents';
+  // Determine translation key based on addon type and quantity
+  const isPlural = addon.quantity > 1;
+  const titleKey = addon.addon_type === 'message_credits'
+    ? (isPlural ? 'addons.quantity_messages' : 'addons.quantity_messages_singular')
+    : (isPlural ? 'addons.quantity_agents' : 'addons.quantity_agents_singular');
 
   // Don't render if no price available for current currency
   if (!price) return null;
@@ -35,13 +38,18 @@ export function AddonListItem({ addon, onPurchase }: AddonListItemProps) {
         <div className="flex-1 min-w-0">
           {/* Title - Dynamic based on addon type and quantity */}
           <h3 className="text-base font-semibold text-neutral-900 mb-1">
-            {t(titleKey, { quantity: addon.quantity.toLocaleString() })}
+            {isPlural ? t(titleKey, { quantity: addon.quantity.toLocaleString() }) : t(titleKey)}
           </h3>
 
           {/* Price */}
-          <p className="text-sm font-medium text-neutral-900">
-            {symbol} {price.toFixed(2)}
-          </p>
+          <div className="flex items-baseline gap-1">
+            <span className="text-sm font-medium text-neutral-900">
+              {Math.round(price).toLocaleString()}
+            </span>
+            <span className="text-sm text-neutral-500">
+              {symbol}{t('addons.per_month')}
+            </span>
+          </div>
         </div>
 
         {/* Right: Add Badge */}

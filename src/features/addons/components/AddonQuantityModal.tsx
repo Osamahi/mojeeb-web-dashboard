@@ -45,8 +45,11 @@ export function AddonQuantityModal({
   const totalUnits = addon.quantity * quantity;
   const unitLabel = addon.addon_type === 'message_credits' ? t('addons.messages_unit') : t('addons.agent_slots_unit');
 
-  // Determine translation key based on addon type (same as AddonListItem)
-  const titleKey = addon.addon_type === 'message_credits' ? 'addons.quantity_messages' : 'addons.quantity_agents';
+  // Determine translation key based on addon type and quantity (same as AddonListItem)
+  const isPlural = addon.quantity > 1;
+  const titleKey = addon.addon_type === 'message_credits'
+    ? (isPlural ? 'addons.quantity_messages' : 'addons.quantity_messages_singular')
+    : (isPlural ? 'addons.quantity_agents' : 'addons.quantity_agents_singular');
 
   const handleConfirm = async () => {
     setIsLoading(true);
@@ -66,7 +69,7 @@ export function AddonQuantityModal({
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title={t(titleKey, { quantity: addon.quantity.toLocaleString() })}
+      title={isPlural ? t(titleKey, { quantity: addon.quantity.toLocaleString() }) : t(titleKey)}
       maxWidth="sm"
       isLoading={isLoading}
       closable={!isLoading}
@@ -95,14 +98,24 @@ export function AddonQuantityModal({
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-neutral-600">{t('addons.total_price').replace(':', '')}</span>
-            <span className="font-semibold text-neutral-900">
-              {symbol} {totalPrice.toFixed(2)}
-            </span>
+            <div className="flex items-baseline gap-1">
+              <span className="font-semibold text-neutral-900">
+                {Math.round(totalPrice).toLocaleString()}
+              </span>
+              <span className="text-sm text-neutral-500">
+                {symbol}{t('addons.per_month')}
+              </span>
+            </div>
           </div>
         </div>
 
+        {/* Availability Note */}
+        <p className="text-xs text-neutral-500 text-start pt-2 pb-1 border-t border-neutral-200">
+          {t('addons.addon_availability_note')}
+        </p>
+
         {/* Actions */}
-        <div className="flex gap-3 justify-end pt-4 border-t border-neutral-200">
+        <div className="flex gap-3 justify-end pt-2">
           <Button variant="secondary" onClick={onClose} disabled={isLoading}>
             {t('addons.cancel')}
           </Button>
