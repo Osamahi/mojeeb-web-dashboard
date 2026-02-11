@@ -1,15 +1,17 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAgentContext } from '@/hooks/useAgentContext';
 import { markConversationAsUnread } from '../services/conversationApi';
+import { updateConversationReadStateInCache } from '../utils/cacheUpdates';
 
 /**
  * React Query mutation hook for marking a conversation as unread.
  *
- * This hook silently marks a conversation as unread without showing notifications.
- * The realtime subscription (useConversationRealtime) handles UI updates automatically.
+ * This hook silently marks a conversation as unread with optimistic cache updates.
+ * Provides instant UI feedback without waiting for realtime.
  *
  * Features:
- * - Silently marks conversation as unread (API call only)
- * - No cache manipulation (realtime handles UI updates)
+ * - Optimistic cache update (instant UI feedback)
+ * - Works on mobile where realtime subscription unmounts
  * - No toast notifications (user-initiated action, silent per requirements)
  *
  * @returns {UseMutationResult} React Query mutation result object
@@ -32,8 +34,16 @@ import { markConversationAsUnread } from '../services/conversationApi';
  * ```
  */
 export function useMarkConversationAsUnread() {
+  const queryClient = useQueryClient();
+  const { agentId } = useAgentContext();
+
   return useMutation({
     mutationFn: markConversationAsUnread,
+
+    // Optimistically update cache immediately
+    onMutate: async (conversationId) => {
+      updateConversationReadStateInCache(queryClient, agentId, conversationId, false);
+    },
 
     onError: (error) => {
       // Silent failure - log error but don't show toast (user-initiated action)

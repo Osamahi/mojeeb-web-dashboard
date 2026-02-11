@@ -1,15 +1,17 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAgentContext } from '@/hooks/useAgentContext';
 import { markConversationAsRead } from '../services/conversationApi';
+import { updateConversationReadStateInCache } from '../utils/cacheUpdates';
 
 /**
  * React Query mutation hook for marking a conversation as read.
  *
- * This hook silently marks a conversation as read without showing notifications.
- * The realtime subscription (useConversationRealtime) handles UI updates automatically.
+ * This hook silently marks a conversation as read with optimistic cache updates.
+ * On mobile, this ensures the UI updates immediately without waiting for realtime.
  *
  * Features:
- * - Silently marks conversation as read (API call only)
- * - No cache manipulation (realtime handles UI updates)
+ * - Optimistic cache update (instant UI feedback)
+ * - Works on mobile where realtime subscription unmounts
  * - No toast notifications (automatic action, not user-initiated)
  *
  * @returns {UseMutationResult} React Query mutation result object
@@ -32,8 +34,16 @@ import { markConversationAsRead } from '../services/conversationApi';
  * ```
  */
 export function useMarkConversationAsRead() {
+  const queryClient = useQueryClient();
+  const { agentId } = useAgentContext();
+
   return useMutation({
     mutationFn: markConversationAsRead,
+
+    // Optimistically update cache immediately (fixes mobile issue where realtime unsubscribes)
+    onMutate: async (conversationId) => {
+      updateConversationReadStateInCache(queryClient, agentId, conversationId, true);
+    },
 
     onError: (error) => {
       // Silent failure - log error but don't show toast (automatic action)

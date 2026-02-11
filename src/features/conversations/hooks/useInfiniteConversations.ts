@@ -79,7 +79,6 @@ export function useInfiniteConversations() {
     initialPageParam: undefined as string | undefined,
     enabled: !!agentId,
     staleTime: 2 * 60 * 1000, // 2 minutes - more frequent than agents
-    refetchOnWindowFocus: true, // Refetch when window regains focus (fixes mobile read state issue)
     retry: (failureCount, error: AxiosError) => {
       // Don't retry on authentication errors (401, 403)
       if (error?.response?.status === 401 || error?.response?.status === 403) {
