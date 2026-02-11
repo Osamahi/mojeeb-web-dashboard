@@ -4,7 +4,7 @@
  */
 
 // Action types supported by the system
-export type ActionType = 'api_call' | 'webhook' | 'database' | 'email' | 'sms';
+export type ActionType = 'api_call' | 'webhook' | 'database' | 'email' | 'sms' | 'lead_generation';
 
 // Action status
 export type ActionStatus = 'active' | 'inactive';

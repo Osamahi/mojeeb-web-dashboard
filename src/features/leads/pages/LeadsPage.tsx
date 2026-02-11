@@ -13,7 +13,7 @@ import { useInfiniteLeads } from '../hooks/useLeads';
 import { useLeadsSubscription } from '../hooks/useLeadsSubscription';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { UserPlus, Download, MoreVertical, FileText, BookOpen } from 'lucide-react';
+import { UserPlus, Download, MoreVertical, FileText, Settings } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { LeadsFilterDrawer } from '../components/LeadsFilterDrawer';
@@ -22,6 +22,7 @@ import AddLeadModal from '../components/AddLeadModal';
 import LeadDetailsDrawer from '../components/LeadDetailsDrawer';
 import { LeadNotesModal } from '../components/LeadNotesModal';
 import { AddSummaryModal } from '../components/AddSummaryModal';
+import { LeadSettingsModal } from '../components/LeadSettingsModal';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import { ExportLeadsModal, ExportProgressModal } from '@/features/exports/components';
 import { useDeleteLead } from '../hooks/useLeads';
@@ -44,6 +45,7 @@ export default function LeadsPage() {
   const [summaryLead, setSummaryLead] = useState<{ id: string; name: string; summary: string } | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportJobId, setExportJobId] = useState<string | null>(null);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState<LeadFilters>({
@@ -159,16 +161,16 @@ export default function LeadsPage() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem onClick={handleExportClick}>
-          <Download className="w-4 h-4 mr-2 text-neutral-700" />
+          <Download className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
           <span>{t('leads.extract')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleAddLeadClick}>
-          <UserPlus className="w-4 h-4 mr-2 text-neutral-700" />
+          <UserPlus className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
           <span>{t('leads.add_lead')}</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => console.log('Lead Instructions clicked')}>
-          <BookOpen className="w-4 h-4 mr-2 text-neutral-700" />
-          <span>{t('leads.lead_instructions')}</span>
+        <DropdownMenuItem onClick={() => setIsSettingsModalOpen(true)}>
+          <Settings className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+          <span>{t('leads.settings')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -297,6 +299,12 @@ export default function LeadsPage() {
         isOpen={!!exportJobId}
         onClose={handleCloseExportProgress}
         jobId={exportJobId}
+      />
+
+      {/* Lead Settings Modal */}
+      <LeadSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
       />
     </div>
   );
