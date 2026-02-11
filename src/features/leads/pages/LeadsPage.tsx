@@ -13,7 +13,7 @@ import { useInfiniteLeads } from '../hooks/useLeads';
 import { useLeadsSubscription } from '../hooks/useLeadsSubscription';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { UserPlus, Download, MoreVertical, FileText, Settings } from 'lucide-react';
+import { UserPlus, Download, MoreVertical, FileText, Settings, TableProperties } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { LeadsFilterDrawer } from '../components/LeadsFilterDrawer';
@@ -23,6 +23,7 @@ import LeadDetailsDrawer from '../components/LeadDetailsDrawer';
 import { LeadNotesModal } from '../components/LeadNotesModal';
 import { AddSummaryModal } from '../components/AddSummaryModal';
 import { LeadSettingsModal } from '../components/LeadSettingsModal';
+import { CustomFieldSchemaModal } from '../components/CustomFieldSchemaModal';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import { ExportLeadsModal, ExportProgressModal } from '@/features/exports/components';
 import { useDeleteLead } from '../hooks/useLeads';
@@ -46,6 +47,7 @@ export default function LeadsPage() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportJobId, setExportJobId] = useState<string | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isCustomFieldSchemaModalOpen, setIsCustomFieldSchemaModalOpen] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState<LeadFilters>({
@@ -167,6 +169,10 @@ export default function LeadsPage() {
         <DropdownMenuItem onClick={handleAddLeadClick}>
           <UserPlus className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
           <span>{t('leads.add_lead')}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setIsCustomFieldSchemaModalOpen(true)}>
+          <TableProperties className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+          <span>Edit Schema</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setIsSettingsModalOpen(true)}>
           <Settings className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
@@ -305,6 +311,12 @@ export default function LeadsPage() {
       <LeadSettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+      />
+
+      {/* Custom Field Schema Modal */}
+      <CustomFieldSchemaModal
+        isOpen={isCustomFieldSchemaModalOpen}
+        onClose={() => setIsCustomFieldSchemaModalOpen(false)}
       />
     </div>
   );

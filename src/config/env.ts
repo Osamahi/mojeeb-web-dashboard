@@ -8,7 +8,12 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   // API Configuration
-  VITE_API_URL: z.string().url('VITE_API_URL must be a valid URL'),
+  // Allow empty string for local dev (uses Vite proxy), or full URL for production
+  VITE_API_URL: z
+    .string()
+    .refine((val) => val === '' || z.string().url().safeParse(val).success, {
+      message: 'VITE_API_URL must be empty (for Vite proxy) or a valid URL',
+    }),
   VITE_API_TIMEOUT: z
     .string()
     .optional()
