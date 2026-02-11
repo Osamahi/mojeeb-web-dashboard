@@ -13,8 +13,9 @@ import { useInfiniteLeads } from '../hooks/useLeads';
 import { useLeadsSubscription } from '../hooks/useLeadsSubscription';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { UserPlus, Download } from 'lucide-react';
+import { UserPlus, Download, MoreVertical, FileText, BookOpen } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { LeadsFilterDrawer } from '../components/LeadsFilterDrawer';
 import { LeadsTableView } from '../components/LeadsTableView';
 import AddLeadModal from '../components/AddLeadModal';
@@ -145,19 +146,33 @@ export default function LeadsPage() {
     setExportJobId(null);
   }, []);
 
-  // Memoize export button to prevent BaseHeader re-renders
-  const exportButton = useMemo(() => (
-    <button
-      onClick={handleExportClick}
-      className="px-4 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
-      title={t('leads.export')}
-    >
-      <Download className="w-4 h-4 text-neutral-700" />
-      <span className="text-sm font-medium text-neutral-900">
-        {t('leads.export')}
-      </span>
-    </button>
-  ), [handleExportClick, t]);
+  // Memoize more menu button to prevent BaseHeader re-renders
+  const moreMenuButton = useMemo(() => (
+    <DropdownMenu>
+      <DropdownMenuTrigger>
+        <button
+          className="w-10 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center justify-center"
+          title={t('leads.more')}
+        >
+          <MoreVertical className="w-5 h-5 text-neutral-700" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={handleExportClick}>
+          <Download className="w-4 h-4 mr-2 text-neutral-700" />
+          <span>{t('leads.extract')}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleAddLeadClick}>
+          <UserPlus className="w-4 h-4 mr-2 text-neutral-700" />
+          <span>{t('leads.add_lead')}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => console.log('Lead Instructions clicked')}>
+          <BookOpen className="w-4 h-4 mr-2 text-neutral-700" />
+          <span>{t('leads.lead_instructions')}</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ), [handleExportClick, handleAddLeadClick, t]);
 
   // ========================================
   // Render Logic
@@ -185,12 +200,7 @@ export default function LeadsPage() {
         showFilterButton
         activeFilterCount={activeFilterCount}
         onFilterClick={handleFilterDrawerToggle}
-        primaryAction={{
-          label: t('leads.add_client'),
-          icon: UserPlus,
-          onClick: handleAddLeadClick
-        }}
-        additionalActions={exportButton}
+        additionalActions={moreMenuButton}
       />
 
       {/* Filter Drawer - slides in from right */}
