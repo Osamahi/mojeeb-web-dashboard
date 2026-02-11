@@ -116,8 +116,13 @@ const ConversationListItem = memo(function ConversationListItem({
         </div>
 
         {/* Timestamp */}
-        <div className="flex-shrink-0 text-xs text-neutral-500">
-          {formattedTime}
+        <div className="flex-shrink-0 flex flex-col items-end gap-1">
+          <div className="text-xs text-neutral-500">
+            {formattedTime}
+          </div>
+          {!conversation.is_read && (
+            <div className="w-2 h-2 rounded-full bg-[#00D084]" />
+          )}
         </div>
       </div>
 
