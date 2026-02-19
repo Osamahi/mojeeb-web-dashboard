@@ -37,11 +37,15 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
   const createMutation = useCreateLead();
   const { data: formSchemas = [] } = useFormCustomFieldSchemas();
 
-  // Split schemas into system and custom
-  const { systemSchemas, customSchemas } = useMemo(() => ({
-    systemSchemas: formSchemas.filter(s => s.is_system).sort((a, b) => a.display_order - b.display_order),
-    customSchemas: formSchemas.filter(s => !s.is_system).sort((a, b) => a.display_order - b.display_order),
-  }), [formSchemas]);
+  // All schemas sorted by display_order (system + custom interleaved)
+  const sortedSchemas = useMemo(() =>
+    [...formSchemas].sort((a, b) => a.display_order - b.display_order),
+  [formSchemas]);
+
+  // Custom-only schemas (for validation)
+  const customSchemas = useMemo(() =>
+    formSchemas.filter(s => !s.is_system),
+  [formSchemas]);
 
   /**
    * Handle system field change — routes to the correct state setter
@@ -157,41 +161,37 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
       maxWidth="md"
       isLoading={createMutation.isPending}
       closable={!createMutation.isPending}
+      contentClassName="!p-0 flex flex-col"
     >
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-4">
-          {/* System fields in display_order */}
-          {systemSchemas.map((schema) => (
+      <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1">
+        {/* Scrollable form body */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {sortedSchemas.map((schema) => (
             <div key={schema.id}>
               <SchemaFormField
                 schema={schema}
-                value={getSystemFormFieldValue(schema.field_key, { name, phone, status, notes })}
-                onChange={(value) => handleSystemFieldChange(schema.field_key, value)}
-                error={schema.field_key === 'name' ? errors.name : undefined}
+                value={
+                  schema.is_system
+                    ? getSystemFormFieldValue(schema.field_key, { name, phone, status, notes })
+                    : (customFields[schema.field_key] || '')
+                }
+                onChange={(value) =>
+                  schema.is_system
+                    ? handleSystemFieldChange(schema.field_key, value)
+                    : handleCustomFieldChange(schema.field_key, value)
+                }
+                error={
+                  schema.is_system
+                    ? (schema.field_key === 'name' ? errors.name : undefined)
+                    : errors.customFields?.[schema.field_key]
+                }
               />
             </div>
           ))}
-
-          {/* Custom fields */}
-          {customSchemas.length > 0 && (
-            <div className="border-t border-neutral-200 pt-4">
-              <h3 className="text-sm font-medium text-neutral-900 mb-3">{t('leads.custom_fields_title')}</h3>
-              {customSchemas.map((schema) => (
-                <div key={schema.id} className="mb-3">
-                  <SchemaFormField
-                    schema={schema}
-                    value={customFields[schema.field_key] || ''}
-                    onChange={(value) => handleCustomFieldChange(schema.field_key, value)}
-                    error={errors.customFields?.[schema.field_key]}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Actions Footer */}
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-neutral-200 bg-white rounded-b-2xl">
+        {/* Fixed footer */}
+        <div className="flex justify-end gap-3 px-4 py-3 border-t border-neutral-200 bg-white flex-shrink-0 rounded-b-lg">
           <Button
             type="button"
             variant="secondary"
