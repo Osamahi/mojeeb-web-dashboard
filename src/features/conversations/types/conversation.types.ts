@@ -59,6 +59,10 @@ export interface Conversation {
   // Read/Unread tracking (conversation-level)
   is_read: boolean;
   read_at: string | null;
+
+  // Pinning (conversation-level)
+  is_pinned: boolean;
+  pinned_at: string | null;
 }
 
 // === Message Types ===

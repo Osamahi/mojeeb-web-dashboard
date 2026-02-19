@@ -155,10 +155,11 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
                 const oldTimestamp = oldConversation?.last_message_at ? new Date(oldConversation.last_message_at).getTime() : null;
                 const newTimestamp = updatedConversation.last_message_at ? new Date(updatedConversation.last_message_at).getTime() : null;
 
-                const isOnlyReadStatusChange =
+                const isOnlyMetadataChange =
                   oldConversation &&
                   oldTimestamp === newTimestamp &&
                   oldConversation.last_message === updatedConversation.last_message;
+                const isOnlyReadStatusChange = isOnlyMetadataChange;
 
                 // DEBUG: Log comparison details
                 if (import.meta.env.DEV) {
@@ -178,9 +179,9 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
                 }
 
                 if (isOnlyReadStatusChange) {
-                  // Just update is_read in place, don't move conversation
+                  // Just update read/pin status in place, don't move conversation
                   if (import.meta.env.DEV) {
-                    console.log('[Realtime] UPDATE: Read status only, updating in place:', updatedConversation.id);
+                    console.log('[Realtime] UPDATE: Metadata only (read/pin), updating in place:', updatedConversation.id);
                   }
 
                   return {
@@ -189,7 +190,13 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
                       ...page,
                       items: page.items.map((conv: ConversationResponse) =>
                         conv.id === updatedConversation.id
-                          ? { ...conv, is_read: updatedConversation.is_read, read_at: updatedConversation.read_at }
+                          ? {
+                              ...conv,
+                              is_read: updatedConversation.is_read,
+                              read_at: updatedConversation.read_at,
+                              is_pinned: updatedConversation.is_pinned,
+                              pinned_at: updatedConversation.pinned_at,
+                            }
                           : conv
                       ),
                     })),
@@ -317,5 +324,7 @@ function transformToConversationResponse(data: Record<string, any>): Conversatio
     updated_at: data.updated_at,
     is_read: data.is_read ?? false,
     read_at: data.read_at ?? null,
+    is_pinned: data.is_pinned ?? false,
+    pinned_at: data.pinned_at ?? null,
   };
 }

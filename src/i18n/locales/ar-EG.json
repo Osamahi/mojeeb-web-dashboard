@@ -1671,7 +1671,11 @@
     "mark_as_read": "علّم كمقروء",
     "mark_as_read_tooltip": "علّم كمقروء",
     "mark_as_unread": "علّم كغير مقروء",
-    "mark_as_unread_tooltip": "علّم كغير مقروء"
+    "mark_as_unread_tooltip": "علّم كغير مقروء",
+    "pin": "تثبيت",
+    "pin_tooltip": "تثبيت المحادثة في الأعلى",
+    "unpin": "إلغاء التثبيت",
+    "unpin_tooltip": "إلغاء تثبيت المحادثة"
   },
   "data_table": {
     "no_items_found": "مفيش {{itemName}} اتلقت",

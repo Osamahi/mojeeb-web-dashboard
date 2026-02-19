@@ -1668,7 +1668,11 @@
     "mark_as_read": "وضع علامة كمقروء",
     "mark_as_read_tooltip": "وضع علامة كمقروء",
     "mark_as_unread": "وضع علامة كغير مقروء",
-    "mark_as_unread_tooltip": "وضع علامة كغير مقروء"
+    "mark_as_unread_tooltip": "وضع علامة كغير مقروء",
+    "pin": "تثبيت",
+    "pin_tooltip": "تثبيت المحادثة في الأعلى",
+    "unpin": "إلغاء التثبيت",
+    "unpin_tooltip": "إلغاء تثبيت المحادثة"
   },
   "data_table": {
     "no_items_found": "لم يتم العثور على {{itemName}}",

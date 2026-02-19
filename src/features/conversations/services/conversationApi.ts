@@ -31,6 +31,8 @@ export interface ConversationResponse {
   updated_at: string;
   is_read: boolean;
   read_at?: string;
+  is_pinned: boolean;
+  pinned_at?: string;
 }
 
 export interface CursorPaginatedConversationsResponse {
@@ -183,4 +185,26 @@ export async function markConversationAsUnread(
   conversationId: string
 ): Promise<void> {
   await api.post(`/api/v2/conversations/${conversationId}/mark-unread`);
+}
+
+/**
+ * Pin a conversation to the top of the list
+ *
+ * @param conversationId - The conversation ID to pin
+ */
+export async function pinConversation(
+  conversationId: string
+): Promise<void> {
+  await api.post(`/api/v2/conversations/${conversationId}/pin`);
+}
+
+/**
+ * Unpin a conversation from the top of the list
+ *
+ * @param conversationId - The conversation ID to unpin
+ */
+export async function unpinConversation(
+  conversationId: string
+): Promise<void> {
+  await api.post(`/api/v2/conversations/${conversationId}/unpin`);
 }

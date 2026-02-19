@@ -4,7 +4,7 @@
  */
 
 import { memo, useState } from 'react';
-import { User, Bot } from 'lucide-react';
+import { User, Bot, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Conversation } from '../../types';
 import { formatConversationTime } from '../../utils/timeFormatters';
@@ -115,10 +115,15 @@ const ConversationListItem = memo(function ConversationListItem({
           )}
         </div>
 
-        {/* Timestamp */}
+        {/* Timestamp and indicators */}
         <div className="flex-shrink-0 flex flex-col items-end gap-1">
-          <div className="text-xs text-neutral-500">
-            {formattedTime}
+          <div className="flex items-center gap-1">
+            {conversation.is_pinned && (
+              <Pin className="w-3 h-3 text-neutral-400 flex-shrink-0" />
+            )}
+            <span className="text-xs text-neutral-500">
+              {formattedTime}
+            </span>
           </div>
           {!conversation.is_read && (
             <div className="w-2 h-2 rounded-full bg-[#00D084]" />

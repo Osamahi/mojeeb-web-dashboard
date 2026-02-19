@@ -1,8 +1,11 @@
 import { useEffect, useRef } from 'react';
+import { Pin, PinOff, Mail, MailOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ConversationResponse } from '../../services/conversationApi';
 import { useMarkConversationAsRead } from '../../hooks/useMarkConversationAsRead';
 import { useMarkConversationAsUnread } from '../../hooks/useMarkConversationAsUnread';
+import { usePinConversation } from '../../hooks/usePinConversation';
+import { useUnpinConversation } from '../../hooks/useUnpinConversation';
 
 interface ConversationContextMenuProps {
   conversation: ConversationResponse;
@@ -30,9 +33,12 @@ export function ConversationContextMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const { mutate: markAsRead, isPending: isPendingRead } = useMarkConversationAsRead();
   const { mutate: markAsUnread, isPending: isPendingUnread } = useMarkConversationAsUnread();
+  const { mutate: pin, isPending: isPendingPin } = usePinConversation();
+  const { mutate: unpin, isPending: isPendingUnpin } = useUnpinConversation();
 
-  const isPending = isPendingRead || isPendingUnread;
+  const isPending = isPendingRead || isPendingUnread || isPendingPin || isPendingUnpin;
   const isUnread = !conversation.is_read;
+  const isPinned = conversation.is_pinned;
 
   // Handle click outside
   useEffect(() => {
@@ -93,15 +99,21 @@ export function ConversationContextMenu({
 
   const handleToggleReadStatus = () => {
     if (isPending) return;
-
-    // Close menu immediately (optimistic UX)
     onClose();
-
-    // Execute the appropriate mutation based on current read status
     if (isUnread) {
       markAsRead(conversation.id);
     } else {
       markAsUnread(conversation.id);
+    }
+  };
+
+  const handleTogglePinStatus = () => {
+    if (isPending) return;
+    onClose();
+    if (isPinned) {
+      unpin(conversation.id);
+    } else {
+      pin(conversation.id);
     }
   };
 
@@ -127,9 +139,28 @@ export function ConversationContextMenu({
       >
         <div className="py-1">
           <button
+            onClick={handleTogglePinStatus}
+            disabled={isPending}
+            className={`w-full px-4 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
+              isPending
+                ? 'cursor-not-allowed text-neutral-400'
+                : 'text-neutral-700 hover:bg-neutral-50'
+            }`}
+            title={
+              isPinned
+                ? t('conversation_context_menu.unpin_tooltip')
+                : t('conversation_context_menu.pin_tooltip')
+            }
+            role="menuitem"
+          >
+            {isPinned
+              ? <><PinOff className="w-4 h-4" />{t('conversation_context_menu.unpin')}</>
+              : <><Pin className="w-4 h-4" />{t('conversation_context_menu.pin')}</>}
+          </button>
+          <button
             onClick={handleToggleReadStatus}
             disabled={isPending}
-            className={`w-full px-4 py-2 text-left text-sm transition-colors ${
+            className={`w-full px-4 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
               isPending
                 ? 'cursor-not-allowed text-neutral-400'
                 : 'text-neutral-700 hover:bg-neutral-50'
@@ -142,8 +173,8 @@ export function ConversationContextMenu({
             role="menuitem"
           >
             {isUnread
-              ? t('conversation_context_menu.mark_as_read')
-              : t('conversation_context_menu.mark_as_unread')}
+              ? <><MailOpen className="w-4 h-4" />{t('conversation_context_menu.mark_as_read')}</>
+              : <><Mail className="w-4 h-4" />{t('conversation_context_menu.mark_as_unread')}</>}
           </button>
         </div>
       </div>

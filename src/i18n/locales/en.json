@@ -1673,7 +1673,11 @@
     "mark_as_read": "Mark as Read",
     "mark_as_read_tooltip": "Mark as read",
     "mark_as_unread": "Mark as Unread",
-    "mark_as_unread_tooltip": "Mark as unread"
+    "mark_as_unread_tooltip": "Mark as unread",
+    "pin": "Pin",
+    "pin_tooltip": "Pin conversation to top",
+    "unpin": "Unpin",
+    "unpin_tooltip": "Unpin conversation"
   },
   "data_table": {
     "no_items_found": "No {{itemName}} found",
