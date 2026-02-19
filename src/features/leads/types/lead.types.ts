@@ -8,7 +8,6 @@
 // ========================================
 
 export type LeadStatus = 'new' | 'processing' | 'completed';
-export type LeadSource = 'web_form' | 'chat_widget' | 'manual' | 'api' | 'whatsapp' | 'instagram';
 export type FieldType = 'text' | 'email' | 'phone' | 'select' | 'textarea' | 'date';
 export type NoteType = 'user_note' | 'status_change';
 
@@ -165,32 +164,6 @@ export interface CreateFieldDefinitionRequest {
 }
 
 // ========================================
-// Statistics & Analytics
-// ========================================
-
-/**
- * Dynamic Lead Statistics
- *
- * Structure:
- * - total: Total count of all leads
- * - [status]: Dynamic key-value pairs for each status (e.g., new, processing, completed, cancelled, etc.)
- *
- * Example response:
- * {
- *   total: 150,
- *   new: 45,
- *   processing: 80,
- *   completed: 25
- * }
- *
- * Future-proof: Automatically supports new status values without code changes
- */
-export interface LeadStatistics {
-  total: number;
-  [status: string]: number; // Dynamic status counts (new, processing, completed, cancelled, etc.)
-}
-
-// ========================================
 // UI Helper Types
 // ========================================
 
@@ -211,14 +184,6 @@ export interface CursorPaginatedLeadsResponse {
   items: ApiLeadResponse[];
   next_cursor: string | null;  // Base64-encoded cursor for next page (null on last page)
   has_more: boolean;  // True if there are more pages available
-}
-
-export interface LeadFormData {
-  name: string;
-  phone: string;
-  status: LeadStatus;
-  summary: string;
-  customFields: Record<string, any>;
 }
 
 export interface LeadFormErrors {

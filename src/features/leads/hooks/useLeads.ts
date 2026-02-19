@@ -80,20 +80,6 @@ export function useLead(leadId: string | undefined, agentId?: string) {
 }
 
 /**
- * Fetch lead statistics for the current agent
- * Returns counts by status (new, processing, completed)
- */
-export function useLeadStatistics() {
-  const { agentId } = useAgentContext();
-
-  return useQuery({
-    queryKey: queryKeys.leadStats(agentId),
-    queryFn: () => leadService.getLeadStatistics(agentId!),
-    enabled: !!agentId,
-  });
-}
-
-/**
  * Fetch custom field definitions for the current agent
  */
 export function useLeadFieldDefinitions() {

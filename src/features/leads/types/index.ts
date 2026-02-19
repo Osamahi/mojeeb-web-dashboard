@@ -8,7 +8,6 @@ export type {
   Lead,
   LeadNote,
   LeadStatus,
-  LeadSource,
   FieldType,
   NoteType,
 
@@ -27,11 +26,7 @@ export type {
   // Custom Fields
   LeadFieldDefinition,
 
-  // Statistics
-  LeadStatistics,
-
   // UI Helpers
   LeadFilters,
-  LeadFormData,
   LeadFormErrors,
 } from './lead.types';

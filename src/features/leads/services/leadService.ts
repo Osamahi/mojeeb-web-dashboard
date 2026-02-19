@@ -12,7 +12,6 @@ import type {
   LeadFilters,
   CreateLeadRequest,
   UpdateLeadRequest,
-  LeadStatistics,
   LeadFieldDefinition,
   ApiLeadResponse,
   ApiLeadNoteResponse,
@@ -202,25 +201,6 @@ class LeadService {
   }
 
   // ========================================
-  // Statistics & Analytics
-  // ========================================
-
-  /**
-   * Get lead statistics for an agent
-   */
-  async getLeadStatistics(agentId: string): Promise<LeadStatistics> {
-    const { data } = await api.get<ApiResponse<Record<string, number>>>(`/api/lead/statistics/${agentId}`);
-
-    // Backend returns wrapped: { success: true, data: { "new": 5, "processing": 3, ... } }
-    const stats = data.data;
-    return {
-      new: stats.new || 0,
-      processing: stats.processing || 0,
-      completed: stats.completed || 0,
-      total: Object.values(stats).reduce((sum, val) => sum + val, 0),
-    };
-  }
-
   // ========================================
   // Custom Field Definitions
   // ========================================

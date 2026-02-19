@@ -8,7 +8,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Copy, MessageSquare, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
-import { useUpdateLead, useDeleteLead } from '../hooks/useLeads';
+import { useUpdateLead } from '../hooks/useLeads';
 import { DataTable } from '@/components/ui/DataTable/DataTable';
 import { InlineEditField } from '@/components/ui/InlineEditField';
 import { EmptyState } from '@/components/ui/EmptyState';
