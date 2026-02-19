@@ -182,13 +182,6 @@ export const queryKeys = {
    */
   leadStats: (agentId: string | undefined) => ['lead-stats', agentId] as const,
 
-  /**
-   * Query key for fetching lead custom field definitions by agent
-   * @param {string | undefined} agentId - The agent ID
-   * @returns {readonly ['lead-field-defs', string | undefined]} Query key tuple
-   */
-  leadFieldDefs: (agentId: string | undefined) => ['lead-field-defs', agentId] as const,
-
   // ==================== User Queries ====================
 
   /**

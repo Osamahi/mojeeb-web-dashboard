@@ -247,6 +247,29 @@ export const getCustomFieldValue = (lead: Lead, fieldKey: string): unknown => {
 };
 
 /**
+ * Extract system field value from lead entity properties
+ * Maps system field_key → lead.property (camelCase)
+ */
+export const getSystemFieldValue = (lead: Lead, fieldKey: string): unknown => {
+  switch (fieldKey) {
+    case 'name':
+      return lead.name;
+    case 'phone':
+      return lead.phone;
+    case 'summary':
+      return lead.summary;
+    case 'status':
+      return lead.status;
+    case 'notes':
+      return lead.notes;
+    case 'created_at':
+      return lead.createdAt;
+    default:
+      return undefined;
+  }
+};
+
+/**
  * Get optimal column width based on field type
  */
 export const getColumnWidth = (fieldType: FieldType): string => {

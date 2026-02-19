@@ -1,29 +1,45 @@
 /**
  * LeadViewMode Component
- * Displays lead information in read-only mode
- * Part of the LeadDetailsDrawer refactoring
+ * Schema-driven read-only display of lead information
+ * Renders system fields + custom fields from custom_field_schemas
  */
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Edit2, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { PhoneNumber } from '@/components/ui/PhoneNumber';
-import { CustomFieldsSection } from './CustomFieldsSection';
+import { SchemaFormField } from './SchemaFormField';
 import { LeadNotesSection } from './LeadNotesSection';
 import { useDateLocale } from '@/lib/dateConfig';
-import type { Lead, LeadFieldDefinition } from '../types';
+import type { Lead } from '../types';
+import type { CustomFieldSchema } from '../types/customFieldSchema.types';
 
 interface LeadViewModeProps {
   lead: Lead;
-  fieldDefinitions?: LeadFieldDefinition[];
+  systemSchemas: CustomFieldSchema[];
+  customSchemas: CustomFieldSchema[];
   onEdit: () => void;
   onViewConversation: () => void;
 }
 
+/**
+ * Maps system field_key → lead entity property value
+ */
+function getSystemFieldValue(lead: Lead, fieldKey: string): any {
+  switch (fieldKey) {
+    case 'name': return lead.name;
+    case 'phone': return lead.phone;
+    case 'status': return lead.status;
+    case 'summary': return lead.summary;
+    case 'created_at': return lead.createdAt;
+    default: return '';
+  }
+}
+
 export function LeadViewMode({
   lead,
-  fieldDefinitions,
+  systemSchemas,
+  customSchemas,
   onEdit,
   onViewConversation,
 }: LeadViewModeProps) {
@@ -34,65 +50,24 @@ export function LeadViewMode({
   return (
     <>
       <div className="space-y-4">
-        {/* Name */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-500 mb-1">
-            {t('lead_details.name_label')}
-          </label>
-          {lead.name ? (
-            <p className="text-base text-neutral-900">{lead.name}</p>
-          ) : (
-            <button
-              onClick={onEdit}
-              className="text-base text-neutral-400 hover:text-neutral-600 transition-colors"
-            >
-              {t('lead_details.add_name')}
-            </button>
-          )}
-        </div>
+        {/* System fields in display_order (read-only via SchemaFormField) */}
+        {systemSchemas.map((schema) => {
+          // Skip notes in the system fields — notes have their own section below
+          if (schema.field_key === 'notes') return null;
 
-        {/* Phone */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-500 mb-1">
-            {t('lead_details.phone_label')}
-          </label>
-          {lead.phone ? (
-            <PhoneNumber value={lead.phone} className="text-base text-neutral-900" />
-          ) : (
-            <button
-              onClick={onEdit}
-              className="text-base text-neutral-400 hover:text-neutral-600 transition-colors"
-            >
-              {t('lead_details.add_phone')}
-            </button>
-          )}
-        </div>
+          return (
+            <div key={schema.id}>
+              <SchemaFormField
+                schema={schema}
+                value={getSystemFieldValue(lead, schema.field_key)}
+                onChange={() => {}}
+                readOnly
+              />
+            </div>
+          );
+        })}
 
-        {/* Status */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-500 mb-1">
-            {t('lead_details.status_label')}
-          </label>
-          <p className="text-base text-neutral-900 capitalize">{lead.status}</p>
-        </div>
-
-        {/* Created */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-500 mb-1">
-            {t('lead_details.created_label')}
-          </label>
-          <p className="text-xs text-neutral-400">
-            {(() => {
-              try {
-                return formatSmartTimestamp(lead.createdAt);
-              } catch {
-                return t('lead_details.invalid_date');
-              }
-            })()}
-          </p>
-        </div>
-
-        {/* Updated */}
+        {/* Updated At (show if different from created) */}
         {(() => {
           try {
             const created = new Date(lead.createdAt).getTime();
@@ -113,21 +88,25 @@ export function LeadViewMode({
           }
         })()}
 
-        {/* Custom Fields */}
-        <CustomFieldsSection
-          customFields={lead.customFields || {}}
-          fieldDefinitions={fieldDefinitions}
-          readOnly={true}
-          initiallyExpanded={false}
-        />
-
-        {/* Summary */}
-        {lead.summary && (
-          <div>
-            <label className="block text-sm font-medium text-neutral-500 mb-1">
-              {t('lead_details.summary_label')}
-            </label>
-            <p className="text-base text-neutral-900 whitespace-pre-wrap">{lead.summary}</p>
+        {/* Custom fields (read-only) */}
+        {customSchemas.length > 0 && (
+          <div className="border-t border-neutral-200 pt-4">
+            <h3 className="text-sm font-medium text-neutral-900 mb-3">{t('lead_details.custom_fields')}</h3>
+            {customSchemas.map((schema) => {
+              const value = lead.customFields?.[schema.field_key];
+              // Skip empty custom fields in view mode
+              if (value === null || value === undefined || value === '') return null;
+              return (
+                <div key={schema.id} className="mb-3">
+                  <SchemaFormField
+                    schema={schema}
+                    value={value}
+                    onChange={() => {}}
+                    readOnly
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
 

@@ -1,94 +1,83 @@
 /**
  * useCustomFieldColumns Hook
- * Isolated layer for generating custom field table columns
+ * Generates DataTable column definitions from custom field schemas
  *
  * Architecture: Clean separation of concerns
- * - Fetches custom field schemas
- * - Generates DataTable column definitions
- * - Handles i18n, loading states, errors
+ * - useCustomFieldColumns: non-system custom field columns (generic renderers)
+ * - useSystemFieldColumns: system field columns (specialized renderers)
+ * - Both driven by custom_field_schemas table (unified source of truth)
  *
  * Usage:
- * const { columns, isLoading } = useCustomFieldColumns();
+ * const { columns: customCols } = useCustomFieldColumns();
+ * const { systemColumns } = useSystemFieldColumns(ctx);
+ * allColumns = [...systemColumns, ...customCols, actionsColumn];
  */
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTableCustomFieldSchemas } from './useCustomFieldSchemas';
 import { renderCustomFieldValue, getCustomFieldValue, getColumnWidth } from '../utils/customFieldTableRenderer';
+import {
+  getSystemFieldRenderer,
+  getSystemFieldColumnWidth,
+  isSystemFieldSortable,
+  type SystemFieldRenderContext,
+} from '../utils/systemFieldRenderers';
 import { useDateLocale } from '@/lib/dateConfig';
 import type { Lead } from '../types/lead.types';
 import type { ColumnDef } from '@/components/ui/DataTable/DataTable';
 
-/**
- * Hook return type
- */
+// ============================================================
+// Non-system custom field columns (generic renderers)
+// ============================================================
+
 interface UseCustomFieldColumnsReturn {
-  /** Generated column definitions for DataTable */
+  /** Generated column definitions for non-system custom fields */
   columns: ColumnDef<Lead>[];
-
-  /** Loading state for schema fetching */
+  /** Loading state */
   isLoading: boolean;
-
-  /** Error state for schema fetching */
+  /** Error state */
   error: Error | null;
-
-  /** Number of custom field columns generated */
+  /** Number of custom field columns */
   count: number;
 }
 
 /**
- * Generate custom field table columns from schemas
- *
- * @returns Column definitions, loading state, and metadata
- *
- * @example
- * const { columns, isLoading } = useCustomFieldColumns();
- *
- * // Merge with static columns
- * const allColumns = [...baseColumns, ...columns, ...fixedColumns];
+ * Generate non-system custom field table columns from schemas
  */
 export const useCustomFieldColumns = (): UseCustomFieldColumnsReturn => {
   const { i18n } = useTranslation();
   const { formatSmartTimestamp } = useDateLocale();
 
-  // Fetch table-visible custom field schemas
   const {
-    data: schemas = [],
+    data: allSchemas = [],
     isLoading,
     error,
   } = useTableCustomFieldSchemas();
 
-  // Generate column definitions
+  // Filter out system fields — only custom fields here
+  const customSchemas = useMemo(
+    () => allSchemas.filter((s) => !s.is_system),
+    [allSchemas],
+  );
+
   const columns = useMemo<ColumnDef<Lead>[]>(() => {
-    if (!schemas || schemas.length === 0) {
+    if (!customSchemas || customSchemas.length === 0) {
       return [];
     }
 
-    return schemas.map((schema) => {
-      // Select label based on current locale
+    return customSchemas.map((schema) => {
       const label = i18n.language === 'ar' ? schema.name_ar : schema.name_en;
-
-      // Get optimal width for field type
       const width = getColumnWidth(schema.field_type);
 
       return {
-        // Prefix with 'custom_' to avoid conflicts with static columns
         key: `custom_${schema.field_key}` as keyof Lead,
-
-        // Translated label
         label,
-
-        // Not sortable initially (can be enabled later with backend support)
         sortable: false,
-
-        // Type-optimized width
         width,
         cellClassName: `w-[${width}]`,
-
-        // Render function
         render: (_: unknown, lead: Lead) => {
           const value = getCustomFieldValue(lead, schema.field_key);
-
           return renderCustomFieldValue({
             value,
             schema,
@@ -98,12 +87,85 @@ export const useCustomFieldColumns = (): UseCustomFieldColumnsReturn => {
         },
       };
     });
-  }, [schemas, i18n.language, formatSmartTimestamp]);
+  }, [customSchemas, i18n.language, formatSmartTimestamp]);
 
   return {
     columns,
     isLoading,
     error: error || null,
     count: columns.length,
+  };
+};
+
+// ============================================================
+// System field columns (specialized renderers)
+// ============================================================
+
+interface UseSystemFieldColumnsReturn {
+  /** Generated column definitions for system fields */
+  systemColumns: ColumnDef<Lead>[];
+  /** Whether this agent has system field schemas */
+  hasSystemFields: boolean;
+  /** Loading state */
+  isLoading: boolean;
+}
+
+/**
+ * Generate system field table columns from schemas
+ * System fields use specialized renderers (inline edit, status dropdown, etc.)
+ *
+ * @param ctx - Render context containing callbacks and state for interactive cells
+ */
+export const useSystemFieldColumns = (
+  ctx: SystemFieldRenderContext,
+): UseSystemFieldColumnsReturn => {
+  const { i18n } = useTranslation();
+
+  const {
+    data: allSchemas = [],
+    isLoading,
+  } = useTableCustomFieldSchemas();
+
+  // Filter to system fields only, sorted by display_order
+  const systemSchemas = useMemo(
+    () => allSchemas
+      .filter((s) => s.is_system && s.show_in_table)
+      .sort((a, b) => a.display_order - b.display_order),
+    [allSchemas],
+  );
+
+  const hasSystemFields = systemSchemas.length > 0;
+
+  const systemColumns = useMemo<ColumnDef<Lead>[]>(() => {
+    if (!hasSystemFields) return [];
+
+    return systemSchemas
+      .map((schema) => {
+        const label = i18n.language === 'ar' ? schema.name_ar : schema.name_en;
+        const renderer = getSystemFieldRenderer(schema.field_key, ctx, schema);
+
+        // Skip fields without a specialized renderer (e.g. phone is rendered inside name)
+        if (!renderer && schema.field_key === 'phone') return null;
+
+        const width = getSystemFieldColumnWidth(schema.field_key);
+
+        return {
+          key: schema.field_key as keyof Lead,
+          label,
+          sortable: isSystemFieldSortable(schema.field_key),
+          width,
+          cellClassName: schema.field_key === 'summary' ? `w-[${width}]` : `w-[${width}]`,
+          render: renderer
+            ? (_: unknown, lead: Lead) => renderer(undefined, lead)
+            : undefined,
+        };
+      })
+      .filter(Boolean) as ColumnDef<Lead>[];
+  }, [systemSchemas, i18n.language, ctx, hasSystemFields]);
+
+  return {
+    systemColumns,
+    hasSystemFields,
+    isLoading,
   };
 };

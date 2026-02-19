@@ -12,15 +12,12 @@ import type {
   LeadFilters,
   CreateLeadRequest,
   UpdateLeadRequest,
-  LeadFieldDefinition,
   ApiLeadResponse,
   ApiLeadNoteResponse,
-  ApiLeadFieldDefinitionResponse,
-  CreateFieldDefinitionRequest,
   CreateNoteRequest,
   UpdateNoteRequest,
-  CursorPaginatedLeadsResponse,
 } from '../types';
+import type { CursorPaginatedLeadsResponse } from '../types/lead.types';
 
 // Backend API Response Wrapper
 interface ApiResponse<T> {
@@ -74,23 +71,6 @@ class LeadService {
     };
 
     return transformed;
-  }
-
-  /**
-   * Transform field definition API response to frontend model
-   */
-  private transformFieldDefinition(apiField: ApiLeadFieldDefinitionResponse): LeadFieldDefinition {
-    return {
-      id: apiField.id,
-      agentId: apiField.agent_id,
-      fieldKey: apiField.field_key,
-      fieldLabel: apiField.field_label,
-      fieldType: apiField.field_type,
-      options: apiField.options,
-      isRequired: apiField.is_required,
-      displayOrder: apiField.display_order,
-      createdAt: apiField.created_at,
-    };
   }
 
   // ========================================
@@ -198,50 +178,6 @@ class LeadService {
    */
   async deleteLead(leadId: string, agentId: string): Promise<void> {
     await api.delete(`/api/lead/${leadId}?agentId=${agentId}`);
-  }
-
-  // ========================================
-  // ========================================
-  // Custom Field Definitions
-  // ========================================
-
-  /**
-   * Get custom field definitions for an agent
-   */
-  async getFieldDefinitions(agentId: string): Promise<LeadFieldDefinition[]> {
-    const { data } = await api.get<ApiResponse<ApiLeadFieldDefinitionResponse[]>>(
-      `/api/lead/field-definitions/${agentId}`
-    );
-    return data.data.map(field => this.transformFieldDefinition(field));
-  }
-
-  /**
-   * Create a custom field definition
-   */
-  async createFieldDefinition(request: CreateFieldDefinitionRequest): Promise<LeadFieldDefinition> {
-    // Transform to snake_case for backend
-    const payload = {
-      agent_id: request.agentId,
-      field_key: request.fieldKey,
-      field_label: request.fieldLabel,
-      field_type: request.fieldType,
-      options: request.options,
-      is_required: request.isRequired ?? false,
-      display_order: request.displayOrder ?? 0,
-    };
-
-    const { data } = await api.post<ApiResponse<ApiLeadFieldDefinitionResponse>>(
-      '/api/lead/field-definitions',
-      payload
-    );
-    return this.transformFieldDefinition(data.data);
-  }
-
-  /**
-   * Delete a custom field definition
-   */
-  async deleteFieldDefinition(fieldId: string): Promise<void> {
-    await api.delete(`/api/lead/field-definitions/${fieldId}`);
   }
 
   // ========================================

@@ -1,15 +1,15 @@
 /**
  * LeadEditMode Component
- * Provides editable form for lead information
- * Part of the LeadDetailsDrawer refactoring
+ * Schema-driven editable form for lead information
+ * Renders system fields + custom fields from custom_field_schemas
  */
 
 import { useTranslation } from 'react-i18next';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
-import { CustomFieldsSection } from './CustomFieldsSection';
-import type { LeadStatus, LeadFormErrors, LeadFieldDefinition } from '../types';
+import { SchemaFormField } from './SchemaFormField';
+import { getSystemFormFieldValue } from '../utils/systemFieldHelpers';
+import type { LeadStatus, LeadFormErrors } from '../types';
+import type { CustomFieldSchema } from '../types/customFieldSchema.types';
 
 interface LeadEditModeProps {
   name: string;
@@ -17,7 +17,8 @@ interface LeadEditModeProps {
   status: LeadStatus;
   notes: string;
   customFields: Record<string, any>;
-  fieldDefinitions?: LeadFieldDefinition[];
+  systemSchemas: CustomFieldSchema[];
+  customSchemas: CustomFieldSchema[];
   errors: LeadFormErrors;
   isLoading: boolean;
   onNameChange: (value: string) => void;
@@ -35,7 +36,8 @@ export function LeadEditMode({
   status,
   notes,
   customFields,
-  fieldDefinitions,
+  systemSchemas,
+  customSchemas,
   errors,
   isLoading,
   onNameChange,
@@ -48,63 +50,57 @@ export function LeadEditMode({
 }: LeadEditModeProps) {
   const { t } = useTranslation();
 
+  /**
+   * Handle system field change — routes to the correct state setter
+   */
+  const handleSystemFieldChange = (fieldKey: string, value: string) => {
+    switch (fieldKey) {
+      case 'name':
+        onNameChange(value);
+        break;
+      case 'phone':
+        onPhoneChange(value);
+        break;
+      case 'status':
+        onStatusChange(value as LeadStatus);
+        break;
+      case 'summary':
+        onNotesChange(value);
+        break;
+    }
+  };
+
   return (
     <>
       <div className="space-y-4">
-        {/* Name */}
-        <div>
-          <Input
-            label={t('lead_details.name_label')}
-            value={name}
-            onChange={(e) => onNameChange(e.target.value)}
-            error={errors.name}
-          />
-        </div>
+        {/* System fields in display_order */}
+        {systemSchemas.map((schema) => (
+          <div key={schema.id}>
+            <SchemaFormField
+              schema={schema}
+              value={getSystemFormFieldValue(schema.field_key, { name, phone, status, notes })}
+              onChange={(value) => handleSystemFieldChange(schema.field_key, value)}
+              error={schema.field_key === 'name' ? errors.name : undefined}
+            />
+          </div>
+        ))}
 
-        {/* Phone */}
-        <div>
-          <Input
-            label={t('lead_details.phone_label')}
-            value={phone}
-            onChange={(e) => onPhoneChange(e.target.value)}
-          />
-        </div>
-
-        {/* Status */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            {t('lead_details.status_label')}
-          </label>
-          <select
-            value={status}
-            onChange={(e) => onStatusChange(e.target.value as LeadStatus)}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-          >
-            <option value="new">{t('lead_details.status_new')}</option>
-            <option value="processing">{t('lead_details.status_processing')}</option>
-            <option value="completed">{t('lead_details.status_completed')}</option>
-          </select>
-        </div>
-
-        {/* Custom Fields */}
-        <CustomFieldsSection
-          customFields={customFields}
-          fieldDefinitions={fieldDefinitions}
-          readOnly={false}
-          onFieldChange={onCustomFieldChange}
-          errors={errors.customFields}
-          initiallyExpanded={false}
-        />
-
-        {/* Summary / Notes */}
-        <div>
-          <Textarea
-            label={t('lead_details.summary_label')}
-            value={notes}
-            onChange={(e) => onNotesChange(e.target.value)}
-            rows={3}
-          />
-        </div>
+        {/* Custom fields */}
+        {customSchemas.length > 0 && (
+          <div className="border-t border-neutral-200 pt-4">
+            <h3 className="text-sm font-medium text-neutral-900 mb-3">{t('lead_details.custom_fields')}</h3>
+            {customSchemas.map((schema) => (
+              <div key={schema.id} className="mb-3">
+                <SchemaFormField
+                  schema={schema}
+                  value={customFields[schema.field_key] || ''}
+                  onChange={(value) => onCustomFieldChange(schema.field_key, value)}
+                  error={errors.customFields?.[schema.field_key]}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Actions Footer */}

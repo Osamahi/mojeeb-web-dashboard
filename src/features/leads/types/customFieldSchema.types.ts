@@ -43,6 +43,7 @@ export interface CustomFieldSchema {
   show_in_table: boolean;
   show_in_form: boolean;
   is_required: boolean;
+  is_system: boolean;
   validation_rules?: ValidationRules | null;
   options?: EnumOption[] | null;
   created_at: string;
@@ -182,6 +183,18 @@ export const FIELD_TYPE_OPTIONS: FieldTypeOption[] = [
     supportsOptions: true,
   },
 ];
+
+// System field keys that map to Lead entity properties
+export const SYSTEM_FIELD_KEYS = [
+  'name',
+  'phone',
+  'summary',
+  'status',
+  'notes',
+  'created_at',
+] as const;
+
+export type SystemFieldKey = typeof SYSTEM_FIELD_KEYS[number];
 
 // Reserved field keys that cannot be used
 export const RESERVED_FIELD_KEYS = [

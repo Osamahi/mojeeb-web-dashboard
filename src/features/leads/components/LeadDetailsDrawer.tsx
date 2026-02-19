@@ -1,15 +1,16 @@
 /**
  * LeadDetailsDrawer Component
  * Coordinator for lead details display and editing
- * Refactored to use separated view and edit mode components
+ * Schema-driven — uses custom_field_schemas as single source of truth
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Spinner } from '@/components/ui/Spinner';
-import { useLead, useUpdateLead, useLeadFieldDefinitions } from '../hooks/useLeads';
+import { useLead, useUpdateLead } from '../hooks/useLeads';
+import { useFormCustomFieldSchemas } from '../hooks/useCustomFieldSchemas';
 import { LeadViewMode } from './LeadViewMode';
 import { LeadEditMode } from './LeadEditMode';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
@@ -32,7 +33,15 @@ export default function LeadDetailsDrawer({
 
   // Fetch data
   const { data: lead, isLoading } = useLead(leadId);
-  const { data: fieldDefinitions } = useLeadFieldDefinitions();
+
+  // Schema-driven field definitions
+  const { data: formSchemas = [] } = useFormCustomFieldSchemas();
+
+  // Split schemas into system and custom
+  const { systemSchemas, customSchemas } = useMemo(() => ({
+    systemSchemas: formSchemas.filter(s => s.is_system).sort((a, b) => a.display_order - b.display_order),
+    customSchemas: formSchemas.filter(s => !s.is_system).sort((a, b) => a.display_order - b.display_order),
+  }), [formSchemas]);
 
   // Edit form state
   const [name, setName] = useState('');
@@ -87,20 +96,20 @@ export default function LeadDetailsDrawer({
 
     setErrors({});
 
-    // Validate custom required fields
+    // Validate required custom fields from schemas
     const validationErrors: LeadFormErrors = {};
     const customFieldErrors: Record<string, string> = {};
 
-    fieldDefinitions?.forEach((field) => {
-      const value = customFields[field.fieldKey];
+    customSchemas.forEach((schema) => {
+      const value = customFields[schema.field_key];
       const isEmpty =
         value === null ||
         value === undefined ||
         (typeof value === 'string' && value.trim() === '');
 
-      if (field.isRequired && isEmpty) {
-        customFieldErrors[field.fieldKey] = t('lead_details.field_required', {
-          field: field.fieldLabel,
+      if (schema.is_required && isEmpty) {
+        customFieldErrors[schema.field_key] = t('lead_details.field_required', {
+          field: schema.name_en,
         });
       }
     });
@@ -141,6 +150,17 @@ export default function LeadDetailsDrawer({
       ...prev,
       [fieldKey]: value,
     }));
+    // Clear validation error for this field when user corrects input
+    if (errors.customFields?.[fieldKey]) {
+      setErrors((prev) => {
+        const updatedCustomFields = { ...prev.customFields };
+        delete updatedCustomFields[fieldKey];
+        return {
+          ...prev,
+          customFields: Object.keys(updatedCustomFields).length > 0 ? updatedCustomFields : undefined,
+        };
+      });
+    }
   };
 
   const handleViewConversation = () => {
@@ -194,7 +214,8 @@ export default function LeadDetailsDrawer({
             status={status}
             notes={notes}
             customFields={customFields}
-            fieldDefinitions={fieldDefinitions}
+            systemSchemas={systemSchemas}
+            customSchemas={customSchemas}
             errors={errors}
             isLoading={updateMutation.isPending}
             onNameChange={handleNameChange}
@@ -208,7 +229,8 @@ export default function LeadDetailsDrawer({
         ) : (
           <LeadViewMode
             lead={lead}
-            fieldDefinitions={fieldDefinitions}
+            systemSchemas={systemSchemas}
+            customSchemas={customSchemas}
             onEdit={handleEdit}
             onViewConversation={handleViewConversation}
           />

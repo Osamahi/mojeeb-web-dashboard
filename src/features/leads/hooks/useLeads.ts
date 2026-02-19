@@ -14,8 +14,6 @@ import type {
   LeadFilters,
   CreateLeadRequest,
   UpdateLeadRequest,
-  LeadFieldDefinition,
-  CreateFieldDefinitionRequest,
   CreateNoteRequest,
   UpdateNoteRequest,
   Lead,
@@ -76,19 +74,6 @@ export function useLead(leadId: string | undefined, agentId?: string) {
     queryKey: queryKeys.lead(leadId),
     queryFn: () => leadService.getLead(leadId!, effectiveAgentId!),
     enabled: !!leadId && !!effectiveAgentId,
-  });
-}
-
-/**
- * Fetch custom field definitions for the current agent
- */
-export function useLeadFieldDefinitions() {
-  const { agentId } = useAgentContext();
-
-  return useQuery({
-    queryKey: queryKeys.leadFieldDefs(agentId),
-    queryFn: () => leadService.getFieldDefinitions(agentId!),
-    enabled: !!agentId,
   });
 }
 
@@ -181,53 +166,6 @@ export function useDeleteLead() {
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || 'Failed to delete lead';
-      toast.error(message);
-    },
-  });
-}
-
-// ========================================
-// Custom Field Definition Mutations
-// ========================================
-
-/**
- * Create a custom field definition
- * Invalidates field definitions on success
- */
-export function useCreateFieldDefinition() {
-  const { agentId } = useAgentContext();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (request: CreateFieldDefinitionRequest) =>
-      leadService.createFieldDefinition(request),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leadFieldDefs(agentId) });
-      toast.success('Custom field created successfully');
-    },
-    onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to create custom field';
-      toast.error(message);
-    },
-  });
-}
-
-/**
- * Delete a custom field definition
- * Invalidates field definitions on success
- */
-export function useDeleteFieldDefinition() {
-  const { agentId } = useAgentContext();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (fieldId: string) => leadService.deleteFieldDefinition(fieldId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.leadFieldDefs(agentId) });
-      toast.success('Custom field deleted successfully');
-    },
-    onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to delete custom field';
       toast.error(message);
     },
   });

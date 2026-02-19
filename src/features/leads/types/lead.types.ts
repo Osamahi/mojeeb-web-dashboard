@@ -8,7 +8,6 @@
 // ========================================
 
 export type LeadStatus = 'new' | 'processing' | 'completed';
-export type FieldType = 'text' | 'email' | 'phone' | 'select' | 'textarea' | 'date';
 export type NoteType = 'user_note' | 'status_change';
 
 // ========================================
@@ -123,44 +122,6 @@ export interface CreateNoteRequest {
  */
 export interface UpdateNoteRequest {
   text: string;
-}
-
-// ========================================
-// Custom Field Definitions
-// ========================================
-
-export interface LeadFieldDefinition {
-  id: string;
-  agentId: string;
-  fieldKey: string;
-  fieldLabel: string;
-  fieldType: FieldType;
-  options: string[] | null;
-  isRequired: boolean;
-  displayOrder: number;
-  createdAt: string;
-}
-
-export interface ApiLeadFieldDefinitionResponse {
-  id: string;
-  agent_id: string;
-  field_key: string;
-  field_label: string;
-  field_type: FieldType;
-  options: string[] | null;
-  is_required: boolean;
-  display_order: number;
-  created_at: string;
-}
-
-export interface CreateFieldDefinitionRequest {
-  agentId: string;
-  fieldKey: string;
-  fieldLabel: string;
-  fieldType: FieldType;
-  options?: string[];
-  isRequired?: boolean;
-  displayOrder?: number;
 }
 
 // ========================================

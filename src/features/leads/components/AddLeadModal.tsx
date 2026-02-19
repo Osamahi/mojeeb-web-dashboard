@@ -1,18 +1,19 @@
 /**
  * AddLeadModal Component
  * Modal for creating a new lead
- * Migrated to BaseModal for consistency and better UX
+ * Schema-driven rendering from custom_field_schemas
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { BaseModal } from '@/components/ui/BaseModal';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
+import { SchemaFormField } from './SchemaFormField';
 import { useAgentContext } from '@/hooks/useAgentContext';
-import { useCreateLead, useLeadFieldDefinitions } from '../hooks/useLeads';
+import { useCreateLead } from '../hooks/useLeads';
+import { useFormCustomFieldSchemas } from '../hooks/useCustomFieldSchemas';
+import { getSystemFormFieldValue } from '../utils/systemFieldHelpers';
 import type { LeadStatus, LeadFormErrors } from '../types';
 
 interface AddLeadModalProps {
@@ -34,30 +35,64 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
 
   // Hooks
   const createMutation = useCreateLead();
-  const { data: fieldDefinitions } = useLeadFieldDefinitions();
+  const { data: formSchemas = [] } = useFormCustomFieldSchemas();
+
+  // Split schemas into system and custom
+  const { systemSchemas, customSchemas } = useMemo(() => ({
+    systemSchemas: formSchemas.filter(s => s.is_system).sort((a, b) => a.display_order - b.display_order),
+    customSchemas: formSchemas.filter(s => !s.is_system).sort((a, b) => a.display_order - b.display_order),
+  }), [formSchemas]);
+
+  /**
+   * Handle system field change — routes to the correct state setter
+   */
+  const handleSystemFieldChange = (fieldKey: string, value: string) => {
+    switch (fieldKey) {
+      case 'name':
+        setName(value);
+        if (errors.name) setErrors(prev => ({ ...prev, name: undefined }));
+        break;
+      case 'phone':
+        setPhone(value);
+        break;
+      case 'status':
+        setStatus(value as LeadStatus);
+        break;
+      case 'summary':
+        setNotes(value);
+        break;
+    }
+  };
+
+  const handleCustomFieldChange = (fieldKey: string, value: string) => {
+    setCustomFields((prev) => ({ ...prev, [fieldKey]: value }));
+    if (errors.customFields?.[fieldKey]) {
+      setErrors((prev) => ({
+        ...prev,
+        customFields: { ...prev.customFields, [fieldKey]: undefined },
+      }));
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Prevent multiple submissions
     if (createMutation.isPending) return;
 
     setErrors({});
-
-    // Validate required fields
     const validationErrors: LeadFormErrors = {};
 
+    // Validate name (always required)
     if (!name.trim()) {
       validationErrors.name = t('leads.name_required');
     }
 
-    // Validate custom required fields
+    // Validate required custom fields from schemas
     const customFieldErrors: Record<string, string> = {};
-    fieldDefinitions?.forEach((field) => {
-      const value = customFields[field.fieldKey];
+    customSchemas.forEach((schema) => {
+      const value = customFields[schema.field_key];
       const isEmpty = value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
-      if (field.isRequired && isEmpty) {
-        customFieldErrors[field.fieldKey] = t('leads.field_required', { field: field.fieldLabel });
+      if (schema.is_required && isEmpty) {
+        customFieldErrors[schema.field_key] = t('leads.field_required', { field: schema.name_en });
       }
     });
 
@@ -76,7 +111,6 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
       return;
     }
 
-    // Create lead
     createMutation.mutate(
       {
         agentId,
@@ -106,29 +140,11 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
 
   const handleClose = () => {
     if (createMutation.isPending) {
-      // Show feedback to user why close is blocked
       toast.info(t('leads.creating_lead'));
       return;
     }
     handleReset();
     onClose();
-  };
-
-  const handleCustomFieldChange = (fieldKey: string, value: string) => {
-    setCustomFields((prev) => ({
-      ...prev,
-      [fieldKey]: value,
-    }));
-    // Clear error for this field
-    if (errors.customFields?.[fieldKey]) {
-      setErrors((prev) => ({
-        ...prev,
-        customFields: {
-          ...prev.customFields,
-          [fieldKey]: undefined,
-        },
-      }));
-    }
   };
 
   return (
@@ -143,108 +159,34 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
     >
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
-          {/* Name (Required) */}
-          <div>
-          <Input
-            label={t('leads.name_label')}
-            placeholder={t('leads.name_placeholder')}
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              if (errors.name) {
-                setErrors((prev) => ({ ...prev, name: undefined }));
-              }
-            }}
-            error={errors.name}
-          />
-        </div>
+          {/* System fields in display_order */}
+          {systemSchemas.map((schema) => (
+            <div key={schema.id}>
+              <SchemaFormField
+                schema={schema}
+                value={getSystemFormFieldValue(schema.field_key, { name, phone, status, notes })}
+                onChange={(value) => handleSystemFieldChange(schema.field_key, value)}
+                error={schema.field_key === 'name' ? errors.name : undefined}
+              />
+            </div>
+          ))}
 
-        {/* Phone */}
-        <div>
-          <Input
-            label={t('leads.phone_label')}
-            placeholder={t('leads.phone_placeholder')}
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-        </div>
-
-        {/* Status */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            {t('leads.status_label_form')}
-          </label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as LeadStatus)}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-          >
-            <option value="new">{t('leads.status_new')}</option>
-            <option value="processing">{t('leads.status_processing')}</option>
-            <option value="completed">{t('leads.status_completed')}</option>
-          </select>
-        </div>
-
-        {/* Custom Fields */}
-        {fieldDefinitions && fieldDefinitions.length > 0 && (
-          <div className="border-t border-neutral-200 pt-4">
-            <h3 className="text-sm font-medium text-neutral-900 mb-3">{t('leads.custom_fields_title')}</h3>
-            {fieldDefinitions.map((field) => (
-              <div key={field.id} className="mb-3">
-                {field.fieldType === 'textarea' ? (
-                  <Textarea
-                    label={`${field.fieldLabel}${field.isRequired ? ' *' : ''}`}
-                    value={customFields[field.fieldKey] || ''}
-                    onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
-                    error={errors.customFields?.[field.fieldKey]}
+          {/* Custom fields */}
+          {customSchemas.length > 0 && (
+            <div className="border-t border-neutral-200 pt-4">
+              <h3 className="text-sm font-medium text-neutral-900 mb-3">{t('leads.custom_fields_title')}</h3>
+              {customSchemas.map((schema) => (
+                <div key={schema.id} className="mb-3">
+                  <SchemaFormField
+                    schema={schema}
+                    value={customFields[schema.field_key] || ''}
+                    onChange={(value) => handleCustomFieldChange(schema.field_key, value)}
+                    error={errors.customFields?.[schema.field_key]}
                   />
-                ) : field.fieldType === 'select' && field.options ? (
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">
-                      {field.fieldLabel}{field.isRequired && ' *'}
-                    </label>
-                    <select
-                      value={customFields[field.fieldKey] || ''}
-                      onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
-                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                    >
-                      <option value="">{t('leads.select_placeholder')}</option>
-                      {field.options.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.customFields?.[field.fieldKey] && (
-                      <p className="text-sm text-red-600 mt-1">
-                        {errors.customFields[field.fieldKey]}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <Input
-                    label={`${field.fieldLabel}${field.isRequired ? ' *' : ''}`}
-                    type={field.fieldType === 'email' ? 'email' : field.fieldType === 'phone' ? 'tel' : field.fieldType === 'date' ? 'date' : 'text'}
-                    value={customFields[field.fieldKey] || ''}
-                    onChange={(e) => handleCustomFieldChange(field.fieldKey, e.target.value)}
-                    error={errors.customFields?.[field.fieldKey]}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Notes */}
-        <div>
-          <Textarea
-            label={t('leads.notes_label')}
-            placeholder={t('leads.notes_placeholder')}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-          />
-        </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Actions Footer */}

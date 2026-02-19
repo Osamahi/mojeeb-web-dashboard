@@ -35,14 +35,9 @@ export const useCustomFieldSchemas = () => {
 
   return useQuery({
     queryKey: customFieldSchemaKeys.all(agentId || ''),
-    queryFn: () => {
-      console.log('[useCustomFieldSchemas] Fetching schemas for agentId:', agentId);
-      return getCustomFieldSchemas(agentId!);
-    },
+    queryFn: () => getCustomFieldSchemas(agentId!),
     enabled: !!agentId,
-    staleTime: 0, // Always fetch fresh data (was 5 minutes - causing cache issue)
-    gcTime: 0, // Don't cache (for debugging)
-    refetchOnMount: true, // Always refetch when component mounts
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -124,6 +119,20 @@ export const useDeleteCustomFieldSchema = () => {
       toast.error(errorMessage);
     },
   });
+};
+
+/**
+ * Hook to fetch schemas where show_in_form === true (for AddLeadModal / edit forms)
+ * Returns both system and custom schemas in display_order
+ */
+export const useFormCustomFieldSchemas = () => {
+  const { data: schemas = [], ...rest } = useCustomFieldSchemas();
+
+  const formSchemas = schemas.filter(
+    (s: CustomFieldSchema) => s.show_in_form
+  );
+
+  return { data: formSchemas, ...rest };
 };
 
 /**
