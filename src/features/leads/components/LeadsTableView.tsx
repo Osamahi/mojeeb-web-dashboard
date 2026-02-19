@@ -180,7 +180,7 @@ export function LeadsTableView({
     label: '',
     sortable: false,
     width: '140px',
-    cellClassName: 'text-right pr-6',
+    cellClassName: 'text-end pe-6',
     render: (_: unknown, lead: Lead) => (
       <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-end gap-1">
         {lead.conversationId ? (

@@ -67,7 +67,7 @@ export const useCustomFieldColumns = (): UseCustomFieldColumnsReturn => {
     }
 
     return customSchemas.map((schema) => {
-      const label = i18n.language === 'ar' ? schema.name_ar : schema.name_en;
+      const label = i18n.language.startsWith('ar') ? schema.name_ar : schema.name_en;
       const width = getColumnWidth(schema.field_type);
 
       return {
@@ -141,7 +141,7 @@ export const useSystemFieldColumns = (
 
     return systemSchemas
       .map((schema) => {
-        const label = i18n.language === 'ar' ? schema.name_ar : schema.name_en;
+        const label = i18n.language.startsWith('ar') ? schema.name_ar : schema.name_en;
         const renderer = getSystemFieldRenderer(schema.field_key, ctx, schema);
 
         // Skip fields without a specialized renderer (e.g. phone is rendered inside name)

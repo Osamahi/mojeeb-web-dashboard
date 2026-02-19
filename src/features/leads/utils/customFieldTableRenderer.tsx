@@ -172,7 +172,7 @@ const renderEnum = (value: unknown, schema: CustomFieldSchema, locale: string): 
 
   // Select label based on locale
   const label = option
-    ? (locale === 'ar' ? option.label_ar : option.label_en)
+    ? (locale.startsWith('ar') ? option.label_ar : option.label_en)
     : stringValue;
 
   return (

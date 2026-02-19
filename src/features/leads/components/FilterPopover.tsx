@@ -114,7 +114,7 @@ export function FilterPopover({ activePreset, dateFrom, dateTo, onApply, onClose
             key={value}
             onClick={() => handlePresetClick(value)}
             className={`
-              w-full px-3 py-2 text-left text-sm rounded-md transition-colors
+              w-full px-3 py-2 text-start text-sm rounded-md transition-colors
               ${
                 selectedPreset === value
                   ? 'bg-neutral-900 text-white'

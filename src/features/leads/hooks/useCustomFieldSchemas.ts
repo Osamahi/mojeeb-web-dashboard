@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import {
   getCustomFieldSchemas,
   getTableCustomFieldSchemas,
@@ -61,6 +62,7 @@ export const useTableCustomFieldSchemas = () => {
 export const useCreateCustomFieldSchema = () => {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (data: CreateCustomFieldSchemaRequest) =>
@@ -69,10 +71,10 @@ export const useCreateCustomFieldSchema = () => {
       // Invalidate all schema queries
       queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.all(agentId!) });
       queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.table(agentId!) });
-      toast.success('Custom field created successfully');
+      toast.success(t('leads.custom_field_created'));
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.error || 'Failed to create custom field';
+      const errorMessage = error?.response?.data?.error || t('leads.custom_field_create_failed');
       toast.error(errorMessage);
     },
   });
@@ -84,6 +86,7 @@ export const useCreateCustomFieldSchema = () => {
 export const useUpdateCustomFieldSchema = () => {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: ({ schemaId, data }: { schemaId: string; data: UpdateCustomFieldSchemaRequest }) =>
@@ -91,10 +94,10 @@ export const useUpdateCustomFieldSchema = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.all(agentId!) });
       queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.table(agentId!) });
-      toast.success('Custom field updated successfully');
+      toast.success(t('leads.custom_field_updated'));
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.error || 'Failed to update custom field';
+      const errorMessage = error?.response?.data?.error || t('leads.custom_field_update_failed');
       toast.error(errorMessage);
     },
   });
@@ -106,16 +109,17 @@ export const useUpdateCustomFieldSchema = () => {
 export const useDeleteCustomFieldSchema = () => {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (schemaId: string) => deleteCustomFieldSchema(agentId!, schemaId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.all(agentId!) });
       queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.table(agentId!) });
-      toast.success('Custom field deleted successfully');
+      toast.success(t('leads.custom_field_deleted'));
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.error || 'Failed to delete custom field';
+      const errorMessage = error?.response?.data?.error || t('leads.custom_field_delete_failed');
       toast.error(errorMessage);
     },
   });
@@ -141,6 +145,7 @@ export const useFormCustomFieldSchemas = () => {
 export const useReorderCustomFieldSchemas = () => {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (data: ReorderCustomFieldSchemasRequest) =>
@@ -172,10 +177,10 @@ export const useReorderCustomFieldSchemas = () => {
           context.previousSchemas
         );
       }
-      toast.error('Failed to reorder custom fields');
+      toast.error(t('leads.custom_field_reorder_failed'));
     },
     onSuccess: () => {
-      toast.success('Custom fields reordered successfully');
+      toast.success(t('leads.custom_field_reordered'));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.all(agentId!) });

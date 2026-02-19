@@ -27,7 +27,7 @@ export default function LeadDetailsDrawer({
   onClose,
   initialEditMode = false,
 }: LeadDetailsDrawerProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isEditing, setIsEditing] = useState(initialEditMode);
   const [showConversationDrawer, setShowConversationDrawer] = useState(false);
 
@@ -108,8 +108,9 @@ export default function LeadDetailsDrawer({
         (typeof value === 'string' && value.trim() === '');
 
       if (schema.is_required && isEmpty) {
+        const fieldLabel = i18n.language.startsWith('ar') ? schema.name_ar : schema.name_en;
         customFieldErrors[schema.field_key] = t('lead_details.field_required', {
-          field: schema.name_en,
+          field: fieldLabel,
         });
       }
     });

@@ -88,6 +88,7 @@ export function useLead(leadId: string | undefined, agentId?: string) {
 export function useCreateLead() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (request: CreateLeadRequest) => leadService.createLead(request),
@@ -98,10 +99,10 @@ export function useCreateLead() {
         refetchType: 'active'
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
-      toast.success('Lead created successfully');
+      toast.success(t('leads.lead_created'));
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to create lead';
+      const message = error?.response?.data?.message || t('leads.lead_create_failed');
       toast.error(message);
     },
   });
@@ -139,7 +140,7 @@ export function useUpdateLead() {
         console.error('[useUpdateLead] Error:', error?.response?.data);
       }
 
-      const message = error?.response?.data?.message || 'Failed to update lead';
+      const message = error?.response?.data?.message || t('leads.lead_update_failed');
       toast.error(message);
     },
   });
@@ -152,6 +153,7 @@ export function useUpdateLead() {
 export function useDeleteLead() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (leadId: string) => leadService.deleteLead(leadId, agentId!),
@@ -162,10 +164,10 @@ export function useDeleteLead() {
         refetchType: 'active'
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
-      toast.success('Lead deleted successfully');
+      toast.success(t('leads.lead_deleted'));
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to delete lead';
+      const message = error?.response?.data?.message || t('leads.lead_delete_failed');
       toast.error(message);
     },
   });
@@ -202,6 +204,7 @@ export function useLeadNotes(
 export function useCreateLeadNote() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationKey: ['createLeadNote'],
@@ -246,7 +249,7 @@ export function useCreateLeadNote() {
         queryClient.setQueryData(['leads', leadId, 'notes'], context.previousNotes);
       }
 
-      const message = error?.response?.data?.message || 'Failed to add note';
+      const message = error?.response?.data?.message || t('leads.note_add_failed');
       toast.error(message);
     },
 
@@ -263,7 +266,7 @@ export function useCreateLeadNote() {
     },
 
     onSuccess: () => {
-      toast.success('Note added successfully');
+      toast.success(t('leads.note_added'));
     },
   });
 }
@@ -275,6 +278,7 @@ export function useCreateLeadNote() {
 export function useUpdateLeadNote() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: ({
@@ -289,10 +293,10 @@ export function useUpdateLeadNote() {
     onSuccess: (_, { leadId }) => {
       queryClient.invalidateQueries({ queryKey: ['leads', leadId, 'notes'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.lead(leadId) });
-      toast.success('Note updated successfully');
+      toast.success(t('leads.note_updated'));
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to update note';
+      const message = error?.response?.data?.message || t('leads.note_update_failed');
       toast.error(message);
     },
   });
@@ -305,6 +309,7 @@ export function useUpdateLeadNote() {
 export function useDeleteLeadNote() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: ({ leadId, noteId }: { leadId: string; noteId: string }) =>
@@ -317,10 +322,10 @@ export function useDeleteLeadNote() {
         queryKey: queryKeys.leads(agentId),
         refetchType: 'active'
       });
-      toast.success('Note deleted successfully');
+      toast.success(t('leads.note_deleted'));
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.message || 'Failed to delete note';
+      const message = error?.response?.data?.message || t('leads.note_delete_failed');
       toast.error(message);
     },
   });

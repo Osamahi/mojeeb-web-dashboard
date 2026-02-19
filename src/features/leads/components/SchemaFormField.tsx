@@ -29,7 +29,7 @@ interface SchemaFormFieldProps {
  */
 function useSchemaLabel(schema: CustomFieldSchema): string {
   const { i18n } = useTranslation();
-  const label = i18n.language === 'ar' ? schema.name_ar : schema.name_en;
+  const label = i18n.language.startsWith('ar') ? schema.name_ar : schema.name_en;
   return schema.is_required ? `${label} *` : label;
 }
 
@@ -45,7 +45,7 @@ function SchemaFieldViewMode({
 }) {
   const { i18n } = useTranslation();
   const { formatSmartTimestamp } = useDateLocale();
-  const label = i18n.language === 'ar' ? schema.name_ar : schema.name_en;
+  const label = i18n.language.startsWith('ar') ? schema.name_ar : schema.name_en;
 
   const isEmpty = value === null || value === undefined || value === '';
 
@@ -77,7 +77,7 @@ function SchemaFieldViewMode({
       case 'enum': {
         const option = schema.options?.find(opt => opt.value === String(value));
         const displayLabel = option
-          ? (i18n.language === 'ar' ? option.label_ar : option.label_en)
+          ? (i18n.language.startsWith('ar') ? option.label_ar : option.label_en)
           : String(value);
         return <p className="text-base text-neutral-900 capitalize">{displayLabel}</p>;
       }
@@ -152,7 +152,7 @@ function SchemaFieldEditMode({
             <option value="">{t('leads.select_placeholder')}</option>
             {schema.options?.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {i18n.language === 'ar' ? opt.label_ar : opt.label_en}
+                {i18n.language.startsWith('ar') ? opt.label_ar : opt.label_en}
               </option>
             ))}
           </select>

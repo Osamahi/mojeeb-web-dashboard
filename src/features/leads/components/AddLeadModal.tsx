@@ -22,7 +22,7 @@ interface AddLeadModalProps {
 }
 
 export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { agentId } = useAgentContext();
 
   // Form state
@@ -92,7 +92,8 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
       const value = customFields[schema.field_key];
       const isEmpty = value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
       if (schema.is_required && isEmpty) {
-        customFieldErrors[schema.field_key] = t('leads.field_required', { field: schema.name_en });
+        const fieldLabel = i18n.language.startsWith('ar') ? schema.name_ar : schema.name_en;
+        customFieldErrors[schema.field_key] = t('leads.field_required', { field: fieldLabel });
       }
     });
 

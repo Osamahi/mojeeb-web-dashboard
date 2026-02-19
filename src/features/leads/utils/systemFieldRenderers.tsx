@@ -181,7 +181,7 @@ const renderStatusColumn = (
         // Schema-driven options with i18n labels
         schema.options.map((opt) => (
           <option key={opt.value} value={opt.value}>
-            {ctx.locale === 'ar' ? opt.label_ar : opt.label_en}
+            {ctx.locale.startsWith('ar') ? opt.label_ar : opt.label_en}
           </option>
         ))
       ) : (

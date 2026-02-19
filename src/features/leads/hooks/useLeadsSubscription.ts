@@ -20,6 +20,7 @@ import { useAgentContext } from '@/hooks/useAgentContext';
 import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { channelRegistry } from '@/lib/supabaseChannelRegistry';
 import { parseNoteMetadata } from '../utils/noteHelpers';
 
@@ -101,6 +102,7 @@ function transformNote(apiNote: NoteRow): any {
 export function useLeadsSubscription() {
   const { agentId } = useAgentContext();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!agentId) {
@@ -238,7 +240,7 @@ export function useLeadsSubscription() {
         });
 
         const newLead = payload.new as LeadRow;
-        toast.success(`New lead: ${newLead.name}`);
+        toast.success(t('leads.new_lead_notification', { name: newLead.name }));
       } else if (payload.eventType === 'DELETE') {
         const deletedLead = payload.old as LeadRow;
 
@@ -250,7 +252,7 @@ export function useLeadsSubscription() {
           }
         );
 
-        toast.info(`Lead deleted: ${deletedLead.name}`);
+        toast.info(t('leads.lead_deleted_notification', { name: deletedLead.name }));
       }
 
       // Always invalidate stats
@@ -309,6 +311,6 @@ export function useLeadsSubscription() {
       channelRegistry.unregister(channel);
       supabase.removeChannel(channel);
     };
-  }, [agentId, queryClient]);
+  }, [agentId, queryClient, t]);
 }
 

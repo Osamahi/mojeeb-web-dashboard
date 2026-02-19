@@ -61,7 +61,7 @@ export function TableHeader<T>({
   return (
     <th
       className={cn(
-        'px-6 py-3 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider',
+        'px-6 py-3 text-start text-xs font-semibold text-neutral-700 uppercase tracking-wider',
         sortable && 'cursor-pointer hover:bg-neutral-100',
         className
       )}

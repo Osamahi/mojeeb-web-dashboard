@@ -67,7 +67,7 @@ export function FieldTypeSelector({ value, onChange, disabled }: FieldTypeSelect
                   key={option.value}
                   type="button"
                   onClick={() => handleSelect(option.value)}
-                  className="w-full flex items-start gap-3 px-3 py-2.5 hover:bg-neutral-50 transition-colors text-left"
+                  className="w-full flex items-start gap-3 px-3 py-2.5 hover:bg-neutral-50 transition-colors text-start"
                 >
                   {IconComponent && <IconComponent className="w-5 h-5 text-neutral-600 flex-shrink-0 mt-0.5" />}
                   <div className="flex-1 min-w-0">
