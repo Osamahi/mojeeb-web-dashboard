@@ -20,8 +20,6 @@ import type {
   CreateFieldDefinitionRequest,
   CreateNoteRequest,
   UpdateNoteRequest,
-  PaginatedLeadsResponse,
-  PaginationMetadata,
   CursorPaginatedLeadsResponse,
 } from '../types';
 
@@ -99,92 +97,6 @@ class LeadService {
   // ========================================
   // Lead CRUD Operations
   // ========================================
-
-  /**
-   * Get all leads for an agent with optional filters
-   */
-  async getLeads(agentId: string, filters?: Partial<LeadFilters>): Promise<Lead[]> {
-    try {
-      // Build query parameters
-      const params = new URLSearchParams();
-      params.append('agentId', agentId);
-
-      if (filters) {
-        if (filters.status && filters.status !== 'all') {
-          params.append('status', filters.status);
-        }
-        if (filters.dateFrom) {
-          params.append('dateFrom', filters.dateFrom);
-        }
-        if (filters.dateTo) {
-          params.append('dateTo', filters.dateTo);
-        }
-        if (filters.search && filters.search.trim()) {
-          params.append('search', filters.search.trim());
-        }
-      }
-
-      const url = `/api/lead?${params.toString()}`;
-      const { data } = await api.get<ApiResponse<ApiLeadResponse[]>>(url);
-      return data.data.map(lead => this.transformLead(lead));
-    } catch (error) {
-      console.error('[LeadService] Error fetching leads:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get paginated leads for an agent with optional filters (for infinite scroll)
-   */
-  async getPaginatedLeads(
-    agentId: string,
-    filters?: Partial<LeadFilters>
-  ): Promise<{ leads: Lead[]; pagination: PaginationMetadata }> {
-    try {
-      // Build query parameters
-      const params = new URLSearchParams();
-      params.append('agentId', agentId);
-
-      if (filters) {
-        if (filters.status && filters.status !== 'all') {
-          params.append('status', filters.status);
-        }
-        if (filters.dateFrom) {
-          params.append('dateFrom', filters.dateFrom);
-        }
-        if (filters.dateTo) {
-          params.append('dateTo', filters.dateTo);
-        }
-        if (filters.search && filters.search.trim()) {
-          params.append('search', filters.search.trim());
-        }
-        if (filters.page) {
-          params.append('page', filters.page.toString());
-        }
-        if (filters.pageSize) {
-          params.append('pageSize', filters.pageSize.toString());
-        }
-      }
-
-      const url = `/api/lead?${params.toString()}`;
-      const { data } = await api.get<ApiResponse<PaginatedLeadsResponse>>(url);
-
-      // Check if response is paginated format
-      if (data.data && typeof data.data === 'object' && 'leads' in data.data && 'pagination' in data.data) {
-        return {
-          leads: data.data.leads.map(lead => this.transformLead(lead)),
-          pagination: data.data.pagination,
-        };
-      } else if (Array.isArray(data.data)) {
-        throw new Error('Backend returned non-paginated response. Check if pagination parameters are being sent correctly.');
-      } else {
-        throw new Error('Unexpected API response format');
-      }
-    } catch (error) {
-      console.error('[LeadService] Error fetching paginated leads:', error);
-      throw error;
-    }
-  }
 
   /**
    * Get leads with cursor-based pagination (optimized for infinite scroll)

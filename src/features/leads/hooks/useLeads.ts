@@ -27,22 +27,6 @@ import type {
 // ========================================
 
 /**
- * Fetch all leads for the current agent with optional filters
- * Auto-scoped to selected agent from context
- * Query key includes filters to enable proper caching per filter combination
- */
-export function useLeads(filters?: Partial<LeadFilters>) {
-  const { agentId } = useAgentContext();
-
-  return useQuery({
-    queryKey: [...queryKeys.leads(agentId), filters],
-    queryFn: () => leadService.getLeads(agentId!, filters),
-    enabled: !!agentId,
-    placeholderData: undefined, // Prevent flash of old data
-  });
-}
-
-/**
  * Fetch paginated leads with infinite scroll support (cursor-based)
  * Auto-scoped to selected agent from context
  * Uses cursor pagination for constant-time performance with any data size

@@ -201,21 +201,6 @@ export interface LeadFilters {
   status: LeadStatus | 'all';
   dateFrom?: string;
   dateTo?: string;
-  page?: number;
-  pageSize?: number;
-}
-
-export interface PaginationMetadata {
-  current_page: number;
-  page_size: number;
-  total_count: number;
-  total_pages: number;
-  has_more: boolean;
-}
-
-export interface PaginatedLeadsResponse {
-  leads: ApiLeadResponse[];
-  pagination: PaginationMetadata;
 }
 
 /**
