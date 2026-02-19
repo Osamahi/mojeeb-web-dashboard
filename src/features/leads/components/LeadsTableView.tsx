@@ -23,6 +23,7 @@ import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { useCustomFieldColumns } from '../hooks/useCustomFieldColumns';
 import type { Lead, LeadStatus, LeadFilters } from '../types';
 
 interface LeadsTableViewProps {
@@ -63,6 +64,12 @@ export function LeadsTableView({
   const updateMutation = useUpdateLead();
   const isMobile = useIsMobile();
   const { toLocaleDateString, toLocaleTimeString, formatSmartTimestamp } = useDateLocale();
+
+  // 🆕 Fetch custom field columns (isolated layer)
+  const {
+    columns: customFieldColumns,
+    isLoading: isCustomFieldsLoading,
+  } = useCustomFieldColumns();
 
   // ✅ PERFORMANCE FIX: Create stable refs to prevent callback recreation
   // React Query mutations return new objects on every render, causing callbacks
@@ -153,209 +160,221 @@ export function LeadsTableView({
   // ✅ PERFORMANCE FIX: Memoize columns array to prevent recreation on every render
   // This prevents all 50+ cells from re-rendering when only one cell should update
   // NOTE: Defined here (before conditional returns) to comply with Rules of Hooks
-  const columns = useMemo(() => [
-    {
-      key: 'name',
-      label: t('leads.table_name'),
-      sortable: true,
-      width: '25%',
-      render: (_: unknown, lead: Lead) => {
-        return (
-          <div className="flex flex-col gap-1.5 py-1">
-            <InlineEditField
-              value={lead.name}
-              fieldName="Name"
-              placeholder={t('leads.enter_lead_name_placeholder')}
-              onSave={(newName) => handleNameSave(lead.id, newName)}
-              validationFn={validateName}
-              isLoading={updateMutation.isPending}
-            />
-            <div className="flex items-center gap-1.5 group">
-              {lead.phone ? (
-                <>
-                  <a
-                    href={`tel:${lead.phone}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-[13px] text-neutral-600 hover:text-neutral-900 transition-colors order-0"
-                  >
-                    <PhoneNumber value={lead.phone} />
-                  </a>
-                  <button
-                    onClick={(e) => handleCopyPhone(lead.phone!, e)}
-                    className="p-1 hover:bg-neutral-100 rounded transition-all order-1"
-                    title={t('leads.copy_phone_title')}
-                  >
-                    <Copy className="w-3.5 h-3.5 text-neutral-400 hover:text-neutral-700" />
-                  </button>
-                </>
+  // 🆕 ARCHITECTURE: Split into base + custom + fixed to inject custom field columns
+  const columns = useMemo(() => {
+    // Base columns (always first)
+    const baseColumns = [
+      {
+        key: 'name',
+        label: t('leads.table_name'),
+        sortable: true,
+        width: '25%',
+        render: (_: unknown, lead: Lead) => {
+          return (
+            <div className="flex flex-col gap-1.5 py-1">
+              <InlineEditField
+                value={lead.name}
+                fieldName="Name"
+                placeholder={t('leads.enter_lead_name_placeholder')}
+                onSave={(newName) => handleNameSave(lead.id, newName)}
+                validationFn={validateName}
+                isLoading={updateMutation.isPending}
+              />
+              <div className="flex items-center gap-1.5 group">
+                {lead.phone ? (
+                  <>
+                    <a
+                      href={`tel:${lead.phone}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[13px] text-neutral-600 hover:text-neutral-900 transition-colors order-0"
+                    >
+                      <PhoneNumber value={lead.phone} />
+                    </a>
+                    <button
+                      onClick={(e) => handleCopyPhone(lead.phone!, e)}
+                      className="p-1 hover:bg-neutral-100 rounded transition-all order-1"
+                      title={t('leads.copy_phone_title')}
+                    >
+                      <Copy className="w-3.5 h-3.5 text-neutral-400 hover:text-neutral-700" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="order-0">
+                    <InlineEditField
+                      value={lead.phone}
+                      fieldName="Phone"
+                      placeholder={t('leads.enter_phone_placeholder')}
+                      onSave={(newPhone) => handlePhoneSave(lead.id, newPhone)}
+                      validationFn={validatePhone}
+                      isPhone={true}
+                      isLoading={updateMutation.isPending}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        key: 'summary',
+        label: t('leads.table_summary'),
+        sortable: false,
+        width: '30%',
+        cellClassName: 'w-[30%]',
+        render: (_: unknown, lead: Lead) => {
+          const maxLength = 120;
+          const shouldTruncate = lead.summary && lead.summary.length > maxLength;
+          const displayText = shouldTruncate ? lead.summary.substring(0, maxLength) : lead.summary;
+
+          return (
+            <div className="py-1 max-w-sm min-w-0">
+              {lead.summary ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddSummaryClick(lead.id, lead.name || '', lead.summary || '');
+                  }}
+                  className="ltr:text-left rtl:text-right w-full group hover:text-neutral-900 transition-colors min-w-0"
+                >
+                  <div className="text-sm text-neutral-700 leading-relaxed break-words whitespace-normal">
+                    {displayText}
+                    {shouldTruncate && <span className="text-neutral-400 group-hover:text-neutral-900"> ...{t('leads.view_more')}</span>}
+                  </div>
+                </button>
               ) : (
-                <div className="order-0">
-                  <InlineEditField
-                    value={lead.phone}
-                    fieldName="Phone"
-                    placeholder={t('leads.enter_phone_placeholder')}
-                    onSave={(newPhone) => handlePhoneSave(lead.id, newPhone)}
-                    validationFn={validatePhone}
-                    isPhone={true}
-                    isLoading={updateMutation.isPending}
-                  />
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddSummaryClick(lead.id, lead.name || '', '');
+                  }}
+                  className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors ltr:text-left rtl:text-right w-full"
+                >
+                  {t('leads.add_summary')}
+                </button>
               )}
             </div>
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      key: 'summary',
-      label: t('leads.table_summary'),
-      sortable: false,
-      width: '30%',
-      cellClassName: 'w-[30%]',
-      render: (_: unknown, lead: Lead) => {
-        const maxLength = 120;
-        const shouldTruncate = lead.summary && lead.summary.length > maxLength;
-        const displayText = shouldTruncate ? lead.summary.substring(0, maxLength) : lead.summary;
+    ];
 
-        return (
-          <div className="py-1 max-w-sm min-w-0">
-            {lead.summary ? (
+    // Fixed columns (always last)
+    const fixedColumns = [
+      {
+        key: 'status',
+        label: t('leads.table_status'),
+        sortable: true,
+        width: '180px',
+        cellClassName: 'w-[180px]',
+        render: (_: unknown, lead: Lead) => (
+          <select
+            value={lead.status}
+            onChange={(e) => handleStatusChange(lead.id, e.target.value as LeadStatus, e)}
+            onClick={(e) => e.stopPropagation()}
+            className={`px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none w-full ${
+              lead.status === 'new' ? 'text-[#00D084]' : 'text-neutral-950'
+            }`}
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+              backgroundPosition: 'right 0.5rem center',
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: '1.25em 1.25em',
+              paddingRight: '2.5rem'
+            }}
+          >
+            <option value="new">{t('leads.status_new')}</option>
+            <option value="processing">{t('leads.status_processing')}</option>
+            <option value="completed">{t('leads.status_completed')}</option>
+          </select>
+        ),
+      },
+      {
+        key: 'createdAt',
+        label: t('leads.table_created'),
+        sortable: true,
+        width: '14%',
+        cellClassName: 'w-[14%]',
+        render: (_: unknown, lead: Lead) => {
+          try {
+            return (
+              <span className="text-[13px] text-neutral-900">
+                {formatSmartTimestamp(lead.createdAt)}
+              </span>
+            );
+          } catch {
+            return <span className="text-neutral-700">—</span>;
+          }
+        },
+      },
+      {
+        key: 'notes',
+        label: t('leads.table_notes'),
+        sortable: false,
+        width: '18%',
+        cellClassName: 'w-[18%]',
+        render: (_: unknown, lead: Lead) => (
+          <LatestNoteCell lead={lead} onAddNoteClick={onAddNoteClick} />
+        ),
+      },
+      {
+        key: 'actions' as keyof Lead,
+        label: '',
+        sortable: false,
+        width: '140px',
+        cellClassName: 'text-right pr-6',
+        render: (_: unknown, lead: Lead) => (
+          <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-end gap-1">
+            {lead.conversationId ? (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAddSummaryClick(lead.id, lead.name || '', lead.summary || '');
+                  onViewConversation(lead.conversationId!);
                 }}
-                className="ltr:text-left rtl:text-right w-full group hover:text-neutral-900 transition-colors min-w-0"
+                className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
+                title={t('leads.view_conversation_title')}
               >
-                <div className="text-sm text-neutral-700 leading-relaxed break-words whitespace-normal">
-                  {displayText}
-                  {shouldTruncate && <span className="text-neutral-400 group-hover:text-neutral-900"> ...{t('leads.view_more')}</span>}
-                </div>
+                <MessageSquare className="w-4 h-4" />
               </button>
             ) : (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddSummaryClick(lead.id, lead.name || '', '');
-                }}
-                className="text-sm text-neutral-400 hover:text-neutral-600 transition-colors ltr:text-left rtl:text-right w-full"
-              >
-                {t('leads.add_summary')}
-              </button>
+              <div className="w-8 h-8" />
             )}
-          </div>
-        );
-      },
-    },
-    {
-      key: 'status',
-      label: t('leads.table_status'),
-      sortable: true,
-      width: '180px',
-      cellClassName: 'w-[180px]',
-      render: (_: unknown, lead: Lead) => (
-        <select
-          value={lead.status}
-          onChange={(e) => handleStatusChange(lead.id, e.target.value as LeadStatus, e)}
-          onClick={(e) => e.stopPropagation()}
-          className={`px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none w-full ${
-            lead.status === 'new' ? 'text-[#00D084]' : 'text-neutral-950'
-          }`}
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-            backgroundPosition: 'right 0.5rem center',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: '1.25em 1.25em',
-            paddingRight: '2.5rem'
-          }}
-        >
-          <option value="new">{t('leads.status_new')}</option>
-          <option value="processing">{t('leads.status_processing')}</option>
-          <option value="completed">{t('leads.status_completed')}</option>
-        </select>
-      ),
-    },
-    {
-      key: 'createdAt',
-      label: t('leads.table_created'),
-      sortable: true,
-      width: '14%',
-      cellClassName: 'w-[14%]',
-      render: (_: unknown, lead: Lead) => {
-        try {
-          return (
-            <span className="text-[13px] text-neutral-900">
-              {formatSmartTimestamp(lead.createdAt)}
-            </span>
-          );
-        } catch {
-          return <span className="text-neutral-700">—</span>;
-        }
-      },
-    },
-    {
-      key: 'notes',
-      label: t('leads.table_notes'),
-      sortable: false,
-      width: '18%',
-      cellClassName: 'w-[18%]',
-      render: (_: unknown, lead: Lead) => (
-        <LatestNoteCell lead={lead} onAddNoteClick={onAddNoteClick} />
-      ),
-    },
-    {
-      key: 'actions' as keyof Lead,
-      label: '',
-      sortable: false,
-      width: '140px',
-      cellClassName: 'text-right pr-6',
-      render: (_: unknown, lead: Lead) => (
-        <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-end gap-1">
-          {lead.conversationId ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onViewConversation(lead.conversationId!);
+                onEditClick(lead.id);
               }}
               className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-              title={t('leads.view_conversation_title')}
+              title={t('leads.edit_lead_title')}
             >
-              <MessageSquare className="w-4 h-4" />
+              <Pencil className="w-4 h-4" />
             </button>
-          ) : (
-            <div className="w-8 h-8" />
-          )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditClick(lead.id);
-            }}
-            className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-            title={t('leads.edit_lead_title')}
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteClick(lead.id);
-            }}
-            className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-            title={t('leads.delete_lead_title')}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
-    },
-  ], [
-    t, // Only include `t` - render functions are closures that capture current values
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteClick(lead.id);
+              }}
+              className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
+              title={t('leads.delete_lead_title')}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ),
+      },
+    ];
+
+    // 🆕 Merge: base + custom + fixed
+    return [...baseColumns, ...customFieldColumns, ...fixedColumns];
+  }, [
+    t,
+    customFieldColumns, // 🆕 Re-compute when custom fields change
     // Callbacks are stable (empty deps), so no need to include them here
     // updateMutation.isPending, user.id, etc. are captured by closures - not needed as deps
   ]);
 
-  // Show skeleton only on initial load
-  if (isLoading) {
+  // Show skeleton only on initial load (including custom fields)
+  if (isLoading || isCustomFieldsLoading) {
     return (
       <div>
         {/* Mobile card skeleton (< 768px) */}

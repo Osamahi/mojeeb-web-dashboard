@@ -16,6 +16,7 @@
  * ```
  */
 
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { arSA } from 'date-fns/locale/ar-SA';
 import { arEG } from 'date-fns/locale/ar-EG';
@@ -161,7 +162,9 @@ export function useDateLocale() {
   const locale = getDateLocale(i18n.language);
   const isArabic = i18n.language.startsWith('ar');
 
-  return {
+  // ✅ PERFORMANCE FIX: Memoize return object to prevent unnecessary re-renders
+  // Critical for table performance when custom field columns depend on formatSmartTimestamp
+  return useMemo(() => ({
     /**
      * Format a date with Arabic-Indic numerals for Arabic locales
      * Uses Intl.DateTimeFormat for Arabic, date-fns for English
@@ -267,7 +270,7 @@ export function useDateLocale() {
 
     // Export the current locale for manual use if needed
     locale,
-  };
+  }), [i18n.language, locale, isArabic]); // ✅ Only recreate when language changes
 }
 
 /**
