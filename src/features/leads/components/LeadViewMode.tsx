@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { SchemaFormField } from './SchemaFormField';
 import { LeadNotesSection } from './LeadNotesSection';
 import { useDateLocale } from '@/lib/dateConfig';
+import { getSystemFieldValue } from '../utils/systemFieldHelpers';
 import type { Lead } from '../types';
 import type { CustomFieldSchema } from '../types/customFieldSchema.types';
 
@@ -20,20 +21,6 @@ interface LeadViewModeProps {
   customSchemas: CustomFieldSchema[];
   onEdit: () => void;
   onViewConversation: () => void;
-}
-
-/**
- * Maps system field_key → lead entity property value
- */
-function getSystemFieldValue(lead: Lead, fieldKey: string): any {
-  switch (fieldKey) {
-    case 'name': return lead.name;
-    case 'phone': return lead.phone;
-    case 'status': return lead.status;
-    case 'summary': return lead.summary;
-    case 'created_at': return lead.createdAt;
-    default: return '';
-  }
 }
 
 export function LeadViewMode({
