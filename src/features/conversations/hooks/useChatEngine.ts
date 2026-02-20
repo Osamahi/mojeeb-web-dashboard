@@ -317,14 +317,15 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
 
           storage.addMessage(newMessage);
 
-          // If this is an AI response, clear sending state
+          // If this is an AI response, clear sending state and typing indicator
           if (newMessage.sender_role === SenderRole.AiAgent) {
-            logger.info('[useChatEngine]', 'AI response received - clearing sending state', {
+            logger.info('[useChatEngine]', 'AI response received - clearing sending state and typing', {
               messageId: newMessage.id,
               conversationId,
             });
 
             setIsSending(false);
+            setIsAITyping(false);
             clearAITimeout();
           }
         }
@@ -361,37 +362,16 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
       if (user_id !== CHAT_IDENTIFIERS.STUDIO_USER_ID) {
         setIsAITyping(is_typing);
 
-        // Auto-hide typing indicator after 3 seconds of no updates
         if (is_typing) {
           logger.debug('[useChatEngine]', 'AI typing indicator started', {
             conversationId,
             userId: user_id,
           });
-
-          if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current);
-          }
-          typingTimeoutRef.current = setTimeout(() => {
-            if (!isMountedRef.current) return; // Prevent setState on unmounted component
-
-            logger.debug('[useChatEngine]', 'AI typing indicator auto-cleared (timeout)', {
-              conversationId,
-              duration: `${CHAT_TIMEOUTS.TYPING_INDICATOR}ms`,
-            });
-
-            setIsAITyping(false);
-            typingTimeoutRef.current = null; // Clear ref to prevent memory leak
-          }, CHAT_TIMEOUTS.TYPING_INDICATOR);
         } else {
           logger.debug('[useChatEngine]', 'AI typing indicator stopped', {
             conversationId,
             userId: user_id,
           });
-
-          if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current);
-            typingTimeoutRef.current = null; // Clear ref to prevent memory leak
-          }
         }
       }
     };
