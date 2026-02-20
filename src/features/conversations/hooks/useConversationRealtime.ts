@@ -134,6 +134,26 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
               // Conversation updated
               const updatedConversation = transformToConversationResponse(payload.new);
 
+              // If conversation was soft-deleted (status=4), remove it from cache instead of updating
+              if (updatedConversation.status === 4) {
+                if (import.meta.env.DEV) {
+                  console.log('[Realtime] UPDATE: Conversation soft-deleted, removing from cache:', updatedConversation.id);
+                }
+
+                queryClient.setQueryData(queryKey, (oldData: any) => {
+                  if (!oldData?.pages) return oldData;
+
+                  return {
+                    ...oldData,
+                    pages: oldData.pages.map((page: any) => ({
+                      ...page,
+                      items: page.items.filter((conv: ConversationResponse) => conv.id !== updatedConversation.id),
+                    })),
+                  };
+                });
+                break;
+              }
+
               queryClient.setQueryData(queryKey, (oldData: any) => {
                 if (!oldData?.pages) {
                   if (import.meta.env.DEV) {

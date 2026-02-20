@@ -69,10 +69,20 @@ export function useDeleteConversation() {
         clearSelection();
       }
 
-      // Invalidate and refetch conversations list
+      // Remove the deleted conversation directly from cache
+      // (don't use invalidateQueries — the refetch races with realtime and can re-add it)
       if (agentId) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.conversations(agentId),
+        const queryKey = queryKeys.conversations(agentId);
+        queryClient.setQueryData(queryKey, (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              items: page.items.filter((conv: any) => conv.id !== conversationId),
+            })),
+          };
         });
       }
     },
