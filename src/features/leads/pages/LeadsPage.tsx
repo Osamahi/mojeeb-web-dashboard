@@ -13,7 +13,7 @@ import { useInfiniteLeads } from '../hooks/useLeads';
 import { useLeadsSubscription } from '../hooks/useLeadsSubscription';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { UserPlus, Download, MoreVertical, FileText, Settings, TableProperties } from 'lucide-react';
+import { UserPlus, Download, MoreVertical, Columns3, Bot, ListChecks } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { LeadsFilterDrawer } from '../components/LeadsFilterDrawer';
@@ -24,6 +24,7 @@ import { LeadNotesModal } from '../components/LeadNotesModal';
 import { AddSummaryModal } from '../components/AddSummaryModal';
 import { LeadSettingsModal } from '../components/LeadSettingsModal';
 import { CustomFieldSchemaModal } from '../components/CustomFieldSchemaModal';
+import { StatusEditorModal } from '../components/StatusEditorModal';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import { ExportLeadsModal, ExportProgressModal } from '@/features/exports/components';
 import { useDeleteLead } from '../hooks/useLeads';
@@ -48,6 +49,7 @@ export default function LeadsPage() {
   const [exportJobId, setExportJobId] = useState<string | null>(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isCustomFieldSchemaModalOpen, setIsCustomFieldSchemaModalOpen] = useState(false);
+  const [isStatusEditorOpen, setIsStatusEditorOpen] = useState(false);
 
   // Filter state
   const [filters, setFilters] = useState<LeadFilters>({
@@ -138,6 +140,14 @@ export default function LeadsPage() {
     setSummaryLead({ id: leadId, name, summary });
   }, []);
 
+  const handleEditStatusClick = useCallback(() => {
+    setIsStatusEditorOpen(true);
+  }, []);
+
+  const handleAddColumnClick = useCallback(() => {
+    setIsCustomFieldSchemaModalOpen(true);
+  }, []);
+
   const handleExportClick = useCallback(() => {
     setIsExportModalOpen(true);
   }, []);
@@ -170,13 +180,17 @@ export default function LeadsPage() {
           <UserPlus className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
           <span>{t('leads.add_lead')}</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setIsCustomFieldSchemaModalOpen(true)}>
-          <TableProperties className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
-          <span>Edit Schema</span>
+        <DropdownMenuItem onClick={handleAddColumnClick}>
+          <Columns3 className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+          <span>{t('leads.edit_columns')}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleEditStatusClick}>
+          <ListChecks className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+          <span>{t('leads.edit_statuses')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setIsSettingsModalOpen(true)}>
-          <Settings className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
-          <span>{t('leads.settings')}</span>
+          <Bot className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+          <span>{t('leads.ai_instructions')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -235,6 +249,8 @@ export default function LeadsPage() {
         fetchNextPage={fetchNextPage}
         hasMore={hasMore}
         isFetchingNextPage={isFetchingNextPage}
+        onEditStatusClick={handleEditStatusClick}
+        onAddColumnClick={handleAddColumnClick}
       />
 
       {/* Modals & Drawers */}
@@ -317,6 +333,12 @@ export default function LeadsPage() {
       <CustomFieldSchemaModal
         isOpen={isCustomFieldSchemaModalOpen}
         onClose={() => setIsCustomFieldSchemaModalOpen(false)}
+      />
+
+      {/* Status Editor Modal */}
+      <StatusEditorModal
+        isOpen={isStatusEditorOpen}
+        onClose={() => setIsStatusEditorOpen(false)}
       />
     </div>
   );

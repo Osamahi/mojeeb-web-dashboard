@@ -161,20 +161,21 @@ const renderStatusColumn = (
   ctx: SystemFieldRenderContext,
   schema?: CustomFieldSchema,
 ): ReactNode => {
+  // Get color from schema options for the current status
+  const statusColor = schema?.options?.find(opt => opt.value === lead.status)?.color || '#6B7280';
+
   return (
     <select
       value={lead.status}
       onChange={(e) => ctx.onStatusChange(lead.id, e.target.value as LeadStatus, e)}
       onClick={(e) => e.stopPropagation()}
-      className={`px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none w-full ${
-        lead.status === 'new' ? 'text-[#00D084]' : 'text-neutral-950'
-      }`}
+      className="ps-0 pe-8 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none w-full"
       style={{
+        color: statusColor,
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
         backgroundPosition: 'right 0.5rem center',
         backgroundRepeat: 'no-repeat',
         backgroundSize: '1.25em 1.25em',
-        paddingRight: '2.5rem'
       }}
     >
       {schema?.options?.length ? (
@@ -185,7 +186,7 @@ const renderStatusColumn = (
           </option>
         ))
       ) : (
-        // Fallback to translation keys
+        // Fallback to translation keys (for agents without schema)
         <>
           <option value="new">{ctx.t('leads.status_new')}</option>
           <option value="processing">{ctx.t('leads.status_processing')}</option>

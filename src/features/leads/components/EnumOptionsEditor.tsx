@@ -1,38 +1,158 @@
 /**
  * EnumOptionsEditor Component
- * Manages dropdown options for enum-type custom fields
+ * Manages dropdown options for enum-type custom fields with drag-and-drop sorting
  */
 
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useMemo } from 'react';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { EnumOption } from '../types/customFieldSchema.types';
 
 interface EnumOptionsEditorProps {
   options: EnumOption[];
   onChange: (options: EnumOption[]) => void;
+  /** Values that cannot be edited (key) or deleted (e.g., ['new'] for status field) */
+  protectedValues?: string[];
 }
 
-const DEFAULT_COLORS = [
-  '#ef4444', // red
-  '#f59e0b', // amber
-  '#10b981', // green
-  '#3b82f6', // blue
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#6b7280', // gray
-];
+interface SortableOptionItemProps {
+  id: string;
+  option: EnumOption;
+  index: number;
+  isProtected: boolean;
+  onUpdate: (index: number, field: keyof EnumOption, value: string) => void;
+  onRemove: (index: number) => void;
+}
 
-export function EnumOptionsEditor({ options, onChange }: EnumOptionsEditorProps) {
-  const { t, i18n } = useTranslation();
-  const isRTL = i18n.dir() === 'rtl';
+function SortableOptionItem({ id, option, index, isProtected, onUpdate, onRemove }: SortableOptionItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled: isProtected });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-start gap-2 p-3 border border-neutral-200 rounded-lg hover:border-neutral-300 transition-colors bg-white"
+    >
+      {/* Drag Handle (hidden for protected values) */}
+      {isProtected ? (
+        <div className="mt-2 w-4 h-4 flex-shrink-0" />
+      ) : (
+        <div
+          {...attributes}
+          {...listeners}
+          className="mt-2 cursor-grab active:cursor-grabbing touch-none text-neutral-400 hover:text-neutral-600"
+        >
+          <GripVertical className="w-4 h-4" />
+        </div>
+      )}
+
+      {/* Color Picker */}
+      <div className="mt-2">
+        <input
+          type="color"
+          value={option.color || '#000000'}
+          onChange={(e) => onUpdate(index, 'color', e.target.value)}
+          className="w-8 h-8 rounded cursor-pointer border border-neutral-300"
+          title="Option color"
+        />
+      </div>
+
+      {/* Option Fields */}
+      <div className="flex-1 grid grid-cols-3 gap-2">
+        <input
+          type="text"
+          value={option.value}
+          onChange={(e) => onUpdate(index, 'value', e.target.value)}
+          placeholder="value (e.g., high)"
+          disabled={isProtected}
+          className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed"
+          required
+        />
+        <input
+          type="text"
+          value={option.label_en}
+          onChange={(e) => onUpdate(index, 'label_en', e.target.value)}
+          placeholder="English label"
+          className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          required
+        />
+        <input
+          type="text"
+          value={option.label_ar}
+          onChange={(e) => onUpdate(index, 'label_ar', e.target.value)}
+          placeholder="Arabic label"
+          dir="rtl"
+          className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          required
+        />
+      </div>
+
+      {/* Delete Button (hidden for protected values) */}
+      {isProtected ? (
+        <div className="w-[26px] h-[26px] mt-2 flex-shrink-0" />
+      ) : (
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          className="mt-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50 p-1 rounded transition-colors"
+          title="Remove option"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function EnumOptionsEditor({ options, onChange, protectedValues = [] }: EnumOptionsEditorProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Stable IDs for sortable items (use value if unique, fallback to index-based)
+  const sortableIds = useMemo(
+    () => options.map((_, i) => `option-${i}`),
+    [options.length]
+  );
 
   const addOption = () => {
     const newOption: EnumOption = {
       value: '',
       label_en: '',
       label_ar: '',
-      color: DEFAULT_COLORS[options.length % DEFAULT_COLORS.length],
+      color: '#000000',
     };
     onChange([...options, newOption]);
   };
@@ -47,11 +167,14 @@ export function EnumOptionsEditor({ options, onChange }: EnumOptionsEditorProps)
     onChange(options.filter((_, i) => i !== index));
   };
 
-  const moveOption = (fromIndex: number, toIndex: number) => {
-    const updated = [...options];
-    const [movedItem] = updated.splice(fromIndex, 1);
-    updated.splice(toIndex, 0, movedItem);
-    onChange(updated);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = sortableIds.indexOf(active.id as string);
+    const newIndex = sortableIds.indexOf(over.id as string);
+
+    onChange(arrayMove(options, oldIndex, newIndex));
   };
 
   return (
@@ -75,82 +198,27 @@ export function EnumOptionsEditor({ options, onChange }: EnumOptionsEditorProps)
           <p className="text-sm text-neutral-500">No options yet. Click "Add Option" to create one.</p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {options.map((option, index) => (
-            <div
-              key={index}
-              className="flex items-start gap-2 p-3 border border-neutral-200 rounded-lg hover:border-neutral-300 transition-colors bg-white"
-            >
-              {/* Drag Handle */}
-              <button
-                type="button"
-                className="mt-2 cursor-move text-neutral-400 hover:text-neutral-600"
-                onMouseDown={(e) => {
-                  // Simple drag implementation - you can enhance this with a library like dnd-kit
-                  e.preventDefault();
-                }}
-              >
-                <GripVertical className="w-4 h-4" />
-              </button>
-
-              {/* Color Picker */}
-              <div className="mt-2">
-                <input
-                  type="color"
-                  value={option.color || DEFAULT_COLORS[0]}
-                  onChange={(e) => updateOption(index, 'color', e.target.value)}
-                  className="w-8 h-8 rounded cursor-pointer border border-neutral-300"
-                  title="Option color"
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {options.map((option, index) => (
+                <SortableOptionItem
+                  key={sortableIds[index]}
+                  id={sortableIds[index]}
+                  option={option}
+                  index={index}
+                  isProtected={protectedValues.includes(option.value)}
+                  onUpdate={updateOption}
+                  onRemove={removeOption}
                 />
-              </div>
-
-              {/* Option Fields */}
-              <div className="flex-1 grid grid-cols-3 gap-2">
-                <input
-                  type="text"
-                  value={option.value}
-                  onChange={(e) => updateOption(index, 'value', e.target.value)}
-                  placeholder="value (e.g., high)"
-                  className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  required
-                />
-                <input
-                  type="text"
-                  value={option.label_en}
-                  onChange={(e) => updateOption(index, 'label_en', e.target.value)}
-                  placeholder="English label"
-                  className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  required
-                />
-                <input
-                  type="text"
-                  value={option.label_ar}
-                  onChange={(e) => updateOption(index, 'label_ar', e.target.value)}
-                  placeholder="Arabic label"
-                  dir="rtl"
-                  className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  required
-                />
-              </div>
-
-              {/* Delete Button */}
-              <button
-                type="button"
-                onClick={() => removeOption(index)}
-                className="mt-2 text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
-                title="Remove option"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
-
-      {options.length > 0 && options.some(opt => !opt.value || !opt.label_en || !opt.label_ar) && (
-        <p className="text-xs text-amber-600">
-          ⚠️ All options must have a value, English label, and Arabic label
-        </p>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );

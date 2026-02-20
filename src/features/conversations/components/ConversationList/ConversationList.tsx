@@ -7,6 +7,7 @@
 
 import { useRef, UIEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { LayoutGroup } from 'framer-motion';
 import { RefreshCw, Loader2 } from 'lucide-react';
 import { useInfiniteConversations } from '../../hooks/useInfiniteConversations';
 import { useConversationRealtime } from '../../hooks/useConversationRealtime';
@@ -138,14 +139,16 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
         className="flex-1 overflow-y-auto p-2 space-y-1"
         onScroll={handleScroll}
       >
-        {conversations.map((conversation) => (
-          <ConversationListItem
-            key={conversation.id}
-            conversation={conversation}
-            isSelected={selectedConversation?.id === conversation.id}
-            onSelect={() => handleSelect(conversation.id)}
-          />
-        ))}
+        <LayoutGroup>
+          {conversations.map((conversation) => (
+            <ConversationListItem
+              key={conversation.id}
+              conversation={conversation}
+              isSelected={selectedConversation?.id === conversation.id}
+              onSelect={() => handleSelect(conversation.id)}
+            />
+          ))}
+        </LayoutGroup>
 
         {/* Loading more indicator */}
         {isFetchingNextPage && (

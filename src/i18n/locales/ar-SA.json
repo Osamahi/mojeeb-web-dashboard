@@ -2,6 +2,7 @@
   "common": {
     "create": "إنشاء",
     "save": "حفظ",
+    "save_changes": "حفظ التغييرات",
     "cancel": "إلغاء",
     "delete": "حذف",
     "confirm": "تأكيد",
@@ -361,7 +362,15 @@
     "custom_field_deleted": "تم حذف الحقل المخصص بنجاح",
     "custom_field_delete_failed": "فشل في حذف الحقل المخصص",
     "custom_field_reordered": "تم إعادة ترتيب الحقول المخصصة بنجاح",
-    "custom_field_reorder_failed": "فشل في إعادة ترتيب الحقول المخصصة"
+    "custom_field_reorder_failed": "فشل في إعادة ترتيب الحقول المخصصة",
+    "manage_statuses": "إدارة الحالات",
+    "manage_statuses_description": "إضافة وإزالة وتعديل خيارات الحالات للعملاء المحتملين",
+    "add_status": "إضافة حالة",
+    "statuses_updated": "تم تحديث الحالات بنجاح",
+    "add_column": "إضافة عمود",
+    "edit_columns": "تعديل الأعمدة",
+    "edit_statuses": "تعديل الحالات",
+    "ai_instructions": "تعليمات الذكاء الاصطناعي"
   },
   "connections": {
     "title": "الاتصالات",

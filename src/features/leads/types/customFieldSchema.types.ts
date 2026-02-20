@@ -22,6 +22,9 @@ export interface EnumOption {
   label_en: string;
   label_ar: string;
   color?: string;
+  is_initial?: boolean;
+  is_final?: boolean;
+  transitions?: string[];
 }
 
 export interface ValidationRules {

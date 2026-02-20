@@ -15,6 +15,7 @@
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Pencil } from 'lucide-react';
 import { useTableCustomFieldSchemas } from './useCustomFieldSchemas';
 import { renderCustomFieldValue, getCustomFieldValue, getColumnWidth } from '../utils/customFieldTableRenderer';
 import {
@@ -101,6 +102,11 @@ export const useCustomFieldColumns = (): UseCustomFieldColumnsReturn => {
 // System field columns (specialized renderers)
 // ============================================================
 
+/** Optional header-level actions for system columns */
+export interface SystemColumnHeaderActions {
+  onEditStatusClick?: () => void;
+}
+
 interface UseSystemFieldColumnsReturn {
   /** Generated column definitions for system fields */
   systemColumns: ColumnDef<Lead>[];
@@ -115,9 +121,11 @@ interface UseSystemFieldColumnsReturn {
  * System fields use specialized renderers (inline edit, status dropdown, etc.)
  *
  * @param ctx - Render context containing callbacks and state for interactive cells
+ * @param headerActions - Optional header-level actions (edit icons on hover)
  */
 export const useSystemFieldColumns = (
   ctx: SystemFieldRenderContext,
+  headerActions?: SystemColumnHeaderActions,
 ): UseSystemFieldColumnsReturn => {
   const { i18n } = useTranslation();
 
@@ -149,19 +157,41 @@ export const useSystemFieldColumns = (
 
         const width = getSystemFieldColumnWidth(schema.field_key);
 
-        return {
+        const colDef: ColumnDef<Lead> = {
           key: schema.field_key as keyof Lead,
           label,
           sortable: isSystemFieldSortable(schema.field_key),
           width,
-          cellClassName: schema.field_key === 'summary' ? `w-[${width}]` : `w-[${width}]`,
+          cellClassName: `w-[${width}]`,
           render: renderer
             ? (_: unknown, lead: Lead) => renderer(undefined, lead)
             : undefined,
         };
+
+        // Attach hover edit icon to status column header
+        if (schema.field_key === 'status' && headerActions?.onEditStatusClick) {
+          const onEdit = headerActions.onEditStatusClick;
+          colDef.headerRender = () => (
+            <span className="inline-flex items-center gap-1.5">
+              {label}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                className="p-0.5 rounded opacity-0 group-hover/header:opacity-100 hover:bg-neutral-200 transition-all"
+                title="Edit statuses"
+              >
+                <Pencil className="w-3 h-3 text-neutral-500" />
+              </button>
+            </span>
+          );
+        }
+
+        return colDef;
       })
       .filter(Boolean) as ColumnDef<Lead>[];
-  }, [systemSchemas, i18n.language, ctx, hasSystemFields]);
+  }, [systemSchemas, i18n.language, ctx, hasSystemFields, headerActions]);
 
   return {
     systemColumns,

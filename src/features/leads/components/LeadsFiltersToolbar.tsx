@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/Input';
 import { FilterBadge } from './FilterBadge';
 import { FilterPopover } from './FilterPopover';
+import { useLeadStatusSchema } from '../hooks/useLeadStatusSchema';
 import type { LeadStatus, LeadFilters, DatePreset } from '../types';
 
 interface LeadsFiltersToolbarProps {
@@ -51,6 +52,7 @@ export const LeadsFiltersToolbar = memo(({
   onRemoveDateFilter,
 }: LeadsFiltersToolbarProps) => {
   const { t } = useTranslation();
+  const { statusOptions, getStatusLabel } = useLeadStatusSchema();
   const hasActiveFilters = filters.search || filters.status !== 'all' || filters.dateFrom || filters.dateTo;
 
   return (
@@ -84,9 +86,11 @@ export const LeadsFiltersToolbar = memo(({
           className="px-3 h-9 text-sm border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black bg-white hover:bg-neutral-50 transition-colors cursor-pointer"
         >
           <option value="all">{t('common.status_all')}</option>
-          <option value="new">{t('lead_stats.new_leads')}</option>
-          <option value="processing">{t('lead_stats.processing')}</option>
-          <option value="completed">{t('lead_stats.completed')}</option>
+          {statusOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {getStatusLabel(opt.value)}
+            </option>
+          ))}
         </select>
 
         {/* Add Filter Button */}

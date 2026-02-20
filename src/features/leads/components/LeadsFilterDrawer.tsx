@@ -11,6 +11,7 @@ import { X, Search, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { FilterPopover } from './FilterPopover';
+import { useLeadStatusSchema } from '../hooks/useLeadStatusSchema';
 import type { LeadStatus, LeadFilters, DatePreset } from '../types';
 
 interface LeadsFilterDrawerProps {
@@ -27,6 +28,7 @@ export const LeadsFilterDrawer = memo(({
   onApplyFilters,
 }: LeadsFilterDrawerProps) => {
   const { t } = useTranslation();
+  const { statusOptions, getStatusLabel } = useLeadStatusSchema();
 
   // Draft state (internal to drawer, not applied until "Apply" clicked)
   const [draftSearch, setDraftSearch] = useState(filters.search || '');
@@ -171,9 +173,10 @@ export const LeadsFilterDrawer = memo(({
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { value: 'all', label: t('leads.status_all') },
-                    { value: 'new', label: t('leads.status_new') },
-                    { value: 'processing', label: t('leads.status_processing') },
-                    { value: 'completed', label: t('leads.status_completed') },
+                    ...statusOptions.map((opt) => ({
+                      value: opt.value,
+                      label: getStatusLabel(opt.value),
+                    })),
                   ].map((option) => (
                     <button
                       key={option.value}

@@ -1,42 +1,37 @@
 /**
  * LeadStatusBadge Component
- * Displays lead status with color-coded minimal badge
- * Follows minimal design system (no gradients, minimal colors)
+ * Displays lead status with color-coded minimal badge.
+ * Colors and labels are driven by custom_field_schemas (field_key='status').
  */
 
-import { useTranslation } from 'react-i18next';
-import type { LeadStatus } from '../types';
+import { useLeadStatusSchema } from '../hooks/useLeadStatusSchema';
 
 interface LeadStatusBadgeProps {
-  status: LeadStatus;
+  status: string;
   className?: string;
 }
 
-// Status configuration with minimal colors (labels now use translations)
-const getStatusConfig = (t: (key: string) => string): Record<LeadStatus, { label: string; className: string }> => ({
-  new: {
-    label: t('leads.status_new'),
-    className: 'bg-neutral-100 text-neutral-700 border-neutral-300',
-  },
-  processing: {
-    label: t('leads.status_processing'),
-    className: 'bg-blue-50 text-blue-700 border-blue-200',
-  },
-  completed: {
-    label: t('leads.status_completed'),
-    className: 'bg-green-50 text-green-700 border-green-200',
-  },
-});
+/**
+ * Convert a hex color to a light background + dark text color pair.
+ * E.g. #00D084 → { bg: 'rgba(0,208,132,0.1)', text: '#00D084', border: 'rgba(0,208,132,0.25)' }
+ */
+function hexToColorSet(hex: string): { bg: string; text: string; border: string } {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return {
+    bg: `rgba(${r},${g},${b},0.1)`,
+    text: hex,
+    border: `rgba(${r},${g},${b},0.25)`,
+  };
+}
 
 export default function LeadStatusBadge({ status, className = '' }: LeadStatusBadgeProps) {
-  const { t } = useTranslation();
-  const statusConfig = getStatusConfig(t);
+  const { getStatusLabel, getStatusColor } = useLeadStatusSchema();
 
-  // Defensive: Handle unknown or undefined status values
-  const config = statusConfig[status] || {
-    label: status || t('leads.status_unknown'),
-    className: 'bg-neutral-100 text-neutral-700 border-neutral-300',
-  };
+  const label = getStatusLabel(status);
+  const color = getStatusColor(status);
+  const colors = hexToColorSet(color);
 
   return (
     <span
@@ -46,11 +41,15 @@ export default function LeadStatusBadge({ status, className = '' }: LeadStatusBa
         text-xs font-medium
         rounded-md
         border
-        ${config.className}
         ${className}
       `.trim()}
+      style={{
+        backgroundColor: colors.bg,
+        color: colors.text,
+        borderColor: colors.border,
+      }}
     >
-      {config.label}
+      {label}
     </span>
   );
 }

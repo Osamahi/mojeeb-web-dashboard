@@ -4,6 +4,7 @@
  */
 
 import { memo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { User, Bot, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Conversation } from '../../types';
@@ -51,7 +52,7 @@ const ConversationListItem = memo(function ConversationListItem({
   };
 
   return (
-    <>
+    <motion.div layoutId={conversation.id} layout transition={{ duration: 0.3, ease: "easeInOut" }}>
       <div
         onClick={onSelect}
         onContextMenu={handleContextMenu}
@@ -139,7 +140,7 @@ const ConversationListItem = memo(function ConversationListItem({
           onClose={() => setContextMenu(null)}
         />
       )}
-    </>
+    </motion.div>
   );
 });
 

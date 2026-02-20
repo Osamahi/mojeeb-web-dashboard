@@ -6,7 +6,7 @@
 
 import { useMemo, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { MessageSquare, Columns3, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUpdateLead } from '../hooks/useLeads';
 import { DataTable } from '@/components/ui/DataTable/DataTable';
@@ -38,6 +38,8 @@ interface LeadsTableViewProps {
   fetchNextPage: () => void;
   hasMore: boolean;
   isFetchingNextPage: boolean;
+  onEditStatusClick?: () => void;
+  onAddColumnClick?: () => void;
 }
 
 export function LeadsTableView({
@@ -55,6 +57,8 @@ export function LeadsTableView({
   fetchNextPage,
   hasMore,
   isFetchingNextPage,
+  onEditStatusClick,
+  onAddColumnClick,
 }: LeadsTableViewProps) {
   const { t, i18n } = useTranslation();
   const user = useAuthStore((state) => state.user);
@@ -168,19 +172,36 @@ export function LeadsTableView({
     isLoading: isCustomFieldsLoading,
   } = useCustomFieldColumns();
 
+  // Header actions for system columns (edit icon on hover)
+  const headerActions = useMemo(() => ({
+    onEditStatusClick,
+  }), [onEditStatusClick]);
+
   // Fetch system field columns (specialized renderers)
   const {
     systemColumns,
     isLoading: isSystemFieldsLoading,
-  } = useSystemFieldColumns(systemFieldRenderCtx);
+  } = useSystemFieldColumns(systemFieldRenderCtx, headerActions);
 
-  // Actions column
+  // Actions column (with "Edit" header on hover)
   const actionsColumn = useMemo(() => ({
     key: 'actions' as keyof Lead,
     label: '',
     sortable: false,
     width: '140px',
     cellClassName: 'text-end pe-6',
+    headerRender: onAddColumnClick
+      ? () => (
+          <button
+            onClick={onAddColumnClick}
+            className="flex items-center gap-1 mx-auto text-xs text-neutral-400 hover:text-neutral-700 opacity-0 group-hover/header:opacity-100 hover:bg-neutral-100 px-2 py-1 rounded transition-all whitespace-nowrap"
+            title={t('leads.edit_columns')}
+          >
+            <Columns3 className="w-3 h-3" />
+            <span className="font-medium normal-case tracking-normal">{t('common.edit')}</span>
+          </button>
+        )
+      : undefined,
     render: (_: unknown, lead: Lead) => (
       <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-end gap-1">
         {lead.conversationId ? (
@@ -219,7 +240,7 @@ export function LeadsTableView({
         </button>
       </div>
     ),
-  }), [t, onViewConversation, onEditClick, onDeleteClick]);
+  }), [t, onViewConversation, onEditClick, onDeleteClick, onAddColumnClick]);
 
   // Schema-driven columns: system + custom + actions
   const columns = useMemo(() => {

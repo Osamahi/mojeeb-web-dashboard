@@ -78,8 +78,6 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
   const [nameEn, setNameEn] = useState('');
   const [nameAr, setNameAr] = useState('');
   const [fieldType, setFieldType] = useState<FieldType>('string');
-  const [showInTable, setShowInTable] = useState(true);
-  const [showInForm, setShowInForm] = useState(true);
   const [isRequired, setIsRequired] = useState(false);
   const [enumOptions, setEnumOptions] = useState<EnumOption[]>([]);
 
@@ -116,8 +114,6 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
     setNameEn('');
     setNameAr('');
     setFieldType('string');
-    setShowInTable(true);
-    setShowInForm(true);
     setIsRequired(false);
     setEnumOptions([]);
     setEditingSchema(null);
@@ -136,8 +132,6 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
     setNameEn(schema.name_en);
     setNameAr(schema.name_ar);
     setFieldType(schema.field_type);
-    setShowInTable(schema.show_in_table);
-    setShowInForm(schema.show_in_form);
     setIsRequired(schema.is_required);
     setEnumOptions(schema.options || []);
     setViewMode('edit');
@@ -422,6 +416,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
               <EnumOptionsEditor
                 options={enumOptions}
                 onChange={setEnumOptions}
+                protectedValues={fieldKey === 'status' ? ['new'] : undefined}
               />
             )}
 

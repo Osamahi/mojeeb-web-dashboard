@@ -7,7 +7,9 @@
 // Enums & Constants
 // ========================================
 
-export type LeadStatus = 'new' | 'processing' | 'completed';
+// Dynamic: status values are defined per-agent in custom_field_schemas (field_key='status')
+// Defaults: 'new', 'processing', 'completed' — but agents can customize
+export type LeadStatus = string;
 export type NoteType = 'user_note' | 'status_change';
 
 // ========================================

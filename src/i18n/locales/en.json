@@ -2,6 +2,7 @@
   "common": {
     "create": "Create",
     "save": "Save",
+    "save_changes": "Save Changes",
     "cancel": "Cancel",
     "delete": "Delete",
     "confirm": "Confirm",
@@ -364,7 +365,15 @@
     "custom_field_deleted": "Custom field deleted successfully",
     "custom_field_delete_failed": "Failed to delete custom field",
     "custom_field_reordered": "Custom fields reordered successfully",
-    "custom_field_reorder_failed": "Failed to reorder custom fields"
+    "custom_field_reorder_failed": "Failed to reorder custom fields",
+    "manage_statuses": "Manage Statuses",
+    "manage_statuses_description": "Add, remove, and configure status options for your leads",
+    "add_status": "Add Status",
+    "statuses_updated": "Statuses updated successfully",
+    "add_column": "Add column",
+    "edit_columns": "Edit Columns",
+    "edit_statuses": "Edit Statuses",
+    "ai_instructions": "AI Instructions"
   },
   "connections": {
     "title": "Connections",

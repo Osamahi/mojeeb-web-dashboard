@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { formatPhoneNumber } from '../utils/formatting';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { useDateLocale } from '@/lib/dateConfig';
+import { useLeadStatusSchema } from '../hooks/useLeadStatusSchema';
 import type { Lead, LeadStatus } from '../types';
 
 interface LeadCardProps {
@@ -34,6 +35,7 @@ export function LeadCard({
 }: LeadCardProps) {
   const { t } = useTranslation();
   const { formatSmartTimestamp } = useDateLocale();
+  const { statusOptions, getStatusLabel, getStatusColor } = useLeadStatusSchema();
 
   return (
     <div
@@ -124,10 +126,9 @@ export function LeadCard({
               onStatusChange(lead.id, e.target.value as LeadStatus);
             }}
             disabled={isUpdating}
-            className={`px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none ${
-              lead.status === 'new' ? 'text-[#00D084]' : 'text-neutral-950'
-            }`}
+            className="px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none"
             style={{
+              color: getStatusColor(lead.status),
               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
               backgroundPosition: 'right 0.5rem center',
               backgroundRepeat: 'no-repeat',
@@ -135,9 +136,11 @@ export function LeadCard({
               paddingRight: '2.5rem',
             }}
           >
-            <option value="new">{t('lead_card.status_new')}</option>
-            <option value="processing">{t('lead_card.status_processing')}</option>
-            <option value="completed">{t('lead_card.status_completed')}</option>
+            {statusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {getStatusLabel(opt.value)}
+              </option>
+            ))}
           </select>
         </div>
 

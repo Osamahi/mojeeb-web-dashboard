@@ -12,6 +12,7 @@ import { TableHeader } from './TableHeader';
 import { TablePagination } from './TablePagination';
 import { EmptyState } from '../EmptyState';
 import { Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface ColumnDef<T> {
   /** Column key */
@@ -22,6 +23,8 @@ export interface ColumnDef<T> {
   sortable?: boolean;
   /** Custom render function for cell content */
   render?: (value: T[keyof T], row: T) => ReactNode;
+  /** Custom header render function (overrides default TableHeader) */
+  headerRender?: () => ReactNode;
   /** Custom CSS classes for header */
   headerClassName?: string;
   /** Custom CSS classes for cell */
@@ -157,20 +160,33 @@ export function DataTable<T extends Record<string, any>>({
         <div className="overflow-x-auto">
           <table className="w-full" style={{ tableLayout: 'fixed' }}>
             <thead className="bg-neutral-50 border-b border-neutral-200">
-              <tr>
-                {columns.map((column) => (
-                  <TableHeader
-                    key={String(column.key)}
-                    field={column.key}
-                    label={column.label}
-                    sortable={sortable && column.sortable !== false}
-                    sortField={sortConfig?.field}
-                    sortDirection={sortConfig?.direction}
-                    onSort={handleSort}
-                    className={column.headerClassName}
-                    style={column.width ? { width: column.width, maxWidth: column.width } : undefined}
-                  />
-                ))}
+              <tr className="group/header">
+                {columns.map((column) =>
+                  column.headerRender ? (
+                    <th
+                      key={String(column.key)}
+                      className={cn(
+                        'px-6 py-3 text-start text-xs font-semibold text-neutral-700 uppercase tracking-wider',
+                        column.headerClassName
+                      )}
+                      style={column.width ? { width: column.width, maxWidth: column.width } : undefined}
+                    >
+                      {column.headerRender()}
+                    </th>
+                  ) : (
+                    <TableHeader
+                      key={String(column.key)}
+                      field={column.key}
+                      label={column.label}
+                      sortable={sortable && column.sortable !== false}
+                      sortField={sortConfig?.field}
+                      sortDirection={sortConfig?.direction}
+                      onSort={handleSort}
+                      className={column.headerClassName}
+                      style={column.width ? { width: column.width, maxWidth: column.width } : undefined}
+                    />
+                  )
+                )}
                 {actionsColumn && (
                   <TableHeader
                     label={t('data_table.actions')}
