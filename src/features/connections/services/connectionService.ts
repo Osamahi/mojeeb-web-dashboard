@@ -3,9 +3,7 @@ import { logger } from '@/lib/logger';
 import { isAxiosError, ApiError, NotFoundError } from '@/lib/errors';
 import type {
   PlatformConnection,
-  ConnectionHealthStatus,
   ApiPlatformConnectionResponse,
-  ApiConnectionHealthResponse,
   PlatformType,
   OAuthInitiationResponse,
   FacebookPagesResponse,
@@ -38,77 +36,6 @@ function validatePlatformType(platform: string): PlatformType {
   }
   logger.warn(`Unknown platform type '${platform}', falling back to 'web'`);
   return 'web';
-}
-
-/**
- * Parse token permissions from raw JSON
- */
-function parseTokenPermissions(rawJson: string | undefined): string[] {
-  if (!rawJson) return [];
-
-  try {
-    const tokenData = JSON.parse(rawJson);
-    const scopes = tokenData?.data?.scopes;
-
-    if (Array.isArray(scopes)) {
-      return scopes.filter((scope: unknown) => typeof scope === 'string');
-    }
-
-    if (scopes !== undefined) {
-      logger.warn('token_check_raw_json.data.scopes is not an array', { scopes });
-    }
-  } catch (error) {
-    logger.warn('Failed to parse token_check_raw_json', error);
-  }
-
-  return [];
-}
-
-/**
- * Parse token expiry information from raw JSON
- */
-function parseTokenExpiry(rawJson: string | undefined): {
-  tokenExpiresAt: string | null;
-  daysUntilExpiry: number | null;
-} {
-  if (!rawJson) {
-    return { tokenExpiresAt: null, daysUntilExpiry: null };
-  }
-
-  try {
-    const tokenData = JSON.parse(rawJson);
-    const expiryTimestamp = tokenData?.data?.data_access_expires_at;
-
-    if (typeof expiryTimestamp === 'number' && expiryTimestamp > 0) {
-      const expiresAtTimestamp = expiryTimestamp * 1000;
-      const tokenExpiresAt = new Date(expiresAtTimestamp).toISOString();
-      const daysUntilExpiry = Math.floor((expiresAtTimestamp - Date.now()) / (1000 * 60 * 60 * 24));
-      return { tokenExpiresAt, daysUntilExpiry };
-    }
-
-    if (expiryTimestamp !== undefined) {
-      logger.warn('token_check_raw_json.data.data_access_expires_at is invalid', { expiryTimestamp });
-    }
-  } catch {
-    // Already logged in parseTokenPermissions if JSON is malformed
-  }
-
-  return { tokenExpiresAt: null, daysUntilExpiry: null };
-}
-
-/**
- * Parse webhook subscription status from raw JSON
- */
-function parseWebhookStatus(rawJson: string | undefined): boolean {
-  if (!rawJson) return true;
-
-  try {
-    const subscriptionData = JSON.parse(rawJson);
-    return subscriptionData?.error === undefined || subscriptionData?.error === null;
-  } catch (error) {
-    logger.warn('Failed to parse subscription_check_raw_json', error);
-    return true; // Default to active if we can't parse
-  }
 }
 
 /**
@@ -150,24 +77,6 @@ class ConnectionService {
   }
 
   /**
-   * Transform health status from API response to internal format
-   */
-  private transformHealthStatus(apiHealth: ApiConnectionHealthResponse): ConnectionHealthStatus {
-    const permissions = parseTokenPermissions(apiHealth.token_check_raw_json);
-    const { tokenExpiresAt, daysUntilExpiry } = parseTokenExpiry(apiHealth.token_check_raw_json);
-    const webhookSubscriptionActive = parseWebhookStatus(apiHealth.subscription_check_raw_json);
-
-    return {
-      tokenValid: apiHealth.is_healthy,
-      tokenExpiresAt,
-      daysUntilExpiry,
-      webhookSubscriptionActive,
-      permissions,
-      error: apiHealth.is_healthy ? null : apiHealth.message,
-    };
-  }
-
-  /**
    * Get all connections for an agent
    */
   async getConnections(agentId: string): Promise<PlatformConnection[]> {
@@ -201,22 +110,6 @@ class ConnectionService {
       await api.delete(API_PATHS.CONNECTION(connectionId));
     } catch (error) {
       logger.error('Error disconnecting platform', { connectionId, error });
-      handleApiError(error, 'Connection', connectionId);
-    }
-  }
-
-  /**
-   * Check health status of a Facebook/Instagram connection
-   */
-  async checkConnectionHealth(connectionId: string): Promise<ConnectionHealthStatus> {
-    try {
-      const { data } = await api.get<ApiConnectionHealthResponse>(
-        API_PATHS.HEALTH_CHECK(connectionId)
-      );
-
-      return this.transformHealthStatus(data);
-    } catch (error) {
-      logger.error('Error checking connection health', { connectionId, error });
       handleApiError(error, 'Connection', connectionId);
     }
   }

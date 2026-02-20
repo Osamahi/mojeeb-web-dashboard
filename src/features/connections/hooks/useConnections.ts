@@ -138,23 +138,3 @@ export function useDisconnectPlatform() {
   });
 }
 
-/**
- * Hook for checking health status of Meta (Facebook/Instagram) connections.
- *
- * @param connectionId - The connection ID to check
- * @returns {UseQueryResult} Query result with health status
- */
-export function useConnectionHealth(connectionId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.connectionHealth(connectionId),
-    queryFn: async () => {
-      if (!connectionId) {
-        throw new Error('No connection ID provided');
-      }
-      return connectionService.checkConnectionHealth(connectionId);
-    },
-    enabled: !!connectionId,
-    staleTime: CACHE_TIMES.HEALTH_CHECK,
-    retry: false, // Don't retry health checks
-  });
-}

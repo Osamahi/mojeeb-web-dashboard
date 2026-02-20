@@ -13,7 +13,6 @@ export interface ConnectedPlatformsSectionProps {
   isLoading?: boolean;
   onManage?: (connection: PlatformConnection) => void;
   onDisconnect?: (connection: PlatformConnection) => void;
-  onViewHealth?: (connection: PlatformConnection) => void;
 }
 
 export function ConnectedPlatformsSection({
@@ -21,7 +20,6 @@ export function ConnectedPlatformsSection({
   isLoading = false,
   onManage,
   onDisconnect,
-  onViewHealth,
 }: ConnectedPlatformsSectionProps) {
   const { t } = useTranslation();
 
@@ -80,7 +78,6 @@ export function ConnectedPlatformsSection({
               connection={connection}
               onManage={onManage}
               onDisconnect={onDisconnect}
-              onViewHealth={onViewHealth}
             />
           ))}
         </div>

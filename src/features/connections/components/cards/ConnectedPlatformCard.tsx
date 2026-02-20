@@ -4,7 +4,7 @@
  * Used in the "Connected Platforms" section
  */
 
-import { MoreVertical, AlertCircle, Users, HelpCircle } from 'lucide-react';
+import { MoreVertical, HelpCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -55,19 +55,14 @@ export interface ConnectedPlatformCardProps {
   connection: PlatformConnection;
   onManage?: (connection: PlatformConnection) => void;
   onDisconnect?: (connection: PlatformConnection) => void;
-  onViewHealth?: (connection: PlatformConnection) => void;
   className?: string;
-  /** Optional health status for warning indicator */
-  hasWarning?: boolean;
 }
 
 export function ConnectedPlatformCard({
   connection,
   onManage,
   onDisconnect,
-  onViewHealth,
   className,
-  hasWarning = false,
 }: ConnectedPlatformCardProps) {
   const { t } = useTranslation();
   const platform = getPlatformById(connection.platform);
@@ -84,10 +79,6 @@ export function ConnectedPlatformCard({
 
   const handleDisconnect = () => {
     onDisconnect?.(connection);
-  };
-
-  const handleViewHealth = () => {
-    onViewHealth?.(connection);
   };
 
   const handleOpenSupport = (e: React.MouseEvent) => {
@@ -154,9 +145,6 @@ export function ConnectedPlatformCard({
               displayName
             )}
           </h3>
-          {hasWarning && (
-            <AlertCircle className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
-          )}
         </div>
 
         {/* Super Minimal Metadata Labels - Brief on mobile, full on desktop */}
@@ -231,11 +219,6 @@ export function ConnectedPlatformCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {onViewHealth && (
-              <DropdownMenuItem onClick={handleViewHealth}>
-                {t('connections.health_check')}
-              </DropdownMenuItem>
-            )}
             {onDisconnect && (
               <DropdownMenuItem
                 onClick={handleDisconnect}

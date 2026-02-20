@@ -138,15 +138,6 @@ export type PlatformConnection = {
   codeVerificationStatus: string | null; // WhatsApp verification status
 };
 
-export type ConnectionHealthStatus = {
-  tokenValid: boolean;
-  tokenExpiresAt: string | null;
-  daysUntilExpiry: number | null;
-  webhookSubscriptionActive: boolean;
-  permissions: string[];
-  error: string | null;
-};
-
 // API Response types (snake_case from backend)
 export interface ApiPlatformConnectionResponse {
   id: string;
@@ -174,17 +165,6 @@ export interface ApiPlatformConnectionResponse {
     business_category?: string;
     [key: string]: unknown;
   };
-}
-
-export interface ApiConnectionHealthResponse {
-  is_healthy: boolean;
-  status: string;
-  message: string;
-  expires_at: string | null;
-  token_check_raw_json?: string;
-  subscription_check_raw_json?: string;
-  token_check_request_url?: string;
-  subscription_check_request_url?: string;
 }
 
 // Platform display configuration

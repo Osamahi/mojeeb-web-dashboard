@@ -7,12 +7,11 @@ import { useState } from 'react';
 import { Link2, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useConnections, useDisconnectPlatform, useConnectionHealth } from '../hooks/useConnections';
+import { useConnections, useDisconnectPlatform } from '../hooks/useConnections';
 import { ConnectedPlatformsSection } from '../components/sections/ConnectedPlatformsSection';
 import { AvailablePlatformsSection } from '../components/sections/AvailablePlatformsSection';
 import { AddConnectionModal } from '../components/AddConnectionModal';
 import { DisconnectConfirmationDialog } from '../components/dialogs/DisconnectConfirmationDialog';
-import { HealthCheckDialog } from '../components/dialogs/HealthCheckDialog';
 import { WidgetCustomizationModal } from '../components/dialogs/WidgetCustomizationModal';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useAuthStore } from '@/features/auth/stores/authStore';
@@ -31,7 +30,6 @@ export default function ConnectionsPage() {
   const [isCustomizeModalOpen, setIsCustomizeModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<PlatformType | null>(null);
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false);
-  const [healthCheckDialogOpen, setHealthCheckDialogOpen] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState<PlatformConnection | null>(null);
 
   const { agent: globalSelectedAgent } = useAgentContext();
@@ -39,9 +37,6 @@ export default function ConnectionsPage() {
 
   const { data: connections, isLoading, error, refetch, isFetching } = useConnections();
   const disconnectMutation = useDisconnectPlatform();
-  const { data: healthStatus, isLoading: isLoadingHealth, error: healthError } = useConnectionHealth(
-    healthCheckDialogOpen ? selectedConnection?.id : undefined
-  );
 
   // Handle platform connection
   const handleConnect = (platformId: PlatformType) => {
@@ -77,12 +72,6 @@ export default function ConnectionsPage() {
         },
       });
     }
-  };
-
-  // Handle view health status - Open health check dialog
-  const handleViewHealth = (connection: PlatformConnection) => {
-    setSelectedConnection(connection);
-    setHealthCheckDialogOpen(true);
   };
 
   // Show empty state if no agent is selected
@@ -151,7 +140,6 @@ export default function ConnectionsPage() {
               isLoading={false}
               onManage={handleManageConnection}
               onDisconnect={handleDisconnect}
-              onViewHealth={handleViewHealth}
             />
           </motion.div>
 
@@ -197,19 +185,6 @@ export default function ConnectionsPage() {
         onConfirm={confirmDisconnect}
         connection={selectedConnection}
         isDisconnecting={disconnectMutation.isPending}
-      />
-
-      {/* Health Check Dialog */}
-      <HealthCheckDialog
-        isOpen={healthCheckDialogOpen}
-        onClose={() => {
-          setHealthCheckDialogOpen(false);
-          setSelectedConnection(null);
-        }}
-        connection={selectedConnection}
-        healthStatus={healthStatus || null}
-        isLoading={isLoadingHealth}
-        error={healthError || null}
       />
 
       {/* Widget Customization Modal */}
