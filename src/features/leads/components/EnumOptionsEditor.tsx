@@ -62,18 +62,13 @@ function SortableOptionItem({ id, option, index, isProtected, onUpdate, onRemove
       style={style}
       className="flex items-start gap-2 p-3 border border-neutral-200 rounded-lg hover:border-neutral-300 transition-colors bg-white"
     >
-      {/* Drag Handle (hidden for protected values) */}
-      {isProtected ? (
-        <div className="mt-2 w-4 h-4 flex-shrink-0" />
-      ) : (
-        <div
-          {...attributes}
-          {...listeners}
-          className="mt-2 cursor-grab active:cursor-grabbing touch-none text-neutral-400 hover:text-neutral-600"
-        >
-          <GripVertical className="w-4 h-4" />
-        </div>
-      )}
+      {/* Drag Handle */}
+      <div
+        {...(isProtected ? {} : { ...attributes, ...listeners })}
+        className={`mt-2 ${isProtected ? 'text-neutral-200 cursor-default' : 'cursor-grab active:cursor-grabbing touch-none text-neutral-400 hover:text-neutral-600'}`}
+      >
+        <GripVertical className="w-4 h-4" />
+      </div>
 
       {/* Color Picker */}
       <div className="mt-2">
@@ -116,19 +111,16 @@ function SortableOptionItem({ id, option, index, isProtected, onUpdate, onRemove
         />
       </div>
 
-      {/* Delete Button (hidden for protected values) */}
-      {isProtected ? (
-        <div className="w-[26px] h-[26px] mt-2 flex-shrink-0" />
-      ) : (
-        <button
-          type="button"
-          onClick={() => onRemove(index)}
-          className="mt-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50 p-1 rounded transition-colors"
-          title="Remove option"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      )}
+      {/* Delete Button */}
+      <button
+        type="button"
+        onClick={() => !isProtected && onRemove(index)}
+        disabled={isProtected}
+        className={`mt-2 p-1 rounded transition-colors ${isProtected ? 'text-neutral-200 cursor-default' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50'}`}
+        title={isProtected ? undefined : 'Remove option'}
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
     </div>
   );
 }
