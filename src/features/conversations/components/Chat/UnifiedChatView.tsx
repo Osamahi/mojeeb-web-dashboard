@@ -7,8 +7,10 @@
 import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Send } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { ChatMessage } from '../../types/conversation.types';
+import { isCustomerMessage } from '../../types';
 import ChatMessageBubble from './ChatMessageBubble';
 import MessageComposer from './MessageComposer';
 import DateSeparator from './DateSeparator';
@@ -118,6 +120,27 @@ export default function UnifiedChatView({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // Track which message IDs have been rendered — new ones get animated, existing ones don't
+  const seenMessageIds = useRef<Set<string>>(new Set());
+  const isInitialLoad = useRef(true);
+
+  // After each render, mark all current messages as seen (keyed by correlation_id or id)
+  useEffect(() => {
+    messages.forEach((m) => {
+      seenMessageIds.current.add(m.id);
+      if (m.correlation_id) seenMessageIds.current.add(m.correlation_id);
+    });
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+    }
+  }, [messages]);
+
+  // Reset when conversation changes
+  useEffect(() => {
+    seenMessageIds.current.clear();
+    isInitialLoad.current = true;
+  }, [conversationId]);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     // Smooth scroll for better UX (instant for many messages)
@@ -179,58 +202,74 @@ export default function UnifiedChatView({
         ) : (
           <>
             {/* Message list with date separators */}
-            {messages.map((message, index) => {
-              const showDateSeparator =
-                index === 0 ||
-                !isSameDay(message.created_at, messages[index - 1].created_at);
+            <AnimatePresence initial={false}>
+              {messages.map((message, index) => {
+                const showDateSeparator =
+                  index === 0 ||
+                  !isSameDay(message.created_at, messages[index - 1].created_at);
+                const isUser = isCustomerMessage(message);
+                const trackingKey = message.correlation_id || message.id;
+                const animate = !isInitialLoad.current && !seenMessageIds.current.has(trackingKey);
 
-              return (
-                <div key={message.id}>
-                  {/* Date separator */}
-                  {showDateSeparator && <DateSeparator date={message.created_at} />}
+                return (
+                  <motion.div
+                    key={message.id}
+                    initial={animate ? { opacity: 0, y: 8, x: isUser ? 12 : -12 } : false}
+                    animate={{ opacity: 1, y: 0, x: 0 }}
+                    transition={animate ? { duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] } : { duration: 0 }}
+                  >
+                    {/* Date separator */}
+                    {showDateSeparator && <DateSeparator date={message.created_at} />}
 
-                  {/* Message */}
-                  <ChatMessageBubble
-                    message={message}
-                    onRetry={
-                      message.sendStatus === 'error' && onRetryMessage
-                        ? () => onRetryMessage(message.id)
-                        : undefined
-                    }
-                  />
-                </div>
-              );
-            })}
+                    {/* Message */}
+                    <ChatMessageBubble
+                      message={message}
+                      onRetry={
+                        message.sendStatus === 'error' && onRetryMessage
+                          ? () => onRetryMessage(message.id)
+                          : undefined
+                      }
+                    />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
 
             {/* Typing indicator - AI is generating response */}
-            {isAITyping && (
-              <div
-                className="flex justify-start"
-                role="status"
-                aria-live="polite"
-                aria-label="AI is typing"
-              >
-                <div className="bg-neutral-100 rounded-2xl px-5 py-4 border border-neutral-200">
-                  <div className="flex gap-1">
-                    <span
-                      className="w-2 h-2 bg-neutral-600 rounded-full animate-bounce"
-                      style={{ animationDelay: '0ms', animationDuration: '1s' }}
-                      aria-hidden="true"
-                    />
-                    <span
-                      className="w-2 h-2 bg-neutral-600 rounded-full animate-bounce"
-                      style={{ animationDelay: '150ms', animationDuration: '1s' }}
-                      aria-hidden="true"
-                    />
-                    <span
-                      className="w-2 h-2 bg-neutral-600 rounded-full animate-bounce"
-                      style={{ animationDelay: '300ms', animationDuration: '1s' }}
-                      aria-hidden="true"
-                    />
+            <AnimatePresence>
+              {isAITyping && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, x: -12 }}
+                  animate={{ opacity: 1, y: 0, x: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className="flex justify-start"
+                  role="status"
+                  aria-live="polite"
+                  aria-label="AI is typing"
+                >
+                  <div className="bg-neutral-100 rounded-2xl px-5 py-4 border border-neutral-200">
+                    <div className="flex gap-1">
+                      <span
+                        className="w-2 h-2 bg-neutral-600 rounded-full animate-bounce"
+                        style={{ animationDelay: '0ms', animationDuration: '1s' }}
+                        aria-hidden="true"
+                      />
+                      <span
+                        className="w-2 h-2 bg-neutral-600 rounded-full animate-bounce"
+                        style={{ animationDelay: '150ms', animationDuration: '1s' }}
+                        aria-hidden="true"
+                      />
+                      <span
+                        className="w-2 h-2 bg-neutral-600 rounded-full animate-bounce"
+                        style={{ animationDelay: '300ms', animationDuration: '1s' }}
+                        aria-hidden="true"
+                      />
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Scroll anchor */}
             <div ref={messagesEndRef} />

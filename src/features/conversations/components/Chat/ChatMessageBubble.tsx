@@ -229,7 +229,13 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
 
         {/* Footer: Status + Timestamp + Copy Button (Outside bubble) - Hidden for deleted messages */}
         {!isDeleted && (
-          <div className={cn('flex items-center gap-2 mt-0.5 px-1', horizontalAlign)}>
+          <div
+            className={cn(
+              'flex items-center gap-2 mt-0.5 px-1 transition-opacity duration-300',
+              isOptimistic ? 'opacity-70' : 'opacity-100',
+              horizontalAlign,
+            )}
+          >
           {/* Status indicator (optimistic/error) */}
           {isOptimistic && (
             <div className="flex items-center gap-1">
@@ -258,19 +264,19 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
             </div>
           )}
 
-          {/* Timestamp (hide when sending) - Extra subtle */}
+          {/* Timestamp (hide when sending) - Extra subtle with fade-in */}
           {!isOptimistic && !hasError && (
-            <span className="text-[11px] text-neutral-500 opacity-50">
+            <span className="text-[11px] text-neutral-500 opacity-50 animate-[fadeIn_0.3s_ease-out]">
               {formatMessageTime(message.created_at)}
             </span>
           )}
 
-          {/* Copy button with visual feedback */}
-          {!hasError && (
+          {/* Copy button with visual feedback and fade-in */}
+          {!hasError && !isOptimistic && (
             <button
               onClick={handleCopy}
               className={cn(
-                "p-1 rounded transition-all",
+                "p-1 rounded transition-all animate-[fadeIn_0.3s_ease-out]",
                 isCopied ? "bg-green-100" : "hover:bg-neutral-100"
               )}
               title={isCopied ? t('conversations.copied') : t('conversations.copy_message')}
