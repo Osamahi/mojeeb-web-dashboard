@@ -4,6 +4,7 @@
  */
 
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 import {
   DndContext,
@@ -41,6 +42,7 @@ interface SortableOptionItemProps {
 }
 
 function SortableOptionItem({ id, option, index, isProtected, onUpdate, onRemove }: SortableOptionItemProps) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -77,7 +79,7 @@ function SortableOptionItem({ id, option, index, isProtected, onUpdate, onRemove
           value={option.color || '#000000'}
           onChange={(e) => onUpdate(index, 'color', e.target.value)}
           className="w-8 h-8 rounded cursor-pointer border border-neutral-300"
-          title="Option color"
+          title={t('leads.option_color')}
         />
       </div>
 
@@ -86,8 +88,8 @@ function SortableOptionItem({ id, option, index, isProtected, onUpdate, onRemove
         <input
           type="text"
           value={option.value}
-          onChange={(e) => onUpdate(index, 'value', e.target.value)}
-          placeholder="value (e.g., high)"
+          onChange={(e) => onUpdate(index, 'value', e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+          placeholder={t('leads.option_key_placeholder')}
           disabled={isProtected}
           className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed"
           required
@@ -96,7 +98,7 @@ function SortableOptionItem({ id, option, index, isProtected, onUpdate, onRemove
           type="text"
           value={option.label_en}
           onChange={(e) => onUpdate(index, 'label_en', e.target.value)}
-          placeholder="English label"
+          placeholder={t('leads.english_label')}
           className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           required
         />
@@ -104,7 +106,7 @@ function SortableOptionItem({ id, option, index, isProtected, onUpdate, onRemove
           type="text"
           value={option.label_ar}
           onChange={(e) => onUpdate(index, 'label_ar', e.target.value)}
-          placeholder="Arabic label"
+          placeholder={t('leads.arabic_label')}
           dir="rtl"
           className="px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           required
@@ -117,7 +119,7 @@ function SortableOptionItem({ id, option, index, isProtected, onUpdate, onRemove
         onClick={() => !isProtected && onRemove(index)}
         disabled={isProtected}
         className={`mt-2 p-1 rounded transition-colors ${isProtected ? 'text-neutral-200 cursor-default' : 'text-neutral-500 hover:text-neutral-700 hover:bg-neutral-50'}`}
-        title={isProtected ? undefined : 'Remove option'}
+        title={isProtected ? undefined : t('leads.remove_option')}
       >
         <Trash2 className="w-4 h-4" />
       </button>
@@ -126,6 +128,7 @@ function SortableOptionItem({ id, option, index, isProtected, onUpdate, onRemove
 }
 
 export function EnumOptionsEditor({ options, onChange, protectedValues = [] }: EnumOptionsEditorProps) {
+  const { t } = useTranslation();
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -173,7 +176,7 @@ export function EnumOptionsEditor({ options, onChange, protectedValues = [] }: E
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="block text-sm font-medium text-neutral-700">
-          Dropdown Options
+          {t('leads.dropdown_options_label')}
         </label>
         <button
           type="button"
@@ -181,13 +184,13 @@ export function EnumOptionsEditor({ options, onChange, protectedValues = [] }: E
           className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add Option
+          {t('leads.add_option')}
         </button>
       </div>
 
       {options.length === 0 ? (
         <div className="text-center py-8 border-2 border-dashed border-neutral-200 rounded-lg">
-          <p className="text-sm text-neutral-500">No options yet. Click "Add Option" to create one.</p>
+          <p className="text-sm text-neutral-500">{t('leads.no_options_yet')}</p>
         </div>
       ) : (
         <DndContext

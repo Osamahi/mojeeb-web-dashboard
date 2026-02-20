@@ -38,25 +38,25 @@ export function StatusEditorModal({ isOpen, onClose }: StatusEditorModalProps) {
   // --- Validation ---
 
   const validate = useCallback((): string | null => {
-    if (options.length === 0) return 'Must have at least one status';
+    if (options.length === 0) return t('leads.must_have_at_least_one_status');
 
     const values = options.map((o) => o.value?.trim().toLowerCase()).filter(Boolean);
-    if (values.length !== options.length) return 'All statuses must have a value';
+    if (values.length !== options.length) return t('leads.all_statuses_must_have_value');
 
     // Check duplicates
-    if (new Set(values).size !== values.length) return 'Duplicate status values are not allowed';
+    if (new Set(values).size !== values.length) return t('leads.duplicate_status_values');
 
     // "new" is mandatory
-    if (!values.includes('new')) return '"New" status is required and cannot be removed';
+    if (!values.includes('new')) return t('leads.new_status_required');
 
     // Labels required
     for (const opt of options) {
-      if (!opt.label_en?.trim()) return `English label is required for "${opt.value}"`;
-      if (!opt.label_ar?.trim()) return `Arabic label is required for "${opt.value}"`;
+      if (!opt.label_en?.trim()) return t('leads.english_label_required_for', { value: opt.value });
+      if (!opt.label_ar?.trim()) return t('leads.arabic_label_required_for', { value: opt.value });
     }
 
     return null;
-  }, [options]);
+  }, [options, t]);
 
   // --- Save ---
 
@@ -68,7 +68,7 @@ export function StatusEditorModal({ isOpen, onClose }: StatusEditorModalProps) {
     }
 
     if (!statusSchema) {
-      toast.error('Status schema not found');
+      toast.error(t('leads.status_schema_not_found'));
       return;
     }
 

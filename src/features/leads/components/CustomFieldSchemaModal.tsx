@@ -60,14 +60,6 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
   const queryClient = useQueryClient();
   const { agentId } = useAgentContext();
 
-  // Clear cache when modal opens to force fresh data
-  useEffect(() => {
-    if (isOpen && agentId) {
-      console.log('[CustomFieldSchemaModal] Modal opened, invalidating cache for agentId:', agentId);
-      queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.all(agentId) });
-    }
-  }, [isOpen, agentId, queryClient]);
-
   // State
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingSchema, setEditingSchema] = useState<CustomFieldSchema | null>(null);
@@ -96,13 +88,6 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
     })
   );
 
-  // Debug logging
-  console.log('Custom Field Schemas Debug:', {
-    schemasCount: schemas.length,
-    isLoading,
-    schemas: schemas.slice(0, 5), // First 5 for inspection
-  });
-
   // Sorted schemas by display_order
   const sortedSchemas = useMemo(() => {
     return [...schemas].sort((a, b) => a.display_order - b.display_order);
@@ -118,6 +103,17 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
     setEnumOptions([]);
     setEditingSchema(null);
   };
+
+  // Reset to list view and clear cache when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setViewMode('list');
+      resetForm();
+      if (agentId) {
+        queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.all(agentId) });
+      }
+    }
+  }, [isOpen]);
 
   // Handle add button click
   const handleAddClick = () => {
@@ -145,36 +141,36 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
 
   // Validate form
   const validateForm = (): string | null => {
-    if (!fieldKey.trim()) return 'Field key is required';
-    if (!nameEn.trim()) return 'English name is required';
-    if (!nameAr.trim()) return 'Arabic name is required';
+    if (!fieldKey.trim()) return t('leads.field_key_required');
+    if (!nameEn.trim()) return t('leads.english_name_required');
+    if (!nameAr.trim()) return t('leads.arabic_name_required');
 
     // Check if field key is valid (snake_case)
     if (!/^[a-z][a-z0-9_]*$/.test(fieldKey)) {
-      return 'Field key must start with lowercase letter and contain only lowercase letters, numbers, and underscores';
+      return t('leads.field_key_invalid_format');
     }
 
     // Check if field key is reserved
     if (RESERVED_FIELD_KEYS.includes(fieldKey)) {
-      return `Field key "${fieldKey}" is reserved and cannot be used`;
+      return t('leads.field_key_reserved', { key: fieldKey });
     }
 
     // Check for duplicate field keys (only for new schemas)
     if (viewMode === 'add') {
       const isDuplicate = schemas.some(s => s.field_key === fieldKey);
       if (isDuplicate) {
-        return `Field key "${fieldKey}" already exists`;
+        return t('leads.field_key_duplicate', { key: fieldKey });
       }
     }
 
     // Validate enum options
     if (fieldType === 'enum') {
       if (enumOptions.length === 0) {
-        return 'Dropdown fields must have at least one option';
+        return t('leads.dropdown_options_required');
       }
       const hasInvalidOptions = enumOptions.some(opt => !opt.value || !opt.label_en || !opt.label_ar);
       if (hasInvalidOptions) {
-        return 'All dropdown options must have a value, English label, and Arabic label';
+        return t('leads.dropdown_options_incomplete');
       }
     }
 
@@ -254,15 +250,15 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
 
   // Get modal title based on mode
   const getModalTitle = () => {
-    if (viewMode === 'add') return 'Add Custom Field';
-    if (viewMode === 'edit') return 'Edit Custom Field';
-    return 'Manage Custom Fields';
+    if (viewMode === 'add') return t('leads.add_custom_field_title');
+    if (viewMode === 'edit') return t('leads.edit_custom_field_title');
+    return t('leads.manage_custom_fields_title');
   };
 
   // Get modal subtitle
   const getModalSubtitle = () => {
-    if (viewMode === 'list') return 'Configure custom fields for your leads table';
-    return 'Define the custom field properties';
+    if (viewMode === 'list') return t('leads.manage_custom_fields_subtitle');
+    return t('leads.define_field_properties');
   };
 
   const selectedFieldTypeOption = FIELD_TYPE_OPTIONS.find(opt => opt.value === fieldType);
@@ -283,7 +279,9 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-neutral-600">
-                {sortedSchemas.length} custom field{sortedSchemas.length !== 1 ? 's' : ''}
+                {sortedSchemas.length !== 1
+                  ? t('leads.custom_fields_count_plural', { count: sortedSchemas.length })
+                  : t('leads.custom_fields_count', { count: sortedSchemas.length })}
               </p>
               <Button
                 onClick={handleAddClick}
@@ -291,27 +289,27 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                 size="sm"
               >
                 <Plus className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-                Add Field
+                {t('leads.add_field')}
               </Button>
             </div>
 
             {isLoading ? (
               <div className="text-center py-12">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand-mojeeb"></div>
-                <p className="text-sm text-neutral-500 mt-2">Loading...</p>
+                <p className="text-sm text-neutral-500 mt-2">{t('common.loading')}</p>
               </div>
             ) : sortedSchemas.length === 0 ? (
               <div className="text-center py-12 border-2 border-dashed border-neutral-200 rounded-lg">
                 <Table2 className="w-12 h-12 text-neutral-400 mx-auto mb-3" />
-                <p className="text-neutral-600 font-medium mb-1">No custom fields yet</p>
-                <p className="text-sm text-neutral-500 mb-4">Add your first custom field to get started</p>
+                <p className="text-neutral-600 font-medium mb-1">{t('leads.no_custom_fields_yet')}</p>
+                <p className="text-sm text-neutral-500 mb-4">{t('leads.add_first_custom_field')}</p>
                 <Button
                   onClick={handleAddClick}
                   variant="primary"
                   size="md"
                 >
                   <Plus className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-                  Add Field
+                  {t('leads.add_field')}
                 </Button>
               </div>
             ) : (
@@ -346,12 +344,12 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
               {/* Field Key */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-1">
-                  Field Key *
+                  {t('leads.field_key_label')} *
                 </label>
                 <input
                   type="text"
                   value={fieldKey}
-                  onChange={(e) => setFieldKey(e.target.value.toLowerCase())}
+                  onChange={(e) => setFieldKey(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                   placeholder="e.g., customer_company"
                   disabled={viewMode === 'edit'}
                   className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan disabled:bg-neutral-100 disabled:cursor-not-allowed"
@@ -359,7 +357,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                 />
                 {viewMode === 'add' && (
                   <p className="text-xs text-neutral-500 mt-1">
-                    Lowercase letters, numbers, underscores only. Cannot be changed after creation.
+                    {t('leads.field_key_hint')}
                   </p>
                 )}
               </div>
@@ -367,7 +365,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
               {/* Field Type */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-1">
-                  Field Type *
+                  {t('leads.field_type_label')} *
                 </label>
                 <FieldTypeSelector
                   value={fieldType}
@@ -383,7 +381,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
             {/* English Name */}
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-1">
-                English Label *
+                {t('leads.english_label')} *
               </label>
               <input
                 type="text"
@@ -398,7 +396,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
             {/* Arabic Name */}
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Arabic Label *
+                {t('leads.arabic_label')} *
               </label>
               <input
                 type="text"
@@ -430,7 +428,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                   className="w-4 h-4 rounded border-neutral-300 focus:ring-2 focus:ring-brand-cyan/20"
                   style={{ accentColor: '#00D084' }}
                 />
-                <span className="text-sm text-neutral-700">Required field</span>
+                <span className="text-sm text-neutral-700">{t('leads.required_field')}</span>
               </label>
             </div>
 
@@ -442,14 +440,14 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                 onClick={handleCancel}
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
-                Back
+                {t('common.back')}
               </Button>
               <Button
                 type="submit"
                 variant="primary"
                 isLoading={createMutation.isPending || updateMutation.isPending}
               >
-                {viewMode === 'add' ? 'Create Field' : 'Update Field'}
+                {viewMode === 'add' ? t('leads.create_field') : t('leads.update_field')}
               </Button>
             </div>
           </form>
@@ -459,9 +457,9 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={!!deleteSchemaId}
-        title="Delete Custom Field"
-        message="Are you sure you want to delete this custom field? This action cannot be undone."
-        confirmText="Delete"
+        title={t('leads.delete_custom_field_title')}
+        message={t('leads.delete_custom_field_message')}
+        confirmText={t('common.delete')}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteSchemaId(null)}
         isLoading={deleteMutation.isPending}
@@ -479,6 +477,7 @@ interface SortableSchemaItemProps {
 }
 
 function SortableSchemaItem({ schema, isRTL, onEdit, onDelete }: SortableSchemaItemProps) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -521,8 +520,8 @@ function SortableSchemaItem({ schema, isRTL, onEdit, onDelete }: SortableSchemaI
           </span>
         </div>
         <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-          {schema.is_required && <span>✓ Required</span>}
-          {schema.field_type === 'enum' && <span>({schema.options?.length || 0} options)</span>}
+          {schema.is_required && <span>✓ {t('leads.required_badge')}</span>}
+          {schema.field_type === 'enum' && <span>{t('leads.options_count', { count: schema.options?.length || 0 })}</span>}
         </div>
       </div>
 
@@ -530,14 +529,14 @@ function SortableSchemaItem({ schema, isRTL, onEdit, onDelete }: SortableSchemaI
         <button
           onClick={() => onEdit(schema)}
           className="p-2 text-neutral-600 hover:text-brand-mojeeb hover:bg-brand-mojeeb/10 rounded-lg transition-colors"
-          title="Edit"
+          title={t('common.edit')}
         >
           <Edit2 className="w-4 h-4" />
         </button>
         <button
           onClick={() => onDelete(schema.id)}
           className="p-2 text-neutral-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          title="Delete"
+          title={t('common.delete')}
         >
           <Trash2 className="w-4 h-4" />
         </button>
