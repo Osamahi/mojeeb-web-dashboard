@@ -10,8 +10,12 @@ import { marked } from 'marked';
  * Detect if text is primarily Arabic (for RTL direction)
  */
 export const isArabicText = (text: string): boolean => {
-  const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
-  return arabicRegex.test(text);
+  if (!text) return false;
+  const arabicChars = text.match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g);
+  const letterChars = text.match(/\p{L}/gu);
+  if (!arabicChars || !letterChars) return false;
+  // RTL if more than 40% of letters are Arabic
+  return arabicChars.length / letterChars.length > 0.4;
 };
 
 /**
@@ -30,16 +34,11 @@ marked.setOptions({
  * Returns HTML string (safe to use with DOMPurify)
  */
 export const parseFormattedText = (text: string, textColor: string = '#000000'): string => {
-  // First, handle phone numbers and WhatsApp links before markdown parsing
-  let formatted = text;
+  // 1. Parse markdown FIRST (handles bold, italic, links safely)
+  let formatted = marked.parseInline(text) as string;
 
-  // Phone numbers (Egyptian format): 01xxxxxxxxx
-  const phoneRegex = /\b(01[0-9]{9})\b/g;
-  formatted = formatted.replace(
-    phoneRegex,
-    `<a href="tel:$1" dir="ltr" style="color: ${textColor}; text-decoration: underline;">$1</a>`
-  );
-
+  // 2. Apply phone/WhatsApp links AFTER markdown (on the HTML output)
+  // Only match phone numbers that are NOT already inside an <a> tag
   // WhatsApp numbers: "واتساب: 01234567890" or "WhatsApp: 01234567890"
   const whatsappRegex = /(واتساب|WhatsApp):\s*(01[0-9]{9})/gi;
   formatted = formatted.replace(
@@ -48,17 +47,21 @@ export const parseFormattedText = (text: string, textColor: string = '#000000'):
       `${prefix}: <a href="https://wa.me/2${number}" target="_blank" rel="noopener noreferrer" dir="ltr" style="color: ${textColor}; text-decoration: underline;">${number}</a>`
   );
 
-  // Parse markdown with marked (handles bold, italic, links safely)
-  const parsed = marked.parseInline(formatted) as string;
+  // Phone numbers (Egyptian format): 01xxxxxxxxx — skip if already inside a link
+  const phoneRegex = /(?<!href="[^"]*)\b(01[0-9]{9})\b(?![^<]*<\/a>)/g;
+  formatted = formatted.replace(
+    phoneRegex,
+    `<a href="tel:$1" dir="ltr" style="color: ${textColor}; text-decoration: underline;">$1</a>`
+  );
 
-  // Apply link styling to markdown-generated links
-  const styledParsed = parsed.replace(
+  // 3. Apply link styling to markdown-generated links
+  formatted = formatted.replace(
     /<a /g,
     `<a style="color: ${textColor}; text-decoration: underline;" `
   );
 
-  // Ensure external links have security attributes
-  return styledParsed.replace(
+  // 4. Ensure external links have security attributes
+  return formatted.replace(
     /<a href="http/g,
     '<a target="_blank" rel="noopener noreferrer" href="http'
   );

@@ -218,7 +218,6 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isMountedRef = useRef(true);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const optimisticMessagesRef = useRef<Map<string, ChatMessage>>(new Map());
 
   // === Optimistic Update Helpers ===
@@ -315,18 +314,25 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
             messagePreview: newMessage.message?.substring(0, 50) || '(no text)',
           });
 
-          storage.addMessage(newMessage);
-
-          // If this is an AI response, clear sending state and typing indicator
+          // If this is an AI response, hide typing dots FIRST then add message after exit animation
           if (newMessage.sender_role === SenderRole.AiAgent) {
-            logger.info('[useChatEngine]', 'AI response received - clearing sending state and typing', {
+            logger.info('[useChatEngine]', 'AI response received - clearing typing, then adding message', {
               messageId: newMessage.id,
               conversationId,
             });
 
-            setIsSending(false);
             setIsAITyping(false);
+            setIsSending(false);
             clearAITimeout();
+
+            // Delay message render until typing dots exit animation completes (250ms)
+            setTimeout(() => {
+              if (isMountedRef.current) {
+                storage.addMessage(newMessage);
+              }
+            }, 250);
+          } else {
+            storage.addMessage(newMessage);
           }
         }
       } catch (error) {
@@ -623,11 +629,6 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
         channelRef.current = null;
       }
       clearAITimeout();
-      // Clear typing timeout to prevent memory leak
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = null;
-      }
     };
   }, [subscribeToMessages, clearAITimeout]);
 

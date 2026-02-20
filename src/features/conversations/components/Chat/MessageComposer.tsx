@@ -37,16 +37,19 @@ const THUMBNAIL_SIZE_PX = 80;
  * and normalizing whitespace
  */
 const sanitizeMessage = (msg: string): string => {
-  // Trim and normalize whitespace (multiple spaces, tabs, etc.)
-  let sanitized = msg.trim().replace(/\s+/g, ' ');
-
   // Remove zero-width characters that could be used maliciously
-  sanitized = sanitized.replace(/[\u200B-\u200D\uFEFF]/g, '');
+  let sanitized = msg.replace(/[\u200B-\u200D\uFEFF]/g, '');
 
-  // Remove control characters except newlines and tabs
+  // Remove control characters except newlines (\n), carriage returns (\r), and tabs (\t)
   sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 
-  return sanitized;
+  // Normalize horizontal whitespace (spaces/tabs) without collapsing newlines
+  sanitized = sanitized.replace(/[^\S\n]+/g, ' ');
+
+  // Collapse 3+ consecutive newlines into 2 (prevent whitespace spam)
+  sanitized = sanitized.replace(/\n{3,}/g, '\n\n');
+
+  return sanitized.trim();
 };
 
 interface MessageComposerProps {
@@ -130,14 +133,17 @@ export default memo(function MessageComposer({
     adjustTextareaHeight();
   }, [message, adjustTextareaHeight]);
 
-  // Cleanup object URLs when component unmounts
+  // Track preview URLs for cleanup on unmount only
+  const previewUrlsRef = useRef<Set<string>>(new Set());
+
+  // Cleanup all object URLs when component unmounts
   useEffect(() => {
+    const urls = previewUrlsRef.current;
     return () => {
-      uploadedImages.forEach(img => {
-        URL.revokeObjectURL(img.previewUrl);
-      });
+      urls.forEach(url => URL.revokeObjectURL(url));
+      urls.clear();
     };
-  }, [uploadedImages]);
+  }, []);
 
   // Auto-focus on mount
   useEffect(() => {
@@ -389,13 +395,17 @@ export default memo(function MessageComposer({
     const tempMessageId = crypto.randomUUID();
 
     // Create initial upload entries with preview URLs and unique IDs
-    const newUploads: UploadedImage[] = validFiles.map(file => ({
-      id: crypto.randomUUID(), // Unique ID for tracking
-      file,
-      previewUrl: URL.createObjectURL(file),
-      progress: 0,
-      isUploading: true,
-    }));
+    const newUploads: UploadedImage[] = validFiles.map(file => {
+      const previewUrl = URL.createObjectURL(file);
+      previewUrlsRef.current.add(previewUrl); // Track for cleanup on unmount
+      return {
+        id: crypto.randomUUID(),
+        file,
+        previewUrl,
+        progress: 0,
+        isUploading: true,
+      };
+    });
 
     // Add to state immediately (show preview with progress)
     setUploadedImages(prev => [...prev, ...newUploads]);
@@ -476,15 +486,16 @@ export default memo(function MessageComposer({
     }
   };
 
-  const handleRemoveImage = (index: number) => {
-    const imageToRemove = uploadedImages[index];
-    if (imageToRemove) {
-      // Revoke the object URL to free memory
-      URL.revokeObjectURL(imageToRemove.previewUrl);
-    }
-    setUploadedImages(prev => prev.filter((_, i) => i !== index));
-    logger.info('Removed image', { index });
-  };
+  const handleRemoveImage = useCallback((index: number) => {
+    setUploadedImages(prev => {
+      const imageToRemove = prev[index];
+      if (imageToRemove) {
+        URL.revokeObjectURL(imageToRemove.previewUrl);
+        previewUrlsRef.current.delete(imageToRemove.previewUrl);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  }, []);
 
   /**
    * ChatGPT-style audio upload-on-select

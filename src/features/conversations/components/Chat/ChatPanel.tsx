@@ -4,7 +4,7 @@
  * Now with optimistic updates, typing indicators, and non-blocking input
  */
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, User, MoreVertical, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -124,7 +124,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   };
 
   // Handle conversation deletion with confirmation
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     const confirmed = await confirm({
       title: t('conversations.delete_confirm_title'),
       message: t('conversations.delete_confirm_message', { name: conversation.customer_name }),
@@ -133,14 +133,14 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
     });
 
     if (confirmed) {
-      deleteMutation.mutate(conversation.id);
-
-      // Navigate back after successful deletion if onBack is provided
-      if (onBack) {
-        onBack();
-      }
+      deleteMutation.mutate(conversation.id, {
+        onSuccess: () => {
+          // Navigate back only after deletion succeeds
+          onBack?.();
+        },
+      });
     }
-  };
+  }, [confirm, conversation.id, conversation.customer_name, deleteMutation, onBack, t]);
 
   // Fetch messages on conversation change
   useEffect(() => {
@@ -219,7 +219,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         </DropdownMenu>
       </div>
     ),
-    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, t, isRTL]
+    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, isRTL, t]
   );
 
   // Handle load more with Zustand store

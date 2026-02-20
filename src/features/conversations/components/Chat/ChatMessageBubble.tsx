@@ -9,6 +9,7 @@
 import { memo, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Copy, Check, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import DOMPurify from 'dompurify';
 import type { ChatMessage } from '../../types';
 import { isCustomerMessage, parseAttachments, isMessageDeleted } from '../../types';
@@ -92,14 +93,19 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
     };
   }, []);
 
-  const handleCopy = useCallback(() => {
+  const handleCopy = useCallback(async () => {
     if (!messageText) return;
-    navigator.clipboard.writeText(messageText);
-    chatToasts.copied();
+    try {
+      await navigator.clipboard.writeText(messageText);
+      chatToasts.copied();
 
-    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
-    setIsCopied(true);
-    copyTimeoutRef.current = setTimeout(() => setIsCopied(false), 2000);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      setIsCopied(true);
+      copyTimeoutRef.current = setTimeout(() => setIsCopied(false), 2000);
+    } catch {
+      // Clipboard API can fail in insecure contexts or when denied
+      chatToasts.sendError();
+    }
   }, [messageText]);
 
   const handleImageLoad = useCallback((index: number) => {
@@ -233,15 +239,32 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
             </div>
           )}
 
-          {/* Sending spinner (inline, no text) */}
-          {!hasError && isOptimistic && (
-            <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />
-          )}
-
-          {/* Delivered tick (fades out after 1.5s) */}
-          {!hasError && showDeliveredTick && !isOptimistic && (
-            <Check className="w-3 h-3 text-green-500" />
-          )}
+          {/* Sending spinner → delivered tick with fade transitions */}
+          <AnimatePresence mode="wait">
+            {!hasError && isOptimistic && (
+              <motion.span
+                key="spinner"
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="flex items-center"
+              >
+                <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />
+              </motion.span>
+            )}
+            {!hasError && showDeliveredTick && !isOptimistic && (
+              <motion.span
+                key="tick"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="flex items-center"
+              >
+                <Check className="w-3 h-3 text-green-500" />
+              </motion.span>
+            )}
+          </AnimatePresence>
 
           {/* Timestamp - always visible (except error) */}
           {!hasError && (
