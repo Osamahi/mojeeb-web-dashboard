@@ -44,6 +44,11 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
   const [isCopied, setIsCopied] = useState(false);
   const copyTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
+  // Track "just delivered" state for user messages (spinner → tick → fade)
+  const [showDeliveredTick, setShowDeliveredTick] = useState(false);
+  const wasOptimisticRef = useRef(isOptimistic);
+  const deliveredTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
   // Image modal state
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
@@ -61,12 +66,22 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
   // Bubble colors
   const bubbleStyle = isUser ? CHAT_BUBBLE_COLORS.user : CHAT_BUBBLE_COLORS.assistant;
 
-  // Cleanup timeout on unmount
+  // Detect optimistic → delivered transition (show tick then fade)
+  useEffect(() => {
+    if (wasOptimisticRef.current && !isOptimistic && !hasError && isUser) {
+      setShowDeliveredTick(true);
+      deliveredTimeoutRef.current = setTimeout(() => {
+        setShowDeliveredTick(false);
+      }, 1500);
+    }
+    wasOptimisticRef.current = isOptimistic;
+  }, [isOptimistic, hasError, isUser]);
+
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
-      if (copyTimeoutRef.current) {
-        clearTimeout(copyTimeoutRef.current);
-      }
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      if (deliveredTimeoutRef.current) clearTimeout(deliveredTimeoutRef.current);
     };
   }, []);
 
@@ -229,23 +244,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
 
         {/* Footer: Status + Timestamp + Copy Button (Outside bubble) - Hidden for deleted messages */}
         {!isDeleted && (
-          <div
-            className={cn(
-              'flex items-center gap-2 mt-0.5 px-1 transition-opacity duration-300',
-              isOptimistic ? 'opacity-70' : 'opacity-100',
-              horizontalAlign,
-            )}
-          >
-          {/* Status indicator (optimistic/error) */}
-          {isOptimistic && (
-            <div className="flex items-center gap-1">
-              <Loader2 className="w-3 h-3 animate-spin text-neutral-500" />
-              <span className="text-xs text-neutral-500">
-                {t('conversations.message_sending')}
-              </span>
-            </div>
-          )}
-
+          <div className={cn('flex items-center gap-1.5 mt-0.5 px-1', horizontalAlign)}>
           {/* Error state */}
           {hasError && (
             <div className="flex items-center gap-1">
@@ -264,19 +263,35 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
             </div>
           )}
 
-          {/* Timestamp (hide when sending) - Extra subtle with fade-in */}
-          {!isOptimistic && !hasError && (
-            <span className="text-[11px] text-neutral-500 opacity-50 animate-[fadeIn_0.3s_ease-out]">
+          {/* Sending spinner (inline, no text) */}
+          {!hasError && isOptimistic && (
+            <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />
+          )}
+
+          {/* Delivered tick (fades out after 1.5s) */}
+          {!hasError && showDeliveredTick && !isOptimistic && (
+            <Check
+              className="w-3 h-3 text-green-500 transition-opacity duration-500"
+              style={{ opacity: 1 }}
+            />
+          )}
+
+          {/* Timestamp - always visible (except error) */}
+          {!hasError && (
+            <span className={cn(
+              'text-[11px] text-neutral-500',
+              isOptimistic ? 'opacity-40' : 'opacity-50'
+            )}>
               {formatMessageTime(message.created_at)}
             </span>
           )}
 
-          {/* Copy button with visual feedback and fade-in */}
-          {!hasError && !isOptimistic && (
+          {/* Copy button */}
+          {!hasError && (
             <button
               onClick={handleCopy}
               className={cn(
-                "p-1 rounded transition-all animate-[fadeIn_0.3s_ease-out]",
+                "p-1 rounded transition-all",
                 isCopied ? "bg-green-100" : "hover:bg-neutral-100"
               )}
               title={isCopied ? t('conversations.copied') : t('conversations.copy_message')}
