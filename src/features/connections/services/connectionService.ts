@@ -270,6 +270,25 @@ class ConnectionService {
   }
 
   /**
+   * Exchange auth code from WhatsApp Embedded Signup (FB JS SDK) for a tempConnectionId
+   */
+  async exchangeEmbeddedCode(code: string, agentId: string, integrationType: string = 'whatsapp'): Promise<string> {
+    try {
+      const { data } = await api.post<{ temp_connection_id: string }>(API_PATHS.OAUTH_EXCHANGE_CODE, {
+        code,
+        agent_id: agentId,
+        integration_type: integrationType,
+      });
+
+      logger.info('Embedded code exchanged successfully', { agentId, integrationType });
+      return data.temp_connection_id;
+    } catch (error) {
+      logger.error('Error exchanging embedded code', { agentId, error });
+      handleApiError(error, 'Embedded Code', agentId);
+    }
+  }
+
+  /**
    * Connect a selected Facebook page (and optionally Instagram account)
    */
   async connectSelectedPage(request: ConnectPageRequest): Promise<ConnectPageResponse> {

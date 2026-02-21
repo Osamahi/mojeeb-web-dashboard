@@ -45,6 +45,20 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
 
+    <!-- Facebook JS SDK for WhatsApp Embedded Signup -->
+    <script>
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId: '1270957991002389',
+          autoLogAppEvents: true,
+          xfbml: false,
+          version: 'v23.0'
+        });
+      };
+    </script>
+    <script async defer crossorigin="anonymous"
+      src="https://connect.facebook.net/en_US/sdk.js"></script>
+
     <!-- Mojeeb Support Widget (Headless Mode) -->
     <script
       id="mojeeb-chat-widget"

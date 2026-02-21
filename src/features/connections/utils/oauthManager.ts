@@ -150,26 +150,20 @@ export function openOAuthPopup(authUrl: string): Promise<{ tempConnectionId: str
 
     // Handle postMessage from callback page
     const handleMessage = (event: MessageEvent) => {
-      console.log('📨 Received postMessage event from:', event.origin);
-      console.log('📦 Event data:', event.data);
-
       // Verify origin for security - allow both authorized domains and localhost for development
       const allowedOrigins = [
         'https://dashboard.mojeeb.app',
         'https://app.mojeeb.app',
-        'http://localhost:5173',
         'http://localhost:3000',
-        'https://localhost:3000'
+        'https://localhost:3000',
       ];
       if (!allowedOrigins.includes(event.origin)) {
-        console.warn('❌ Unauthorized origin:', event.origin);
         logger.warn('Received message from unauthorized origin', {
           origin: event.origin,
           allowedOrigins
         });
         return;
       }
-      console.log('✅ Origin authorized');
 
       // Validate message structure for security
       if (
@@ -177,13 +171,10 @@ export function openOAuthPopup(authUrl: string): Promise<{ tempConnectionId: str
         event.data === null ||
         event.data.type !== 'OAUTH_CALLBACK'
       ) {
-        console.log('⚠️ Invalid message structure or type:', event.data?.type);
         return;
       }
-      console.log('✅ Message structure valid');
 
       const { tempConnectionId, error } = event.data;
-      console.log('📋 Extracted from message:', { tempConnectionId, error });
 
       // Validate error is a string if present
       if (error !== undefined && typeof error !== 'string') {
@@ -208,23 +199,16 @@ export function openOAuthPopup(authUrl: string): Promise<{ tempConnectionId: str
       }
 
       if (tempConnectionId) {
-        console.log('✅✅✅ OAUTH CALLBACK SUCCESSFUL ✅✅✅');
-        console.log('📋 Received tempConnectionId:', tempConnectionId);
         logger.info('OAuth callback successful', { tempConnectionId });
 
         const stored = storeTempConnectionId(tempConnectionId);
-        console.log('💾 Storage result:', stored ? 'SUCCESS' : 'FAILED');
         if (!stored) {
           logger.warn('Failed to store temp connection ID, but proceeding');
         }
 
-        console.log('🧹 Cleaning up popup listeners...');
         cleanup();
-        console.log('🚪 Closing popup window...');
         popup.close();
-        console.log('🎯 Resolving promise with:', { tempConnectionId });
         resolve({ tempConnectionId });
-        console.log('✨ Promise resolved successfully!');
       }
     };
 

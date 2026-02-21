@@ -29,4 +29,35 @@ interface Window {
    * Meta Pixel internal queue (for initialization)
    */
   _fbq?: typeof Window.prototype.fbq;
+
+  /**
+   * Facebook JS SDK
+   * Used for WhatsApp Embedded Signup (FB.login with config_id)
+   */
+  FB: {
+    login: (
+      callback: (response: {
+        status: 'connected' | 'not_authorized' | 'unknown';
+        authResponse?: {
+          code?: string;
+          accessToken?: string;
+          userID?: string;
+        };
+      }) => void,
+      options: {
+        config_id: string;
+        response_type: string;
+        override_default_response_type: boolean;
+        extras?: Record<string, unknown>;
+      }
+    ) => void;
+    getLoginStatus: (callback: (response: {
+      status: 'connected' | 'not_authorized' | 'unknown';
+      authResponse?: {
+        code?: string;
+        accessToken?: string;
+        userID?: string;
+      };
+    }) => void) => void;
+  };
 }

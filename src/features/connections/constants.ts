@@ -23,6 +23,7 @@ export const API_PATHS = {
   OAUTH_AUTHORIZE: '/api/FacebookBusinessOAuth/authorize',
   OAUTH_PAGES: (tempConnectionId: string) => `/api/FacebookBusinessOAuth/pages/${tempConnectionId}`,
   OAUTH_CONNECT_PAGE: '/api/FacebookBusinessOAuth/connect-page',
+  OAUTH_EXCHANGE_CODE: '/api/FacebookBusinessOAuth/exchange-code',
 } as const;
 
 /**

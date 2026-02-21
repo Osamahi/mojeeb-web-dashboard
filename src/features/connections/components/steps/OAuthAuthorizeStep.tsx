@@ -1,6 +1,7 @@
 /**
  * OAuth Authorization Step
- * Handles the OAuth flow with popup support and fallback
+ * - WhatsApp: Uses Facebook JS SDK Embedded Signup (inline modal)
+ * - Facebook/Instagram: Uses OAuth redirect popup (existing flow)
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -11,6 +12,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { logger } from '@/lib/logger';
 import type { OAuthIntegrationType } from '../../types';
 import { useOAuthConnectionFlow } from '../../hooks/useAddConnection';
+import { connectionService } from '../../services/connectionService';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { getPlatformById } from '../../constants/platforms';
 import {
@@ -31,103 +33,118 @@ type OAuthAuthorizeStepProps = {
 type AuthorizationState = 'idle' | 'initiating' | 'authorizing' | 'error';
 
 export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthorizeStepProps) {
-  console.log('⚡⚡⚡ OAuthAuthorizeStep RENDER - NEW CODE LOADED ⚡⚡⚡', { platform });
-
   const { t } = useTranslation();
   const { agentId } = useAgentContext();
-  const { initiateOAuthAsync, isInitiating, initiationData, resetAll } = useOAuthConnectionFlow();
+  const { initiateOAuthAsync, isInitiating, resetAll } = useOAuthConnectionFlow();
 
   const [authState, setAuthState] = useState<AuthorizationState>('idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [authUrl, setAuthUrl] = useState<string>('');
 
-  // Track if component is mounted to prevent state updates after unmount
   const mountedRef = useRef(true);
+  const hasStartedRef = useRef(false);
   useEffect(() => {
-    console.log('🎬🎬🎬 OAuthAuthorizeStep MOUNTED 🎬🎬🎬');
-    logger.debug('🎬 OAuthAuthorizeStep MOUNTED', {
-      platform,
-      agentId,
-      authState,
-      isInitiating,
-      hasInitiateOAuthAsync: !!initiateOAuthAsync
-    });
     return () => {
-      console.log('💀💀💀 OAuthAuthorizeStep UNMOUNTING 💀💀💀');
-      console.trace('Component unmount stack trace');
-      logger.debug('🎬 OAuthAuthorizeStep UNMOUNTING');
       mountedRef.current = false;
     };
   }, []);
 
-  console.log('🔧 Component setup:', {
-    agentId,
-    platform,
-    hasInitiateOAuthAsync: !!initiateOAuthAsync,
-    isInitiating,
-    authState
-  });
-
+  const isWhatsApp = platform === 'whatsapp';
   const platformName = platform === 'facebook' ? t('connections.platform_facebook_name') : platform === 'instagram' ? t('connections.platform_instagram_name') : t('connections.platform_whatsapp_name');
   const platformMetadata = getPlatformById(platform);
   const PlatformIcon = platform === 'facebook' ? Facebook : platform === 'instagram' ? Instagram : MessageCircle;
 
-  // Start the OAuth flow
-  const startOAuthFlow = useCallback(async () => {
-    console.log('🚀🚀🚀 startOAuthFlow CALLED', { agentId, platform });
-
+  // WhatsApp Embedded Signup flow — FB.login() MUST be called directly in click handler
+  const startWhatsAppEmbedded = useCallback(() => {
     if (!agentId) {
-      console.error('❌ No agentId available');
       setErrorMessage(t('oauth_authorize.error_no_agent'));
       setAuthState('error');
       return;
     }
 
-    console.log('✅ Setting authState to initiating');
+    if (!window.FB) {
+      setErrorMessage('Facebook SDK not loaded. Please refresh the page and try again.');
+      setAuthState('error');
+      return;
+    }
+
+    setAuthState('authorizing');
+    setErrorMessage('');
+
+    // Call FB.login() DIRECTLY — no async, no Promise wrapper, no indirection
+    window.FB.login(
+      (response) => {
+        logger.info('[EmbeddedSignup] FB.login response', { status: response.status });
+
+        if (response.status !== 'connected' || !response.authResponse?.code) {
+          const msg = response.status === 'not_authorized'
+            ? 'Authorization was not granted. Please try again.'
+            : 'Login was cancelled or failed.';
+          if (mountedRef.current) {
+            setErrorMessage(msg);
+            setAuthState('error');
+          }
+          return;
+        }
+
+        // Exchange code with backend
+        connectionService.exchangeEmbeddedCode(
+          response.authResponse.code,
+          agentId,
+          'whatsapp'
+        ).then((tempConnectionId) => {
+          logger.info('[EmbeddedSignup] Code exchanged, calling onSuccess', { tempConnectionId });
+          // Always call onSuccess — parent modal is still mounted and needs the tempConnectionId
+          onSuccess(tempConnectionId);
+        }).catch((err) => {
+          const msg = err instanceof Error ? err.message : 'Failed to exchange authorization code';
+          logger.error('[EmbeddedSignup] Code exchange failed', { error: err });
+          if (!mountedRef.current) return;
+          setErrorMessage(msg);
+          setAuthState('error');
+        });
+      },
+      {
+        config_id: '1601450690875651',
+        response_type: 'code',
+        override_default_response_type: true,
+      }
+    );
+  }, [agentId, onSuccess, t]);
+
+  // Facebook/Instagram popup OAuth flow (existing)
+  const startOAuthFlow = useCallback(async () => {
+    if (!agentId) {
+      setErrorMessage(t('oauth_authorize.error_no_agent'));
+      setAuthState('error');
+      return;
+    }
+
     setAuthState('initiating');
     setErrorMessage('');
     setPopupBlocked(false);
 
-    // Generate and store state for CSRF protection
     const state = generateOAuthState();
     storeOAuthState(state, platform);
 
     try {
-      // Initiate OAuth to get authorization URL
-      console.log('📞 Calling initiateOAuthAsync');
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('TIMEOUT: initiateOAuthAsync took > 5s')), 5000)
-      );
-
       const data = await Promise.race([
         initiateOAuthAsync({ agentId, platform }),
-        timeoutPromise
-      ]).catch(err => {
-        console.error('💥 initiateOAuthAsync FAILED:', err);
-        throw err;
-      });
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 5000))
+      ]);
 
-      console.log('📥 OAuth initiation response received', { data });
-
-      // Validate authorization URL before proceeding
       if (!data.authorizationUrl || typeof data.authorizationUrl !== 'string') {
-        logger.error('Invalid authorization URL received', { authUrl: data.authorizationUrl });
         setErrorMessage(t('oauth_authorize.error_invalid_url'));
         setAuthState('error');
         cleanupOAuthStorage();
         return;
       }
 
-      // Validate it's a proper URL
       try {
         const url = new URL(data.authorizationUrl);
-        if (!url.protocol.startsWith('http')) {
-          throw new Error('Invalid protocol');
-        }
+        if (!url.protocol.startsWith('http')) throw new Error('Invalid protocol');
       } catch {
-        logger.error('Malformed authorization URL', { authUrl: data.authorizationUrl });
         setErrorMessage(t('oauth_authorize.error_malformed_url'));
         setAuthState('error');
         cleanupOAuthStorage();
@@ -135,48 +152,23 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
       }
 
       setAuthUrl(data.authorizationUrl);
-      console.log('🎯 Setting state to authorizing and opening popup', { authUrl: data.authorizationUrl });
       setAuthState('authorizing');
 
       try {
-        // Try to open popup
-        console.log('🪟 Calling openOAuthPopup');
         const result = await openOAuthPopup(data.authorizationUrl);
-        console.log('✅ openOAuthPopup returned', { result });
-        console.log('🔍 Checking result.tempConnectionId:', result.tempConnectionId);
-        console.log('🔍 Checking result.result?.tempConnectionId:', (result as any).result?.tempConnectionId);
-
-        // Handle both direct and wrapped response formats
         const tempConnectionId = result.tempConnectionId || (result as any).result?.tempConnectionId;
-        console.log('🎯 Final tempConnectionId:', tempConnectionId);
 
         if (tempConnectionId) {
-          console.log('🎉🎉🎉 OAUTH FLOW COMPLETE! 🎉🎉🎉');
-          console.log('📋 tempConnectionId to pass to onSuccess:', tempConnectionId);
           logger.info('OAuth completed successfully', { tempConnectionId });
-
-          // Call onSuccess BEFORE checking mounted state
-          // This ensures the parent component gets the result even if this component unmounts
-          console.log('🚀 Calling onSuccess callback...');
           onSuccess(tempConnectionId);
-          console.log('✅ onSuccess callback completed');
-
-          // Now check if component is still mounted for state updates
-          console.log('🔍 Checking mountedRef.current:', mountedRef.current);
-          if (!mountedRef.current) {
-            console.log('ℹ️ Component unmounted after successful OAuth - this is OK');
-            return;
-          }
-        } else {
-          console.error('❌ No tempConnectionId found in result:', result);
-          console.error('❌ This should not happen - OAuth flow stuck!');
+          if (!mountedRef.current) return;
         }
       } catch (error) {
         if (!mountedRef.current) return;
         if (error instanceof Error) {
           if (error.message === OAuthErrorTypes.POPUP_BLOCKED) {
             setPopupBlocked(true);
-            setAuthState('authorizing'); // Still show authorizing UI with manual option
+            setAuthState('authorizing');
           } else if (error.message === OAuthErrorTypes.POPUP_CLOSED) {
             setErrorMessage(t('oauth_authorize.error_cancelled'));
             setAuthState('error');
@@ -198,8 +190,6 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
       }
     } catch (error) {
       if (!mountedRef.current) return;
-      logger.error('OAuth initiation failed', { error });
-      // Check for network/server errors
       const errorMsg = error instanceof Error ? error.message : String(error);
       if (errorMsg.includes('Network') || errorMsg.includes('fetch') || errorMsg.includes('Failed to fetch')) {
         setErrorMessage(t('oauth_authorize.error_server_connection'));
@@ -213,48 +203,43 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
       setAuthState('error');
       cleanupOAuthStorage();
     }
-  }, [agentId, platform, initiateOAuthAsync, onSuccess]);
+  }, [agentId, platform, initiateOAuthAsync, onSuccess, t]);
 
-  // Open OAuth URL in new tab (fallback)
   const openInNewTab = useCallback(() => {
     if (authUrl) {
       window.open(authUrl, '_blank', 'noopener,noreferrer');
     }
   }, [authUrl]);
 
-  // Handle retry
   const handleRetry = useCallback(() => {
     cleanupOAuthStorage();
     resetAll();
+    hasStartedRef.current = false;
     setAuthState('idle');
     setErrorMessage('');
     setPopupBlocked(false);
     setAuthUrl('');
   }, [resetAll]);
 
-  // Auto-start OAuth when component mounts
+  // Auto-start OAuth flow on mount (once only).
+  // WhatsApp uses FB.login() which normally requires a direct user click,
+  // but works here because the user just clicked "Connect +" moments ago.
   useEffect(() => {
-    logger.debug('🔍 Auto-start useEffect triggered', { authState, agentId, hasStartOAuthFlow: !!startOAuthFlow });
-    if (authState === 'idle' && agentId) {
-      logger.debug('✅ Conditions met, calling startOAuthFlow');
-      startOAuthFlow();
-    } else {
-      logger.debug('❌ Conditions NOT met', {
-        authStateIsIdle: authState === 'idle',
-        hasAgentId: !!agentId,
-        authState,
-        agentId
-      });
+    if (authState === 'idle' && agentId && !hasStartedRef.current) {
+      hasStartedRef.current = true;
+      if (isWhatsApp) {
+        startWhatsAppEmbedded();
+      } else {
+        startOAuthFlow();
+      }
     }
-  }, [authState, agentId, startOAuthFlow]);
+  }, [authState, agentId, isWhatsApp, startOAuthFlow, startWhatsAppEmbedded]);
 
-  // Add timeout for initiating state to prevent hanging indefinitely
+  // Timeout for initiating state
   useEffect(() => {
     if (authState === 'initiating' || isInitiating) {
       const timeoutId = setTimeout(() => {
-        // Check if still mounted and still in initiating state
         if (mountedRef.current && (authState === 'initiating' || isInitiating)) {
-          logger.warn('OAuth initiation timed out');
           setErrorMessage(
             `Unable to connect to the server. Please ensure the backend API is running at ${
               import.meta.env.VITE_API_URL || 'http://localhost:5000'
@@ -264,26 +249,25 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
           cleanupOAuthStorage();
           resetAll();
         }
-      }, 10000); // 10 second timeout
-
+      }, 10000);
       return () => clearTimeout(timeoutId);
     }
   }, [authState, isInitiating, resetAll]);
 
+  const isLoadingState = authState === 'idle' || authState === 'initiating' || isInitiating;
+  const isAuthorizingPopup = authState === 'authorizing' && !isWhatsApp && !popupBlocked;
+  const isWhatsAppAuthorizing = isWhatsApp && authState === 'authorizing';
+
   return (
     <div className="flex items-center justify-center py-12">
-      {/* Content Container */}
       <div className="w-full max-w-md">
         <div className="px-8">
           <div className="flex flex-col items-center text-center space-y-4">
             {/* Platform Icon with Spinner */}
             <div className="relative">
-              {/* Spinning loader ring around icon */}
-              {(authState === 'idle' || authState === 'initiating' || isInitiating || (authState === 'authorizing' && !popupBlocked)) && (
+              {(isLoadingState || isAuthorizingPopup || isWhatsAppAuthorizing) && (
                 <Loader2 className="absolute inset-0 w-20 h-20 -m-2 animate-spin text-neutral-300" />
               )}
-
-              {/* Platform Icon */}
               <div
                 className="w-16 h-16 rounded-full flex items-center justify-center relative z-10"
                 style={{ backgroundColor: platformMetadata?.brandBgColor }}
@@ -295,18 +279,32 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
               </div>
             </div>
 
-            {/* Initiating state */}
-            {(authState === 'idle' || authState === 'initiating' || isInitiating) && (
+            {/* Loading / Initiating state */}
+            {isLoadingState && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-neutral-900">{t('oauth_authorize.preparing')}</p>
+                <p className="text-sm font-medium text-neutral-900">
+                  {t('oauth_authorize.preparing')}
+                </p>
                 <p className="text-xs text-neutral-600">
                   {t('oauth_authorize.redirect_message', { platform: platformName })}
                 </p>
               </div>
             )}
 
-            {/* Authorizing state - waiting for user */}
-            {authState === 'authorizing' && !popupBlocked && (
+            {/* WhatsApp authorizing state (embedded signup in progress) */}
+            {isWhatsAppAuthorizing && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-neutral-900">
+                  {t('oauth_authorize.preparing_whatsapp', 'Connecting to WhatsApp...')}
+                </p>
+                <p className="text-xs text-neutral-600">
+                  {t('oauth_authorize.embedded_signup_message', 'Complete the signup in the popup window.')}
+                </p>
+              </div>
+            )}
+
+            {/* Authorizing state - popup (Facebook/Instagram only) */}
+            {isAuthorizingPopup && (
               <div className="space-y-2">
                 <p className="text-sm font-medium text-neutral-900">{t('oauth_authorize.waiting')}</p>
                 <p className="text-xs text-neutral-600">
@@ -317,8 +315,8 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
               </div>
             )}
 
-            {/* Popup blocked state */}
-            {authState === 'authorizing' && popupBlocked && (
+            {/* Popup blocked state (Facebook/Instagram only) */}
+            {authState === 'authorizing' && popupBlocked && !isWhatsApp && (
               <>
                 <div>
                   <AlertTriangle className="h-12 w-12 text-yellow-500" />
@@ -332,10 +330,7 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
                       {t('oauth_authorize.popup_blocked_instruction')}
                     </p>
                   </div>
-                  <Button
-                    onClick={openInNewTab}
-                    className="flex items-center gap-2"
-                  >
+                  <Button onClick={openInNewTab} className="flex items-center gap-2">
                     <ExternalLink className="h-4 w-4" />
                     {t('oauth_authorize.open_authorization', { platform: platformName })}
                   </Button>
@@ -348,13 +343,11 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
 
             {/* Error state */}
             {authState === 'error' && (
-              <>
-                <ErrorState
-                  title={t('oauth_authorize.error_title')}
-                  description={errorMessage}
-                  onRetry={handleRetry}
-                />
-              </>
+              <ErrorState
+                title={t('oauth_authorize.error_title')}
+                description={errorMessage}
+                onRetry={handleRetry}
+              />
             )}
           </div>
         </div>

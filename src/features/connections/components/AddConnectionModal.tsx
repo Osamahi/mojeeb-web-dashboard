@@ -232,7 +232,7 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
           )}
 
           {/* Step content */}
-          <div ref={contentRef} className="min-h-[300px]" tabIndex={-1} aria-live="polite">
+          <div ref={contentRef} tabIndex={-1} aria-live="polite">
             {/* Only show platform selection if no initial platform */}
             {state.step === 'platform' && !initialPlatform && (
               <PlatformSelectStep onSelect={handlePlatformSelect} existingConnections={connections} />
@@ -265,7 +265,7 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
                 <h3 className="mt-4 text-xl font-semibold text-neutral-900">{t('connections.success_title')}</h3>
                 <p className="mt-2 text-sm text-neutral-600">
                   {t('connections.success_message', {
-                    platform: state.platform === 'instagram' ? t('connections.platform_instagram_name') : t('connections.platform_facebook_name')
+                    platform: state.platform === 'facebook' ? t('connections.platform_facebook_name') : state.platform === 'instagram' ? t('connections.platform_instagram_name') : t('connections.platform_whatsapp_name')
                   })}
                 </p>
                 <p className="mt-1 text-xs text-neutral-500">{t('connections.auto_close')}</p>

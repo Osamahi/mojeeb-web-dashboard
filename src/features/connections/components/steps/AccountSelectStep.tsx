@@ -38,26 +38,6 @@ export function AccountSelectStep({
 
   const { data, isLoading, error, refetch } = platform === 'whatsapp' ? whatsappQuery : facebookQuery;
 
-  // Debug logging
-  console.log('========== ACCOUNT SELECT STEP ==========');
-  console.log('Platform:', platform);
-  console.log('Temp Connection ID:', tempConnectionId);
-  console.log('Is Loading:', isLoading);
-  console.log('Error:', error);
-  console.log('Data:', data);
-  if (platform !== 'whatsapp' && data?.pages) {
-    console.log('Pages Count:', data.pages.length);
-    data.pages.forEach((page, index) => {
-      console.log(`UI Page ${index + 1}:`, {
-        id: page.id,
-        name: page.name,
-        category: page.category,
-        followerCount: page.followerCount,
-      });
-    });
-  }
-  console.log('========================================');
-
   const [selectedPage, setSelectedPage] = useState<FacebookPage | null>(null);
   const [selectedInstagram, setSelectedInstagram] = useState<InstagramAccount | null>(null);
   const [selectedWhatsAppPhone, setSelectedWhatsAppPhone] = useState<WhatsAppPhoneNumber | null>(null);
