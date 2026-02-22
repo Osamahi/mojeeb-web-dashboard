@@ -242,9 +242,12 @@ export function LeadsTableView({
     ),
   }), [t, onViewConversation, onEditClick, onDeleteClick, onAddColumnClick]);
 
-  // Schema-driven columns: system + custom + actions
+  // Schema-driven columns: merge system + custom by display_order, then actions last
   const columns = useMemo(() => {
-    return [...systemColumns, ...customFieldColumns, actionsColumn];
+    const merged = [...systemColumns, ...customFieldColumns].sort(
+      (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0),
+    );
+    return [...merged, actionsColumn];
   }, [systemColumns, customFieldColumns, actionsColumn]);
 
   // Show skeleton only on initial load

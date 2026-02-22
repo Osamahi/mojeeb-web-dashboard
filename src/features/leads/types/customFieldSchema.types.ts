@@ -81,7 +81,7 @@ export interface UpdateCustomFieldSchemaRequest {
 }
 
 export interface ReorderCustomFieldSchemasRequest {
-  schema_ids: string[];
+  ordered_ids: string[];
 }
 
 // Cursor pagination

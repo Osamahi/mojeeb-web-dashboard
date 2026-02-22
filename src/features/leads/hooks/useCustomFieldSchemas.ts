@@ -159,7 +159,7 @@ export const useReorderCustomFieldSchemas = () => {
       );
 
       if (previousSchemas) {
-        const reorderedSchemas = newOrder.schema_ids.map((id, index) => {
+        const reorderedSchemas = newOrder.ordered_ids.map((id, index) => {
           const schema = previousSchemas.find(s => s.id === id);
           return schema ? { ...schema, display_order: index } : null;
         }).filter(Boolean) as CustomFieldSchema[];
@@ -184,6 +184,7 @@ export const useReorderCustomFieldSchemas = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.all(agentId!) });
+      queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.table(agentId!) });
     },
   });
 };

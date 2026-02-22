@@ -31,6 +31,8 @@ export interface ColumnDef<T> {
   cellClassName?: string;
   /** Column width (CSS width value) */
   width?: string;
+  /** Display order for schema-driven column sorting (lower = earlier) */
+  displayOrder?: number;
 }
 
 interface DataTableProps<T> {

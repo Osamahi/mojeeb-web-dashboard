@@ -244,7 +244,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
       const schemaIds = newOrder.map((s) => s.id);
 
       // Call reorder mutation
-      reorderMutation.mutate({ schema_ids: schemaIds });
+      reorderMutation.mutate({ ordered_ids: schemaIds });
     }
   };
 

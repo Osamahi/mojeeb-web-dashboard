@@ -10,7 +10,7 @@
  * Usage:
  * const { columns: customCols } = useCustomFieldColumns();
  * const { systemColumns } = useSystemFieldColumns(ctx);
- * allColumns = [...systemColumns, ...customCols, actionsColumn];
+ * allColumns = [...systemColumns, ...customCols].sort(by displayOrder) + actionsColumn;
  */
 
 import { useMemo } from 'react';
@@ -58,7 +58,9 @@ export const useCustomFieldColumns = (): UseCustomFieldColumnsReturn => {
 
   // Filter out system fields — only custom fields here
   const customSchemas = useMemo(
-    () => allSchemas.filter((s) => !s.is_system),
+    () => allSchemas
+      .filter((s) => !s.is_system)
+      .sort((a, b) => a.display_order - b.display_order),
     [allSchemas],
   );
 
@@ -76,6 +78,7 @@ export const useCustomFieldColumns = (): UseCustomFieldColumnsReturn => {
         label,
         sortable: false,
         width,
+        displayOrder: schema.display_order,
         cellClassName: `w-[${width}]`,
         render: (_: unknown, lead: Lead) => {
           const value = getCustomFieldValue(lead, schema.field_key);
@@ -162,6 +165,7 @@ export const useSystemFieldColumns = (
           label,
           sortable: isSystemFieldSortable(schema.field_key),
           width,
+          displayOrder: schema.display_order,
           cellClassName: `w-[${width}]`,
           render: renderer
             ? (_: unknown, lead: Lead) => renderer(undefined, lead)
