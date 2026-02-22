@@ -152,6 +152,21 @@ export const useAuthStore = create<AuthState>()(
       }),
       onRehydrateStorage: () => {
         return (state) => {
+          // CRITICAL FIX: Skip auth rehydration on OAuth callback page
+          // When the OAuth popup loads dashboard.mojeeb.app/oauth/callback, it initializes
+          // the full React app including Zustand. The rehydration validation would either:
+          // 1. Call refreshToken(), invalidating the parent window's token
+          // 2. Fail validation and call logout(), clearing localStorage tokens
+          // Both scenarios break the parent window's auth state.
+          const isOAuthCallback = window.location.pathname === '/oauth/callback';
+          if (isOAuthCallback) {
+            // Don't validate or modify auth state in OAuth popup
+            if (state) {
+              state.isAuthenticated = false; // Popup doesn't need auth
+            }
+            return;
+          }
+
           // CRITICAL FIX: Validate refresh token before trusting it
           // This prevents false positive authentication state from expired/invalid tokens
           if (state?.refreshToken && state?.user) {
