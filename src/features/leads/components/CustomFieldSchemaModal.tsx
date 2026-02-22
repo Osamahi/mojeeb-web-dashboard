@@ -88,10 +88,17 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
     })
   );
 
-  // Sorted schemas by display_order
+  // Local reorder state – tracks pending (unsaved) order
+  const [pendingOrder, setPendingOrder] = useState<CustomFieldSchema[] | null>(null);
+  const [hasOrderChanged, setHasOrderChanged] = useState(false);
+
+  // Sorted schemas by display_order (server truth)
   const sortedSchemas = useMemo(() => {
     return [...schemas].sort((a, b) => a.display_order - b.display_order);
   }, [schemas]);
+
+  // Display list: pending local order or server order
+  const displaySchemas = pendingOrder ?? sortedSchemas;
 
   // Reset form
   const resetForm = () => {
@@ -104,11 +111,18 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
     setEditingSchema(null);
   };
 
+  // Reset pending order
+  const resetPendingOrder = () => {
+    setPendingOrder(null);
+    setHasOrderChanged(false);
+  };
+
   // Reset to list view and clear cache when modal opens
   useEffect(() => {
     if (isOpen) {
       setViewMode('list');
       resetForm();
+      resetPendingOrder();
       if (agentId) {
         queryClient.invalidateQueries({ queryKey: customFieldSchemaKeys.all(agentId) });
       }
@@ -232,20 +246,38 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
     }
   };
 
-  // Handle drag end
+  // Handle drag end — update local state only (saved on "Save" click)
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = sortedSchemas.findIndex((s) => s.id === active.id);
-      const newIndex = sortedSchemas.findIndex((s) => s.id === over.id);
+      const currentList = pendingOrder ?? sortedSchemas;
+      const oldIndex = currentList.findIndex((s) => s.id === active.id);
+      const newIndex = currentList.findIndex((s) => s.id === over.id);
 
-      const newOrder = arrayMove(sortedSchemas, oldIndex, newIndex);
-      const schemaIds = newOrder.map((s) => s.id);
-
-      // Call reorder mutation
-      reorderMutation.mutate({ ordered_ids: schemaIds });
+      const newOrder = arrayMove(currentList, oldIndex, newIndex);
+      setPendingOrder(newOrder);
+      setHasOrderChanged(true);
     }
+  };
+
+  // Save pending reorder to backend and close modal
+  const handleSaveOrder = () => {
+    if (pendingOrder && hasOrderChanged) {
+      const schemaIds = pendingOrder.map((s) => s.id);
+      reorderMutation.mutate({ ordered_ids: schemaIds }, {
+        onSuccess: () => {
+          resetPendingOrder();
+          onClose();
+        },
+      });
+    }
+  };
+
+  // Cancel pending reorder and close
+  const handleCancelList = () => {
+    resetPendingOrder();
+    onClose();
   };
 
   // Get modal title based on mode
@@ -271,21 +303,21 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
         title={getModalTitle()}
         subtitle={getModalSubtitle()}
         maxWidth="2xl"
-        isLoading={createMutation.isPending || updateMutation.isPending}
-        closable={!createMutation.isPending && !updateMutation.isPending}
+        isLoading={createMutation.isPending || updateMutation.isPending || reorderMutation.isPending}
+        closable={!createMutation.isPending && !updateMutation.isPending && !reorderMutation.isPending}
       >
         {viewMode === 'list' ? (
           // List View
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-neutral-600">
-                {sortedSchemas.length !== 1
-                  ? t('leads.custom_fields_count_plural', { count: sortedSchemas.length })
-                  : t('leads.custom_fields_count', { count: sortedSchemas.length })}
+                {displaySchemas.length !== 1
+                  ? t('leads.custom_fields_count_plural', { count: displaySchemas.length })
+                  : t('leads.custom_fields_count', { count: displaySchemas.length })}
               </p>
               <Button
                 onClick={handleAddClick}
-                variant="primary"
+                variant="secondary"
                 size="sm"
               >
                 <Plus className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
@@ -298,14 +330,14 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand-mojeeb"></div>
                 <p className="text-sm text-neutral-500 mt-2">{t('common.loading')}</p>
               </div>
-            ) : sortedSchemas.length === 0 ? (
+            ) : displaySchemas.length === 0 ? (
               <div className="text-center py-12 border-2 border-dashed border-neutral-200 rounded-lg">
                 <Table2 className="w-12 h-12 text-neutral-400 mx-auto mb-3" />
                 <p className="text-neutral-600 font-medium mb-1">{t('leads.no_custom_fields_yet')}</p>
                 <p className="text-sm text-neutral-500 mb-4">{t('leads.add_first_custom_field')}</p>
                 <Button
                   onClick={handleAddClick}
-                  variant="primary"
+                  variant="secondary"
                   size="md"
                 >
                   <Plus className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
@@ -319,11 +351,11 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
-                  items={sortedSchemas.map((s) => s.id)}
+                  items={displaySchemas.map((s) => s.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {sortedSchemas.map((schema) => (
+                    {displaySchemas.map((schema) => (
                       <SortableSchemaItem
                         key={schema.id}
                         schema={schema}
@@ -336,6 +368,27 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                 </SortableContext>
               </DndContext>
             )}
+
+            {/* Footer: Save & Cancel */}
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleCancelList}
+                disabled={reorderMutation.isPending}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleSaveOrder}
+                disabled={!hasOrderChanged}
+                isLoading={reorderMutation.isPending}
+              >
+                {reorderMutation.isPending ? t('common.saving') : t('common.save')}
+              </Button>
+            </div>
           </div>
         ) : (
           // Add/Edit Form View
@@ -508,21 +561,10 @@ function SortableSchemaItem({ schema, isRTL, onEdit, onDelete }: SortableSchemaI
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-neutral-900">
-            {isRTL ? schema.name_ar : schema.name_en}
-          </span>
-          <span className="text-xs px-2 py-0.5 bg-neutral-100 text-neutral-600 rounded">
-            {schema.field_key}
-          </span>
-          <span className="text-xs px-2 py-0.5 bg-brand-mojeeb/10 text-brand-mojeeb rounded font-medium">
-            {FIELD_TYPE_OPTIONS.find(opt => opt.value === schema.field_type)?.label}
-          </span>
-        </div>
-        <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
-          {schema.is_required && <span>✓ {t('leads.required_badge')}</span>}
-          {schema.field_type === 'enum' && <span>{t('leads.options_count', { count: schema.options?.length || 0 })}</span>}
-        </div>
+        <span className="font-medium text-neutral-900">
+          {isRTL ? schema.name_ar : schema.name_en}
+          {schema.is_required && <span className="text-red-500 ltr:ml-0.5 rtl:mr-0.5">*</span>}
+        </span>
       </div>
 
       <div className="flex items-center gap-1">
