@@ -196,6 +196,15 @@ export const queryKeys = {
    */
   userRoleStats: () => ['user-role-stats'] as const,
 
+  // ==================== Follow-Up Step Queries ====================
+
+  /**
+   * Query key for fetching follow-up steps by agent
+   * @param {string | undefined} agentId - The agent ID
+   * @returns {readonly ['followUpSteps', string | undefined]} Query key tuple
+   */
+  followUpSteps: (agentId: string | undefined) => ['followUpSteps', agentId] as const,
+
   // ==================== Billing & Stripe Queries ====================
 
   /**

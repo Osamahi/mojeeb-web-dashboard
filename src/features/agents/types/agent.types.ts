@@ -29,6 +29,8 @@ export type Agent = {
   canEdit?: boolean;
   canDelete?: boolean;
   canManageAccess?: boolean;
+  followUpEnabled: boolean;
+  followUpPlatforms: string[];
 };
 
 export type CreateAgentRequest = {
@@ -53,6 +55,8 @@ export type UpdateAgentRequest = {
   modelProvider?: ModelProvider;
   avatarUrl?: string;
   status?: AgentStatus;
+  followUpEnabled?: boolean;
+  followUpPlatforms?: string[];
 };
 
 export type KnowledgeBase = {

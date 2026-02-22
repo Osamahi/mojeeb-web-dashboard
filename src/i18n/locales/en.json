@@ -832,7 +832,22 @@
     "delete_confirm_title": "Delete Knowledge Base",
     "delete_confirm_message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
     "edit_label": "Edit",
-    "delete_label": "Delete"
+    "delete_label": "Delete",
+    "follow_ups": "Follow-ups"
+  },
+  "follow_up": {
+    "title": "Follow-Up Settings",
+    "subtitle": "Configure automatic follow-up messages for idle conversations",
+    "enable_label": "Enable Follow-ups",
+    "enable_description": "Automatically send follow-up messages when customers go silent",
+    "platforms_label": "Platforms",
+    "steps_label": "Follow-Up Steps",
+    "add_step": "Add Step",
+    "no_steps": "No follow-up steps configured. Add a step to get started.",
+    "minutes": "minutes",
+    "saved": "Follow-up settings saved",
+    "save_failed": "Failed to save follow-up settings",
+    "kb_hint": "Tip: Add follow-up instructions as a Knowledge Base entry so the AI knows how to craft follow-up messages."
   },
   "onboarding": {
     "skip": "Skip",

@@ -13,6 +13,11 @@ import type {
   DocumentJobCreated,
   DocumentJobStatus,
 } from '../types/agent.types';
+import type {
+  FollowUpStep,
+  CreateFollowUpStepRequest,
+  UpdateFollowUpStepRequest,
+} from '../types/followUp.types';
 import { organizationService } from '@/features/organizations/services/organizationService';
 
 // API Response Types (snake_case from backend)
@@ -41,6 +46,8 @@ interface ApiAgentResponse {
   can_edit?: boolean;
   can_delete?: boolean;
   can_manage_access?: boolean;
+  follow_up_enabled?: boolean;
+  follow_up_platforms?: string[];
 }
 
 interface ApiResponse<T> {
@@ -76,6 +83,17 @@ interface ApiDocumentJobResponse {
   error_message: string | null;
 }
 
+// Follow-Up Step API Response Type (snake_case from backend)
+interface ApiFollowUpStepResponse {
+  id: string;
+  agent_id: string;
+  step_order: number;
+  delay_minutes: number;
+  is_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 class AgentService {
   /**
    * Transform API response from snake_case to camelCase
@@ -106,6 +124,8 @@ class AgentService {
       canEdit: apiAgent.can_edit,
       canDelete: apiAgent.can_delete,
       canManageAccess: apiAgent.can_manage_access,
+      followUpEnabled: apiAgent.follow_up_enabled ?? false,
+      followUpPlatforms: apiAgent.follow_up_platforms ?? [],
     };
   }
 
@@ -192,6 +212,8 @@ class AgentService {
       model_provider: request.modelProvider,
       avatar_url: request.avatarUrl,
       status: request.status,
+      follow_up_enabled: request.followUpEnabled,
+      follow_up_platforms: request.followUpPlatforms,
     };
 
     const { data } = await api.put<ApiResponse<ApiAgentResponse>>(`/api/agents/${id}`, snakeCaseRequest);
@@ -392,6 +414,67 @@ class AgentService {
    */
   async cancelDocumentJob(jobId: string): Promise<void> {
     await api.delete(`/api/knowledgebases/document-jobs/${jobId}`);
+  }
+
+  // ==================== Follow-Up Steps ====================
+
+  private transformFollowUpStep(apiStep: ApiFollowUpStepResponse): FollowUpStep {
+    return {
+      id: apiStep.id,
+      agentId: apiStep.agent_id,
+      stepOrder: apiStep.step_order,
+      delayMinutes: apiStep.delay_minutes,
+      isEnabled: apiStep.is_enabled,
+      createdAt: apiStep.created_at,
+      updatedAt: apiStep.updated_at,
+    };
+  }
+
+  /**
+   * Get follow-up steps for an agent
+   */
+  async getFollowUpSteps(agentId: string): Promise<FollowUpStep[]> {
+    const { data } = await api.get<ApiResponse<ApiFollowUpStepResponse[]>>(
+      `/api/agents/${agentId}/followup-steps`
+    );
+    return data.data.map(s => this.transformFollowUpStep(s));
+  }
+
+  /**
+   * Create a follow-up step
+   */
+  async createFollowUpStep(agentId: string, request: CreateFollowUpStepRequest): Promise<FollowUpStep> {
+    const snakeCaseRequest = {
+      step_order: request.stepOrder,
+      delay_minutes: request.delayMinutes,
+      is_enabled: request.isEnabled ?? true,
+    };
+    const { data } = await api.post<ApiResponse<ApiFollowUpStepResponse>>(
+      `/api/agents/${agentId}/followup-steps`,
+      snakeCaseRequest
+    );
+    return this.transformFollowUpStep(data.data);
+  }
+
+  /**
+   * Update a follow-up step
+   */
+  async updateFollowUpStep(agentId: string, stepId: string, request: UpdateFollowUpStepRequest): Promise<FollowUpStep> {
+    const snakeCaseRequest: Record<string, unknown> = {};
+    if (request.delayMinutes !== undefined) snakeCaseRequest.delay_minutes = request.delayMinutes;
+    if (request.isEnabled !== undefined) snakeCaseRequest.is_enabled = request.isEnabled;
+    const { data } = await api.put<ApiResponse<ApiFollowUpStepResponse>>(
+      `/api/agents/${agentId}/followup-steps/${stepId}`,
+      snakeCaseRequest
+    );
+    return this.transformFollowUpStep(data.data);
+  }
+
+  /**
+   * Delete a follow-up step
+   */
+  async deleteFollowUpStep(agentId: string, stepId: string): Promise<void> {
+    await api.delete(`/api/agents/${agentId}/followup-steps/${stepId}`);
   }
 }
 

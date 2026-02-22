@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus, MessageSquare, Plug } from 'lucide-react';
+import { Plus, MessageSquare, Plug, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -26,6 +26,7 @@ import MainInstructionCard from '../components/MainInstructionCard';
 import KnowledgeBaseItem from '../components/KnowledgeBaseItem';
 import AddKnowledgeBaseModal from '../components/AddKnowledgeBaseModal';
 import DocumentUploadProgressCard from '../components/DocumentUploadProgressCard';
+import FollowUpSettingsModal from '../components/FollowUpSettingsModal';
 import TestChat from '../components/TestChat';
 import TestChatPanel from '../components/TestChatPanel';
 import { logger } from '@/lib/logger';
@@ -50,6 +51,7 @@ export default function StudioPage() {
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const isDesktop = useIsDesktop();
   const [isAddKBModalOpen, setIsAddKBModalOpen] = useState(false);
+  const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
   const [activeUploadJobs, setActiveUploadJobs] = useState<string[]>([]);
 
@@ -205,8 +207,8 @@ export default function StudioPage() {
                 />
               ))}
 
-              {/* Add Knowledge Button - Desktop only */}
-              <div className="hidden lg:flex justify-center pt-2">
+              {/* Action Buttons - Desktop only */}
+              <div className="hidden lg:flex justify-center gap-3 pt-2">
                 <Button
                   variant="secondary"
                   size="md"
@@ -214,6 +216,14 @@ export default function StudioPage() {
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   {t('studio.add_knowledge')}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => setIsFollowUpModalOpen(true)}
+                >
+                  <Bell className="w-4 h-4 mr-2" />
+                  {t('studio.follow_ups')}
                 </Button>
               </div>
             </div>
@@ -290,6 +300,13 @@ export default function StudioPage() {
           // Add to optimistic state for instant display
           setActiveUploadJobs(prev => [...prev, jobId]);
         }}
+      />
+
+      {/* Follow-Up Settings Modal */}
+      <FollowUpSettingsModal
+        isOpen={isFollowUpModalOpen}
+        onClose={() => setIsFollowUpModalOpen(false)}
+        agent={agent}
       />
     </>
   );
