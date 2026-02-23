@@ -84,5 +84,12 @@ export interface CreateTemplateButtonInput {
   phone_number?: string;
 }
 
+export interface CreateTemplateHeaderInput {
+  format: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+  text?: string;
+  header_example?: string;
+  media_url?: string;
+}
+
 export type TemplateStatus = MessageTemplate['status'];
 export type TemplateCategory = MessageTemplate['category'];

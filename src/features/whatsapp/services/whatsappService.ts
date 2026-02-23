@@ -10,6 +10,7 @@ import type {
   SendTemplateRequest,
   SendTemplateResponse,
   CreateTemplateButtonInput,
+  CreateTemplateHeaderInput,
 } from '../types/whatsapp.types';
 
 const WHATSAPP_TEMPLATES_BASE = '/api/whatsapp/templates';
@@ -44,6 +45,9 @@ export const whatsappService = {
       language: string;
       category: string;
       body: string;
+      header?: CreateTemplateHeaderInput;
+      footer?: string;
+      body_examples?: string[];
       buttons?: CreateTemplateButtonInput[];
     }
   ): Promise<{ success: boolean; template_id?: string; status?: string; error?: string }> {
