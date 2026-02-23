@@ -154,7 +154,7 @@ export default function WhatsAppManagementPage() {
                       <MessageSquare className="w-5 h-5 text-green-600" />
                     </div>
                     {connection.isActive && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                      <div className="absolute bottom-0 end-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -193,10 +193,10 @@ export default function WhatsAppManagementPage() {
                     <MessageSquare className="w-5 h-5 text-green-600" />
                   </div>
                   {selectedPhoneNumber?.isActive && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                    <div className="absolute bottom-0 end-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
                   )}
                 </div>
-                <div className="flex-1 min-w-0 text-left">
+                <div className="flex-1 min-w-0 text-start">
                   <h3 className="text-sm font-semibold text-neutral-900 truncate">
                     {(selectedPhoneNumber?.platformMetadata as any)?.verified_name ||
                       selectedPhoneNumber?.platformAccountName ||
@@ -238,7 +238,7 @@ export default function WhatsAppManagementPage() {
                           setSelectedPhoneNumber(connection);
                           setIsDropdownOpen(false);
                         }}
-                        className={`w-full flex items-center gap-3 p-3 transition-colors text-left ${
+                        className={`w-full flex items-center gap-3 p-3 transition-colors text-start ${
                           isSelected
                             ? 'bg-green-50'
                             : 'hover:bg-neutral-50'
@@ -249,7 +249,7 @@ export default function WhatsAppManagementPage() {
                             <MessageSquare className="w-4 h-4 text-green-600" />
                           </div>
                           {connection.isActive && (
-                            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
+                            <div className="absolute bottom-0 end-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -354,7 +354,7 @@ export default function WhatsAppManagementPage() {
                             }}
                             className="text-green-600 hover:text-green-700 hover:bg-green-50"
                           >
-                            <Send className="w-4 h-4 mr-1" />
+                            <Send className="w-4 h-4 me-1" />
                             {t('whatsapp.send')}
                           </Button>
                         </div>
@@ -370,7 +370,7 @@ export default function WhatsAppManagementPage() {
                 description={t('whatsapp.no_templates_description')}
                 action={
                   <Button onClick={() => setIsAddModalOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4 me-2" />
                     {t('whatsapp.add_template')}
                   </Button>
                 }

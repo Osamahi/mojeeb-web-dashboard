@@ -359,7 +359,7 @@ export function AddTemplateModal({ isOpen, onClose, connectionId }: AddTemplateM
         {/* LEFT PANEL: Form + Actions              */}
         {/* ═══════════════════════════════════════ */}
         <div className="flex-1 flex flex-col min-w-0 h-full">
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-5 lg:pr-3 pb-1">
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-5 lg:pe-3 pb-1">
 
           {/* ── Name / Language / Category ── */}
           <div className="grid grid-cols-2 gap-4">
@@ -512,10 +512,10 @@ export function AddTemplateModal({ isOpen, onClose, connectionId }: AddTemplateM
                         <p className="text-xs text-neutral-500">
                           {formatFileSize(mediaFile.size)}
                           {uploadMutation.isPending && (
-                            <span className="text-blue-600 ml-1.5">{t('whatsapp.upload_uploading')}</span>
+                            <span className="text-blue-600 ms-1.5">{t('whatsapp.upload_uploading')}</span>
                           )}
                           {headerMediaUrl && !uploadMutation.isPending && (
-                            <span className="text-green-600 ml-1.5">{t('whatsapp.upload_uploaded')}</span>
+                            <span className="text-green-600 ms-1.5">{t('whatsapp.upload_uploaded')}</span>
                           )}
                         </p>
                       </div>
