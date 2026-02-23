@@ -27,27 +27,86 @@ export function ConversationListSkeleton() {
   );
 }
 
-export function ChatMessagesSkeleton() {
+/**
+ * Skeleton bubble configuration for realistic chat loading state.
+ * Each entry defines: side (assistant/user), number of text lines, and widths.
+ */
+const SKELETON_BUBBLES = [
+  { side: 'assistant' as const, lines: [{ w: 'w-44' }, { w: 'w-56' }, { w: 'w-36' }] },
+  { side: 'user' as const, lines: [{ w: 'w-32' }] },
+  { side: 'assistant' as const, lines: [{ w: 'w-52' }, { w: 'w-40' }] },
+  { side: 'user' as const, lines: [{ w: 'w-48' }, { w: 'w-28' }] },
+  { side: 'assistant' as const, lines: [{ w: 'w-60' }, { w: 'w-44' }, { w: 'w-32' }] },
+  { side: 'user' as const, lines: [{ w: 'w-36' }] },
+  { side: 'assistant' as const, lines: [{ w: 'w-48' }, { w: 'w-24' }] },
+];
+
+function SkeletonBubble({
+  side,
+  lines,
+  delay,
+}: {
+  side: 'assistant' | 'user';
+  lines: { w: string }[];
+  delay: number;
+}) {
+  const isUser = side === 'user';
+
   return (
-    <div className="flex flex-col gap-4 p-6">
-      {Array.from({ length: 6 }).map((_, i) => (
+    <div
+      className={`flex mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className={`flex flex-col max-w-[70%] ${isUser ? 'items-end' : 'items-start'}`}>
+        {/* Bubble */}
         <div
-          key={i}
-          className="flex"
-          style={{
-            justifyContent: i % 2 === 0 ? 'flex-start' : 'flex-end',
-          }}
+          className={`relative overflow-hidden p-4 border ${
+            isUser
+              ? 'rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md border-neutral-200 bg-white'
+              : 'rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-md border-neutral-800 bg-neutral-900'
+          }`}
         >
-          <div
-            className="max-w-[70%] p-4 rounded-2xl animate-pulse"
-            style={{
-              backgroundColor: i % 2 === 0 ? '#F5F5F5' : '#E5E5E5',
-            }}
-          >
-            <div className="h-4 bg-neutral-300 rounded w-48 mb-2" />
-            <div className="h-4 bg-neutral-300 rounded w-32" />
+          {/* Shimmer overlay */}
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.8s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+
+          {/* Skeleton text lines */}
+          <div className="space-y-2.5">
+            {lines.map((line, i) => (
+              <div
+                key={i}
+                className={`h-3.5 rounded-full ${line.w} ${
+                  isUser ? 'bg-neutral-200' : 'bg-neutral-700'
+                }`}
+              />
+            ))}
           </div>
         </div>
+
+        {/* Timestamp skeleton */}
+        <div className={`flex items-center gap-1.5 mt-0.5 px-1 ${isUser ? 'justify-end' : 'justify-start'}`}>
+          <div className="h-2.5 w-10 rounded-full bg-neutral-200" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ChatMessagesSkeleton() {
+  return (
+    <div className="flex flex-col p-3 sm:p-4" role="status" aria-label="Loading messages">
+      {/* Date separator skeleton */}
+      <div className="flex items-center justify-center my-3">
+        <div className="h-6 w-16 bg-neutral-100 rounded-full" />
+      </div>
+
+      {/* Message bubbles */}
+      {SKELETON_BUBBLES.map((bubble, i) => (
+        <SkeletonBubble
+          key={i}
+          side={bubble.side}
+          lines={bubble.lines}
+          delay={i * 80}
+        />
       ))}
     </div>
   );

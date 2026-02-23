@@ -50,16 +50,19 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       return;
     }
 
-    // If conversation changed, reset everything
+    // If conversation changed, reset everything AND set loading in one batch
+    // (prevents flash of empty state between clearing messages and setting isLoading)
     if (conversationId !== currentConversationId) {
       set({
         messages: [],
         hasMore: true,
         currentConversationId: conversationId,
+        isLoading: true,
+        error: null,
       });
+    } else {
+      set({ isLoading: true, error: null });
     }
-
-    set({ isLoading: true, error: null });
 
     try {
       const offset = refresh ? 0 : messages.length;

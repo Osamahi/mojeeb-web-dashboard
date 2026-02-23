@@ -6,7 +6,7 @@
 
 import { useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Send } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { ChatMessage } from '../../types/conversation.types';
@@ -14,6 +14,7 @@ import { isCustomerMessage } from '../../types';
 import ChatMessageBubble from './ChatMessageBubble';
 import MessageComposer from './MessageComposer';
 import DateSeparator from './DateSeparator';
+import { ChatMessagesSkeleton } from '../shared/LoadingSkeleton';
 
 export interface UnifiedChatViewProps {
   // From ChatEngine
@@ -64,19 +65,21 @@ function DefaultEmptyState() {
 }
 
 /**
- * Loading state during initialization
+ * Skeleton loading state during initialization
+ * Uses realistic chat bubble skeletons with shimmer effect
  */
 function LoadingState() {
-  const { t } = useTranslation();
   return (
-    <div
-      className="h-full flex flex-col items-center justify-center bg-white p-6"
-      role="status"
-      aria-live="polite"
+    <motion.div
+      key="skeleton"
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.3, ease: 'easeOut' } }}
+      className="h-full flex flex-col bg-white"
     >
-      <Loader2 className="w-12 h-12 animate-spin text-neutral-400 mb-4" aria-hidden="true" />
-      <p className="text-sm text-neutral-600">{t('conversations.loading_messages')}</p>
-    </div>
+      <div className="flex-1 overflow-hidden">
+        <ChatMessagesSkeleton />
+      </div>
+    </motion.div>
   );
 }
 
@@ -189,13 +192,18 @@ export default function UnifiedChatView({
     return () => container.removeEventListener('scroll', handleScroll);
   }, [enablePagination, onLoadMore, hasMore, handleScrollToTop]);
 
-  // Show loading state during initialization
-  if (isLoading) {
-    return <LoadingState />;
-  }
-
   return (
-    <div className={cn('h-full flex flex-col bg-white relative', className)}>
+    <AnimatePresence mode="wait">
+      {isLoading ? (
+        <LoadingState />
+      ) : (
+    <motion.div
+      key="chat"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+      className={cn('h-full flex flex-col bg-white relative', className)}
+    >
       {/* Optional header slot (e.g., conversation metadata, new conversation button) */}
       {header}
 
@@ -317,6 +325,8 @@ export default function UnifiedChatView({
 
       {/* Optional footer slot */}
       {footer}
-    </div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -49,6 +49,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   const fetchMessages = useChatStore((state) => state.fetchMessages);
   const loadMoreMessages = useChatStore((state) => state.loadMore);
   const hasMore = useChatStore((state) => state.hasMore);
+  const isStoreLoading = useChatStore((state) => state.isLoading);
 
   // Use Zustand storage adapter (persistent)
   const storage = useZustandChatStorage();
@@ -237,7 +238,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         {/* SCROLLABLE CONTENT - UnifiedChatView without header */}
         <UnifiedChatView
           messages={chatEngine.messages}
-          isLoading={chatEngine.isLoading}
+          isLoading={isStoreLoading}
           isAITyping={chatEngine.isAITyping}
           onSendMessage={chatEngine.sendMessage}
           onRetryMessage={chatEngine.retryMessage}
