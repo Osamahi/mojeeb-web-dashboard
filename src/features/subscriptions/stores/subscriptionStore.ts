@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { SubscriptionDetails, UsageSummary } from '../types/subscription.types';
 import { subscriptionService } from '../services/subscriptionService';
 import { logger } from '@/lib/logger';
+import { AxiosError } from 'axios';
 
 interface SubscriptionState {
   subscription: SubscriptionDetails | null;
@@ -66,6 +67,13 @@ export const useSubscriptionStore = create<SubscriptionState>()(
             usage: `${data.usage.messagesUsed}/${data.usage.messagesLimit}`
           });
         } catch (error) {
+          // 404 means no subscription exists for this user (e.g., super admin) - this is expected
+          if (error instanceof AxiosError && error.response?.status === 404) {
+            logger.debug('[SubscriptionStore]', 'No subscription found (404) - user may not require one');
+            set({ subscription: null, usage: null, isLoading: false });
+            return;
+          }
+
           logger.error('[SubscriptionStore]', 'refreshSubscription - error:', error);
           set({
             error: error instanceof Error ? error.message : 'Failed to load subscription',

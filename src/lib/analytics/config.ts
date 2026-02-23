@@ -12,7 +12,8 @@ export const analyticsConfig: AnalyticsConfig = {
   // Enable/disable providers globally (can be overridden by env vars)
   enabledProviders: [
     'gtm',
-    'metaPixel',
+    // Meta Pixel only works on production domains (Facebook blocks localhost)
+    ...(import.meta.env.DEV ? [] : ['metaPixel']),
     // 'googleAnalytics', // Uncomment when ready
     // 'linkedIn',        // Uncomment when ready
   ].filter(provider => {

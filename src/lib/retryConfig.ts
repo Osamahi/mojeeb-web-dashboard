@@ -55,7 +55,7 @@ export function shouldRetry(
   // Don't retry if status code indicates client error
   const status = isAxiosError(error) ? error.response?.status : undefined;
   if (status && config.noRetryStatuses.includes(status)) {
-    logger.info('Not retrying due to status code', { status, noRetryStatuses: config.noRetryStatuses });
+    logger.debug('Not retrying due to status code', { status, noRetryStatuses: config.noRetryStatuses });
     return false;
   }
 

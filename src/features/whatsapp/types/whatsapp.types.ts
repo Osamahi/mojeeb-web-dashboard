@@ -27,6 +27,7 @@ export interface MessageTemplate {
   category: 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
   language: string;
   components?: TemplateComponent[];
+  quality_score?: { score: string; date?: number };
 }
 
 export interface TemplateComponent {
@@ -35,6 +36,7 @@ export interface TemplateComponent {
   format?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
   parameters?: TemplateParameter[];
   buttons?: TemplateButton[];
+  example?: { body_text?: string[][] };
 }
 
 export interface TemplateParameter {
@@ -73,6 +75,13 @@ export interface CreateTemplateRequest {
   language: string;
   category: 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
   components: TemplateComponent[];
+}
+
+export interface CreateTemplateButtonInput {
+  type: 'URL' | 'PHONE_NUMBER' | 'QUICK_REPLY';
+  text: string;
+  url?: string;
+  phone_number?: string;
 }
 
 export type TemplateStatus = MessageTemplate['status'];

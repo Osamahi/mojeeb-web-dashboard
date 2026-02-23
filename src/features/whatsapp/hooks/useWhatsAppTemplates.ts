@@ -3,7 +3,7 @@
  * Custom hook for fetching and managing WhatsApp message templates
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { whatsappService } from '../services/whatsappService';
 import type { SendTemplateRequest } from '../types/whatsapp.types';
 
@@ -31,23 +31,16 @@ export function useWhatsAppTemplates(connectionId?: string) {
 
 /**
  * Hook to send a template message
+ * SECURITY: Uses connectionId for credential retrieval, no access token exposed
  */
 export function useSendTemplate() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: ({
-      phoneNumberId,
-      accessToken,
+      connectionId,
       request,
     }: {
-      phoneNumberId: string;
-      accessToken: string;
+      connectionId: string;
       request: SendTemplateRequest;
-    }) => whatsappService.sendTemplate(phoneNumberId, accessToken, request),
-    onSuccess: () => {
-      // Optionally invalidate queries or show success toast
-      console.log('Template message sent successfully');
-    },
+    }) => whatsappService.sendTemplate(connectionId, request),
   });
 }

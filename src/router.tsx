@@ -261,11 +261,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'whatsapp-management',
-        element: (
-          <SuperAdminRoute>
-            <WhatsAppManagementPage />
-          </SuperAdminRoute>
-        ),
+        element: <WhatsAppManagementPage />,
       },
       {
         path: 'users',

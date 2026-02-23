@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
+import { useAuthStore } from '@/features/auth/stores/authStore';
+import { Role } from '@/features/auth/types/auth.types';
 import { logger } from '@/lib/logger';
 
 /**
@@ -7,13 +9,21 @@ import { logger } from '@/lib/logger';
  *
  * Loads subscription data once when the app initializes (after user is authenticated).
  * This component is invisible and only exists to trigger the subscription fetch side effect.
+ * Skips fetching for SuperAdmin users who don't have subscriptions.
  *
  * Usage: Render inside AuthInitializer after auth validation succeeds
  */
 export const SubscriptionInitializer = () => {
   useEffect(() => {
     const loadSubscription = async () => {
-      // Use refreshSubscription action which handles all the logic
+      const user = useAuthStore.getState().user;
+
+      // SuperAdmins don't have subscriptions - skip the API call entirely
+      if (user?.role === Role.SuperAdmin) {
+        logger.debug('[SubscriptionInitializer]', 'SuperAdmin detected - skipping subscription fetch');
+        return;
+      }
+
       logger.info('[SubscriptionInitializer]', 'Loading subscription data...');
       try {
         await useSubscriptionStore.getState().refreshSubscription();

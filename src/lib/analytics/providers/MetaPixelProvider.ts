@@ -30,29 +30,16 @@ export class MetaPixelProvider implements AnalyticsProvider {
   }
 
   initialize(): void {
-    console.log('[Meta Pixel] 🔍 Initializing...');
-    console.log('[Meta Pixel] isEnabled (from config):', this.isEnabled);
-
-    if (!this.isEnabled) {
-      console.log('[Meta Pixel] ⏭️ Provider disabled in config - skipping initialization');
-      return;
-    }
-
-    // Meta Pixel is initialized in index.html, so we just verify it exists
-    console.log('[Meta Pixel] 🔍 Checking for window.fbq...');
-    console.log('[Meta Pixel] typeof window:', typeof window);
-    console.log('[Meta Pixel] typeof window.fbq:', typeof window !== 'undefined' ? typeof window.fbq : 'window undefined');
+    if (!this.isEnabled) return;
 
     if (typeof window !== 'undefined' && !window.fbq) {
-      console.error('[Meta Pixel] ❌ window.fbq NOT FOUND - Meta Pixel script not loaded!');
-      console.error('[Meta Pixel] ❌ DISABLING PROVIDER PERMANENTLY');
+      console.warn('[Meta Pixel] window.fbq not found - disabling provider');
       this.isEnabled = false;
       return;
     }
 
-    if (typeof window !== 'undefined' && window.fbq) {
-      console.log('[Meta Pixel] ✅ window.fbq found - Meta Pixel is ready!');
-      console.log('[Meta Pixel] Pixel ID: 2334159923685300');
+    if (analyticsConfig.debug) {
+      console.log('[Meta Pixel] Initialized');
     }
   }
 
@@ -60,37 +47,13 @@ export class MetaPixelProvider implements AnalyticsProvider {
     eventName: T,
     payload: AnalyticsEventPayload<T>
   ): void {
-    console.log(`[Meta Pixel] 🎯 track() called: "${eventName}"`);
-    console.log(`[Meta Pixel] isEnabled: ${this.isEnabled}`);
-    console.log(`[Meta Pixel] typeof window: ${typeof window}`);
-    console.log(`[Meta Pixel] typeof window.fbq: ${typeof window !== 'undefined' ? typeof window.fbq : 'N/A'}`);
+    if (!this.isEnabled || typeof window === 'undefined' || !window.fbq) return;
 
-    if (!this.isEnabled) {
-      console.error(`[Meta Pixel] ⚠️ Provider is DISABLED - cannot track "${eventName}"`);
-      return;
-    }
-
-    if (typeof window === 'undefined') {
-      console.error(`[Meta Pixel] ⚠️ window is undefined - cannot track "${eventName}"`);
-      return;
-    }
-
-    if (!window.fbq) {
-      console.error(`[Meta Pixel] ⚠️ window.fbq not found - cannot track "${eventName}"`);
-      return;
-    }
-
-    // Check if event maps to a standard Meta event
     const metaEventName = META_EVENT_MAP[eventName];
-    console.log(`[Meta Pixel] Event mapping check: "${eventName}" → ${metaEventName || '(custom event)'}`);
 
     if (metaEventName) {
-      // Use standard event
-      console.log(`[Meta Pixel] 📊 Using STANDARD event: "${metaEventName}"`);
       this.trackStandardEvent(metaEventName, eventName, payload);
     } else {
-      // Use custom event
-      console.log(`[Meta Pixel] 🎨 Using CUSTOM event (will convert to PascalCase)`);
       this.trackCustomEvent(eventName, payload);
     }
   }
@@ -103,7 +66,6 @@ export class MetaPixelProvider implements AnalyticsProvider {
     if (!window.fbq) return;
 
     const eventParams = this.transformPayload(internalEventName, payload);
-
     window.fbq('track', metaEventName, eventParams);
 
     if (analyticsConfig.debug) {
@@ -115,27 +77,19 @@ export class MetaPixelProvider implements AnalyticsProvider {
     eventName: T,
     payload: AnalyticsEventPayload<T>
   ): void {
-    console.log(`[Meta Pixel] trackCustomEvent() called for: "${eventName}"`);
-
-    if (!window.fbq) {
-      console.error(`[Meta Pixel] ❌ window.fbq not available in trackCustomEvent - ABORTING`);
-      return;
-    }
+    if (!window.fbq) return;
 
     const eventParams = {
       timestamp: new Date().toISOString(),
       ...payload,
     };
 
-    // Convert event name to PascalCase for custom events
     const customEventName = this.toPascalCase(eventName);
-    console.log(`[Meta Pixel] 🔄 Converted event name: "${eventName}" → "${customEventName}"`);
-    console.log(`[Meta Pixel] 📦 Event parameters:`, eventParams);
-
-    console.log(`[Meta Pixel] 📤 Calling window.fbq('trackCustom', '${customEventName}', {...})`);
     window.fbq('trackCustom', customEventName, eventParams);
-    console.log(`[Meta Pixel] ✅ window.fbq() call completed successfully!`);
-    console.log(`[Meta Pixel] 🎉 Custom event "${customEventName}" sent to Meta Pixel!`);
+
+    if (analyticsConfig.debug) {
+      console.log('[Meta Pixel] Custom Event:', customEventName, eventParams);
+    }
   }
 
   /**
@@ -203,8 +157,6 @@ export class MetaPixelProvider implements AnalyticsProvider {
   identify(userId: string, traits?: Record<string, unknown>): void {
     if (!this.isEnabled || typeof window === 'undefined' || !window.fbq) return;
 
-    // Meta Pixel doesn't have a dedicated identify method
-    // User data is sent with events automatically
     if (analyticsConfig.debug) {
       console.log('[Meta Pixel] User identified:', userId, traits);
     }
@@ -213,10 +165,8 @@ export class MetaPixelProvider implements AnalyticsProvider {
   reset(): void {
     if (!this.isEnabled || typeof window === 'undefined' || !window.fbq) return;
 
-    // Meta Pixel doesn't have a reset method
-    // User session is tied to cookies
     if (analyticsConfig.debug) {
-      console.log('[Meta Pixel] User logged out');
+      console.log('[Meta Pixel] User reset');
     }
   }
 }

@@ -2150,6 +2150,19 @@
     "template_created_success": "تم إنشاء القالب \"{{name}}\" بنجاح! الحالة: {{status}}",
     "template_created_error": "فشل إنشاء القالب",
     "creating": "جاري الإنشاء...",
-    "submit": "إرسال"
+    "submit": "إرسال",
+    "send": "إرسال",
+    "sending": "جاري الإرسال...",
+    "send_template_title": "إرسال رسالة قالب",
+    "send_preview": "معاينة الرسالة",
+    "send_recipient": "رقم الهاتف",
+    "send_recipient_placeholder": "+966512345678",
+    "send_recipient_hint": "أدخل رقم الهاتف الكامل مع رمز البلد (مثال: +966512345678)",
+    "send_recipient_required": "رقم الهاتف مطلوب",
+    "send_parameters": "متغيرات القالب",
+    "send_param_placeholder": "قيمة المتغير {{index}}",
+    "send_params_required": "جميع متغيرات القالب مطلوبة",
+    "send_success": "تم إرسال القالب \"{{name}}\" إلى {{recipient}}",
+    "send_error": "فشل إرسال رسالة القالب"
   }
 }

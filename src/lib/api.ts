@@ -265,12 +265,21 @@ api.interceptors.response.use(
     // 1. Error is not retryable (4xx client error)
     // 2. Max retries exceeded
     // 3. Other non-retryable condition
-    logger.error('Request failed after retries', error, {
+    const status = error.response?.status;
+    const logDetails = {
       url: originalRequest.url,
       method: originalRequest.method,
-      status: error.response?.status,
+      status,
       retryCount: originalRequest._retryCount,
-    });
+    };
+
+    // 4xx errors are client-side (expected in many flows like 404 no-subscription)
+    // Only log 5xx and network errors as ERROR
+    if (status && status >= 400 && status < 500) {
+      logger.info('Request failed with client error', logDetails);
+    } else {
+      logger.error('Request failed after retries', error, logDetails);
+    }
 
     return Promise.reject(error);
   }

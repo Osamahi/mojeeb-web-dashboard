@@ -2278,6 +2278,19 @@
     "template_created_success": "Template \"{{name}}\" created successfully! Status: {{status}}",
     "template_created_error": "Failed to create template",
     "creating": "Creating...",
-    "submit": "Submit"
+    "submit": "Submit",
+    "send": "Send",
+    "sending": "Sending...",
+    "send_template_title": "Send Template Message",
+    "send_preview": "Message Preview",
+    "send_recipient": "Recipient Phone Number",
+    "send_recipient_placeholder": "+1234567890",
+    "send_recipient_hint": "Enter the full phone number with country code (E.164 format)",
+    "send_recipient_required": "Recipient phone number is required",
+    "send_parameters": "Template Parameters",
+    "send_param_placeholder": "Value for parameter {{index}}",
+    "send_params_required": "All template parameters are required",
+    "send_success": "Template \"{{name}}\" sent to {{recipient}}",
+    "send_error": "Failed to send template message"
   }
 }

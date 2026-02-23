@@ -9,6 +9,7 @@ import type {
   MessageTemplate,
   SendTemplateRequest,
   SendTemplateResponse,
+  CreateTemplateButtonInput,
 } from '../types/whatsapp.types';
 
 const WHATSAPP_TEMPLATES_BASE = '/api/whatsapp/templates';
@@ -43,6 +44,7 @@ export const whatsappService = {
       language: string;
       category: string;
       body: string;
+      buttons?: CreateTemplateButtonInput[];
     }
   ): Promise<{ success: boolean; template_id?: string; status?: string; error?: string }> {
     const response = await api.post(
@@ -59,19 +61,19 @@ export const whatsappService = {
 
   /**
    * Send a WhatsApp template message
-   * Route: POST /api/whatsapp/templates/send/{phoneNumberId}
+   * SECURITY: Access token retrieved from backend, not passed from frontend
+   * Route: POST /api/whatsapp/templates/send
    */
   async sendTemplate(
-    phoneNumberId: string,
-    accessToken: string,
+    connectionId: string,
     request: SendTemplateRequest
   ): Promise<SendTemplateResponse> {
     const response = await api.post<SendTemplateResponse>(
-      `${WHATSAPP_TEMPLATES_BASE}/send/${phoneNumberId}`,
+      `${WHATSAPP_TEMPLATES_BASE}/send`,
       request,
       {
         params: {
-          accessToken,
+          connectionId,
         },
       }
     );
