@@ -83,4 +83,26 @@ export const whatsappService = {
     );
     return response.data;
   },
+
+  /**
+   * Upload media for a WhatsApp template header (image, video, or document).
+   * Uploads directly to Meta via Resumable Upload API and returns a file handle.
+   * Route: POST /api/whatsapp/templates/upload-media
+   */
+  async uploadTemplateMedia(
+    connectionId: string,
+    file: File
+  ): Promise<{ success: boolean; handle: string; content_type: string; size: number }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(
+      `${WHATSAPP_TEMPLATES_BASE}/upload-media`,
+      formData,
+      {
+        params: { connectionId },
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }
+    );
+    return response.data;
+  },
 };
