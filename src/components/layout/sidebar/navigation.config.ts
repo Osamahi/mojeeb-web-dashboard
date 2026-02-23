@@ -15,15 +15,14 @@ import {
   UserPlus,
   Receipt,
   CreditCard,
-  DollarSign,
   Package,
   BookOpen,
   Network,
-  FileText,
   Puzzle,
   Layers,
   Workflow,
 } from 'lucide-react';
+import { WhatsAppIcon } from './WhatsAppIcon';
 import type { NavigationItem } from './types';
 
 /**
@@ -142,7 +141,7 @@ export const navigation: NavigationItem[] = [
     name: 'WhatsApp',
     translationKey: 'navigation.whatsapp',
     href: '/whatsapp-management',
-    icon: FileText,
+    icon: WhatsAppIcon,
     requireSuperAdmin: true,
   },
   {

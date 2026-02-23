@@ -4,7 +4,7 @@
  */
 
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Plus, MessageSquare, CheckCircle2, Phone, Send, ChevronDown } from 'lucide-react';
+import { Plus, CheckCircle2, Send, ChevronDown, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { BaseHeader } from '@/components/ui/BaseHeader';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Badge } from '@/components/ui/Badge';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
+import { PlatformIcon } from '@/features/connections/components/PlatformIcon';
 import { AddTemplateModal } from '../components/AddTemplateModal';
 import { TemplateDetailsModal } from '../components/TemplateDetailsModal';
 import { SendTemplateModal } from '../components/SendTemplateModal';
@@ -90,7 +91,9 @@ export default function WhatsAppManagementPage() {
     return (
       <div className="p-4 sm:p-6 flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <MessageSquare className="w-8 h-8 text-neutral-400 mx-auto mb-2 animate-pulse" />
+          <div className="mx-auto mb-2 w-fit animate-pulse opacity-50">
+            <PlatformIcon platform="whatsapp" size="lg" variant="brand" />
+          </div>
           <p className="text-sm text-neutral-500">{t('whatsapp.loading')}</p>
         </div>
       </div>
@@ -106,7 +109,7 @@ export default function WhatsAppManagementPage() {
           subtitle={t('whatsapp.subtitle')}
         />
         <EmptyState
-          icon={<MessageSquare className="w-12 h-12 text-neutral-400" />}
+          icon={<PlatformIcon platform="whatsapp" size="xl" variant="brand" />}
           title={t('whatsapp.no_connections_title')}
           description={t('whatsapp.no_connections_description')}
           action={
@@ -150,9 +153,7 @@ export default function WhatsAppManagementPage() {
               return (
                 <div className="flex items-center gap-3 rounded-lg border border-green-500 bg-white p-3 shadow-sm">
                   <div className="flex-shrink-0 relative">
-                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <MessageSquare className="w-5 h-5 text-green-600" />
-                    </div>
+                    <PlatformIcon platform="whatsapp" size="md" variant="brand" showBackground />
                     {connection.isActive && (
                       <div className="absolute bottom-0 end-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
                     )}
@@ -189,9 +190,7 @@ export default function WhatsAppManagementPage() {
                 }`}
               >
                 <div className="flex-shrink-0 relative">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-green-600" />
-                  </div>
+                  <PlatformIcon platform="whatsapp" size="md" variant="brand" showBackground />
                   {selectedPhoneNumber?.isActive && (
                     <div className="absolute bottom-0 end-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
                   )}
@@ -245,9 +244,7 @@ export default function WhatsAppManagementPage() {
                         }`}
                       >
                         <div className="flex-shrink-0 relative">
-                          <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center">
-                            <MessageSquare className="w-4 h-4 text-green-600" />
-                          </div>
+                          <PlatformIcon platform="whatsapp" size="sm" variant="brand" showBackground />
                           {connection.isActive && (
                             <div className="absolute bottom-0 end-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white" />
                           )}
@@ -320,8 +317,8 @@ export default function WhatsAppManagementPage() {
                     >
                       {/* Template Icon */}
                       <div className="flex-shrink-0">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <MessageSquare className="w-5 h-5 text-blue-600" />
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-neutral-100 flex items-center justify-center">
+                          <MessageSquare className="w-5 h-5 text-neutral-500" />
                         </div>
                       </div>
 
@@ -365,7 +362,7 @@ export default function WhatsAppManagementPage() {
               </div>
             ) : (
               <EmptyState
-                icon={<MessageSquare className="w-12 h-12 text-neutral-400" />}
+                icon={<PlatformIcon platform="whatsapp" size="xl" variant="brand" />}
                 title={t('whatsapp.no_templates_title')}
                 description={t('whatsapp.no_templates_description')}
                 action={
