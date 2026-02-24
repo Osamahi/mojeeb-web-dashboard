@@ -37,6 +37,44 @@ export interface AdminFollowUpJobsApiResponse {
   has_more: boolean;
 }
 
+// === Follow-Up Steps (Admin) ===
+
+export interface FollowUpStepAdmin {
+  id: string;
+  agentId: string;
+  agentName: string;
+  stepOrder: number;
+  delayMinutes: number;
+  isEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FollowUpStepFilters {
+  agentId?: string;
+  isEnabled?: string; // "true" | "false" | undefined (all)
+  searchTerm?: string;
+}
+
+/** Raw API response matching CursorPaginatedResponse<T> (snake_case from Newtonsoft.Json) */
+export interface AdminFollowUpStepsApiResponse {
+  items: ApiFollowUpStepAdmin[];
+  next_cursor: string | null;
+  has_more: boolean;
+}
+
+/** Raw API response shape (snake_case) */
+export interface ApiFollowUpStepAdmin {
+  id: string;
+  agent_id: string;
+  agent_name: string;
+  step_order: number;
+  delay_minutes: number;
+  is_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 /** Raw API response shape (snake_case) */
 export interface ApiFollowUpJob {
   id: string;

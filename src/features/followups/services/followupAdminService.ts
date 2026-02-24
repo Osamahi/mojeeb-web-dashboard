@@ -4,6 +4,10 @@ import type {
   FollowUpJobFilters,
   AdminFollowUpJobsApiResponse,
   ApiFollowUpJob,
+  FollowUpStepAdmin,
+  FollowUpStepFilters,
+  AdminFollowUpStepsApiResponse,
+  ApiFollowUpStepAdmin,
 } from '../types/followup.types';
 
 function transformJob(apiJob: ApiFollowUpJob): FollowUpJob {
@@ -26,6 +30,19 @@ function transformJob(apiJob: ApiFollowUpJob): FollowUpJob {
     generatedMessage: apiJob.generated_message,
     attemptCount: apiJob.attempt_count,
     createdAt: apiJob.created_at,
+  };
+}
+
+function transformStep(apiStep: ApiFollowUpStepAdmin): FollowUpStepAdmin {
+  return {
+    id: apiStep.id,
+    agentId: apiStep.agent_id,
+    agentName: apiStep.agent_name,
+    stepOrder: apiStep.step_order,
+    delayMinutes: apiStep.delay_minutes,
+    isEnabled: apiStep.is_enabled,
+    createdAt: apiStep.created_at,
+    updatedAt: apiStep.updated_at,
   };
 }
 
@@ -59,6 +76,36 @@ class FollowUpAdminService {
 
     return {
       items: payload.items.map(transformJob),
+      nextCursor: payload.next_cursor,
+      hasMore: payload.has_more,
+    };
+  }
+  /**
+   * Fetches follow-up steps with cursor-based pagination.
+   * Matches getJobs pattern: { items, nextCursor, hasMore }
+   */
+  async getSteps(
+    filters: FollowUpStepFilters,
+    limit: number = 50,
+    cursor?: string | null
+  ): Promise<{ items: FollowUpStepAdmin[]; nextCursor: string | null; hasMore: boolean }> {
+    const params = new URLSearchParams();
+    params.append('limit', limit.toString());
+
+    if (cursor) params.append('cursor', cursor);
+    if (filters.agentId) params.append('agentId', filters.agentId);
+    if (filters.isEnabled) params.append('isEnabled', filters.isEnabled);
+    if (filters.searchTerm) params.append('search', filters.searchTerm);
+
+    // ExecuteServiceCallAsync wraps in { data: { items, next_cursor, has_more }, timestamp }
+    const { data: response } = await api.get<{ data: AdminFollowUpStepsApiResponse }>(
+      `/api/admin/followups/steps?${params.toString()}`
+    );
+
+    const payload = response.data;
+
+    return {
+      items: payload.items.map(transformStep),
       nextCursor: payload.next_cursor,
       hasMore: payload.has_more,
     };

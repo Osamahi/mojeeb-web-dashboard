@@ -22,6 +22,7 @@ import {
   Layers,
   Workflow,
   Timer,
+  ListOrdered,
   Settings,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
@@ -144,6 +145,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.followup_jobs',
     href: '/followup-jobs',
     icon: Timer,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Follow-Up Steps',
+    translationKey: 'navigation.followup_steps',
+    href: '/followup-steps',
+    icon: ListOrdered,
     requireSuperAdmin: true,
   },
   {
