@@ -1378,7 +1378,22 @@
     "detail_delay": "Delay",
     "detail_step_order": "Step Order",
     "detail_created": "Created",
-    "detail_updated": "Updated"
+    "detail_updated": "Updated",
+    "edit_step": "Edit step",
+    "delete_step": "Delete step",
+    "edit_title": "Edit Follow-Up Step",
+    "edit_delay_label": "Delay (minutes)",
+    "edit_delay_hint": "= {{formatted}}",
+    "edit_enabled_label": "Enabled",
+    "edit_cancel": "Cancel",
+    "edit_save": "Save",
+    "edit_success": "Step updated successfully",
+    "edit_failed": "Failed to update step",
+    "delete_title": "Delete Follow-Up Step",
+    "delete_confirm": "Are you sure you want to delete this follow-up step? This action cannot be undone.",
+    "delete_confirm_button": "Delete",
+    "delete_success": "Step deleted successfully",
+    "delete_failed": "Failed to delete step"
   },
   "app_config": {
     "title": "App Configurations",

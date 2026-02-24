@@ -117,6 +117,27 @@ class FollowUpAdminService {
   async triggerJob(jobId: string): Promise<void> {
     await api.post(`/api/admin/followups/${jobId}/trigger`);
   }
+
+  /**
+   * Updates a follow-up step (delay_minutes, is_enabled). SuperAdmin only.
+   */
+  async updateStep(
+    stepId: string,
+    agentId: string,
+    data: { delay_minutes?: number; is_enabled?: boolean }
+  ): Promise<void> {
+    await api.put(`/api/admin/followups/steps/${stepId}`, {
+      agent_id: agentId,
+      ...data,
+    });
+  }
+
+  /**
+   * Deletes a follow-up step. SuperAdmin only.
+   */
+  async deleteStep(stepId: string, agentId: string): Promise<void> {
+    await api.delete(`/api/admin/followups/steps/${stepId}?agentId=${agentId}`);
+  }
 }
 
 export const followUpAdminService = new FollowUpAdminService();

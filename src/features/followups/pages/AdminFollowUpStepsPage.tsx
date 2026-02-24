@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Search, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
+import { RefreshCw, Search, Loader2, ChevronDown, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
+import { BaseModal } from '@/components/ui/BaseModal';
 import { followUpAdminService } from '../services/followupAdminService';
 import { useDateLocale } from '@/lib/dateConfig';
 import { toast } from 'sonner';
@@ -37,6 +38,16 @@ export default function AdminFollowUpStepsPage() {
   const [filters, setFilters] = useState<FollowUpStepFilters>({});
   const [searchInput, setSearchInput] = useState('');
   const [expandedStepId, setExpandedStepId] = useState<string | null>(null);
+
+  // Edit modal state
+  const [editingStep, setEditingStep] = useState<FollowUpStepAdmin | null>(null);
+  const [editDelayMinutes, setEditDelayMinutes] = useState<number>(0);
+  const [editIsEnabled, setEditIsEnabled] = useState<boolean>(true);
+  const [saving, setSaving] = useState(false);
+
+  // Delete confirmation state
+  const [deletingStep, setDeletingStep] = useState<FollowUpStepAdmin | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Cursor-based pagination state
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -121,6 +132,58 @@ export default function AdminFollowUpStepsPage() {
     loadSteps(null, false);
   }, [loadSteps]);
 
+  const handleEditClick = useCallback((step: FollowUpStepAdmin) => {
+    setEditingStep(step);
+    setEditDelayMinutes(step.delayMinutes);
+    setEditIsEnabled(step.isEnabled);
+  }, []);
+
+  const handleEditSave = useCallback(async () => {
+    if (!editingStep) return;
+    setSaving(true);
+    try {
+      await followUpAdminService.updateStep(editingStep.id, editingStep.agentId, {
+        delay_minutes: editDelayMinutes,
+        is_enabled: editIsEnabled,
+      });
+      toast.success(t('followup_steps.edit_success'));
+      // Update local state
+      setSteps(prev =>
+        prev.map(s =>
+          s.id === editingStep.id
+            ? { ...s, delayMinutes: editDelayMinutes, isEnabled: editIsEnabled, updatedAt: new Date().toISOString() }
+            : s
+        )
+      );
+      setEditingStep(null);
+    } catch (error) {
+      console.error('Failed to update step:', error);
+      toast.error(t('followup_steps.edit_failed'));
+    } finally {
+      setSaving(false);
+    }
+  }, [editingStep, editDelayMinutes, editIsEnabled, t]);
+
+  const handleDeleteClick = useCallback((step: FollowUpStepAdmin) => {
+    setDeletingStep(step);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deletingStep) return;
+    setDeleting(true);
+    try {
+      await followUpAdminService.deleteStep(deletingStep.id, deletingStep.agentId);
+      toast.success(t('followup_steps.delete_success'));
+      setSteps(prev => prev.filter(s => s.id !== deletingStep.id));
+      setDeletingStep(null);
+    } catch (error) {
+      console.error('Failed to delete step:', error);
+      toast.error(t('followup_steps.delete_failed'));
+    } finally {
+      setDeleting(false);
+    }
+  }, [deletingStep, t]);
+
   return (
     <div className="space-y-6 p-6">
       <BaseHeader
@@ -194,6 +257,7 @@ export default function AdminFollowUpStepsPage() {
                   <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">{t('followup_steps.col_status')}</th>
                   <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">{t('followup_steps.col_created')}</th>
                   <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">{t('followup_steps.col_updated')}</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
@@ -237,12 +301,36 @@ export default function AdminFollowUpStepsPage() {
                       <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                         {formatSmartTimestamp(step.updatedAt)}
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditClick(step);
+                            }}
+                            className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
+                            title={t('followup_steps.edit_step')}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClick(step);
+                            }}
+                            className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
+                            title={t('followup_steps.delete_step')}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
 
                     {/* Expanded Details Row */}
                     {expandedStepId === step.id && (
                       <tr key={`${step.id}-details`} className="bg-gray-50">
-                        <td colSpan={7} className="px-4 py-4">
+                        <td colSpan={8} className="px-4 py-4">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                               <span className="text-gray-500 block">{t('followup_steps.detail_step_id')}</span>
@@ -288,6 +376,111 @@ export default function AdminFollowUpStepsPage() {
           </div>
         )}
       </div>
+
+      {/* Edit Step Modal */}
+      <BaseModal
+        isOpen={!!editingStep}
+        onClose={() => setEditingStep(null)}
+        title={t('followup_steps.edit_title')}
+        subtitle={editingStep ? `${editingStep.agentName} - ${t('followup_steps.step_label', { order: editingStep.stepOrder })}` : ''}
+        maxWidth="sm"
+        isLoading={saving}
+        closable={!saving}
+      >
+        <div className="space-y-4">
+          {/* Delay Minutes */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('followup_steps.edit_delay_label')}
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={10080}
+              value={editDelayMinutes}
+              onChange={(e) => setEditDelayMinutes(parseInt(e.target.value) || 1)}
+              className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              {t('followup_steps.edit_delay_hint', { formatted: formatDelay(editDelayMinutes) })}
+            </p>
+          </div>
+
+          {/* Enabled Toggle */}
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700">
+              {t('followup_steps.edit_enabled_label')}
+            </label>
+            <button
+              type="button"
+              onClick={() => setEditIsEnabled(!editIsEnabled)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                editIsEnabled ? 'bg-green-500' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  editIsEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              onClick={() => setEditingStep(null)}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
+              {t('followup_steps.edit_cancel')}
+            </button>
+            <button
+              onClick={handleEditSave}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 inline-flex items-center gap-2"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {t('followup_steps.edit_save')}
+            </button>
+          </div>
+        </div>
+      </BaseModal>
+
+      {/* Delete Confirmation Modal */}
+      <BaseModal
+        isOpen={!!deletingStep}
+        onClose={() => setDeletingStep(null)}
+        title={t('followup_steps.delete_title')}
+        subtitle={deletingStep ? `${deletingStep.agentName} - ${t('followup_steps.step_label', { order: deletingStep.stepOrder })}` : ''}
+        maxWidth="sm"
+        isLoading={deleting}
+        closable={!deleting}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            {t('followup_steps.delete_confirm')}
+          </p>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              onClick={() => setDeletingStep(null)}
+              disabled={deleting}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
+              {t('followup_steps.edit_cancel')}
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              disabled={deleting}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 inline-flex items-center gap-2"
+            >
+              {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {t('followup_steps.delete_confirm_button')}
+            </button>
+          </div>
+        </div>
+      </BaseModal>
     </div>
   );
 }
