@@ -725,7 +725,8 @@
     "title_subscriptions": "الاشتراكات",
     "title_team_management": "إدارة الفريق",
     "title_users": "المستخدمون",
-    "title_followup_jobs": "وظائف المتابعة"
+    "title_followup_jobs": "وظائف المتابعة",
+    "title_app_config": "إعدادات التطبيق"
   },
   "conversations": {
     "title": "المحادثات",
@@ -936,6 +937,7 @@
     "team": "الفريق",
     "actions": "الإجراءات",
     "followup_jobs": "وظائف المتابعة",
+    "app_config": "إعدادات التطبيق",
     "whatsapp": "الواتساب",
     "support": "الدعم",
     "main_aria_label": "التنقل الرئيسي"
@@ -1339,6 +1341,37 @@
     "detail_sent_at": "وقت الإرسال",
     "detail_cancelled_at": "وقت الإلغاء",
     "view_conversation": "عرض المحادثة"
+  },
+  "app_config": {
+    "title": "إعدادات التطبيق",
+    "subtitle": "إدارة الإعدادات العامة للتطبيق (أزواج مفتاح-قيمة)",
+    "add_button": "إضافة إعداد",
+    "edit_button": "تعديل",
+    "no_configs_title": "لا توجد إعدادات",
+    "no_configs_subtitle": "أضف أول إعداد للبدء",
+    "col_key": "المفتاح",
+    "col_value": "القيمة",
+    "col_description": "الوصف",
+    "col_updated": "آخر تحديث",
+    "col_actions": "الإجراءات",
+    "modal_add_title": "إضافة إعداد",
+    "modal_add_subtitle": "إنشاء إعداد جديد (مفتاح-قيمة)",
+    "modal_edit_title": "تعديل الإعداد",
+    "modal_edit_subtitle": "تحديث قيمة الإعداد",
+    "field_key": "المفتاح",
+    "field_key_placeholder": "مثال: system_prompt_format",
+    "field_value": "القيمة",
+    "field_value_placeholder": "أدخل قيمة الإعداد",
+    "field_description": "الوصف",
+    "field_description_placeholder": "وصف اختياري لهذا الإعداد",
+    "error_key_required": "المفتاح مطلوب",
+    "error_value_required": "القيمة مطلوبة",
+    "create_success": "تم إنشاء الإعداد بنجاح",
+    "create_error": "فشل في إنشاء الإعداد",
+    "update_success": "تم تحديث الإعداد بنجاح",
+    "update_error": "فشل في تحديث الإعداد",
+    "btn_create": "إنشاء",
+    "btn_update": "تحديث"
   },
   "user_stats": {
     "total_users": "إجمالي المستخدمين",

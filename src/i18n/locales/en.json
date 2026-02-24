@@ -727,7 +727,8 @@
     "title_subscriptions": "Subscriptions",
     "title_team_management": "Team Management",
     "title_users": "Users",
-    "title_followup_jobs": "Follow-Up Jobs"
+    "title_followup_jobs": "Follow-Up Jobs",
+    "title_app_config": "App Config"
   },
   "conversations": {
     "title": "Conversations",
@@ -938,6 +939,7 @@
     "team": "Team",
     "actions": "Actions",
     "followup_jobs": "Follow-Up Jobs",
+    "app_config": "App Config",
     "whatsapp": "WhatsApp",
     "support": "Support",
     "main_aria_label": "Main navigation"
@@ -1345,6 +1347,37 @@
     "detail_sent_at": "Sent At",
     "detail_cancelled_at": "Cancelled At",
     "view_conversation": "View conversation"
+  },
+  "app_config": {
+    "title": "App Configurations",
+    "subtitle": "Manage global application settings (key-value pairs)",
+    "add_button": "Add Configuration",
+    "edit_button": "Edit",
+    "no_configs_title": "No configurations found",
+    "no_configs_subtitle": "Add your first configuration to get started",
+    "col_key": "Key",
+    "col_value": "Value",
+    "col_description": "Description",
+    "col_updated": "Updated",
+    "col_actions": "Actions",
+    "modal_add_title": "Add Configuration",
+    "modal_add_subtitle": "Create a new key-value configuration",
+    "modal_edit_title": "Edit Configuration",
+    "modal_edit_subtitle": "Update the configuration value",
+    "field_key": "Key",
+    "field_key_placeholder": "e.g. system_prompt_format",
+    "field_value": "Value",
+    "field_value_placeholder": "Enter the configuration value",
+    "field_description": "Description",
+    "field_description_placeholder": "Optional description of this configuration",
+    "error_key_required": "Key is required",
+    "error_value_required": "Value is required",
+    "create_success": "Configuration created successfully",
+    "create_error": "Failed to create configuration",
+    "update_success": "Configuration updated successfully",
+    "update_error": "Failed to update configuration",
+    "btn_create": "Create",
+    "btn_update": "Update"
   },
   "user_stats": {
     "total_users": "Total Users",

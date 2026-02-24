@@ -22,6 +22,7 @@ import {
   Layers,
   Workflow,
   Timer,
+  Settings,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import type { NavigationItem } from './types';
@@ -143,6 +144,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.followup_jobs',
     href: '/followup-jobs',
     icon: Timer,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'App Config',
+    translationKey: 'navigation.app_config',
+    href: '/app-config',
+    icon: Settings,
     requireSuperAdmin: true,
   },
   {

@@ -29,6 +29,7 @@ const WhatsAppManagementPage = lazy(() => import('./features/whatsapp/pages/What
 const InstallWidgetPage = lazy(() => import('./pages/InstallWidgetPage').then(m => ({ default: m.InstallWidgetPage })));
 const AdminSubscriptionsPage = lazy(() => import('./features/subscriptions/pages/AdminSubscriptionsPage'));
 const AdminFollowUpJobsPage = lazy(() => import('./features/followups/pages/AdminFollowUpJobsPage'));
+const AdminAppConfigPage = lazy(() => import('./features/appconfig/pages/AdminAppConfigPage'));
 const AdminPricingPage = lazy(() => import('./features/pricing/pages/AdminPricingPage'));
 const MetaTokenExaminerPage = lazy(() => import('./features/meta/pages/MetaTokenExaminerPage').then(m => ({ default: m.MetaTokenExaminerPage })));
 const AdminPlanCataloguePage = lazy(() => import('./features/catalogue/pages/AdminPlanCataloguePage').then(m => ({ default: m.AdminPlanCataloguePage })));
@@ -353,6 +354,14 @@ export const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <AdminFollowUpJobsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'app-config',
+        element: (
+          <SuperAdminRoute>
+            <AdminAppConfigPage />
           </SuperAdminRoute>
         ),
       },
