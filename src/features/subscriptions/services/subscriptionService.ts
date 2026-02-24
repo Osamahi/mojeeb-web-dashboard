@@ -28,6 +28,8 @@ interface ApiSubscriptionResponse {
   current_period_end: string;
   is_flagged_non_paying: boolean;
   grace_period_end: string | null;
+  messages_used: number;
+  agents_used: number;
 }
 
 interface ApiUsageResponse {
@@ -286,22 +288,32 @@ class SubscriptionService {
   }
 
   /**
-   * Update message and agent limits for a subscription (SuperAdmin only)
+   * Update message/agent limits and optionally period dates for a subscription (SuperAdmin only)
    * PATCH /api/admin/subscriptions/{id}/limits
    * IMPORTANT: Transform camelCase to snake_case for Newtonsoft.Json backend
    */
   async adminUpdateLimits(
     subscriptionId: string,
     messageLimit?: number | null,
-    agentLimit?: number | null
+    agentLimit?: number | null,
+    periodStart?: string | null,
+    periodEnd?: string | null
   ): Promise<SubscriptionDetails> {
     // Transform camelCase to snake_case for backend (Newtonsoft.Json)
-    const snakeCaseRequest = {
+    const snakeCaseRequest: Record<string, unknown> = {
       message_limit: messageLimit,
       agent_limit: agentLimit,
     };
 
-    console.log('🔄 adminUpdateLimits - Frontend request (camelCase):', { messageLimit, agentLimit });
+    // Only include period dates if provided (null = no change on backend)
+    if (periodStart !== undefined) {
+      snakeCaseRequest.period_start = periodStart;
+    }
+    if (periodEnd !== undefined) {
+      snakeCaseRequest.period_end = periodEnd;
+    }
+
+    console.log('🔄 adminUpdateLimits - Frontend request (camelCase):', { messageLimit, agentLimit, periodStart, periodEnd });
     console.log('🔄 adminUpdateLimits - Backend payload (snake_case):', snakeCaseRequest);
 
     const response = await api.patch<ApiResponse<ApiSubscriptionResponse>>(
@@ -348,6 +360,8 @@ class SubscriptionService {
       currentPeriodEnd: apiResponse.current_period_end,
       isFlaggedNonPaying: apiResponse.is_flagged_non_paying,
       gracePeriodEnd: apiResponse.grace_period_end,
+      messagesUsed: apiResponse.messages_used,
+      agentsUsed: apiResponse.agents_used,
     };
   }
 

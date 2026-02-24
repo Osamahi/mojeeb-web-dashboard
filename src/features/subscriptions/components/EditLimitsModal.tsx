@@ -1,7 +1,7 @@
 /**
  * Edit Subscription Limits Modal
  * Allows SuperAdmin to manually adjust message and agent limits for the current billing period
- * Modifies the active subscription_usage_record, not the subscription or plan
+ * Also allows overriding the billing period start/end dates (updates both subscriptions and usage records tables)
  */
 
 import { useState, useEffect } from 'react';
@@ -20,6 +20,25 @@ interface EditLimitsModalProps {
   subscription: SubscriptionDetails;
 }
 
+/**
+ * Convert an ISO date string to YYYY-MM-DD format for date input
+ */
+function toDateInputValue(isoString: string): string {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Convert a YYYY-MM-DD date input value to an ISO UTC string
+ */
+function toUtcIsoString(dateInputValue: string): string {
+  return `${dateInputValue}T00:00:00Z`;
+}
+
 export function EditLimitsModal({
   isOpen,
   onClose,
@@ -31,19 +50,29 @@ export function EditLimitsModal({
 
   const [messageLimit, setMessageLimit] = useState<string>(subscription.messageLimit.toString());
   const [agentLimit, setAgentLimit] = useState<string>(subscription.agentLimit.toString());
+  const [periodStart, setPeriodStart] = useState<string>('');
+  const [periodEnd, setPeriodEnd] = useState<string>('');
+
+  // Store original date values for change detection
+  const originalPeriodStart = toDateInputValue(subscription.currentPeriodStart);
+  const originalPeriodEnd = toDateInputValue(subscription.currentPeriodEnd);
 
   // Reset form when modal opens or subscription changes
   useEffect(() => {
     if (isOpen) {
       setMessageLimit(subscription.messageLimit.toString());
       setAgentLimit(subscription.agentLimit.toString());
+      setPeriodStart(originalPeriodStart);
+      setPeriodEnd(originalPeriodEnd);
     }
   }, [isOpen, subscription]);
 
   // Check if anything changed
   const hasChanges =
     messageLimit !== subscription.messageLimit.toString() ||
-    agentLimit !== subscription.agentLimit.toString();
+    agentLimit !== subscription.agentLimit.toString() ||
+    periodStart !== originalPeriodStart ||
+    periodEnd !== originalPeriodEnd;
 
   // Mutation for updating limits
   const updateLimitsMutation = useMutation({
@@ -51,10 +80,16 @@ export function EditLimitsModal({
       const messageLimitValue = messageLimit === '' ? null : parseInt(messageLimit, 10);
       const agentLimitValue = agentLimit === '' ? null : parseInt(agentLimit, 10);
 
+      // Only send period dates if they changed
+      const periodStartValue = periodStart !== originalPeriodStart ? toUtcIsoString(periodStart) : null;
+      const periodEndValue = periodEnd !== originalPeriodEnd ? toUtcIsoString(periodEnd) : null;
+
       return subscriptionService.adminUpdateLimits(
         subscription.id,
         messageLimitValue,
-        agentLimitValue
+        agentLimitValue,
+        periodStartValue,
+        periodEndValue
       );
     },
     onSuccess: () => {
@@ -97,6 +132,12 @@ export function EditLimitsModal({
       return;
     }
 
+    // Validate dates
+    if (periodStart && periodEnd && new Date(periodStart) >= new Date(periodEnd)) {
+      toast.error(t('edit_limits.invalid_dates', 'Period start must be before period end'));
+      return;
+    }
+
     updateLimitsMutation.mutate();
   };
 
@@ -107,7 +148,7 @@ export function EditLimitsModal({
       title={t('edit_limits.title', 'Edit Subscription Limits')}
       subtitle={t(
         'edit_limits.subtitle',
-        'Adjust limits for the current billing period (0 = unlimited)'
+        'Adjust limits and billing period dates'
       )}
       maxWidth="md"
       isLoading={updateLimitsMutation.isPending}
@@ -186,6 +227,44 @@ export function EditLimitsModal({
           </div>
         </div>
 
+        {/* Billing Period Section */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-neutral-700">
+            {t('edit_limits.billing_period', 'Billing Period')}
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Period Start */}
+            <div>
+              <label htmlFor="periodStart" className="block text-sm font-medium text-neutral-700">
+                {t('edit_limits.period_start', 'Start Date')}
+              </label>
+              <input
+                type="date"
+                id="periodStart"
+                value={periodStart}
+                onChange={(e) => setPeriodStart(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                disabled={updateLimitsMutation.isPending}
+              />
+            </div>
+
+            {/* Period End */}
+            <div>
+              <label htmlFor="periodEnd" className="block text-sm font-medium text-neutral-700">
+                {t('edit_limits.period_end', 'End Date')}
+              </label>
+              <input
+                type="date"
+                id="periodEnd"
+                value={periodEnd}
+                onChange={(e) => setPeriodEnd(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                disabled={updateLimitsMutation.isPending}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Preview Changes */}
         {hasChanges && (
           <div className="rounded-lg border-2 border-green-200 bg-green-50 p-4">
@@ -206,6 +285,22 @@ export function EditLimitsModal({
                   {t('edit_limits.agent_change', 'Agent Limit: {old} → {new}', {
                     old: subscription.agentLimit === 0 ? 'Unlimited' : subscription.agentLimit,
                     new: agentLimit === '' || parseInt(agentLimit) === 0 ? 'Unlimited' : agentLimit,
+                  })}
+                </p>
+              )}
+              {periodStart !== originalPeriodStart && (
+                <p>
+                  {t('edit_limits.period_start_change', 'Period Start: {old} → {new}', {
+                    old: originalPeriodStart,
+                    new: periodStart,
+                  })}
+                </p>
+              )}
+              {periodEnd !== originalPeriodEnd && (
+                <p>
+                  {t('edit_limits.period_end_change', 'Period End: {old} → {new}', {
+                    old: originalPeriodEnd,
+                    new: periodEnd,
                   })}
                 </p>
               )}

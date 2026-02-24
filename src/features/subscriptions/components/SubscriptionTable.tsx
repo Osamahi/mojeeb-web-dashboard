@@ -75,6 +75,20 @@ export function SubscriptionTable({
     }
   }, [openMenuId]);
 
+  const getUsageColor = (used: number, limit: number): string => {
+    if (limit === 0) return 'bg-gray-300';
+    const percent = (used / limit) * 100;
+    if (percent >= 90) return 'bg-red-500';
+    if (percent >= 75) return 'bg-orange-500';
+    if (percent >= 50) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const getUsagePercent = (used: number, limit: number): number => {
+    if (limit === 0) return 0;
+    return Math.min((used / limit) * 100, 100);
+  };
+
   const getStatusBadgeClasses = (status: string) => {
     switch (status.toLowerCase()) {
       case 'active':
@@ -111,7 +125,7 @@ export function SubscriptionTable({
               {t('subscriptions.table_current_period')}
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-              {t('subscriptions.table_limits')}
+              {t('subscriptions.table_usage')}
             </th>
             <th className="relative px-6 py-3">
               <span className="sr-only">{t('subscriptions.table_actions')}</span>
@@ -166,9 +180,20 @@ export function SubscriptionTable({
                   {t('common.to')} {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
                 </div>
               </td>
-              <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                <div>{t('subscriptions.messages_count', { count: subscription.messageLimit })}</div>
-                <div>{t('subscriptions.agents_count', { count: subscription.agentLimit })}</div>
+              <td className="px-6 py-4 text-sm text-gray-500">
+                {/* Messages usage */}
+                <div className="min-w-[120px]">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-gray-700">{subscription.messagesUsed} / {subscription.messageLimit}</span>
+                    <span className="text-gray-400">msgs</span>
+                  </div>
+                  <div className="mt-0.5 h-1.5 w-full rounded-full bg-gray-200">
+                    <div
+                      className={`h-1.5 rounded-full transition-all ${getUsageColor(subscription.messagesUsed, subscription.messageLimit)}`}
+                      style={{ width: `${getUsagePercent(subscription.messagesUsed, subscription.messageLimit)}%` }}
+                    />
+                  </div>
+                </div>
               </td>
               <td className="relative whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                 <div className="relative">

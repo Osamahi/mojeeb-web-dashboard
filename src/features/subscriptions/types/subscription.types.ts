@@ -47,6 +47,9 @@ export interface SubscriptionDetails {
   currentPeriodEnd: string;
   isFlaggedNonPaying: boolean;
   gracePeriodEnd: string | null;
+  // Usage data (from subscription_details view, 0 if no usage record for current period)
+  messagesUsed: number;
+  agentsUsed: number;
 }
 
 /**
