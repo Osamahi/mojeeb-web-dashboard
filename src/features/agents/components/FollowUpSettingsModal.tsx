@@ -352,6 +352,7 @@ export default function FollowUpSettingsModal({
             onClick={handleSave}
             isLoading={saveMutation.isPending}
             disabled={isBusy || !hasChanges}
+            className="!bg-[#00bd6f] hover:!bg-[#00a862] active:!bg-[#009457]"
           >
             {t('common.save_changes')}
           </Button>
