@@ -21,6 +21,7 @@ import {
   Puzzle,
   Layers,
   Workflow,
+  Timer,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import type { NavigationItem } from './types';
@@ -135,6 +136,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.actions',
     href: '/actions',
     icon: Workflow,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Follow-Up Jobs',
+    translationKey: 'navigation.followup_jobs',
+    href: '/followup-jobs',
+    icon: Timer,
     requireSuperAdmin: true,
   },
   {
