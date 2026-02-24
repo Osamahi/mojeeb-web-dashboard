@@ -183,7 +183,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
             </h3>
             {/* Human mode indicator */}
             {!conversation.is_ai && (
-              <User className="w-3.5 h-3.5 text-[#00D084] flex-shrink-0" />
+              <User className="w-3.5 h-3.5 text-brand-mojeeb flex-shrink-0" />
             )}
           </div>
 

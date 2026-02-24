@@ -85,7 +85,7 @@ const ConversationListItem = memo(function ConversationListItem({
 
             {/* Human mode indicator */}
             {showHumanMode && (
-              <User className="w-3.5 h-3.5 text-[#00D084] flex-shrink-0" />
+              <User className="w-3.5 h-3.5 text-brand-mojeeb flex-shrink-0" />
             )}
 
             {/* Unhappy sentiment indicator */}
@@ -127,7 +127,7 @@ const ConversationListItem = memo(function ConversationListItem({
             </span>
           </div>
           {!conversation.is_read && (
-            <div className="w-2 h-2 rounded-full bg-[#00D084]" />
+            <div className="w-2 h-2 rounded-full bg-brand-mojeeb" />
           )}
         </div>
       </div>

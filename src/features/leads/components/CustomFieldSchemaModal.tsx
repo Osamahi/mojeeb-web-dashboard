@@ -478,8 +478,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                   type="checkbox"
                   checked={isRequired}
                   onChange={(e) => setIsRequired(e.target.checked)}
-                  className="w-4 h-4 rounded border-neutral-300 focus:ring-2 focus:ring-brand-cyan/20"
-                  style={{ accentColor: '#00D084' }}
+                  className="w-4 h-4 rounded border-neutral-300 focus:ring-2 focus:ring-brand-cyan/20 accent-brand-mojeeb"
                 />
                 <span className="text-sm text-neutral-700">{t('leads.required_field')}</span>
               </label>

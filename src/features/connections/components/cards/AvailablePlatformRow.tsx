@@ -133,7 +133,7 @@ export function AvailablePlatformRow({
           </Button>
           <Button
             onClick={handleConnect}
-            className="h-7 sm:h-8 px-2.5 sm:px-3 bg-[#00D084] hover:bg-[#00BA75] text-white text-xs sm:text-sm"
+            className="h-7 sm:h-8 px-2.5 sm:px-3 bg-brand-mojeeb hover:bg-brand-mojeeb-hover text-white text-xs sm:text-sm"
             size="sm"
           >
             <span className="hidden sm:inline">{t('connections.connect_button')}</span>
@@ -145,7 +145,7 @@ export function AvailablePlatformRow({
         <div className="flex-shrink-0">
           <Button
             onClick={handleConnect}
-            className="h-7 sm:h-8 px-2.5 sm:px-3 bg-[#00D084] hover:bg-[#00BA75] text-white text-xs sm:text-sm"
+            className="h-7 sm:h-8 px-2.5 sm:px-3 bg-brand-mojeeb hover:bg-brand-mojeeb-hover text-white text-xs sm:text-sm"
             size="sm"
           >
             <span className="hidden sm:inline">

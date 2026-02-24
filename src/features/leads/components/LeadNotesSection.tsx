@@ -177,7 +177,7 @@ export function LeadNotesSection({ leadId, agentId, onNoteAdded }: LeadNotesSect
                       {getNoteAuthorName(note.userName, note.userId, user?.id, t('common.you'))}
                     </span>
                     {note.noteType === 'status_change' && (
-                      <span className="text-xs text-[#00D084] font-normal">
+                      <span className="text-xs text-brand-mojeeb font-normal">
                         {t('lead_notes.status_update')}
                       </span>
                     )}

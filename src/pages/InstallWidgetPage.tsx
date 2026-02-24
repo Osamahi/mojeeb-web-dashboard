@@ -81,7 +81,7 @@ export function InstallWidgetPage() {
     return (
       <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-8 h-8 text-[#00D084] animate-spin mx-auto mb-4" />
+          <Loader2 className="w-8 h-8 text-brand-mojeeb animate-spin mx-auto mb-4" />
           <p className="text-neutral-600 text-sm">{t('widget_install.loading_widget')}</p>
         </div>
       </div>
@@ -135,7 +135,7 @@ export function InstallWidgetPage() {
       <div className="bg-white border-b border-neutral-200">
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-[#00D084] rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-brand-mojeeb rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
@@ -175,15 +175,15 @@ export function InstallWidgetPage() {
                   <button
                     key={option.value}
                     onClick={() => setSelectedMode(option.value)}
-                    className="w-full text-left border-2 border-neutral-200 rounded-lg p-4 hover:border-[#00D084] hover:bg-neutral-50 transition-all group"
+                    className="w-full text-left border-2 border-neutral-200 rounded-lg p-4 hover:border-brand-mojeeb hover:bg-neutral-50 transition-all group"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-base font-semibold text-neutral-900 group-hover:text-[#00D084] transition-colors">
+                          <h3 className="text-base font-semibold text-neutral-900 group-hover:text-brand-mojeeb transition-colors">
                             {option.label}
                           </h3>
-                          <span className="text-xs font-medium px-2 py-0.5 rounded bg-[#00D084] text-white">
+                          <span className="text-xs font-medium px-2 py-0.5 rounded bg-brand-mojeeb text-white">
                             {option.badge}
                           </span>
                         </div>
@@ -191,7 +191,7 @@ export function InstallWidgetPage() {
                           {option.description}
                         </p>
                       </div>
-                      <svg className="w-5 h-5 text-neutral-400 group-hover:text-[#00D084] transition-colors flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-neutral-400 group-hover:text-brand-mojeeb transition-colors flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
@@ -216,7 +216,7 @@ export function InstallWidgetPage() {
               {/* Step 1 */}
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
-                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#00D084] text-white text-sm font-bold">
+                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-brand-mojeeb text-white text-sm font-bold">
                     1
                   </span>
                   <div className="flex-1">
@@ -226,7 +226,7 @@ export function InstallWidgetPage() {
                     <div className="relative">
                       <button
                         onClick={handleCopy}
-                        className="absolute top-3 right-3 z-10 flex items-center gap-2 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-sm font-medium rounded transition-colors"
+                        className="absolute top-3 right-3 z-10 flex items-center gap-2 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-brand-mojeeb text-sm font-medium rounded transition-colors"
                       >
                         {isCopied ? (
                           <>
@@ -251,7 +251,7 @@ export function InstallWidgetPage() {
               {/* Step 2 */}
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
-                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#00D084] text-white text-sm font-bold">
+                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-brand-mojeeb text-white text-sm font-bold">
                     2
                   </span>
                   <div className="flex-1">
@@ -282,7 +282,7 @@ export function InstallWidgetPage() {
               </div>
 
               {/* Success note */}
-              <div className="bg-[#F0FDF9] border border-[#00D084]/20 rounded-lg p-4">
+              <div className="bg-brand-mojeeb-light border border-brand-mojeeb/20 rounded-lg p-4">
                 <p className="text-sm text-neutral-700">
                   ✅ <strong>That's it!</strong> Your chat widget will appear on your website immediately after you publish the changes.
                 </p>
@@ -305,7 +305,7 @@ export function InstallWidgetPage() {
               {/* Headless steps - simplified for public page */}
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
-                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#00D084] text-white text-sm font-bold">
+                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-brand-mojeeb text-white text-sm font-bold">
                     1
                   </span>
                   <div className="flex-1">
@@ -318,7 +318,7 @@ export function InstallWidgetPage() {
                     <div className="relative">
                       <button
                         onClick={handleCopy}
-                        className="absolute top-3 right-3 z-10 flex items-center gap-2 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-sm font-medium rounded transition-colors"
+                        className="absolute top-3 right-3 z-10 flex items-center gap-2 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-brand-mojeeb text-sm font-medium rounded transition-colors"
                       >
                         {isCopied ? (
                           <>
@@ -342,7 +342,7 @@ export function InstallWidgetPage() {
 
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
-                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#00D084] text-white text-sm font-bold">
+                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-brand-mojeeb text-white text-sm font-bold">
                     2
                   </span>
                   <div className="flex-1">
@@ -355,7 +355,7 @@ export function InstallWidgetPage() {
                     <div className="relative">
                       <button
                         onClick={handleCopyHeadless}
-                        className="absolute top-3 right-3 z-10 flex items-center gap-2 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-sm font-medium rounded transition-colors"
+                        className="absolute top-3 right-3 z-10 flex items-center gap-2 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-brand-mojeeb text-sm font-medium rounded transition-colors"
                       >
                         {isHeadlessCopied ? (
                           <>
@@ -387,7 +387,7 @@ export function InstallWidgetPage() {
               {/* Step 3 - Full Example */}
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
-                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-[#00D084] text-white text-sm font-bold">
+                  <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-brand-mojeeb text-white text-sm font-bold">
                     3
                   </span>
                   <div className="flex-1">
@@ -432,7 +432,7 @@ export function InstallWidgetPage() {
               </div>
 
               {/* Success note */}
-              <div className="bg-[#F0FDF9] border border-[#00D084]/20 rounded-lg p-4">
+              <div className="bg-brand-mojeeb-light border border-brand-mojeeb/20 rounded-lg p-4">
                 <p className="text-sm text-neutral-700">
                   ✅ <strong>Done!</strong> Your custom button will now open the chat widget when clicked.
                 </p>
@@ -449,7 +449,7 @@ export function InstallWidgetPage() {
               href="https://mojeeb.ai"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#00D084] hover:underline font-medium"
+              className="text-brand-mojeeb hover:underline font-medium"
             >
               Mojeeb
             </a>

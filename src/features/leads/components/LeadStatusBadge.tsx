@@ -13,7 +13,7 @@ interface LeadStatusBadgeProps {
 
 /**
  * Convert a hex color to a light background + dark text color pair.
- * E.g. #00D084 → { bg: 'rgba(0,208,132,0.1)', text: '#00D084', border: 'rgba(0,208,132,0.25)' }
+ * E.g. #00bd6f → { bg: 'rgba(0,208,132,0.1)', text: '#00bd6f', border: 'rgba(0,208,132,0.25)' }
  */
 function hexToColorSet(hex: string): { bg: string; text: string; border: string } {
   const r = parseInt(hex.slice(1, 3), 16);

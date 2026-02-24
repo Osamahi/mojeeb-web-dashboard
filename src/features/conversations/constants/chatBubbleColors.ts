@@ -33,7 +33,7 @@ export const MINIMAL_COLORS = {
   grey50: '#F5F5F5',
 
   // Brand Color (USE SPARINGLY)
-  brandGreen: '#00D084',
+  brandGreen: '#00bd6f',
 
   // UI Element Colors
   borderLight: '#D4D4D4',

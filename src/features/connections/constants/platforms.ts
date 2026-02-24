@@ -67,7 +67,7 @@ export const PLATFORMS: PlatformMetadata[] = [
     usesOAuth: false,
     showsWidget: true,
     category: 'website',
-    brandColor: '#00D084', // Mojeeb green
+    brandColor: '#00bd6f', // Mojeeb green
     brandBgColor: '#E6F9F3',
   },
   {

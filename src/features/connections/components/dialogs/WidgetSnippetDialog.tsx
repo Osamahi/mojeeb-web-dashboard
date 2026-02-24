@@ -145,7 +145,7 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
 <button
   id="my-chat-button"
   style="padding: 10px 20px;
-         background: #00D084;
+         background: #00bd6f;
          color: white;
          border: none;
          border-radius: 8px;
@@ -164,7 +164,7 @@ export function WidgetSnippetDialog({ isOpen, onClose }: WidgetSnippetDialogProp
 <html>
 <body>
   <!-- Step 1: Your custom button (place anywhere in body) -->
-  <button id="my-chat-button" style="padding: 10px 20px; background: #00D084; color: white; border: none; border-radius: 8px; cursor: pointer;">
+  <button id="my-chat-button" style="padding: 10px 20px; background: #00bd6f; color: white; border: none; border-radius: 8px; cursor: pointer;">
     Chat with us
   </button>
 
@@ -221,10 +221,10 @@ ${snippet}
                     w-full flex items-start gap-4 p-5 border-2 rounded-lg text-left transition-all
                     ${
                       isLoading && selectedMode === modeOption.value
-                        ? 'border-[#00D084] bg-[#F0FDF9] cursor-wait'
+                        ? 'border-brand-mojeeb bg-brand-mojeeb-light cursor-wait'
                         : isLoading
                         ? 'opacity-50 cursor-not-allowed'
-                        : 'border-neutral-200 bg-white hover:border-[#00D084] hover:bg-[#F0FDF9] cursor-pointer'
+                        : 'border-neutral-200 bg-white hover:border-brand-mojeeb hover:bg-brand-mojeeb-light cursor-pointer'
                     }
                   `}
                 >
@@ -247,7 +247,7 @@ ${snippet}
                               text-xs font-medium px-2 py-0.5 rounded
                               ${
                                 modeOption.badgeVariant === 'recommended'
-                                  ? 'bg-[#00D084] text-white'
+                                  ? 'bg-brand-mojeeb text-white'
                                   : 'bg-neutral-600 text-white'
                               }
                             `}
@@ -307,7 +307,7 @@ ${snippet}
                   {/* Step 1: Copy Widget Script */}
                   <div className="space-y-3">
                     <div className="flex gap-3 items-start">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-brand-mojeeb text-white text-xs font-bold mt-0.5">
                         1
                       </span>
                       <div className="flex-1 min-w-0">
@@ -315,7 +315,7 @@ ${snippet}
                         <div className="relative">
                           <button
                             onClick={() => handleCopy(snippet)}
-                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-xs font-medium rounded transition-colors"
+                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-brand-mojeeb text-xs font-medium rounded transition-colors"
                           >
                             {isCopied && copiedSnippet === snippet ? (
                               <>
@@ -340,7 +340,7 @@ ${snippet}
                   {/* Step 2: Paste in HTML */}
                   <div className="space-y-3">
                     <div className="flex gap-3 items-start">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-brand-mojeeb text-white text-xs font-bold mt-0.5">
                         2
                       </span>
                       <div className="flex-1">
@@ -354,7 +354,7 @@ ${snippet}
                   {/* Step 3: Save and Publish */}
                   <div className="space-y-3">
                     <div className="flex gap-3 items-start">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-brand-mojeeb text-white text-xs font-bold mt-0.5">
                         3
                       </span>
                       <div className="flex-1">
@@ -369,7 +369,7 @@ ${snippet}
                   {/* Step 1: Create Custom Button */}
                   <div className="space-y-3">
                     <div className="flex gap-3 items-start">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-brand-mojeeb text-white text-xs font-bold mt-0.5">
                         1
                       </span>
                       <div className="flex-1 min-w-0">
@@ -377,7 +377,7 @@ ${snippet}
                         <div className="relative">
                           <button
                             onClick={() => handleCopy(customButtonSnippet)}
-                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-xs font-medium rounded transition-colors"
+                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-brand-mojeeb text-xs font-medium rounded transition-colors"
                           >
                             {isCopied && copiedSnippet === customButtonSnippet ? (
                               <>
@@ -405,7 +405,7 @@ ${snippet}
                   {/* Step 2: Add Widget Script */}
                   <div className="space-y-3">
                     <div className="flex gap-3 items-start">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-brand-mojeeb text-white text-xs font-bold mt-0.5">
                         2
                       </span>
                       <div className="flex-1 min-w-0">
@@ -413,7 +413,7 @@ ${snippet}
                         <div className="relative">
                           <button
                             onClick={() => handleCopy(snippet)}
-                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-xs font-medium rounded transition-colors"
+                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-brand-mojeeb text-xs font-medium rounded transition-colors"
                           >
                             {isCopied && copiedSnippet === snippet ? (
                               <>
@@ -441,7 +441,7 @@ ${snippet}
                   {/* Step 3: Attach Widget to Button */}
                   <div className="space-y-3">
                     <div className="flex gap-3 items-start">
-                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-[#00D084] text-white text-xs font-bold mt-0.5">
+                      <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-brand-mojeeb text-white text-xs font-bold mt-0.5">
                         3
                       </span>
                       <div className="flex-1 min-w-0">
@@ -449,7 +449,7 @@ ${snippet}
                         <div className="relative">
                           <button
                             onClick={() => handleCopy(attachWidgetSnippet)}
-                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-xs font-medium rounded transition-colors"
+                            className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-brand-mojeeb text-xs font-medium rounded transition-colors"
                           >
                             {isCopied && copiedSnippet === attachWidgetSnippet ? (
                               <>
@@ -489,7 +489,7 @@ ${snippet}
                 <div className="relative">
                   <button
                     onClick={() => handleCopy(completeExampleSnippet)}
-                    className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-[#00D084] text-xs font-medium rounded transition-colors"
+                    className="absolute top-2 right-2 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-brand-mojeeb text-xs font-medium rounded transition-colors"
                   >
                     {isCopied && copiedSnippet === completeExampleSnippet ? (
                       <>
@@ -531,7 +531,7 @@ ${snippet}
                 </a>
                 <button
                   onClick={handleCopyShareUrl}
-                  className="flex-shrink-0 text-sm font-medium text-[#00D084] hover:text-[#00B570] transition-colors flex items-center gap-2"
+                  className="flex-shrink-0 text-sm font-medium text-brand-mojeeb hover:text-brand-mojeeb-hover transition-colors flex items-center gap-2"
                 >
                   {isShareUrlCopied ? (
                     <>

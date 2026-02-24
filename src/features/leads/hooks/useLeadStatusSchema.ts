@@ -15,7 +15,7 @@ import type { EnumOption } from '../types/customFieldSchema.types';
 
 // Hardcoded fallback for edge cases (agent without schema, loading state)
 const FALLBACK_OPTIONS: EnumOption[] = [
-  { value: 'new', label_en: 'New', label_ar: 'جديد', color: '#00D084', is_initial: true, is_final: false, transitions: ['processing'] },
+  { value: 'new', label_en: 'New', label_ar: 'جديد', color: '#00bd6f', is_initial: true, is_final: false, transitions: ['processing'] },
   { value: 'processing', label_en: 'Processing', label_ar: 'قيد المعالجة', color: '#FFB020', is_initial: false, is_final: false, transitions: ['completed', 'new'] },
   { value: 'completed', label_en: 'Completed', label_ar: 'مكتمل', color: '#6B7280', is_initial: false, is_final: true, transitions: [] },
 ];
