@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, RefreshCw, Filter, Search, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { subscriptionService } from '../services/subscriptionService';
 import type { SubscriptionDetails, SubscriptionFilters, PlanCode, SubscriptionStatus } from '../types/subscription.types';
 import { CreateSubscriptionModal } from '../components/CreateSubscriptionModal';
@@ -25,6 +26,13 @@ export default function AdminSubscriptionsPage() {
   const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionDetails | null>(null);
   const [filters, setFilters] = useState<SubscriptionFilters>({});
   const [searchInput, setSearchInput] = useState(''); // Local search input for debouncing
+
+  // Fetch available plans for the filter dropdown (same pattern as AdminChangePlanModal)
+  const { data: availablePlans = [] } = useQuery({
+    queryKey: ['plans'],
+    queryFn: () => subscriptionService.getPlans(),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes (plans rarely change)
+  });
 
   // Infinite scroll state
   const [page, setPage] = useState(1);
@@ -235,10 +243,11 @@ export default function AdminSubscriptionsPage() {
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
           >
             <option value="">{t('subscriptions.all_plans')}</option>
-            <option value="free">{t('subscriptions.plan_free')}</option>
-            <option value="starter">{t('subscriptions.plan_starter')}</option>
-            <option value="professional">{t('subscriptions.plan_professional')}</option>
-            <option value="enterprise">{t('subscriptions.plan_enterprise')}</option>
+            {availablePlans.map((plan) => (
+              <option key={plan.id} value={plan.code}>
+                {plan.name}
+              </option>
+            ))}
           </select>
 
           <button
