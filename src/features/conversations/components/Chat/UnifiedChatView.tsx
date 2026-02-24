@@ -305,6 +305,13 @@ export default function UnifiedChatView({
         )}
       </div>
 
+      {/* Subtle fade above composer — softens the scroll edge */}
+      <div
+        className="flex-shrink-0 pointer-events-none h-5 -mt-5 relative z-[1]"
+        style={{ background: 'linear-gradient(to bottom, transparent, rgba(255,255,255,0.85))' }}
+        aria-hidden="true"
+      />
+
       {/* Message Composer */}
       <div
         className="flex-shrink-0 px-3 sm:px-4"
