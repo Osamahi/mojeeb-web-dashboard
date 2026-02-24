@@ -11,7 +11,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus, MessageSquare, Plug, Bell } from 'lucide-react';
+import { Plus, MessageSquare, Plug, Bell, MoreVertical } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -151,15 +152,36 @@ export default function StudioPage() {
                 </p>
               </div>
 
-              {/* Add Knowledge - Header Button (Mobile/Tablet only) */}
-              <button
-                onClick={() => setIsAddKBModalOpen(true)}
-                className="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors"
-                aria-label={t('studio.add_knowledge_label')}
-              >
-                <Plus className="w-4 h-4 text-neutral-700" />
-                <span className="text-sm font-medium text-neutral-700">{t('common.add')}</span>
-              </button>
+              {/* Right side: More menu (all screens) + Add button (mobile only) */}
+              <div className="flex items-center gap-2">
+                {/* More Options Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <button
+                      className="w-10 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center justify-center"
+                      title={t('common.more')}
+                    >
+                      <MoreVertical className="w-5 h-5 text-neutral-700" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => setIsFollowUpModalOpen(true)}>
+                      <Bell className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+                      <span>{t('studio.automated_follow_ups')}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Add Knowledge - Header Button (Mobile/Tablet only) */}
+                <button
+                  onClick={() => setIsAddKBModalOpen(true)}
+                  className="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors"
+                  aria-label={t('studio.add_knowledge_label')}
+                >
+                  <Plus className="w-4 h-4 text-neutral-700" />
+                  <span className="text-sm font-medium text-neutral-700">{t('common.add')}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -216,14 +238,6 @@ export default function StudioPage() {
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   {t('studio.add_knowledge')}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setIsFollowUpModalOpen(true)}
-                >
-                  <Bell className="w-4 h-4 mr-2" />
-                  {t('studio.follow_ups')}
                 </Button>
               </div>
             </div>
