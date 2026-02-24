@@ -256,7 +256,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
           conversationId={conversation.id}
           agentId={conversation.agent_id
           }
-          className="bg-white flex-1"
+          className="bg-white flex-1 min-h-0"
         />
       </div>
       {ConfirmDialogComponent}

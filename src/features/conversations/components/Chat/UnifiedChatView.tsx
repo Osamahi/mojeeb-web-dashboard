@@ -142,28 +142,29 @@ export default function UnifiedChatView({
   useEffect(() => {
     seenMessageIds.current.clear();
     isInitialLoad.current = true;
+    lastMessageIdRef.current = null;
   }, [conversationId]);
 
-  // Auto-scroll to bottom only when new messages are appended (not on pagination load)
-  const prevMessageCountRef = useRef(messages.length);
-  useEffect(() => {
-    const prevCount = prevMessageCountRef.current;
-    prevMessageCountRef.current = messages.length;
+  // Track the last message ID to detect appended messages vs pagination prepends
+  const lastMessageIdRef = useRef<string | null>(null);
 
-    // Only scroll if messages were appended at the end (new message), not prepended (pagination)
-    if (messages.length > prevCount) {
-      const lastMessage = messages[messages.length - 1];
-      const prevLastMessage = prevCount > 0 ? messages[prevCount - 1] : null;
-
-      // If the last message changed, it was appended — scroll to bottom
-      if (!prevLastMessage || lastMessage?.id !== prevLastMessage?.id) {
-        const behavior = messages.length > 10 ? 'instant' : 'smooth';
-        messagesEndRef.current?.scrollIntoView({ behavior: behavior as ScrollBehavior });
-      }
-    } else if (prevCount === 0 && messages.length > 0) {
-      // Initial load — scroll to bottom instantly
-      messagesEndRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
+  // Callback ref: scrolls to bottom the instant the anchor element mounts in the DOM.
+  // This fires after AnimatePresence mounts the chat view, avoiding all timing issues.
+  const scrollAnchorRef = useCallback((node: HTMLDivElement | null) => {
+    messagesEndRef.current = node;
+    if (node) {
+      node.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
+      lastMessageIdRef.current = messages[messages.length - 1]?.id ?? null;
     }
+  }, [conversationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll to bottom when new messages are appended (not pagination prepends)
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const currentLastId = messages[messages.length - 1]?.id;
+    if (currentLastId === lastMessageIdRef.current) return;
+    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
+    lastMessageIdRef.current = currentLastId ?? null;
   }, [messages]);
 
   // Handle "load more" when scrolling to top (pagination)
@@ -202,7 +203,7 @@ export default function UnifiedChatView({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className={cn('h-full flex flex-col bg-white relative', className)}
+      className={cn('h-full flex flex-col min-h-0 bg-white relative', className)}
     >
       {/* Optional header slot (e.g., conversation metadata, new conversation button) */}
       {header}
@@ -299,14 +300,14 @@ export default function UnifiedChatView({
             </AnimatePresence>
 
             {/* Scroll anchor */}
-            <div ref={messagesEndRef} />
+            <div ref={scrollAnchorRef} />
           </>
         )}
       </div>
 
       {/* Message Composer */}
       <div
-        className="px-3 sm:px-4"
+        className="flex-shrink-0 px-3 sm:px-4"
         style={{
           paddingTop: '12px',
           paddingBottom: 'max(12px, env(safe-area-inset-bottom))'
