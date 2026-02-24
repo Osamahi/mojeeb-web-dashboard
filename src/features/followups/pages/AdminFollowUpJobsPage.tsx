@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Search, Loader2, ChevronDown, ChevronRight, MessageSquare } from 'lucide-react';
+import { RefreshCw, Search, Loader2, ChevronDown, ChevronRight, MessageSquare, Play } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { followUpAdminService } from '../services/followupAdminService';
 import { useDateLocale } from '@/lib/dateConfig';
@@ -39,6 +39,7 @@ export default function AdminFollowUpJobsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [triggeringJobId, setTriggeringJobId] = useState<string | null>(null);
 
   // Cursor-based pagination state
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -126,6 +127,21 @@ export default function AdminFollowUpJobsPage() {
   const handleViewConversation = useCallback((conversationId: string) => {
     setSelectedConversationId(conversationId);
   }, []);
+
+  const handleTriggerJob = useCallback(async (jobId: string) => {
+    setTriggeringJobId(jobId);
+    try {
+      await followUpAdminService.triggerJob(jobId);
+      toast.success(t('followup_jobs.trigger_success'));
+      // Update the local job status to 'processing' immediately for UI feedback
+      setJobs(prev => prev.map(j => j.id === jobId ? { ...j, status: 'processing' as const } : j));
+    } catch (error) {
+      console.error('Failed to trigger follow-up job:', error);
+      toast.error(t('followup_jobs.trigger_failed'));
+    } finally {
+      setTriggeringJobId(null);
+    }
+  }, [t]);
 
   const getResultText = (job: FollowUpJob): string => {
     if (job.status === 'sent' && job.sentAt)
@@ -302,16 +318,35 @@ export default function AdminFollowUpJobsPage() {
                         {getResultText(job)}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewConversation(job.conversationId);
-                          }}
-                          className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-                          title={t('followup_jobs.view_conversation')}
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-center gap-1">
+                          {job.status === 'scheduled' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTriggerJob(job.id);
+                              }}
+                              disabled={triggeringJobId === job.id}
+                              className="p-2 text-green-500 hover:text-green-700 hover:bg-green-50 rounded-lg transition-all disabled:opacity-50"
+                              title={t('followup_jobs.trigger_now')}
+                            >
+                              {triggeringJobId === job.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Play className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewConversation(job.conversationId);
+                            }}
+                            className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
+                            title={t('followup_jobs.view_conversation')}
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
 

@@ -1343,7 +1343,10 @@
     "detail_skip_reason": "سبب التخطي",
     "detail_sent_at": "وقت الإرسال",
     "detail_cancelled_at": "وقت الإلغاء",
-    "view_conversation": "عرض المحادثة"
+    "view_conversation": "عرض المحادثة",
+    "trigger_now": "شغّل الآن",
+    "trigger_success": "تم تشغيل المتابعة بنجاح",
+    "trigger_failed": "فشل تشغيل المتابعة"
   },
   "followup_steps": {
     "title": "خطوات المتابعة",

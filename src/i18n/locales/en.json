@@ -1348,7 +1348,10 @@
     "detail_skip_reason": "Skip Reason",
     "detail_sent_at": "Sent At",
     "detail_cancelled_at": "Cancelled At",
-    "view_conversation": "View conversation"
+    "view_conversation": "View conversation",
+    "trigger_now": "Trigger now",
+    "trigger_success": "Follow-up job triggered successfully",
+    "trigger_failed": "Failed to trigger follow-up job"
   },
   "followup_steps": {
     "title": "Follow-Up Steps",

@@ -110,6 +110,13 @@ class FollowUpAdminService {
       hasMore: payload.has_more,
     };
   }
+  /**
+   * Triggers immediate execution of a scheduled follow-up job.
+   * Claims the job and enqueues it to the processing pipeline.
+   */
+  async triggerJob(jobId: string): Promise<void> {
+    await api.post(`/api/admin/followups/${jobId}/trigger`);
+  }
 }
 
 export const followUpAdminService = new FollowUpAdminService();
