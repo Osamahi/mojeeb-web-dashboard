@@ -3,7 +3,7 @@
  * WhatsApp-style conversation preview with avatar, name, last message, timestamp
  */
 
-import { memo, useState } from 'react';
+import { memo, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { User, Bot, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,10 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { cn } from '@/lib/utils';
 import { ConversationContextMenu } from './ConversationContextMenu';
+import { useDeleteConversation } from '../../hooks/useDeleteConversation';
+import { useAuthStore } from '@/features/auth/stores/authStore';
+import { Role } from '@/features/auth/types/auth.types';
+import { useConfirm } from '@/hooks/useConfirm';
 
 interface ConversationListItemProps {
   conversation: Conversation;
@@ -28,6 +32,24 @@ const ConversationListItem = memo(function ConversationListItem({
 }: ConversationListItemProps) {
   const { t } = useTranslation();
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const deleteMutation = useDeleteConversation();
+  const user = useAuthStore((state) => state.user);
+  const canDelete = user?.role === Role.SuperAdmin || user?.role === Role.Admin;
+  const { confirm, ConfirmDialogComponent } = useConfirm();
+
+  const handleDelete = useCallback(async () => {
+    setContextMenu(null);
+    const confirmed = await confirm({
+      title: t('conversations.delete_confirm_title'),
+      message: t('conversations.delete_confirm_message', { name: conversation.customer_name }),
+      confirmText: t('conversations.delete_confirm_button'),
+      variant: 'danger',
+    });
+
+    if (confirmed) {
+      deleteMutation.mutate(conversation.id);
+    }
+  }, [confirm, conversation.id, conversation.customer_name, deleteMutation, t]);
 
   // Extract profile picture from metadata
   const profilePictureUrl = conversation.customer_metadata?.profile_picture;
@@ -45,17 +67,60 @@ const ConversationListItem = memo(function ConversationListItem({
   const showUrgent = conversation.urgent;
   const showNeedsAttention = conversation.requires_human_attention;
 
-  // Handle right-click
+  // Handle right-click (desktop)
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY });
   };
 
+  // Long-press for mobile (500ms threshold)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    longPressFired.current = false;
+    const touch = e.touches[0];
+    const x = touch.clientX;
+    const y = touch.clientY;
+
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      setContextMenu({ x, y });
+    }, 500);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleTouchMove = useCallback(() => {
+    // Cancel long-press if finger moves (user is scrolling)
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }, []);
+
+  const handleClick = useCallback(() => {
+    // Don't trigger select if long-press just fired
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
+    onSelect();
+  }, [onSelect]);
+
   return (
     <motion.div layoutId={conversation.id} layout transition={{ duration: 0.3, ease: "easeInOut" }}>
       <div
-        onClick={onSelect}
+        onClick={handleClick}
         onContextMenu={handleContextMenu}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchMove={handleTouchMove}
         className={cn(
           'flex items-center gap-3 p-3 border border-neutral-200 rounded-lg cursor-pointer transition-colors',
           isSelected
@@ -138,8 +203,13 @@ const ConversationListItem = memo(function ConversationListItem({
           conversation={conversation}
           position={contextMenu}
           onClose={() => setContextMenu(null)}
+          canDelete={canDelete}
+          onDelete={handleDelete}
         />
       )}
+
+      {/* Confirm dialog (lives in parent so it persists after context menu closes) */}
+      {ConfirmDialogComponent}
     </motion.div>
   );
 });

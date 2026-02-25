@@ -24,6 +24,8 @@ import { logger } from '@/lib/logger';
 import { chatToasts } from '../../utils/chatToasts';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useDeleteConversation } from '../../hooks/useDeleteConversation';
+import { useAuthStore } from '@/features/auth/stores/authStore';
+import { Role } from '@/features/auth/types/auth.types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +46,8 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   const selectConversation = useConversationStore((state) => state.selectConversation);
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const deleteMutation = useDeleteConversation();
+  const user = useAuthStore((state) => state.user);
+  const canDelete = user?.role === Role.SuperAdmin || user?.role === Role.Admin;
 
   // Fetch initial messages using Zustand store
   const fetchMessages = useChatStore((state) => state.fetchMessages);
@@ -197,30 +201,32 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
           )}
         </div>
 
-        {/* Three-dot menu with delete option */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
-              aria-label={t('conversations.more_options')}
-            >
-              <MoreVertical className="w-5 h-5 text-neutral-600" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-              className="text-red-600 focus:text-red-600 cursor-pointer"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              {deleteMutation.isPending ? t('conversations.deleting') : t('common.delete')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Three-dot menu with delete option (SuperAdmin & Admin only) */}
+        {canDelete && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
+                aria-label={t('conversations.more_options')}
+              >
+                <MoreVertical className="w-5 h-5 text-neutral-600" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+                className="text-red-600 focus:text-red-600 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4 me-2" />
+                {deleteMutation.isPending ? t('conversations.deleting') : t('common.delete')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     ),
-    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, isRTL, t]
+    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, isRTL, canDelete, t]
   );
 
   // Handle load more with Zustand store

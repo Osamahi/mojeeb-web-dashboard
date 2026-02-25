@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Pin, PinOff, Mail, MailOpen } from 'lucide-react';
+import { Pin, PinOff, Mail, MailOpen, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ConversationResponse } from '../../services/conversationApi';
 import { useMarkConversationAsRead } from '../../hooks/useMarkConversationAsRead';
@@ -11,6 +11,8 @@ interface ConversationContextMenuProps {
   conversation: ConversationResponse;
   position: { x: number; y: number };
   onClose: () => void;
+  canDelete?: boolean;
+  onDelete?: () => void;
 }
 
 /**
@@ -20,6 +22,7 @@ interface ConversationContextMenuProps {
  * Features:
  * - Native right-click menu positioning
  * - "Mark as Unread" action (disabled when already unread)
+ * - Conditional "Delete" action (SuperAdmin & Admin only, via props)
  * - Click outside to close
  * - ESC key to close
  * - Edge detection to prevent overflow
@@ -28,6 +31,8 @@ export function ConversationContextMenu({
   conversation,
   position,
   onClose,
+  canDelete = false,
+  onDelete,
 }: ConversationContextMenuProps) {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -141,7 +146,7 @@ export function ConversationContextMenu({
           <button
             onClick={handleTogglePinStatus}
             disabled={isPending}
-            className={`w-full px-4 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
+            className={`w-full px-4 py-2 text-start text-sm transition-colors flex items-center gap-2 ${
               isPending
                 ? 'cursor-not-allowed text-neutral-400'
                 : 'text-neutral-700 hover:bg-neutral-50'
@@ -160,7 +165,7 @@ export function ConversationContextMenu({
           <button
             onClick={handleToggleReadStatus}
             disabled={isPending}
-            className={`w-full px-4 py-2 text-left text-sm transition-colors flex items-center gap-2 ${
+            className={`w-full px-4 py-2 text-start text-sm transition-colors flex items-center gap-2 ${
               isPending
                 ? 'cursor-not-allowed text-neutral-400'
                 : 'text-neutral-700 hover:bg-neutral-50'
@@ -176,6 +181,26 @@ export function ConversationContextMenu({
               ? <><MailOpen className="w-4 h-4" />{t('conversation_context_menu.mark_as_read')}</>
               : <><Mail className="w-4 h-4" />{t('conversation_context_menu.mark_as_unread')}</>}
           </button>
+
+          {/* Delete option - passed from parent (SuperAdmin & Admin only) */}
+          {canDelete && onDelete && (
+            <>
+              <div className="border-t border-neutral-100 my-1" />
+              <button
+                onClick={onDelete}
+                disabled={isPending}
+                className={`w-full px-4 py-2 text-start text-sm transition-colors flex items-center gap-2 ${
+                  isPending
+                    ? 'cursor-not-allowed text-neutral-400'
+                    : 'text-red-600 hover:bg-red-50'
+                }`}
+                role="menuitem"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t('common.delete', 'Delete')}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>
