@@ -746,11 +746,16 @@
     "filters": {
       "search_placeholder": "بحث في المحادثات...",
       "unread": "غير مقروء",
-      "urgent": "عاجل",
+      "urgent": "تحتاج متابعة",
       "no_results": "لا توجد محادثات تطابق الفلاتر",
       "all_platforms": "جميع المنصات",
       "platforms_count": "{{count}} منصات",
-      "clear_platforms": "مسح الاختيار"
+      "clear_platforms": "مسح الاختيار",
+      "platform_facebook": "فيسبوك",
+      "platform_instagram": "انستقرام",
+      "platform_whatsapp": "واتساب",
+      "platform_widget": "الموقع",
+      "platform_test": "تجربة"
     },
     "delete_confirm_title": "حذف المحادثة",
     "delete_confirm_message": "هل أنت متأكد من حذف المحادثة مع \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء.",

@@ -748,11 +748,16 @@
     "filters": {
       "search_placeholder": "Search conversations...",
       "unread": "Unread",
-      "urgent": "Urgent",
+      "urgent": "Needs Attention",
       "no_results": "No conversations match your filters",
       "all_platforms": "All Platforms",
       "platforms_count": "{{count}} platforms",
-      "clear_platforms": "Clear selection"
+      "clear_platforms": "Clear selection",
+      "platform_facebook": "Facebook",
+      "platform_instagram": "Instagram",
+      "platform_whatsapp": "WhatsApp",
+      "platform_widget": "Website",
+      "platform_test": "Test"
     },
     "delete_confirm_title": "Delete Conversation",
     "delete_confirm_message": "Are you sure you want to delete the conversation with \"{{name}}\"? This action cannot be undone.",

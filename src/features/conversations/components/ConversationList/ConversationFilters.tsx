@@ -102,25 +102,25 @@ export function ConversationFilters({
   const platformLabel = filters.selectedSources.length === 0
     ? t('conversations.filters.all_platforms', 'All Platforms')
     : filters.selectedSources.length === 1
-      ? formatSourceLabel(filters.selectedSources[0])
+      ? t(`conversations.filters.platform_${filters.selectedSources[0]}`, formatSourceLabel(filters.selectedSources[0]))
       : t('conversations.filters.platforms_count', '{{count}} platforms', { count: filters.selectedSources.length });
 
   return (
     <div className="px-2 pb-2 space-y-2">
       {/* Search row */}
       <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+        <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
         <input
           type="text"
           value={localSearch}
           onChange={(e) => setLocalSearch(e.target.value)}
           placeholder={t('conversations.filters.search_placeholder', 'Search conversations...')}
-          className="w-full pl-8 pr-8 py-1.5 text-sm bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-mojeeb focus:border-brand-mojeeb placeholder:text-neutral-400"
+          className="w-full ps-8 pe-8 py-1.5 text-sm bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-mojeeb focus:border-brand-mojeeb placeholder:text-neutral-400"
         />
         {localSearch && (
           <button
             onClick={clearSearch}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-neutral-100"
+            className="absolute end-2 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-neutral-100"
           >
             <X className="w-3.5 h-3.5 text-neutral-400" />
           </button>
@@ -140,7 +140,7 @@ export function ConversationFilters({
         <FilterToggle
           active={filters.showUrgentOnly}
           onClick={toggleUrgent}
-          label={t('conversations.filters.urgent', 'Urgent')}
+          label={t('conversations.filters.urgent', 'Needs Attention')}
         />
 
         {/* Platform multiselect dropdown */}
@@ -163,7 +163,7 @@ export function ConversationFilters({
 
           {/* Dropdown menu */}
           {showPlatformDropdown && (
-            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-neutral-200 rounded-lg shadow-lg z-50 py-1">
+            <div className="absolute top-full start-0 mt-1 w-48 bg-white border border-neutral-200 rounded-lg shadow-lg z-50 py-1">
               {FIXED_PLATFORMS.map((source) => {
                   const isSelected = filters.selectedSources.includes(source);
                   return (
@@ -202,7 +202,7 @@ export function ConversationFilters({
                       )}
 
                       {/* Label */}
-                      <span className="flex-1 text-left">{formatSourceLabel(source)}</span>
+                      <span className="flex-1 text-start">{t(`conversations.filters.platform_${source}`, formatSourceLabel(source))}</span>
                     </button>
                   );
                 })}
