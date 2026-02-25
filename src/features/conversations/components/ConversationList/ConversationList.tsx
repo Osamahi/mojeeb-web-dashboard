@@ -9,14 +9,13 @@
 import { useRef, useState, useCallback, UIEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LayoutGroup } from 'framer-motion';
-import { RefreshCw, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useInfiniteConversations } from '../../hooks/useInfiniteConversations';
 import { useConversationRealtime } from '../../hooks/useConversationRealtime';
 import { useConversationStore } from '../../stores/conversationStore';
 import ConversationListItem from './ConversationListItem';
 import { ConversationFilters, type ConversationFiltersState } from './ConversationFilters';
 import { ConversationListSkeleton, NoConversationsState } from '../shared/LoadingSkeleton';
-import { Button } from '@/components/ui/Button';
 
 interface ConversationListProps {
   agentId: string;
@@ -43,8 +42,6 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    refetch,
-    isRefetching,
   } = useInfiniteConversations({
     agentId,
     limit: 50,
@@ -90,11 +87,6 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
     }
   }, [conversations, selectConversation, onConversationSelect]);
 
-  // Handle refresh
-  const handleRefresh = useCallback(() => {
-    refetch();
-  }, [refetch]);
-
   // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: ConversationFiltersState) => {
     setFilters(newFilters);
@@ -106,25 +98,6 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-neutral-50">
-      {/* Header */}
-      <div className="h-14 bg-white border-b border-neutral-200 flex items-center justify-between px-4 flex-shrink-0">
-        <h2 className="text-lg font-semibold text-neutral-950">
-          {isInitialLoad
-            ? t('conversations.title')
-            : t('conversations.title_with_count', { count: conversations.length })
-          }
-        </h2>
-        <Button
-          onClick={handleRefresh}
-          className="p-2"
-          variant="ghost"
-          title={t('conversations.refresh')}
-          disabled={isRefetching}
-        >
-          <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
-        </Button>
-      </div>
-
       {/* Filters - always visible */}
       <div className="flex-shrink-0 bg-neutral-50 pt-2">
         <ConversationFilters
@@ -182,14 +155,6 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
           <p className="text-sm text-red-600">
             {error instanceof Error ? error.message : t('conversations.error_loading')}
           </p>
-          <Button
-            onClick={handleRefresh}
-            className="mt-2"
-            variant="ghost"
-            size="sm"
-          >
-            {t('conversations.retry')}
-          </Button>
         </div>
       )}
     </div>
