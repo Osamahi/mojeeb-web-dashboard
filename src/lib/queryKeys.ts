@@ -31,10 +31,26 @@ export const queryKeys = {
 
   /**
    * Query key for fetching conversations by agent
+   * Base key (no filters) used for cache updates that should affect all filtered views.
    * @param {string | undefined} agentId - The agent ID
    * @returns {readonly ['conversations', string | undefined]} Query key tuple
    */
   conversations: (agentId: string | undefined) => ['conversations', agentId] as const,
+
+  /**
+   * Query key for fetching conversations with filters
+   * Extends the base conversations key so partial matching still works for cache updates.
+   * @param {string | undefined} agentId - The agent ID
+   * @param filters - Optional filter parameters
+   * @returns Query key tuple
+   */
+  conversationsFiltered: (agentId: string | undefined, filters?: {
+    searchTerm?: string;
+    source?: string[];
+    isRead?: boolean;
+    urgent?: boolean;
+  }) =>
+    ['conversations', agentId, filters] as const,
 
   /**
    * Query key for fetching messages in a conversation

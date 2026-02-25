@@ -2,10 +2,11 @@
  * Conversation List Component - V2 Cursor Pagination
  * WhatsApp-style conversation list with real-time updates via React Query
  * Infinite scroll with cursor-based pagination for 100x faster performance
+ * All filters are server-side (DB level) for accurate results across all pages
  * Created: February 2026
  */
 
-import { useRef, UIEvent } from 'react';
+import { useRef, useState, useCallback, UIEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LayoutGroup } from 'framer-motion';
 import { RefreshCw, Loader2 } from 'lucide-react';
@@ -13,6 +14,7 @@ import { useInfiniteConversations } from '../../hooks/useInfiniteConversations';
 import { useConversationRealtime } from '../../hooks/useConversationRealtime';
 import { useConversationStore } from '../../stores/conversationStore';
 import ConversationListItem from './ConversationListItem';
+import { ConversationFilters, type ConversationFiltersState } from './ConversationFilters';
 import { ConversationListSkeleton, NoConversationsState } from '../shared/LoadingSkeleton';
 import { Button } from '@/components/ui/Button';
 
@@ -21,10 +23,18 @@ interface ConversationListProps {
   onConversationSelect: (conversationId: string) => void;
 }
 
+const DEFAULT_FILTERS: ConversationFiltersState = {
+  searchTerm: '',
+  showUnreadOnly: false,
+  selectedSources: [],
+  showUrgentOnly: false,
+};
+
 export default function ConversationList({ agentId, onConversationSelect }: ConversationListProps) {
   const { t } = useTranslation();
+  const [filters, setFilters] = useState<ConversationFiltersState>(DEFAULT_FILTERS);
 
-  // V2: Fetch conversations with cursor-based pagination
+  // All filters are now server-side (DB level)
   const {
     conversations,
     isLoading,
@@ -37,15 +47,22 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
     isRefetching,
   } = useInfiniteConversations({
     agentId,
-    limit: 50, // Fetch 50 conversations per page
+    limit: 50,
+    searchTerm: filters.searchTerm || undefined,
+    source: filters.selectedSources.length > 0 ? filters.selectedSources : undefined,
+    isRead: filters.showUnreadOnly ? false : undefined,
+    urgent: filters.showUrgentOnly ? true : undefined,
   });
 
   // V2: Subscribe to real-time updates with smart cache merging
-  // IMPORTANT: Must pass same parameters as useInfiniteConversations for cache sync
   useConversationRealtime({
     agentId,
-    limit: 50, // Must match useInfiniteConversations limit
+    limit: 50,
+    searchTerm: filters.searchTerm || undefined,
   });
+
+  // Check if any filters are active
+  const hasActiveFilters = filters.showUnreadOnly || filters.selectedSources.length > 0 || filters.showUrgentOnly || !!filters.searchTerm;
 
   // UI state from Zustand store
   const selectedConversation = useConversationStore((state) => state.selectedConversation);
@@ -65,62 +82,37 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
   };
 
   // Handle conversation selection
-  const handleSelect = (conversationId: string) => {
+  const handleSelect = useCallback((conversationId: string) => {
     const conversation = conversations.find((c) => c.id === conversationId);
     if (conversation) {
       selectConversation(conversation);
       onConversationSelect(conversationId);
     }
-  };
+  }, [conversations, selectConversation, onConversationSelect]);
 
   // Handle refresh
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     refetch();
-  };
+  }, [refetch]);
 
-  // Loading state - initial load
-  if (isLoading && conversations.length === 0) {
-    return (
-      <div className="h-full overflow-hidden bg-neutral-50">
-        <div className="h-14 bg-white border-b border-neutral-200 flex items-center px-4">
-          <h2 className="text-lg font-semibold text-neutral-950">{t('conversations.title')}</h2>
-        </div>
-        <div className="overflow-y-auto h-[calc(100%-3.5rem)]">
-          <ConversationListSkeleton />
-        </div>
-      </div>
-    );
-  }
+  // Handle filter changes
+  const handleFiltersChange = useCallback((newFilters: ConversationFiltersState) => {
+    setFilters(newFilters);
+  }, []);
 
-  // Empty state
-  if (!isLoading && conversations.length === 0) {
-    return (
-      <div className="h-full flex flex-col bg-neutral-50">
-        <div className="h-14 bg-white border-b border-neutral-200 flex items-center justify-between px-4">
-          <h2 className="text-lg font-semibold text-neutral-950">{t('conversations.title')}</h2>
-          <Button
-            onClick={handleRefresh}
-            className="p-2"
-            variant="ghost"
-            title={t('conversations.refresh')}
-            disabled={isRefetching}
-          >
-            <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
-        <div className="flex-1">
-          <NoConversationsState />
-        </div>
-      </div>
-    );
-  }
+  // Determine what to show in the list area
+  const isInitialLoad = isLoading && conversations.length === 0;
+  const isEmpty = !isLoading && conversations.length === 0 && !hasActiveFilters;
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-neutral-50">
       {/* Header */}
       <div className="h-14 bg-white border-b border-neutral-200 flex items-center justify-between px-4 flex-shrink-0">
         <h2 className="text-lg font-semibold text-neutral-950">
-          {t('conversations.title_with_count', { count: conversations.length })}
+          {isInitialLoad
+            ? t('conversations.title')
+            : t('conversations.title_with_count', { count: conversations.length })
+          }
         </h2>
         <Button
           onClick={handleRefresh}
@@ -133,22 +125,40 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
         </Button>
       </div>
 
+      {/* Filters - always visible */}
+      <div className="flex-shrink-0 bg-neutral-50 pt-2">
+        <ConversationFilters
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+        />
+      </div>
+
       {/* Conversation List */}
       <div
         ref={listRef}
         className="flex-1 overflow-y-auto p-2 space-y-1"
         onScroll={handleScroll}
       >
-        <LayoutGroup>
-          {conversations.map((conversation) => (
-            <ConversationListItem
-              key={conversation.id}
-              conversation={conversation}
-              isSelected={selectedConversation?.id === conversation.id}
-              onSelect={() => handleSelect(conversation.id)}
-            />
-          ))}
-        </LayoutGroup>
+        {isInitialLoad ? (
+          <ConversationListSkeleton />
+        ) : isEmpty ? (
+          <NoConversationsState />
+        ) : conversations.length === 0 ? (
+          <div className="text-center py-8 text-sm text-neutral-500">
+            {t('conversations.filters.no_results', 'No conversations match your filters')}
+          </div>
+        ) : (
+          <LayoutGroup>
+            {conversations.map((conversation) => (
+              <ConversationListItem
+                key={conversation.id}
+                conversation={conversation}
+                isSelected={selectedConversation?.id === conversation.id}
+                onSelect={() => handleSelect(conversation.id)}
+              />
+            ))}
+          </LayoutGroup>
+        )}
 
         {/* Loading more indicator */}
         {isFetchingNextPage && (

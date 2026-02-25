@@ -71,9 +71,10 @@ export function useDeleteConversation() {
 
       // Remove the deleted conversation directly from cache
       // (don't use invalidateQueries — the refetch races with realtime and can re-add it)
+      // Use setQueriesData for partial key matching — updates all filtered views
       if (agentId) {
         const queryKey = queryKeys.conversations(agentId);
-        queryClient.setQueryData(queryKey, (oldData: any) => {
+        queryClient.setQueriesData({ queryKey }, (oldData: any) => {
           if (!oldData?.pages) return oldData;
 
           return {

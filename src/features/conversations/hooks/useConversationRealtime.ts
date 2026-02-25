@@ -7,6 +7,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { queryKeys } from '@/lib/queryKeys';
 import type { ConversationResponse } from '../services/conversationApi';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
@@ -96,10 +97,10 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
             console.log('[Realtime] Received event:', payload.eventType, payload);
           }
 
-          // Build query key matching useInfiniteConversations structure
-          // IMPORTANT: Must match exactly for cache updates to work
-          // ✨ FIXED: Aligned with useInfiniteConversations query key format
-          const queryKey = ['conversations', agentId] as const;
+          // Use base conversations key for partial matching
+          // This updates ALL conversation queries (regardless of filter params)
+          // React Query's setQueriesData with partial key matches any query starting with this prefix
+          const queryKey = queryKeys.conversations(agentId);
 
           // Update cache based on event type
           switch (payload.eventType) {
@@ -107,7 +108,7 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
               // New conversation - prepend to first page
               const newConversation = transformToConversationResponse(payload.new);
 
-              queryClient.setQueryData(queryKey, (oldData: any) => {
+              queryClient.setQueriesData({ queryKey }, (oldData: any) => {
                 if (!oldData?.pages) {
                   return oldData;
                 }
@@ -140,7 +141,7 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
                   console.log('[Realtime] UPDATE: Conversation soft-deleted, removing from cache:', updatedConversation.id);
                 }
 
-                queryClient.setQueryData(queryKey, (oldData: any) => {
+                queryClient.setQueriesData({ queryKey }, (oldData: any) => {
                   if (!oldData?.pages) return oldData;
 
                   return {
@@ -154,7 +155,7 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
                 break;
               }
 
-              queryClient.setQueryData(queryKey, (oldData: any) => {
+              queryClient.setQueriesData({ queryKey }, (oldData: any) => {
                 if (!oldData?.pages) {
                   if (import.meta.env.DEV) {
                     console.warn('[Realtime] UPDATE: No pages in cache, skipping update');
@@ -278,7 +279,7 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
               // Conversation deleted - remove from cache
               const deletedId = payload.old.id;
 
-              queryClient.setQueryData(queryKey, (oldData: any) => {
+              queryClient.setQueriesData({ queryKey }, (oldData: any) => {
                 if (!oldData?.pages) {
                   return oldData;
                 }

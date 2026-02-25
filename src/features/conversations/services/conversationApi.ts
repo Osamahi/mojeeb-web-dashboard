@@ -47,6 +47,9 @@ export interface GetConversationsParams {
   cursor?: string;
   status?: string;
   search_term?: string;
+  source?: string[];
+  is_read?: boolean;
+  urgent?: boolean;
 }
 
 // ============================================================================
@@ -100,6 +103,18 @@ export async function getConversations(
 
   if (params.search_term) {
     queryParams.append('searchTerm', params.search_term);
+  }
+
+  if (params.source && params.source.length > 0) {
+    queryParams.append('source', params.source.join(','));
+  }
+
+  if (params.is_read !== undefined) {
+    queryParams.append('isRead', params.is_read.toString());
+  }
+
+  if (params.urgent !== undefined) {
+    queryParams.append('urgent', params.urgent.toString());
   }
 
   const response = await api.get<CursorPaginatedConversationsResponse>(

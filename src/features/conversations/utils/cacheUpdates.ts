@@ -30,7 +30,8 @@ export function updateConversationReadStateInCache(
 ): void {
   const queryKey = queryKeys.conversations(agentId);
 
-  queryClient.setQueryData(queryKey, (oldData: any) => {
+  // Use setQueriesData for partial key matching — updates all filtered views
+  queryClient.setQueriesData({ queryKey }, (oldData: any) => {
     if (!oldData?.pages) return oldData;
 
     return {
@@ -70,7 +71,8 @@ export function updateConversationPinStateInCache(
 ): void {
   const queryKey = queryKeys.conversations(agentId);
 
-  queryClient.setQueryData(queryKey, (oldData: any) => {
+  // Use setQueriesData for partial key matching — updates all filtered views
+  queryClient.setQueriesData({ queryKey }, (oldData: any) => {
     if (!oldData?.pages) return oldData;
 
     if (isPinned) {

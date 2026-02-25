@@ -743,6 +743,15 @@
     "no_more": "لا مزيد من المحادثات",
     "error_loading": "فشل تحميل المحادثات",
     "retry": "إعادة المحاولة",
+    "filters": {
+      "search_placeholder": "بحث في المحادثات...",
+      "unread": "غير مقروء",
+      "urgent": "عاجل",
+      "no_results": "لا توجد محادثات تطابق الفلاتر",
+      "all_platforms": "جميع المنصات",
+      "platforms_count": "{{count}} منصات",
+      "clear_platforms": "مسح الاختيار"
+    },
     "delete_confirm_title": "حذف المحادثة",
     "delete_confirm_message": "هل أنت متأكد من حذف المحادثة مع \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
     "delete_confirm_button": "حذف",

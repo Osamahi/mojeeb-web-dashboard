@@ -6,41 +6,35 @@ import { getConversations } from '../services/conversationApi';
 
 const PAGE_SIZE = 50; // Match cursor API page size
 
+interface UseInfiniteConversationsOptions {
+  agentId: string;
+  limit?: number;
+  searchTerm?: string;
+  source?: string[];
+  isRead?: boolean;
+  urgent?: boolean;
+}
+
 /**
  * React Query hook for infinite scrolling conversations
  *
  * Features:
  * - Automatic pagination with infinite scroll
- * - Loads 20 conversations per page
+ * - Loads 50 conversations per page
+ * - Server-side filtering (search, source, read status, urgency)
  * - Proper loading and error states
- * - Cache invalidation on agent change
- *
- * @example
- * ```tsx
- * function ConversationList() {
- *   const {
- *     data,
- *     fetchNextPage,
- *     hasNextPage,
- *     isFetchingNextPage,
- *   } = useInfiniteConversations();
- *
- *   return (
- *     <div>
- *       {data?.pages.map(page =>
- *         page.map(conv => <ConversationCard key={conv.id} conversation={conv} />)
- *       )}
- *       {hasNextPage && <button onClick={() => fetchNextPage()}>Load More</button>}
- *     </div>
- *   );
- * }
- * ```
+ * - Cache invalidation on agent/filter change
  */
-export function useInfiniteConversations() {
-  const { agentId } = useAgentContext();
+export function useInfiniteConversations(options?: UseInfiniteConversationsOptions) {
+  const { agentId: contextAgentId } = useAgentContext();
+  const agentId = options?.agentId || contextAgentId;
+  const searchTerm = options?.searchTerm;
+  const source = options?.source;
+  const isRead = options?.isRead;
+  const urgent = options?.urgent;
 
   const query = useInfiniteQuery({
-    queryKey: queryKeys.conversations(agentId),
+    queryKey: queryKeys.conversationsFiltered(agentId, { searchTerm, source, isRead, urgent }),
     queryFn: async ({ pageParam }) => {
       if (!agentId) {
         throw new Error('No agent selected');
@@ -51,6 +45,10 @@ export function useInfiniteConversations() {
         agent_id: agentId,
         limit: PAGE_SIZE,
         cursor: pageParam, // undefined for first page, cursor string for subsequent pages
+        search_term: searchTerm,
+        source,
+        is_read: isRead,
+        urgent,
       });
 
       // Verification logging
