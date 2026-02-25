@@ -11,7 +11,8 @@
 export const colors = {
   // Brand Colors (Use sparingly - 10% of UI)
   brand: {
-    cyan: '#00DBB7',    // Primary actions, links
+    cyan: '#00DBB7',    // Legacy accent (prefer mojeeb for interactive elements)
+    mojeeb: '#00bd6f',  // Primary brand color - buttons, links, focus states
     green: '#7DFF51',   // Success states, highlights
     dark: '#0A0A17',    // Brand dark, main text
   },
@@ -249,7 +250,7 @@ export function getSpacing(key: keyof typeof spacing): string {
 /**
  * Create focus ring styles (for accessibility)
  */
-export function focusRing(color: string = colors.brand.cyan): string {
+export function focusRing(color: string = colors.brand.mojeeb): string {
   return `outline: 2px solid ${color}20; outline-offset: 2px;`;
 }
 

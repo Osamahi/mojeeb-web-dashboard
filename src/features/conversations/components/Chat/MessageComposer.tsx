@@ -965,8 +965,8 @@ export default memo(function MessageComposer({
                   </>
                 ) : (
                   <>
-                    <User className="w-4 h-4 text-brand-cyan" />
-                    <span className="text-xs font-medium text-brand-cyan">Human</span>
+                    <User className="w-4 h-4 text-brand-mojeeb" />
+                    <span className="text-xs font-medium text-brand-mojeeb">Human</span>
                   </>
                 )}
               </div>
@@ -977,7 +977,7 @@ export default memo(function MessageComposer({
                 className={cn(
                   'relative inline-flex h-6 w-11 items-center rounded-full',
                   'transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2',
-                  isAIMode ? 'bg-neutral-300' : 'bg-brand-cyan'
+                  isAIMode ? 'bg-neutral-300' : 'bg-brand-mojeeb'
                 )}
                 role="switch"
                 aria-checked={!isAIMode}

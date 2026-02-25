@@ -152,7 +152,7 @@ export default function InvitationSentModal({
           )}
           <Button
             onClick={onClose}
-            className={`bg-brand-cyan hover:bg-brand-cyan/90 ${showShareSection ? 'flex-1' : 'flex-1'}`}
+            className={`bg-brand-mojeeb hover:bg-brand-mojeeb/90 ${showShareSection ? 'flex-1' : 'flex-1'}`}
           >
             {t('team.done')}
           </Button>

@@ -131,7 +131,7 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
                   placeholder={t('reassign_org.search_placeholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-neutral-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-cyan focus:border-transparent text-sm"
+                  className="w-full pl-10 pr-3 py-2 border border-neutral-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-mojeeb focus:border-transparent text-sm"
                 />
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
                   <label
                     key={org.id}
                     className={`flex items-center gap-3 p-3 border-b border-neutral-100 last:border-0 cursor-pointer hover:bg-neutral-50 transition-colors ${
-                      selectedOrgId === org.id ? 'bg-brand-cyan/5' : ''
+                      selectedOrgId === org.id ? 'bg-brand-mojeeb/5' : ''
                     }`}
                   >
                     <input
@@ -160,7 +160,7 @@ export default function ReassignOrganizationModal({ isOpen, onClose, agent }: Re
                       value={org.id}
                       checked={selectedOrgId === org.id}
                       onChange={() => setSelectedOrgId(org.id)}
-                      className="w-4 h-4 text-brand-cyan focus:ring-brand-cyan"
+                      className="w-4 h-4 text-brand-mojeeb focus:ring-brand-mojeeb"
                       disabled={org.id === agent.organizationId}
                     />
                     <div className="flex-1 min-w-0">

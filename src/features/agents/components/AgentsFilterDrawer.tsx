@@ -97,7 +97,7 @@ export default function AgentsFilterDrawer({
                 onChange={(e) =>
                   setDraftFilters({ ...draftFilters, search: e.target.value })
                 }
-                className="w-full pl-10 pr-3 py-2 border border-neutral-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-cyan focus:border-transparent text-sm"
+                className="w-full pl-10 pr-3 py-2 border border-neutral-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-mojeeb focus:border-transparent text-sm"
               />
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function AgentsFilterDrawer({
                         status: e.target.value as AgentStatus | 'all',
                       })
                     }
-                    className="w-4 h-4 text-brand-cyan focus:ring-brand-cyan"
+                    className="w-4 h-4 text-brand-mojeeb focus:ring-brand-mojeeb"
                   />
                   <span className="text-sm text-neutral-950 capitalize">
                     {status === 'all' ? t('agents_filter.status_all') : t(`agents_filter.status_${status}`)}
@@ -156,7 +156,7 @@ export default function AgentsFilterDrawer({
                         modelProvider: e.target.value as ModelProvider | 'all',
                       })
                     }
-                    className="w-4 h-4 text-brand-cyan focus:ring-brand-cyan"
+                    className="w-4 h-4 text-brand-mojeeb focus:ring-brand-mojeeb"
                   />
                   <span className="text-sm text-neutral-950 capitalize">
                     {provider === 'all' ? t('agents_filter.provider_all') : provider}
@@ -188,7 +188,7 @@ export default function AgentsFilterDrawer({
                         platformTarget: e.target.value as PlatformTarget | 'all',
                       })
                     }
-                    className="w-4 h-4 text-brand-cyan focus:ring-brand-cyan"
+                    className="w-4 h-4 text-brand-mojeeb focus:ring-brand-mojeeb"
                   />
                   <span className="text-sm text-neutral-950 capitalize">
                     {platform === 'all' ? t('agents_filter.platform_all') : t(`agents_filter.platform_${platform}`)}
@@ -224,7 +224,7 @@ export default function AgentsFilterDrawer({
                         sortBy: e.target.value as 'name' | 'createdAt' | 'updatedAt',
                       })
                     }
-                    className="w-4 h-4 text-brand-cyan focus:ring-brand-cyan"
+                    className="w-4 h-4 text-brand-mojeeb focus:ring-brand-mojeeb"
                   />
                   <span className="text-sm text-neutral-950">{sort.label}</span>
                 </label>

@@ -84,8 +84,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             'bg-white text-neutral-950 placeholder:text-neutral-400',
             'text-base leading-relaxed',
             'resize-none', // Disable manual resize if auto-resize is enabled
-            // Focus state - brand cyan accent
-            'focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan',
+            // Focus state - brand mojeeb accent
+            'focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb',
             'transition-colors duration-200',
             // Disabled state
             'disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed',

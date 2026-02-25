@@ -85,7 +85,7 @@ export const ConfirmDialog = ({
   const icon = variant === 'danger' ? (
     <AlertTriangle className="w-6 h-6 text-error" />
   ) : (
-    <Info className="w-6 h-6 text-brand-cyan" />
+    <Info className="w-6 h-6 text-brand-mojeeb" />
   );
 
   const dialog = (
@@ -125,7 +125,7 @@ export const ConfirmDialog = ({
             <div
               className={cn(
                 'flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center',
-                variant === 'danger' ? 'bg-error/10' : 'bg-brand-cyan/10'
+                variant === 'danger' ? 'bg-error/10' : 'bg-brand-mojeeb/10'
               )}
             >
               {icon}

@@ -152,7 +152,7 @@ export function DataTable<T extends Record<string, any>>({
             placeholder={t('data_table.search_placeholder', { itemName })}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-cyan w-full max-w-md"
+            className="px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-mojeeb w-full max-w-md"
           />
         </div>
       )}

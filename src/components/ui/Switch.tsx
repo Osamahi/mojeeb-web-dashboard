@@ -1,7 +1,7 @@
 /**
  * Mojeeb Minimal Switch Component
  * Clean, accessible toggle switch following Mojeeb brand guidelines
- * Features: On/off states, focus states with brand cyan, keyboard accessible
+ * Features: On/off states, focus states with brand mojeeb, keyboard accessible
  */
 
 import { type InputHTMLAttributes, forwardRef } from 'react';
@@ -26,10 +26,10 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(
           // Base container - pill shape
           'relative inline-flex h-6 w-11 items-center rounded-full',
           'transition-colors duration-200 ease-in-out',
-          // Focus state - brand cyan ring
-          'focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:ring-offset-2',
+          // Focus state - brand mojeeb ring
+          'focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:ring-offset-2',
           // Background colors
-          checked ? 'bg-brand-cyan' : 'bg-neutral-300',
+          checked ? 'bg-brand-mojeeb' : 'bg-neutral-300',
           // Disabled state
           disabled && 'opacity-50 cursor-not-allowed',
           !disabled && 'cursor-pointer',

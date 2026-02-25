@@ -284,7 +284,7 @@ export function AvatarUploader({
               step={0.1}
               value={zoom}
               onChange={(event) => setZoom(Number(event.target.value))}
-              className="w-full accent-brand-cyan"
+              className="w-full accent-brand-mojeeb"
               aria-label="Zoom"
             />
           </div>

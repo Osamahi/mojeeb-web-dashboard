@@ -115,7 +115,7 @@ export default function EditMemberRoleModal({
                   className={`
                     w-full text-left p-4 border-2 rounded-lg transition-all
                     ${isSelected
-                      ? 'border-brand-cyan bg-brand-cyan/5'
+                      ? 'border-brand-mojeeb bg-brand-mojeeb/5'
                       : isDisabled
                       ? 'border-neutral-200 bg-neutral-50 cursor-not-allowed opacity-60'
                       : 'border-neutral-200 hover:border-neutral-300 cursor-pointer'
@@ -126,7 +126,7 @@ export default function EditMemberRoleModal({
                   <div className="flex items-start">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className={`font-medium ${isSelected ? 'text-brand-cyan' : 'text-neutral-900'}`}>
+                        <p className={`font-medium ${isSelected ? 'text-brand-mojeeb' : 'text-neutral-900'}`}>
                           {option.label}
                         </p>
                         {isDisabled && (

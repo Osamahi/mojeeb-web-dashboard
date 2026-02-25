@@ -74,8 +74,8 @@ describe('Input', () => {
       const input = screen.getByPlaceholderText('Test');
       expect(input).toHaveClass('focus:outline-none');
       expect(input).toHaveClass('focus:ring-2');
-      expect(input).toHaveClass('focus:ring-brand-cyan/20');
-      expect(input).toHaveClass('focus:border-brand-cyan');
+      expect(input).toHaveClass('focus:ring-brand-mojeeb/20');
+      expect(input).toHaveClass('focus:border-brand-mojeeb');
     });
 
     it('should be focusable', async () => {

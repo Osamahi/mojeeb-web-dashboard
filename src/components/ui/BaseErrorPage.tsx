@@ -48,7 +48,7 @@ export function BaseErrorPage({
         {/* Error Icon - Mojeeb Brand Styling */}
         <div className="flex justify-center">
           <div className="relative">
-            <Icon className="w-24 h-24 text-brand-cyan/20" strokeWidth={1.5} />
+            <Icon className="w-24 h-24 text-brand-mojeeb/20" strokeWidth={1.5} />
           </div>
         </div>
 
@@ -69,7 +69,7 @@ export function BaseErrorPage({
           {showBackButton && (
             <button
               onClick={handleBack}
-              className="inline-flex items-center justify-center gap-2 h-10 px-6 text-base font-medium bg-white text-neutral-950 border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:ring-offset-2 rtl:font-arabic"
+              className="inline-flex items-center justify-center gap-2 h-10 px-6 text-base font-medium bg-white text-neutral-950 border border-neutral-300 rounded-md hover:bg-neutral-50 active:bg-neutral-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:ring-offset-2 rtl:font-arabic"
             >
               <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
               {t('error_pages.actions.go_back')}
@@ -79,7 +79,7 @@ export function BaseErrorPage({
           {showRetryButton && (
             <button
               onClick={handleRetry}
-              className="inline-flex items-center justify-center gap-2 h-10 px-6 text-base font-medium bg-brand-cyan text-white rounded-md hover:bg-brand-cyan/90 active:bg-brand-cyan/80 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:ring-offset-2 rtl:font-arabic"
+              className="inline-flex items-center justify-center gap-2 h-10 px-6 text-base font-medium bg-brand-mojeeb text-white rounded-md hover:bg-brand-mojeeb/90 active:bg-brand-mojeeb/80 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:ring-offset-2 rtl:font-arabic"
             >
               <RotateCw className="w-4 h-4" />
               {t('error_pages.actions.retry')}
@@ -89,7 +89,7 @@ export function BaseErrorPage({
           {showHomeButton && (
             <button
               onClick={handleHome}
-              className="inline-flex items-center justify-center gap-2 h-10 px-6 text-base font-medium bg-brand-cyan text-white rounded-md hover:bg-brand-cyan/90 active:bg-brand-cyan/80 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:ring-offset-2 rtl:font-arabic"
+              className="inline-flex items-center justify-center gap-2 h-10 px-6 text-base font-medium bg-brand-mojeeb text-white rounded-md hover:bg-brand-mojeeb/90 active:bg-brand-mojeeb/80 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:ring-offset-2 rtl:font-arabic"
             >
               <Home className="w-4 h-4" />
               {t('error_pages.actions.go_home')}

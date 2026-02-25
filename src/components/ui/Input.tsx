@@ -1,7 +1,7 @@
 /**
  * Mojeeb Minimal Input Component
  * Clean, accessible input fields following Mojeeb brand guidelines
- * Features: Label, error states, focus states with brand cyan
+ * Features: Label, error states, focus states with brand mojeeb
  */
 
 import { type InputHTMLAttributes, forwardRef } from 'react';
@@ -29,8 +29,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             'w-full h-10 px-4 rounded-md border border-neutral-300',
             'bg-white text-neutral-950 placeholder:text-neutral-400',
             'text-base',
-            // Focus state - brand cyan accent
-            'focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan',
+            // Focus state - brand mojeeb accent
+            'focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb',
             'transition-colors duration-200',
             // Disabled state
             'disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed',

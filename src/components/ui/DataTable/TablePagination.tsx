@@ -46,7 +46,7 @@ export function TablePagination({
         <select
           value={rowsPerPage}
           onChange={(e) => onRowsPerPageChange(Number(e.target.value))}
-          className="px-2 py-1 border border-neutral-200 rounded bg-white focus:outline-none focus:ring-2 focus:ring-brand-cyan"
+          className="px-2 py-1 border border-neutral-200 rounded bg-white focus:outline-none focus:ring-2 focus:ring-brand-mojeeb"
         >
           {rowsPerPageOptions.map((option) => (
             <option key={option} value={option}>

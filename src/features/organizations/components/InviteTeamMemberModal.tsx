@@ -136,7 +136,7 @@ export default function InviteTeamMemberModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t('organizations.invite_email_placeholder')}
-              className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb focus:border-transparent"
               autoComplete="email"
               disabled={isSubmitting}
             />
@@ -152,7 +152,7 @@ export default function InviteTeamMemberModal({
             id="role"
             value={selectedRole}
             onChange={(e) => setSelectedRole(e.target.value as 'owner' | 'admin' | 'member')}
-            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
+            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb focus:border-transparent"
             disabled={isSubmitting}
           >
             <option value="member">{t('organizations.role_member_description')}</option>
@@ -174,7 +174,7 @@ export default function InviteTeamMemberModal({
             onClick={handleSubmit}
             disabled={!canSubmit || isSubmitting}
             isLoading={isSubmitting}
-            className="bg-brand-cyan hover:bg-brand-cyan/90"
+            className="bg-brand-mojeeb hover:bg-brand-mojeeb/90"
           >
             {t('organizations.invite_send_button')}
           </Button>

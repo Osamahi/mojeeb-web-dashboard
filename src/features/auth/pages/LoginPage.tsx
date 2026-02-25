@@ -77,7 +77,7 @@ export const LoginPage = () => {
             <button
               type="button"
               onClick={handleForgotPassword}
-              className="text-sm text-brand-cyan hover:text-brand-cyan/80 transition-colors"
+              className="text-sm text-brand-mojeeb hover:text-brand-mojeeb/80 transition-colors"
               disabled={isLoading}
             >
               {t('auth.forgot_password_link')}

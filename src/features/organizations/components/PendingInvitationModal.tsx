@@ -95,14 +95,14 @@ export const PendingInvitationModal = () => {
       >
       <div className="space-y-6">
         {/* Invitation Card */}
-        <div className="p-4 bg-brand-cyan/5 border border-brand-cyan/20 rounded-lg space-y-3">
+        <div className="p-4 bg-brand-mojeeb/5 border border-brand-mojeeb/20 rounded-lg space-y-3">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-full bg-brand-cyan/10 flex items-center justify-center flex-shrink-0">
-              <Building2 className="h-5 w-5 text-brand-cyan" />
+            <div className="h-10 w-10 rounded-full bg-brand-mojeeb/10 flex items-center justify-center flex-shrink-0">
+              <Building2 className="h-5 w-5 text-brand-mojeeb" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-neutral-900">You've been invited to join</h3>
-              <p className="text-lg font-bold text-brand-cyan mt-1">{currentInvitation.organizationName}</p>
+              <p className="text-lg font-bold text-brand-mojeeb mt-1">{currentInvitation.organizationName}</p>
             </div>
           </div>
 
@@ -157,9 +157,9 @@ export const PendingInvitationModal = () => {
                 key={index}
                 className={`h-1.5 rounded-full transition-all ${
                   index === currentIndex
-                    ? 'w-8 bg-brand-cyan'
+                    ? 'w-8 bg-brand-mojeeb'
                     : index < currentIndex
-                    ? 'w-1.5 bg-brand-cyan/40'
+                    ? 'w-1.5 bg-brand-mojeeb/40'
                     : 'w-1.5 bg-neutral-200'
                 }`}
               />

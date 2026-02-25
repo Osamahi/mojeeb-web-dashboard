@@ -158,7 +158,7 @@ export const RichTextEditor = ({
       <div
         className={cn(
           'border border-neutral-300 rounded-b-md bg-white',
-          'focus-within:ring-2 focus-within:ring-brand-cyan/20 focus-within:border-brand-cyan',
+          'focus-within:ring-2 focus-within:ring-brand-mojeeb/20 focus-within:border-brand-mojeeb',
           'transition-colors duration-200',
           'overflow-y-auto',
           disabled && 'bg-neutral-50 cursor-not-allowed'

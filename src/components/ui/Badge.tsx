@@ -14,7 +14,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: 'bg-neutral-100 text-neutral-800 border border-neutral-200',
-        primary: 'bg-brand-cyan/10 text-brand-cyan border border-brand-cyan/20',
+        primary: 'bg-brand-mojeeb/10 text-brand-mojeeb border border-brand-mojeeb/20',
         success: 'bg-brand-green/10 text-brand-green border border-brand-green/20',
         warning: 'bg-warning/10 text-warning border border-warning/20',
         danger: 'bg-error/10 text-error border border-error/20',

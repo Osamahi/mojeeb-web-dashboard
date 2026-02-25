@@ -150,7 +150,7 @@ export default function AgentFormModal({ isOpen, onClose, mode, agent }: AgentFo
             placeholder={t('agent_form.instructions_placeholder')}
             value={formData.personaPrompt || ''}
             onChange={(e) => setFormData({ ...formData, personaPrompt: e.target.value })}
-            className="w-full px-4 py-2 border border-neutral-300 rounded-md bg-white text-neutral-950 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan transition-colors duration-200 min-h-[100px] resize-y text-base"
+            className="w-full px-4 py-2 border border-neutral-300 rounded-md bg-white text-neutral-950 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb transition-colors duration-200 min-h-[100px] resize-y text-base"
             rows={4}
           />
         </div>

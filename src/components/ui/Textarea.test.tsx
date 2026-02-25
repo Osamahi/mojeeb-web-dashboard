@@ -408,8 +408,8 @@ describe('Textarea', () => {
       const textarea = screen.getByPlaceholderText('Test');
       expect(textarea).toHaveClass('focus:outline-none');
       expect(textarea).toHaveClass('focus:ring-2');
-      expect(textarea).toHaveClass('focus:ring-brand-cyan/20');
-      expect(textarea).toHaveClass('focus:border-brand-cyan');
+      expect(textarea).toHaveClass('focus:ring-brand-mojeeb/20');
+      expect(textarea).toHaveClass('focus:border-brand-mojeeb');
     });
 
     it('should be focusable', async () => {

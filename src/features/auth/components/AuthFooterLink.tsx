@@ -18,7 +18,7 @@ export const AuthFooterLink = ({ text, linkText, linkTo }: AuthFooterLinkProps) 
         {text}{' '}
         <Link
           to={linkTo}
-          className="text-brand-cyan hover:text-brand-cyan/80 transition-colors font-medium"
+          className="text-brand-mojeeb hover:text-brand-mojeeb/80 transition-colors font-medium"
         >
           {linkText}
         </Link>

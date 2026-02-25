@@ -59,7 +59,7 @@ const ConversationListItem = memo(function ConversationListItem({
         className={cn(
           'flex items-center gap-3 p-3 border border-neutral-200 rounded-lg cursor-pointer transition-colors',
           isSelected
-            ? 'bg-brand-cyan/10 border-brand-cyan'
+            ? 'bg-brand-mojeeb/10 border-brand-mojeeb'
             : 'bg-white hover:bg-neutral-50'
         )}
       >

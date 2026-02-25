@@ -89,8 +89,8 @@ export default function GlobalAgentSelector() {
         onClick={handleCreateAgent}
         className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-neutral-50 transition-colors"
       >
-        <Plus className="w-4 h-4 text-brand-cyan" />
-        <span className="text-sm font-medium text-brand-cyan">{t('agent_selector.create_agent')}</span>
+        <Plus className="w-4 h-4 text-brand-mojeeb" />
+        <span className="text-sm font-medium text-brand-mojeeb">{t('agent_selector.create_agent')}</span>
       </button>
     );
   }
@@ -136,7 +136,7 @@ export default function GlobalAgentSelector() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('agent_selector.search_placeholder')}
-                className="w-full ps-10 pe-4 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
+                className="w-full ps-10 pe-4 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-mojeeb focus:border-transparent"
                 autoFocus
               />
             </div>
@@ -155,7 +155,7 @@ export default function GlobalAgentSelector() {
                 onClick={() => handleAgentSelect(agent.id)}
                 className={cn(
                   'w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-neutral-50 transition-colors',
-                  globalSelectedAgent?.id === agent.id && 'bg-brand-cyan text-white hover:bg-brand-cyan'
+                  globalSelectedAgent?.id === agent.id && 'bg-brand-mojeeb text-white hover:bg-brand-mojeeb'
                 )}
               >
                 <span className={cn(
@@ -180,8 +180,8 @@ export default function GlobalAgentSelector() {
             onClick={handleCreateAgent}
             className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg hover:bg-neutral-50 transition-colors"
           >
-            <Plus className="w-4 h-4 text-brand-cyan" />
-            <span className="text-sm font-medium text-brand-cyan">{t('agent_selector.create_new')}</span>
+            <Plus className="w-4 h-4 text-brand-mojeeb" />
+            <span className="text-sm font-medium text-brand-mojeeb">{t('agent_selector.create_new')}</span>
           </button>
         </div>
       </BaseModal>

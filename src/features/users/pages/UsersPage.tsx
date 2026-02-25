@@ -117,7 +117,7 @@ export default function UsersPage() {
               onChange={(e) => setSearchInput(e.target.value)}
               className="block w-full rounded-lg border border-neutral-300 ps-10 pe-10 py-2.5 text-sm
                        placeholder:text-neutral-400 focus:outline-none focus:ring-2
-                       focus:ring-brand-cyan/20 focus:border-brand-cyan
+                       focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb
                        disabled:bg-neutral-50 disabled:text-neutral-500"
             />
             {searchInput && (

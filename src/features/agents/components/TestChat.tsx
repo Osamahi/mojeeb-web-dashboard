@@ -159,10 +159,10 @@ export default function TestChat({ agentId }: TestChatProps) {
         {/* Enhanced spinner with dual rings */}
         <div className="relative mb-6 animate-scale-in">
           {/* Outer pulsing ring */}
-          <div className="absolute inset-0 w-20 h-20 rounded-full border-4 border-brand-cyan/20 animate-pulse-ring" />
+          <div className="absolute inset-0 w-20 h-20 rounded-full border-4 border-brand-mojeeb/20 animate-pulse-ring" />
 
           {/* Inner rotating ring */}
-          <div className="relative w-20 h-20 rounded-full border-4 border-transparent border-t-brand-cyan animate-rotate-slow" />
+          <div className="relative w-20 h-20 rounded-full border-4 border-transparent border-t-brand-mojeeb animate-rotate-slow" />
 
           {/* Center dot */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-brand-green" />

@@ -441,7 +441,7 @@ export default function EditOrganizationModal({
               <button
                 type="button"
                 onClick={handleOpenAssignModal}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-brand-cyan hover:bg-brand-cyan/10 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-brand-mojeeb hover:bg-brand-mojeeb/10 rounded-lg transition-colors"
               >
                 <UserPlus className="h-4 w-4" />
                 {t('organizations.add_member')}

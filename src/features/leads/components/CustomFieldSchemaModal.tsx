@@ -405,7 +405,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                   onChange={(e) => setFieldKey(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                   placeholder="e.g., customer_company"
                   disabled={viewMode === 'edit'}
-                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan disabled:bg-neutral-100 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb disabled:bg-neutral-100 disabled:cursor-not-allowed"
                   required
                 />
                 {viewMode === 'add' && (
@@ -441,7 +441,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                 value={nameEn}
                 onChange={(e) => setNameEn(e.target.value)}
                 placeholder="e.g., Company Name"
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
                 required
               />
             </div>
@@ -457,7 +457,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                 onChange={(e) => setNameAr(e.target.value)}
                 placeholder="e.g., اسم الشركة"
                 dir="rtl"
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
                 required
               />
             </div>
@@ -478,7 +478,7 @@ export function CustomFieldSchemaModal({ isOpen, onClose }: CustomFieldSchemaMod
                   type="checkbox"
                   checked={isRequired}
                   onChange={(e) => setIsRequired(e.target.checked)}
-                  className="w-4 h-4 rounded border-neutral-300 focus:ring-2 focus:ring-brand-cyan/20 accent-brand-mojeeb"
+                  className="w-4 h-4 rounded border-neutral-300 focus:ring-2 focus:ring-brand-mojeeb/20 accent-brand-mojeeb"
                 />
                 <span className="text-sm text-neutral-700">{t('leads.required_field')}</span>
               </label>

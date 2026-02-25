@@ -27,7 +27,7 @@ describe('Button', () => {
     it('should render primary variant by default', () => {
       render(<Button>Primary</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-brand-cyan');
+      expect(button).toHaveClass('bg-brand-mojeeb');
     });
 
     it('should render secondary variant', () => {
@@ -243,7 +243,7 @@ describe('Button', () => {
         </Button>
       );
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-brand-cyan');
+      expect(button).toHaveClass('bg-brand-mojeeb');
       expect(button).toHaveClass('h-9');
       expect(button).toHaveClass('custom');
       expect(button).toBeDisabled();
@@ -271,7 +271,7 @@ describe('Button', () => {
     it('should handle undefined variant gracefully', () => {
       render(<Button variant={undefined}>Default</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-brand-cyan'); // Falls back to default
+      expect(button).toHaveClass('bg-brand-mojeeb'); // Falls back to default
     });
 
     it('should handle undefined size gracefully', () => {

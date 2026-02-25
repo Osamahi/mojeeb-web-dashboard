@@ -259,7 +259,7 @@ export default function AssignUserToOrgModal({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="user@example.com"
-                    className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb focus:border-transparent"
                     autoComplete="email"
                   />
                   <p className="mt-2 text-sm text-neutral-600">
@@ -272,7 +272,7 @@ export default function AssignUserToOrgModal({
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value as 'owner' | 'admin' | 'member')}
-                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb focus:border-transparent"
               >
                 <option value="member">{t('assign_user_to_org.role_member')}</option>
                 <option value="admin">{t('assign_user_to_org.role_admin')}</option>
@@ -315,7 +315,7 @@ export default function AssignUserToOrgModal({
               <Button
                 onClick={handleAssign}
                 disabled={!canSubmit || isSubmitting}
-                className="bg-brand-cyan hover:bg-brand-cyan/90"
+                className="bg-brand-mojeeb hover:bg-brand-mojeeb/90"
               >
                 {isSubmitting ? t('assign_user_to_org.assigning') : t('assign_user_to_org.assign_button')}
               </Button>

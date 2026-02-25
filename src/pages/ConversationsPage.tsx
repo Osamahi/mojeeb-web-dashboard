@@ -98,7 +98,7 @@ export const ConversationsPage = () => {
           />
         </Panel>
 
-        <PanelResizeHandle className="w-px bg-neutral-200 hover:bg-brand-cyan transition-colors" />
+        <PanelResizeHandle className="w-px bg-neutral-200 hover:bg-brand-mojeeb transition-colors" />
 
         {/* Right Panel: Chat Messages */}
         <Panel defaultSize={65}>

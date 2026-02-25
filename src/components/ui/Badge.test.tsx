@@ -68,9 +68,9 @@ describe('Badge', () => {
     it('should render primary variant (cyan)', () => {
       render(<Badge variant="primary">Primary</Badge>);
       const badge = screen.getByText('Primary');
-      expect(badge).toHaveClass('bg-brand-cyan/10');
-      expect(badge).toHaveClass('text-brand-cyan');
-      expect(badge).toHaveClass('border-brand-cyan/20');
+      expect(badge).toHaveClass('bg-brand-mojeeb/10');
+      expect(badge).toHaveClass('text-brand-mojeeb');
+      expect(badge).toHaveClass('border-brand-mojeeb/20');
     });
 
     it('should render success variant (green)', () => {
@@ -184,7 +184,7 @@ describe('Badge', () => {
         </Badge>
       );
       const badge = screen.getByTestId('full-badge');
-      expect(badge).toHaveClass('bg-brand-cyan/10');
+      expect(badge).toHaveClass('bg-brand-mojeeb/10');
       expect(badge).toHaveClass('extra-class');
       expect(badge).toHaveAttribute('aria-label', 'Full badge');
     });
