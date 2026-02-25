@@ -165,6 +165,10 @@ export default function StudioPage() {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => setIsAddKBModalOpen(true)}>
+                      <Plus className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+                      <span>{t('studio.add_knowledge')}</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setIsFollowUpModalOpen(true)}>
                       <Bell className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
                       <span>{t('studio.automated_follow_ups')}</span>
