@@ -1,15 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { unpinConversation } from '../services/conversationApi';
-import { updateConversationPinStateInCache } from '../utils/cacheUpdates';
+import { queryKeys } from '@/lib/queryKeys';
 
 /**
  * React Query mutation hook for unpinning a conversation.
- *
- * Features:
- * - Optimistic cache update (instant UI feedback)
- * - Updates in place (server handles reordering on next fetch)
- * - Silent error handling (automatic action)
+ * Invalidates conversation queries on success so the list refetches with correct sort order.
  */
 export function useUnpinConversation() {
   const queryClient = useQueryClient();
@@ -18,8 +14,10 @@ export function useUnpinConversation() {
   return useMutation({
     mutationFn: unpinConversation,
 
-    onMutate: async (conversationId) => {
-      updateConversationPinStateInCache(queryClient, agentId, conversationId, false);
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.conversations(agentId),
+      });
     },
 
     onError: (error) => {
