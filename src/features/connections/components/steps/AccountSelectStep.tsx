@@ -11,6 +11,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Badge } from '@/components/ui/Badge';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
+import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useFacebookPages, useWhatsAppAccounts } from '../../hooks/useAddConnection';
 import type { FacebookPage, InstagramAccount, WhatsAppPhoneNumber, OAuthIntegrationType } from '../../types';
@@ -18,7 +19,13 @@ import type { FacebookPage, InstagramAccount, WhatsAppPhoneNumber, OAuthIntegrat
 type AccountSelectStepProps = {
   tempConnectionId: string;
   platform: OAuthIntegrationType;
-  onSelect: (pageId: string, instagramAccount?: InstagramAccount, whatsAppPhone?: WhatsAppPhoneNumber) => void;
+  onSelect: (
+    pageId: string,
+    instagramAccount?: InstagramAccount,
+    whatsAppPhone?: WhatsAppPhoneNumber,
+    respondToMessages?: boolean,
+    respondToComments?: boolean
+  ) => void;
   onBack: () => void;
   isConnecting: boolean;
 };
@@ -41,6 +48,8 @@ export function AccountSelectStep({
   const [selectedPage, setSelectedPage] = useState<FacebookPage | null>(null);
   const [selectedInstagram, setSelectedInstagram] = useState<InstagramAccount | null>(null);
   const [selectedWhatsAppPhone, setSelectedWhatsAppPhone] = useState<WhatsAppPhoneNumber | null>(null);
+  const [respondToMessages, setRespondToMessages] = useState(true);
+  const [respondToComments, setRespondToComments] = useState(true);
 
   const handlePageSelect = useCallback((page: FacebookPage) => {
     setSelectedPage(prev => {
@@ -49,10 +58,15 @@ export function AccountSelectStep({
         setSelectedInstagram(null);
         return null;
       }
-      setSelectedInstagram(null);
+      // Auto-select first IG account for Instagram flow
+      if (platform === 'instagram' && page.instagramAccounts.length > 0) {
+        setSelectedInstagram(page.instagramAccounts[0]);
+      } else {
+        setSelectedInstagram(null);
+      }
       return page;
     });
-  }, []);
+  }, [platform]);
 
   const handleInstagramSelect = useCallback((account: InstagramAccount) => {
     setSelectedInstagram(prev => (prev?.id === account.id ? null : account));
@@ -64,11 +78,11 @@ export function AccountSelectStep({
 
   const handleConnect = useCallback(() => {
     if (platform === 'whatsapp' && selectedWhatsAppPhone) {
-      onSelect('', undefined, selectedWhatsAppPhone);
+      onSelect('', undefined, selectedWhatsAppPhone, respondToMessages, respondToComments);
     } else if (selectedPage) {
-      onSelect(selectedPage.id, selectedInstagram || undefined);
+      onSelect(selectedPage.id, selectedInstagram || undefined, undefined, respondToMessages, respondToComments);
     }
-  }, [platform, selectedPage, selectedInstagram, selectedWhatsAppPhone, onSelect]);
+  }, [platform, selectedPage, selectedInstagram, selectedWhatsAppPhone, onSelect, respondToMessages, respondToComments]);
 
   // Validate image URL for security (prevent XSS)
   const isValidImageUrl = useCallback((url: string | null): boolean => {
@@ -231,49 +245,93 @@ export function AccountSelectStep({
             <button
               onClick={() => handlePageSelect(page)}
               className={cn(
-                'flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all',
+                'w-full rounded-lg border p-3 text-left transition-all',
                 selectedPage?.id === page.id
-                  ? 'border-neutral-900 bg-neutral-50 ring-1 ring-neutral-900'
+                  ? 'border-green-600 bg-green-50 ring-1 ring-green-600'
                   : 'border-neutral-200 bg-white hover:border-neutral-400'
               )}
             >
-              {/* Page avatar */}
-              <div className="relative flex-shrink-0">
-                {isValidImageUrl(page.profilePictureUrl) ? (
-                  <img
-                    src={page.profilePictureUrl!}
-                    alt={`${page.name} profile`}
-                    className="h-12 w-12 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                    </svg>
-                  </div>
-                )}
-                {selectedPage?.id === page.id && (
-                  <div className="absolute -right-1 -top-1 rounded-full bg-neutral-900 p-0.5">
-                    <CheckCircle2 className="h-4 w-4 text-white" />
-                  </div>
-                )}
-              </div>
-
-              {/* Page info */}
-              <div className="flex-1 min-w-0">
-                <h4 className="truncate font-medium text-neutral-900">{page.name}</h4>
-                <p className="text-xs text-neutral-500">{page.category}</p>
-                <p className="text-xs text-neutral-500">{formatFollowers(page.followerCount)} followers</p>
-              </div>
-
-              {/* Instagram indicator */}
-              {page.instagramAccounts.length > 0 && (
-                <div className="flex-shrink-0">
-                  <Badge variant="default" className="text-xs font-semibold px-3 py-1">
-                    {page.instagramAccounts.length} IG
-                  </Badge>
+              <div className="flex items-center gap-3">
+                {/* Page avatar */}
+                <div className="relative flex-shrink-0">
+                  {isValidImageUrl(page.profilePictureUrl) ? (
+                    <img
+                      src={page.profilePictureUrl!}
+                      alt={`${page.name} profile`}
+                      className="h-12 w-12 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                    </div>
+                  )}
+                  {selectedPage?.id === page.id && (
+                    <div className="absolute -right-1 -top-1 rounded-full bg-green-600 p-0.5">
+                      <CheckCircle2 className="h-4 w-4 text-white" />
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {/* Page info */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="truncate font-medium text-neutral-900">{page.name}</h4>
+                  <p className="text-xs text-neutral-500">{page.category}</p>
+                  <p className="text-xs text-neutral-500">{formatFollowers(page.followerCount)} followers</p>
+                </div>
+
+                {/* Instagram indicator */}
+                {page.instagramAccounts.length > 0 && (
+                  <div className="flex-shrink-0">
+                    <Badge variant="default" className="text-xs font-semibold px-3 py-1">
+                      {page.instagramAccounts.length} IG
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              {/* Inline feature checkboxes — only on FB card for Facebook flow */}
+              <AnimatePresence initial={false}>
+                {selectedPage?.id === page.id && platform === 'facebook' && (
+                  <motion.div
+                    key="checkboxes"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div
+                      className="flex items-center gap-4 pt-2 mt-2 border-t border-green-200"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={respondToMessages}
+                          onChange={() => setRespondToMessages(prev => !prev)}
+                          className="h-3.5 w-3.5 rounded border-neutral-300 accent-green-600"
+                        />
+                        <span className="text-xs text-neutral-600">
+                          {t('connections.respond_to_messages', { defaultValue: 'Messages' })}
+                        </span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={respondToComments}
+                          onChange={() => setRespondToComments(prev => !prev)}
+                          className="h-3.5 w-3.5 rounded border-neutral-300 accent-green-600"
+                        />
+                        <span className="text-xs text-neutral-600">
+                          {t('connections.respond_to_comments', { defaultValue: 'Comments' })}
+                        </span>
+                      </label>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </button>
 
             {/* Nested Instagram accounts */}
@@ -287,39 +345,83 @@ export function AccountSelectStep({
                       key={ig.id}
                       onClick={() => handleInstagramSelect(ig)}
                       className={cn(
-                        'flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all',
+                        'w-full rounded-lg border p-3 text-left transition-all',
                         selectedInstagram?.id === ig.id
-                          ? 'border-pink-500 bg-pink-50 ring-1 ring-pink-500'
+                          ? 'border-green-600 bg-green-50 ring-1 ring-green-600'
                           : 'border-neutral-200 bg-white hover:border-neutral-400'
                       )}
                     >
-                      {/* IG avatar */}
-                      <div className="relative flex-shrink-0">
-                        {isValidImageUrl(ig.profilePictureUrl) ? (
-                          <img
-                            src={ig.profilePictureUrl!}
-                            alt={`Instagram profile picture for @${ig.username}`}
-                            className="h-10 w-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-100 text-pink-600">
-                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z" />
-                            </svg>
-                          </div>
-                        )}
-                        {selectedInstagram?.id === ig.id && (
-                          <div className="absolute -right-1 -top-1 rounded-full bg-pink-500 p-0.5">
-                            <CheckCircle2 className="h-3 w-3 text-white" />
-                          </div>
-                        )}
+                      <div className="flex items-center gap-3">
+                        {/* IG avatar */}
+                        <div className="relative flex-shrink-0">
+                          {isValidImageUrl(ig.profilePictureUrl) ? (
+                            <img
+                              src={ig.profilePictureUrl!}
+                              alt={`Instagram profile picture for @${ig.username}`}
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-100 text-pink-600">
+                              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z" />
+                              </svg>
+                            </div>
+                          )}
+                          {selectedInstagram?.id === ig.id && (
+                            <div className="absolute -right-1 -top-1 rounded-full bg-green-600 p-0.5">
+                              <CheckCircle2 className="h-3 w-3 text-white" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* IG info */}
+                        <div className="flex-1 min-w-0">
+                          <h5 className="truncate font-medium text-neutral-900">@{ig.username}</h5>
+                          <p className="text-xs text-neutral-500">{formatFollowers(ig.followerCount)} followers</p>
+                        </div>
                       </div>
 
-                      {/* IG info */}
-                      <div className="flex-1 min-w-0">
-                        <h5 className="truncate font-medium text-neutral-900">@{ig.username}</h5>
-                        <p className="text-xs text-neutral-500">{formatFollowers(ig.followerCount)} followers</p>
-                      </div>
+                      {/* Inline feature checkboxes — on IG card for Instagram flow */}
+                      <AnimatePresence initial={false}>
+                        {selectedInstagram?.id === ig.id && (
+                          <motion.div
+                            key="ig-checkboxes"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div
+                              className="flex items-center gap-4 pt-2 mt-2 border-t border-green-200"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={respondToMessages}
+                                  onChange={() => setRespondToMessages(prev => !prev)}
+                                  className="h-3.5 w-3.5 rounded border-neutral-300 accent-green-600"
+                                />
+                                <span className="text-xs text-neutral-600">
+                                  {t('connections.respond_to_messages', { defaultValue: 'Messages' })}
+                                </span>
+                              </label>
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={respondToComments}
+                                  onChange={() => setRespondToComments(prev => !prev)}
+                                  className="h-3.5 w-3.5 rounded border-neutral-300 accent-green-600"
+                                />
+                                <span className="text-xs text-neutral-600">
+                                  {t('connections.respond_to_comments', { defaultValue: 'Comments' })}
+                                </span>
+                              </label>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </button>
                   ))}
                 </div>

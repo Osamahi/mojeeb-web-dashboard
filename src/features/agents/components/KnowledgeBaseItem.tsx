@@ -40,7 +40,7 @@ export default function KnowledgeBaseItem({
   const [isModified, setIsModified] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  // Check if KB is document-based (content stored in chunks, not in KB record)
+  // Check if KB is document-based
   const isDocumentBased = knowledgeBase.source_type === 'document';
 
   // Check if data has been modified
@@ -120,53 +120,18 @@ export default function KnowledgeBaseItem({
     );
   };
 
-  // Content preview (handle NULL for document-based KBs)
+  // Content preview
   const contentPreview = knowledgeBase.content
-    ? knowledgeBase.content.substring(0, 120) + (knowledgeBase.content.length > 120 ? '...' : '')
+    ? knowledgeBase.content.substring(0, 150) + (knowledgeBase.content.length > 150 ? '...' : '')
     : null;
 
-  // Render different card types based on source type
-  if (isDocumentBased) {
-    // Document KB: Simple card with document icon (not expandable)
-    return (
-      <>
-        {ConfirmDialogComponent}
-
-        <div className="bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">
-          <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
-            {/* Document icon */}
-            <FileText className="w-5 h-5 text-neutral-400 flex-shrink-0" />
-
-            {/* Title */}
-            <h3 className="flex-1 text-base font-semibold text-neutral-950 truncate">
-              {toTitleCase(currentName)}
-            </h3>
-
-            {/* Action buttons - visible on hover */}
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={handleDelete}
-                disabled={deleteMutation.isPending}
-                className="p-2 sm:p-1.5 hover:bg-red-50 rounded transition-colors text-neutral-600 hover:text-red-600 disabled:opacity-50 min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
-                title={t('knowledge_base.delete_title')}
-                aria-label={t('knowledge_base.delete_aria_label')}
-              >
-                <Trash2 className="w-5 h-5 sm:w-4 sm:h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  // Manual KB: Expandable accordion (existing behavior)
+  // Unified expandable accordion for both document and manual KBs
   return (
     <>
       {ConfirmDialogComponent}
 
       <div className="bg-white rounded-lg border border-neutral-200 hover:border-neutral-300 transition-all duration-200 group">
-        {/* Accordion Header - GitHub Style */}
+        {/* Accordion Header */}
         <div
           className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 cursor-pointer"
           onClick={() => {
@@ -188,26 +153,28 @@ export default function KnowledgeBaseItem({
             {toTitleCase(currentName)}
           </h3>
 
-          {/* Hover Actions - GitHub Style (visible on hover or when expanded) */}
+          {/* Hover Actions (visible on hover or when expanded) */}
           <div className={cn(
             'flex items-center gap-1 transition-opacity',
             isExpanded ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           )}>
             {!isEditing && (
               <>
-                {/* Edit button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isExpanded) setIsExpanded(true);
-                    setIsEditing(true);
-                  }}
-                  className="p-2 sm:p-1.5 rounded transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center hover:bg-neutral-100 text-neutral-600 hover:text-neutral-950"
-                  title={t('knowledge_base.edit_title')}
-                  aria-label={t('knowledge_base.edit_aria_label')}
-                >
-                  <Edit2 className="w-5 h-5 sm:w-4 sm:h-4" />
-                </button>
+                {/* Edit button - only for manual KBs */}
+                {!isDocumentBased && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!isExpanded) setIsExpanded(true);
+                      setIsEditing(true);
+                    }}
+                    className="p-2 sm:p-1.5 rounded transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center hover:bg-neutral-100 text-neutral-600 hover:text-neutral-950"
+                    title={t('knowledge_base.edit_title')}
+                    aria-label={t('knowledge_base.edit_aria_label')}
+                  >
+                    <Edit2 className="w-5 h-5 sm:w-4 sm:h-4" />
+                  </button>
+                )}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -225,12 +192,12 @@ export default function KnowledgeBaseItem({
           </div>
         </div>
 
-        {/* Accordion Content - Smooth Transition */}
+        {/* Accordion Content */}
         {isExpanded && (
           <div className="px-3 sm:px-4 pb-3 sm:pb-4 space-y-3 border-t border-neutral-100">
-            {isEditing ? (
+            {isEditing && !isDocumentBased ? (
               <>
-                {/* Edit Mode - Inline */}
+                {/* Edit Mode - only for manual KBs */}
                 <div className="pt-4 space-y-3">
                   <input
                     type="text"
@@ -257,7 +224,7 @@ export default function KnowledgeBaseItem({
                   />
                 </div>
 
-                {/* Actions - GitHub Style */}
+                {/* Actions */}
                 <div className="flex items-center justify-end gap-2 pt-2">
                   <Button
                     variant="secondary"
@@ -282,16 +249,14 @@ export default function KnowledgeBaseItem({
                 </div>
               </>
             ) : (
-              // View Mode - Clean Read-only
+              // View Mode - Read-only content
               <div className="pt-4 space-y-3">
                 {knowledgeBase.content ? (
-                  // Manual KB with content
                   <div
                     className="text-sm text-neutral-700 leading-relaxed prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: plainTextToHtml(knowledgeBase.content) }}
                   />
                 ) : (
-                  // Edge case: manual KB with no content
                   <div className="text-sm text-neutral-400 italic">No content available</div>
                 )}
 

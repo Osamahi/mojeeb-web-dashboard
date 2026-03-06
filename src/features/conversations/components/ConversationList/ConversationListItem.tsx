@@ -18,6 +18,8 @@ import { useDeleteConversation } from '../../hooks/useDeleteConversation';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
 import { useConfirm } from '@/hooks/useConfirm';
+import { PlatformIcon } from '@/features/connections/components/PlatformIcon';
+import type { PlatformType } from '@/features/connections/types';
 
 interface ConversationListItemProps {
   conversation: Conversation;
@@ -128,13 +130,24 @@ const ConversationListItem = memo(function ConversationListItem({
             : 'bg-white hover:bg-neutral-50'
         )}
       >
-        {/* Avatar */}
-        <div className="flex-shrink-0">
+        {/* Avatar with platform icon */}
+        <div className="relative flex-shrink-0">
           <Avatar
             src={profilePictureUrl}
             name={conversation.customer_name}
             size="lg"
           />
+          {conversation.source !== 'web' && (
+            <div className="absolute -bottom-1 ltr:-right-1 rtl:-left-1">
+              <PlatformIcon
+                platform={(conversation.source === 'test' ? 'web' : conversation.source) as PlatformType}
+                size="sm"
+                variant="brand"
+                showBackground
+                className="!w-5 !h-5 shadow-sm ring-1 ring-white [&_svg]:!w-2.5 [&_svg]:!h-2.5"
+              />
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -171,11 +184,9 @@ const ConversationListItem = memo(function ConversationListItem({
             )}
           </div>
 
-          {/* Source and topic - matching chat header format */}
-          {(conversation.topic || conversation.source !== 'web') && (
+          {/* Topic */}
+          {conversation.topic && (
             <p className="text-xs text-neutral-600 font-normal truncate">
-              {conversation.source !== 'web' && conversation.source}
-              {conversation.source !== 'web' && conversation.topic && ' • '}
               {conversation.topic}
             </p>
           )}

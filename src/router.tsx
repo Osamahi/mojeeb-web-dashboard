@@ -40,6 +40,7 @@ const MySubscriptionPage = lazy(() => import('./features/subscriptions/pages/MyS
 const SubscriptionSuccessPage = lazy(() => import('./features/billing/pages/SubscriptionSuccessPage'));
 const SubscriptionCancelPage = lazy(() => import('./features/billing/pages/SubscriptionCancelPage'));
 const AddonSuccessPage = lazy(() => import('./features/addons/pages/AddonSuccessPage'));
+const CommentsPage = lazy(() => import('./features/comments/pages/CommentsPage').then(m => ({ default: m.CommentsPage })));
 const AcceptInvitationPage = lazy(() => import('./features/organizations/pages/AcceptInvitationPage').then(m => ({ default: m.AcceptInvitationPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage').then(m => ({ default: m.ServerErrorPage })));
@@ -253,6 +254,10 @@ export const router = createBrowserRouter([
       {
         path: 'leads',
         element: <LeadsPage />,
+      },
+      {
+        path: 'comments',
+        element: <CommentsPage />,
       },
       {
         path: 'actions',

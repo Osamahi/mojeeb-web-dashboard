@@ -163,7 +163,9 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
   const handleAccountSelect = (
     pageId: string,
     instagramAccount?: InstagramAccount,
-    whatsAppPhone?: WhatsAppPhoneNumber
+    whatsAppPhone?: WhatsAppPhoneNumber,
+    respondToMessages?: boolean,
+    respondToComments?: boolean
   ) => {
     if (!state.tempConnectionId) return;
 
@@ -175,6 +177,8 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
         instagramUsername: instagramAccount?.username,
         whatsAppPhoneNumberId: whatsAppPhone?.id,
         whatsAppBusinessAccountId: whatsAppPhone?.businessAccountId || undefined,
+        respondToMessages,
+        respondToComments,
       },
       {
         onSuccess: () => {

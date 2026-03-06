@@ -7,6 +7,7 @@ import {
   Bot,
   Users,
   MessageSquare,
+  MessageCircleReply,
   Wrench,
   Plug,
   Contact,
@@ -38,6 +39,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.chats',
     href: '/conversations',
     icon: MessageSquare,
+  },
+  {
+    name: 'Comments',
+    translationKey: 'navigation.comments',
+    href: '/comments',
+    icon: MessageCircleReply,
+    requiresAgent: true,
   },
   {
     name: 'Setup',

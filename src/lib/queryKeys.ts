@@ -235,6 +235,29 @@ export const queryKeys = {
    * @returns {readonly ['subscription', 'me']} Query key tuple
    */
   mySubscription: () => ['subscription', 'me'] as const,
+
+  // ==================== Comment Queries ====================
+
+  /**
+   * Query key for fetching social posts (comments page) by agent
+   * @param {string | null} agentId - The agent ID
+   * @returns {readonly ['social-posts', string | null]} Query key tuple
+   */
+  socialPosts: (agentId: string | null) => ['social-posts', agentId] as const,
+
+  /**
+   * Query key for fetching comment stats by agent
+   * @param {string | null} agentId - The agent ID
+   * @returns {readonly ['comment-stats', string | null]} Query key tuple
+   */
+  commentStats: (agentId: string | null) => ['comment-stats', agentId] as const,
+
+  /**
+   * Query key for fetching comments for a specific post
+   * @param {string | null} postDbId - The post database ID
+   * @returns {readonly ['post-comments', string | null]} Query key tuple
+   */
+  postComments: (postDbId: string | null) => ['post-comments', postDbId] as const,
 } as const;
 
 /**

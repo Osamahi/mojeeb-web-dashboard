@@ -69,6 +69,8 @@ class ConnectionService {
       platformPictureUrl: apiConnection.platform_picture_url ?? null,
       parentPageId,
       isActive: apiConnection.is_active,
+      respondToMessages: (apiConnection as any).respond_to_messages ?? true,
+      respondToComments: (apiConnection as any).respond_to_comments ?? false,
       createdAt: apiConnection.created_at,
       updatedAt: apiConnection.updated_at,
       platformMetadata: apiConnection.metadata ?? null,
@@ -313,6 +315,12 @@ class ConnectionService {
         ...(request.whatsAppPhoneNumberId && {
           whats_app_phone_number_id: request.whatsAppPhoneNumberId,
           whats_app_business_account_id: request.whatsAppBusinessAccountId,
+        }),
+        ...(request.respondToMessages !== undefined && {
+          respond_to_messages: request.respondToMessages,
+        }),
+        ...(request.respondToComments !== undefined && {
+          respond_to_comments: request.respondToComments,
         }),
       };
 

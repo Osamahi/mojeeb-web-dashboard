@@ -59,6 +59,8 @@ export type ConnectPageRequest = {
   instagramUsername?: string;
   whatsAppPhoneNumberId?: string;
   whatsAppBusinessAccountId?: string;
+  respondToMessages?: boolean;
+  respondToComments?: boolean;
 };
 
 export type ConnectPageResponse = {
@@ -132,6 +134,8 @@ export type PlatformConnection = {
   platformPictureUrl: string | null;
   parentPageId: string | null;
   isActive: boolean;
+  respondToMessages: boolean;
+  respondToComments: boolean;
   createdAt: string;
   updatedAt: string;
   platformMetadata: Record<string, unknown> | null;
