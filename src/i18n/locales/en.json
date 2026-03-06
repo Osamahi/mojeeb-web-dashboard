@@ -965,6 +965,7 @@
     "billing": "Billing",
     "team": "Team",
     "actions": "Actions",
+    "failed_messages": "Failed Messages",
     "followup_jobs": "Follow-Up Jobs",
     "followup_steps": "Follow-Up Steps",
     "app_config": "App Config",

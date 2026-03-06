@@ -963,6 +963,7 @@
     "billing": "الفواتير",
     "team": "الفريق",
     "actions": "الإجراءات",
+    "failed_messages": "الرسائل الفاشلة",
     "followup_jobs": "مهام المتابعة",
     "followup_steps": "خطوات المتابعة",
     "app_config": "إعدادات التطبيق",

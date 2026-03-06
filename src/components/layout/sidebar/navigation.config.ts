@@ -25,6 +25,7 @@ import {
   Timer,
   ListOrdered,
   Settings,
+  AlertTriangle,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import type { NavigationItem } from './types';
@@ -146,6 +147,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.actions',
     href: '/actions',
     icon: Workflow,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Failed Messages',
+    translationKey: 'navigation.failed_messages',
+    href: '/failed-messages',
+    icon: AlertTriangle,
     requireSuperAdmin: true,
   },
   {

@@ -41,6 +41,7 @@ const SubscriptionSuccessPage = lazy(() => import('./features/billing/pages/Subs
 const SubscriptionCancelPage = lazy(() => import('./features/billing/pages/SubscriptionCancelPage'));
 const AddonSuccessPage = lazy(() => import('./features/addons/pages/AddonSuccessPage'));
 const CommentsPage = lazy(() => import('./features/comments/pages/CommentsPage').then(m => ({ default: m.CommentsPage })));
+const FailedMessagesPage = lazy(() => import('./features/failed-messages/pages/FailedMessagesPage').then(m => ({ default: m.FailedMessagesPage })));
 const AcceptInvitationPage = lazy(() => import('./features/organizations/pages/AcceptInvitationPage').then(m => ({ default: m.AcceptInvitationPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage').then(m => ({ default: m.ServerErrorPage })));
@@ -264,6 +265,14 @@ export const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <ActionsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'failed-messages',
+        element: (
+          <SuperAdminRoute>
+            <FailedMessagesPage />
           </SuperAdminRoute>
         ),
       },
