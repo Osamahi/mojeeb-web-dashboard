@@ -296,12 +296,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
 
           {/* Delivery status ticks — only for outbound (non-customer) messages */}
           {!hasError && !isUser && (
-            <span className="flex items-center" title={
-              isOptimistic ? 'Sending...' :
-              message.status === MessageStatus.Read ? 'Read' :
-              message.status === MessageStatus.Delivered ? 'Delivered' :
-              message.status === MessageStatus.Failed ? 'Failed' : 'Sent'
-            }>
+            <span className="relative flex items-center group/tick cursor-default">
               {isOptimistic ? (
                 <Loader2 className="w-4 h-4 animate-spin text-neutral-400" />
               ) : message.status === MessageStatus.Read ? (
@@ -311,6 +306,12 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
               ) : (
                 <Check className="w-4 h-4 text-neutral-300" strokeWidth={2.5} />
               )}
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-[10px] font-medium text-white bg-neutral-800 rounded shadow-sm whitespace-nowrap opacity-0 group-hover/tick:opacity-100 transition-opacity pointer-events-none">
+                {isOptimistic ? 'Sending...' :
+                  message.status === MessageStatus.Read ? 'Read' :
+                  message.status === MessageStatus.Delivered ? 'Delivered' :
+                  message.status === MessageStatus.Failed ? 'Failed' : 'Sent'}
+              </span>
             </span>
           )}
 
