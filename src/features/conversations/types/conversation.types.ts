@@ -230,11 +230,19 @@ export const parseAttachments = (attachmentsJson: string | object | null): Messa
       rawKeys: Object.keys(parsed),
     });
 
+    // Normalize MediaAttachment fields to MessageAttachment format
+    // Backend stores 'original_file_name' but UI expects 'filename'
+    const normalize = (items: any[]): MessageAttachment[] =>
+      items.map((item: any) => ({
+        ...item,
+        filename: item.filename || item.original_file_name,
+      }));
+
     // Extract and validate arrays
     // Handle both 'files' (display/Supabase) and 'documents' (backend AttachmentsWrapper) keys
-    const images = parsed.images || [];
-    const audio = parsed.audio || [];
-    const files = parsed.files || parsed.documents || [];
+    const images = normalize(parsed.images || []);
+    const audio = normalize(parsed.audio || []);
+    const files = normalize(parsed.files || parsed.documents || []);
 
     // Validate image URLs
     images.forEach((img: any, idx: number) => {
