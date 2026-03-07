@@ -129,7 +129,7 @@ const transformMessage = (backendMsg: BackendMessage): ChatMessage => {
     attachments: backendMsg.attachments || null,
     sender_id: backendMsg.sender_id || null,
     sender_role: backendMsg.sender_role,
-    status: backendMsg.status || MessageStatus.Active,
+    status: backendMsg.status || MessageStatus.Sent,
     created_at: backendMsg.created_at,
     updated_at: backendMsg.updated_at,
     platform_message_id: backendMsg.platform_message_id || null,
@@ -482,7 +482,7 @@ export function useChatEngine(config: ChatEngineConfig): ChatEngineReturn {
         attachments: attachments || null,
         sender_id: null,
         sender_role: config.senderRole || SenderRole.Customer, // Use config or default to Customer
-        status: MessageStatus.Active,
+        status: MessageStatus.Sent,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         platform_message_id: null,

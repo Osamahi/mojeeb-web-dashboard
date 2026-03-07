@@ -82,8 +82,11 @@ export enum SenderRole {
 }
 
 export enum MessageStatus {
-  Deleted = 0,
-  Active = 1,
+  Deleted   = 0,
+  Sent      = 1,
+  Delivered = 2,
+  Read      = 3,
+  Failed    = 5,
 }
 
 /**

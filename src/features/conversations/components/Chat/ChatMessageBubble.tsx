@@ -8,11 +8,10 @@
 
 import { memo, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, Check, Loader2, AlertCircle, RefreshCw, FileText } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Copy, Check, CheckCheck, Loader2, AlertCircle, RefreshCw, FileText } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import type { ChatMessage } from '../../types';
-import { isCustomerMessage, parseAttachments, isMessageDeleted, isVideoAttachment } from '../../types';
+import { isCustomerMessage, parseAttachments, isMessageDeleted, isVideoAttachment, MessageStatus } from '../../types';
 import { formatMessageTime } from '../../utils/timeFormatters';
 import { parseFormattedText, isArabicText } from '../../utils/textFormatters';
 import { cn } from '@/lib/utils';
@@ -51,11 +50,6 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
   const [isCopied, setIsCopied] = useState(false);
   const copyTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  // Track "just delivered" state for user messages (spinner → tick → fade)
-  const [showDeliveredTick, setShowDeliveredTick] = useState(false);
-  const wasOptimisticRef = useRef(isOptimistic);
-  const deliveredTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-
   // Image modal state
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
@@ -75,22 +69,10 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
     return DOMPurify.sanitize(parseFormattedText(messageText, bubbleStyle.color));
   }, [messageText, isDeleted, bubbleStyle.color]);
 
-  // Detect optimistic → delivered transition (show tick then fade)
-  useEffect(() => {
-    if (wasOptimisticRef.current && !isOptimistic && !hasError && isUser) {
-      setShowDeliveredTick(true);
-      deliveredTimeoutRef.current = setTimeout(() => {
-        setShowDeliveredTick(false);
-      }, 1500);
-    }
-    wasOptimisticRef.current = isOptimistic;
-  }, [isOptimistic, hasError, isUser]);
-
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
-      if (deliveredTimeoutRef.current) clearTimeout(deliveredTimeoutRef.current);
     };
   }, []);
 
@@ -121,7 +103,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
 
   return (
     <div className={cn('flex mb-4', horizontalAlign)}>
-      <div className={cn('flex flex-col max-w-[70%]', verticalAlign)}>
+      <div className={cn('group flex flex-col max-w-[70%]', verticalAlign)}>
         {/* Images & Videos - Rendered OUTSIDE bubble, above it */}
         {!isDeleted && images.length > 0 && (
           <div className={cn('mb-2 flex flex-wrap gap-2', horizontalAlign)}>
@@ -302,33 +284,6 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
             </div>
           )}
 
-          {/* Sending spinner → delivered tick with fade transitions */}
-          <AnimatePresence mode="wait">
-            {!hasError && isOptimistic && (
-              <motion.span
-                key="spinner"
-                initial={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                className="flex items-center"
-              >
-                <Loader2 className="w-3 h-3 animate-spin text-neutral-400" />
-              </motion.span>
-            )}
-            {!hasError && showDeliveredTick && !isOptimistic && (
-              <motion.span
-                key="tick"
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
-                className="flex items-center"
-              >
-                <Check className="w-3 h-3 text-green-500" />
-              </motion.span>
-            )}
-          </AnimatePresence>
-
           {/* Timestamp - always visible (except error) */}
           {!hasError && (
             <span className={cn(
@@ -339,13 +294,33 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
             </span>
           )}
 
-          {/* Copy button */}
+          {/* Delivery status ticks — only for outbound (non-customer) messages */}
+          {!hasError && !isUser && (
+            <span className="flex items-center" title={
+              isOptimistic ? 'Sending...' :
+              message.status === MessageStatus.Read ? 'Read' :
+              message.status === MessageStatus.Delivered ? 'Delivered' :
+              message.status === MessageStatus.Failed ? 'Failed' : 'Sent'
+            }>
+              {isOptimistic ? (
+                <Loader2 className="w-4 h-4 animate-spin text-neutral-400" />
+              ) : message.status === MessageStatus.Read ? (
+                <CheckCheck className="w-4 h-4 text-green-500" strokeWidth={2.5} />
+              ) : message.status === MessageStatus.Delivered ? (
+                <CheckCheck className="w-4 h-4 text-neutral-300" strokeWidth={2.5} />
+              ) : (
+                <Check className="w-4 h-4 text-neutral-300" strokeWidth={2.5} />
+              )}
+            </span>
+          )}
+
+          {/* Copy button — visible on hover only */}
           {!hasError && (
             <button
               onClick={handleCopy}
               className={cn(
                 "p-1 rounded transition-all",
-                isCopied ? "bg-green-100" : "hover:bg-neutral-100"
+                isCopied ? "bg-green-100 opacity-100" : "opacity-0 group-hover:opacity-100 hover:bg-neutral-100"
               )}
               title={isCopied ? t('conversations.copied') : t('conversations.copy_message')}
             >
