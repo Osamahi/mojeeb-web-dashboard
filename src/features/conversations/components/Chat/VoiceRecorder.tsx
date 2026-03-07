@@ -139,17 +139,13 @@ export function VoiceRecorder({
       // Start waveform animation
       animateWaveform();
 
-      // Setup MediaRecorder with Gemini-compatible format
-
-      // Try formats in order of preference (all Gemini-compatible)
+      // Setup MediaRecorder — format doesn't matter for WhatsApp since backend converts to MP3
+      // Prefer MP4 (Chrome default) as it's compatible with Gemini AI transcription
       let mimeType = 'audio/webm;codecs=opus'; // Fallback
-
       if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        mimeType = 'audio/mp4'; // Best: Supported by Gemini + all browsers
-      } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
-        mimeType = 'audio/ogg;codecs=opus'; // Good: Supported by Gemini
+        mimeType = 'audio/mp4';
       } else if (MediaRecorder.isTypeSupported('audio/aac')) {
-        mimeType = 'audio/aac'; // Good: Supported by Gemini
+        mimeType = 'audio/aac';
       }
 
       // Store MIME type for blob creation

@@ -798,9 +798,10 @@ export default memo(function MessageComposer({
   const handleRecordingComplete = async (audioBlob: Blob) => {
     setIsRecording(false);
 
-    // Convert blob to File - use the blob's actual MIME type (Gemini-compatible)
+    // Convert blob to File - use the blob's actual MIME type
     const mimeType = audioBlob.type; // Get actual MIME type from VoiceRecorder
-    const extension = mimeType.split('/')[1] || 'mp4'; // Extract extension (mp4, ogg, aac, etc.)
+    // Extract extension: "audio/ogg;codecs=opus" → "ogg", "audio/mp4" → "mp4"
+    const extension = (mimeType.split('/')[1] || 'mp4').split(';')[0];
     const fileName = `voice-${Date.now()}.${extension}`;
     const audioFile = new File([audioBlob], fileName, { type: mimeType });
 
