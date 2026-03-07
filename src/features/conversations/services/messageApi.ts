@@ -57,7 +57,7 @@ export async function getMessages(
         // If media_attachments is an array, transform to grouped object structure
         if (Array.isArray(msg.media_attachments)) {
           attachments = {
-            images: msg.media_attachments.filter((att: any) => att.type === 'image'),
+            images: msg.media_attachments.filter((att: any) => att.type === 'image' || att.type === 'sticker' || att.type === 'video'),
             audio: msg.media_attachments.filter((att: any) => att.type === 'audio'),
             files: msg.media_attachments.filter((att: any) => att.type === 'document'),
           };
