@@ -793,7 +793,9 @@
     "message_deleted": "This message was deleted",
     "message_sending": "Sending...",
     "copy_message": "Copy message",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "document_attachment": "Document",
+    "tap_to_open": "Tap to open"
   },
   "auth": {
     "login_title": "Welcome back",
@@ -2009,7 +2011,19 @@
     "remove_audio_aria": "Remove audio {{index}}",
     "uploading_images_placeholder": "Uploading {{count}} image(s)...",
     "toggle_mode_aria": "Toggle mode. Currently {{mode}} mode",
-    "switch_mode_title": "Click to switch to {{mode}} mode"
+    "switch_mode_title": "Click to switch to {{mode}} mode",
+    "upload_photo": "Upload Photo",
+    "upload_file": "Upload File",
+    "upload_file_aria": "Upload document files",
+    "attach_aria": "Attach",
+    "attach_title": "Attach file or image",
+    "max_documents_error": "Maximum {{max}} document allowed",
+    "invalid_document_type_error": "Invalid file type: {{filename}}. Only PDF, DOCX, TXT, XLSX, XLS, and CSV are supported.",
+    "document_too_large_error": "File too large: {{filename}}. Maximum {{maxSize}}MB allowed.",
+    "document_upload_failed": "Failed to upload {{filename}}",
+    "document_upload_failed_generic": "Failed to upload document",
+    "wait_documents_uploading": "Wait for document upload to complete",
+    "remove_document_aria": "Remove document {{index}}"
   },
   "voice_recorder": {
     "cancel_recording_aria": "Cancel recording",

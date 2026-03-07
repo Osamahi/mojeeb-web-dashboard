@@ -7,7 +7,7 @@
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music, Image, FileText } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -26,10 +26,21 @@ const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const MAX_AUDIO_SIZE_MB = 5; // Backend audio limit
 const MAX_AUDIO_SIZE_BYTES = MAX_AUDIO_SIZE_MB * 1024 * 1024;
+const MAX_DOC_SIZE_MB = 20; // Backend document limit
+const MAX_DOC_SIZE_BYTES = MAX_DOC_SIZE_MB * 1024 * 1024;
 const MAX_IMAGES = 10;
 const MAX_AUDIO = 5;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
 const ALLOWED_AUDIO_TYPES = ['audio/mp3', 'audio/mpeg', 'audio/mp4', 'audio/m4a', 'audio/ogg', 'audio/webm', 'audio/wav', 'audio/aac', 'audio/flac'];
+const ALLOWED_DOCUMENT_TYPES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+  'application/vnd.ms-excel', // .xls
+  'text/plain', // .txt
+  'text/csv', // .csv
+];
+const ALLOWED_DOCUMENT_EXTENSIONS = ['.pdf', '.docx', '.xlsx', '.xls', '.txt', '.csv'];
 const THUMBNAIL_SIZE_PX = 80;
 
 /**
@@ -87,6 +98,18 @@ interface UploadedAudio {
   isUploading: boolean;          // Whether currently uploading
 }
 
+/**
+ * Upload state for individual document files
+ */
+interface UploadedDocument {
+  id: string;
+  file: File;
+  attachment?: MediaAttachment;
+  progress: number;
+  error?: string;
+  isUploading: boolean;
+}
+
 export default memo(function MessageComposer({
   onSendMessage,
   isSending,
@@ -99,6 +122,7 @@ export default memo(function MessageComposer({
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [isLocalSending, setIsLocalSending] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
 
@@ -108,10 +132,15 @@ export default memo(function MessageComposer({
   // ChatGPT-style upload-on-select: Track uploaded audio with progress
   const [uploadedAudio, setUploadedAudio] = useState<UploadedAudio[]>([]);
 
+  // Track uploaded documents
+  const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const attachMenuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-resize textarea (optimized with useCallback)
   const adjustTextareaHeight = useCallback(() => {
@@ -204,6 +233,28 @@ export default memo(function MessageComposer({
     };
   }, [showEmojiPicker]);
 
+  // Close attachment menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target;
+      if (
+        target instanceof Node &&
+        attachMenuRef.current &&
+        !attachMenuRef.current.contains(target)
+      ) {
+        setShowAttachMenu(false);
+      }
+    };
+
+    if (showAttachMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showAttachMenu]);
+
   const handleSend = async () => {
     // Sanitize and validate message
     const sanitizedMessage = sanitizeMessage(message);
@@ -225,6 +276,13 @@ export default memo(function MessageComposer({
       return;
     }
 
+    // Check if any documents are still uploading
+    const hasUploadingDocs = uploadedDocuments.some(doc => doc.isUploading);
+    if (hasUploadingDocs) {
+      toast.error(t('message_composer.wait_documents_uploading'));
+      return;
+    }
+
     // Check if any images failed to upload
     const hasFailedImages = uploadedImages.some(img => img.error);
     if (hasFailedImages) {
@@ -239,8 +297,15 @@ export default memo(function MessageComposer({
       return;
     }
 
+    // Check if any documents failed to upload
+    const hasFailedDocs = uploadedDocuments.some(doc => doc.error);
+    if (hasFailedDocs) {
+      toast.error(t('message_composer.document_upload_failed_generic'));
+      return;
+    }
+
     // Allow empty message if there are attachments (WhatsApp-style voice messages)
-    const hasAttachments = uploadedImages.length > 0 || uploadedAudio.length > 0;
+    const hasAttachments = uploadedImages.length > 0 || uploadedAudio.length > 0 || uploadedDocuments.length > 0;
     if (!sanitizedMessage && !hasAttachments) {
       // Empty message with no attachments - do nothing
       return;
@@ -255,7 +320,7 @@ export default memo(function MessageComposer({
     try {
       let attachmentsJson: string | undefined = undefined;
 
-      // Build attachments JSON with both images and audio
+      // Build attachments JSON with images, audio, and documents
       const successfulImageUploads = uploadedImages
         .filter(img => img.attachment && !img.error)
         .map(img => img.attachment!);
@@ -264,15 +329,21 @@ export default memo(function MessageComposer({
         .filter(aud => aud.attachment && !aud.error)
         .map(aud => aud.attachment!);
 
-      if (successfulImageUploads.length > 0 || successfulAudioUploads.length > 0) {
-        const wrapper: { images?: MediaAttachment[]; audio?: MediaAttachment[] } = {};
+      const successfulDocUploads = uploadedDocuments
+        .filter(doc => doc.attachment && !doc.error)
+        .map(doc => doc.attachment!);
+
+      if (successfulImageUploads.length > 0 || successfulAudioUploads.length > 0 || successfulDocUploads.length > 0) {
+        const wrapper: { images?: MediaAttachment[]; audio?: MediaAttachment[]; documents?: MediaAttachment[] } = {};
         if (successfulImageUploads.length > 0) wrapper.images = successfulImageUploads;
         if (successfulAudioUploads.length > 0) wrapper.audio = successfulAudioUploads;
+        if (successfulDocUploads.length > 0) wrapper.documents = successfulDocUploads;
 
         attachmentsJson = JSON.stringify(wrapper);
         logger.info('Using pre-uploaded attachments', {
           images: successfulImageUploads.length,
-          audio: successfulAudioUploads.length
+          audio: successfulAudioUploads.length,
+          documents: successfulDocUploads.length,
         });
       }
 
@@ -280,6 +351,7 @@ export default memo(function MessageComposer({
       setMessage('');
       setUploadedImages([]);
       setUploadedAudio([]);
+      setUploadedDocuments([]);
 
       // Reset textarea height
       if (textareaRef.current) {
@@ -608,8 +680,111 @@ export default memo(function MessageComposer({
     logger.info('Removed audio', { index });
   };
 
+  /**
+   * Document upload handler
+   */
+  const handleDocumentSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    // Only 1 document per message
+    if (uploadedDocuments.length + files.length > 1) {
+      toast.error(t('message_composer.max_documents_error'));
+      return;
+    }
+
+    const validFiles: File[] = [];
+    for (const file of files) {
+      // Check by MIME type first, fallback to extension
+      const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+      if (!ALLOWED_DOCUMENT_TYPES.includes(file.type) && !ALLOWED_DOCUMENT_EXTENSIONS.includes(extension)) {
+        toast.error(t('message_composer.invalid_document_type_error', { filename: file.name }));
+        continue;
+      }
+
+      if (file.size > MAX_DOC_SIZE_BYTES) {
+        toast.error(t('message_composer.document_too_large_error', { filename: file.name, maxSize: MAX_DOC_SIZE_MB }));
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) {
+      if (documentInputRef.current) documentInputRef.current.value = '';
+      return;
+    }
+
+    const tempMessageId = crypto.randomUUID();
+
+    const newUploads: UploadedDocument[] = validFiles.map(file => ({
+      id: crypto.randomUUID(),
+      file,
+      progress: 0,
+      isUploading: true,
+    }));
+
+    setUploadedDocuments(prev => [...prev, ...newUploads]);
+
+    logger.info(`Starting upload-on-select for ${validFiles.length} document(s)`);
+
+    newUploads.forEach(async (uploadedDoc) => {
+      try {
+        logger.info(`Starting document upload for ${uploadedDoc.file.name}`, { id: uploadedDoc.id });
+
+        const attachment = await chatApiService.uploadDocumentWithProgress({
+          file: uploadedDoc.file,
+          conversationId,
+          messageId: tempMessageId,
+          onProgress: (progress) => {
+            setUploadedDocuments(prev =>
+              prev.map(doc =>
+                doc.id === uploadedDoc.id ? { ...doc, progress } : doc
+              )
+            );
+          },
+        });
+
+        logger.info(`Document upload complete: ${uploadedDoc.file.name}`, { id: uploadedDoc.id });
+        setUploadedDocuments(prev =>
+          prev.map(doc =>
+            doc.id === uploadedDoc.id
+              ? { ...doc, attachment, progress: 100, isUploading: false }
+              : doc
+          )
+        );
+      } catch (error) {
+        logger.error(`Document upload failed: ${uploadedDoc.file.name}`, error, { id: uploadedDoc.id });
+        setUploadedDocuments(prev =>
+          prev.map(doc =>
+            doc.id === uploadedDoc.id
+              ? { ...doc, error: 'Upload failed', isUploading: false, progress: 0 }
+              : doc
+          )
+        );
+        toast.error(t('message_composer.document_upload_failed', { filename: uploadedDoc.file.name }));
+      }
+    });
+
+    if (documentInputRef.current) documentInputRef.current.value = '';
+  };
+
+  const handleRemoveDocument = (index: number) => {
+    setUploadedDocuments(prev => prev.filter((_, i) => i !== index));
+    logger.info('Removed document', { index });
+  };
+
   const handleAttachmentClick = () => {
+    setShowAttachMenu(prev => !prev);
+  };
+
+  const handlePhotoOption = () => {
+    setShowAttachMenu(false);
     fileInputRef.current?.click();
+  };
+
+  const handleFileOption = () => {
+    setShowAttachMenu(false);
+    documentInputRef.current?.click();
   };
 
   const handleAudioButtonClick = () => {
@@ -697,7 +872,7 @@ export default memo(function MessageComposer({
         'relative'
       )}
     >
-      {/* Hidden File Input */}
+      {/* Hidden File Inputs */}
       <input
         ref={fileInputRef}
         type="file"
@@ -707,8 +882,6 @@ export default memo(function MessageComposer({
         className="hidden"
         aria-label={t('message_composer.upload_images_aria')}
       />
-
-      {/* Hidden Audio Input */}
       <input
         ref={audioInputRef}
         type="file"
@@ -717,6 +890,14 @@ export default memo(function MessageComposer({
         onChange={handleAudioSelect}
         className="hidden"
         aria-label={t('message_composer.upload_audio_aria')}
+      />
+      <input
+        ref={documentInputRef}
+        type="file"
+        accept=".pdf,.docx,.xlsx,.xls,.txt,.csv"
+        onChange={handleDocumentSelect}
+        className="hidden"
+        aria-label={t('message_composer.upload_file_aria')}
       />
 
       {/* Image Previews - ChatGPT Style with Upload Progress */}
@@ -792,10 +973,7 @@ export default memo(function MessageComposer({
                 uploadedAudioFile.error ? "border-red-300 bg-red-50" : "border-neutral-200 bg-neutral-50"
               )}
             >
-              {/* Audio Icon */}
               <Music className="w-5 h-5 text-neutral-500 flex-shrink-0" />
-
-              {/* File Info */}
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-neutral-900 truncate">
                   {uploadedAudioFile.file.name}
@@ -804,8 +982,6 @@ export default memo(function MessageComposer({
                   {(uploadedAudioFile.file.size / 1024 / 1024).toFixed(2)} MB
                 </div>
               </div>
-
-              {/* Upload Progress */}
               {uploadedAudioFile.isUploading && (
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <Loader2 className="w-4 h-4 text-neutral-600 animate-spin" />
@@ -814,16 +990,12 @@ export default memo(function MessageComposer({
                   </span>
                 </div>
               )}
-
-              {/* Error Indicator */}
               {uploadedAudioFile.error && (
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <AlertCircle className="w-4 h-4 text-red-600" />
                   <span className="text-xs text-red-600">{t('conversations.upload_failed')}</span>
                 </div>
               )}
-
-              {/* Remove Button */}
               <button
                 onClick={() => handleRemoveAudio(index)}
                 disabled={uploadedAudioFile.isUploading}
@@ -836,6 +1008,59 @@ export default memo(function MessageComposer({
                 )}
                 aria-label={t('message_composer.remove_audio_aria', { index: index + 1 })}
                 title={uploadedAudioFile.error ? t('conversations.remove_failed_audio') : t('conversations.remove_audio')}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Document Previews */}
+      {uploadedDocuments.length > 0 && (
+        <div className="flex flex-col gap-2 mb-3">
+          {uploadedDocuments.map((uploadedDoc, index) => (
+            <div
+              key={uploadedDoc.id}
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-lg border",
+                uploadedDoc.error ? "border-red-300 bg-red-50" : "border-neutral-200 bg-neutral-50"
+              )}
+            >
+              <FileText className="w-5 h-5 text-neutral-500 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-neutral-900 truncate">
+                  {uploadedDoc.file.name}
+                </div>
+                <div className="text-xs text-neutral-500">
+                  {(uploadedDoc.file.size / 1024 / 1024).toFixed(2)} MB
+                </div>
+              </div>
+              {uploadedDoc.isUploading && (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Loader2 className="w-4 h-4 text-neutral-600 animate-spin" />
+                  <span className="text-xs font-medium text-neutral-600 min-w-[3ch]">
+                    {uploadedDoc.progress}%
+                  </span>
+                </div>
+              )}
+              {uploadedDoc.error && (
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <span className="text-xs text-red-600">{t('conversations.upload_failed')}</span>
+                </div>
+              )}
+              <button
+                onClick={() => handleRemoveDocument(index)}
+                disabled={uploadedDoc.isUploading}
+                className={cn(
+                  "p-1.5 rounded-md",
+                  "text-neutral-500 hover:text-neutral-700",
+                  "hover:bg-neutral-200",
+                  "transition-colors",
+                  uploadedDoc.isUploading && "opacity-50 cursor-not-allowed"
+                )}
+                aria-label={t('message_composer.remove_document_aria', { index: index + 1 })}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -898,23 +1123,46 @@ export default memo(function MessageComposer({
       <div className="flex items-center justify-between">
         {/* Left: Action Icons */}
         <div className="flex items-center gap-2 relative">
-          {/* Attachment Button */}
-          <button
-            onClick={handleAttachmentClick}
-            className={cn(
-              'p-2 rounded-lg',
-              'text-neutral-500',
-              'hover:bg-neutral-100',
-              'hover:text-neutral-700',
-              'transition-all duration-150',
-              (isSending || isLocalSending) && 'opacity-50 cursor-not-allowed'
+          {/* Attachment Button with Dropdown */}
+          <div className="relative" ref={attachMenuRef}>
+            <button
+              onClick={handleAttachmentClick}
+              className={cn(
+                'p-2 rounded-lg',
+                'text-neutral-500',
+                'hover:bg-neutral-100',
+                'hover:text-neutral-700',
+                'transition-all duration-150',
+                showAttachMenu && 'bg-neutral-100 text-neutral-700',
+                (isSending || isLocalSending) && 'opacity-50 cursor-not-allowed'
+              )}
+              aria-label={t('message_composer.attach_aria')}
+              title={t('message_composer.attach_title')}
+              disabled={isSending || isLocalSending}
+            >
+              <Paperclip className="w-5 h-5" />
+            </button>
+
+            {/* Attachment Dropdown Menu */}
+            {showAttachMenu && (
+              <div className="absolute bottom-full left-0 mb-2 z-50 bg-white rounded-xl shadow-lg border border-neutral-200 overflow-hidden min-w-[180px]">
+                <button
+                  onClick={handlePhotoOption}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
+                >
+                  <Image className="w-4 h-4 text-neutral-500" />
+                  {t('message_composer.upload_photo')}
+                </button>
+                <button
+                  onClick={handleFileOption}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors border-t border-neutral-100"
+                >
+                  <FileText className="w-4 h-4 text-neutral-500" />
+                  {t('message_composer.upload_file')}
+                </button>
+              </div>
             )}
-            aria-label={t('message_composer.attach_images_aria')}
-            title={t('message_composer.attach_images_title')}
-            disabled={isSending || isLocalSending}
-          >
-            <Paperclip className="w-5 h-5" />
-          </button>
+          </div>
 
           {/* Emoji Picker */}
           <div className="relative">

@@ -223,16 +223,18 @@ export const parseAttachments = (attachmentsJson: string | object | null): Messa
       hasImages: !!parsed.images,
       hasAudio: !!parsed.audio,
       hasFiles: !!parsed.files,
+      hasDocuments: !!parsed.documents,
       imageCount: parsed.images?.length ?? 0,
       audioCount: parsed.audio?.length ?? 0,
-      fileCount: parsed.files?.length ?? 0,
+      fileCount: (parsed.files || parsed.documents)?.length ?? 0,
       rawKeys: Object.keys(parsed),
     });
 
     // Extract and validate arrays
+    // Handle both 'files' (display/Supabase) and 'documents' (backend AttachmentsWrapper) keys
     const images = parsed.images || [];
     const audio = parsed.audio || [];
-    const files = parsed.files || [];
+    const files = parsed.files || parsed.documents || [];
 
     // Validate image URLs
     images.forEach((img: any, idx: number) => {

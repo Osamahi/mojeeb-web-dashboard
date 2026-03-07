@@ -8,7 +8,7 @@
 
 import { memo, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, Check, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Copy, Check, Loader2, AlertCircle, RefreshCw, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import DOMPurify from 'dompurify';
 import type { ChatMessage } from '../../types';
@@ -34,11 +34,12 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
   const messageText = message.message || '';
 
   // Memoize attachment parsing (avoid re-parsing on every state change)
-  const { images, audio } = useMemo(() => {
+  const { images, audio, files } = useMemo(() => {
     const parsed = parseAttachments(message.attachments);
     return {
       images: parsed?.images || [],
       audio: parsed?.audio || [],
+      files: parsed?.files || [],
     };
   }, [message.attachments]);
 
@@ -180,6 +181,46 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                   isAssistantMessage={!isUser}
                 />
               </div>
+            ))}
+          </div>
+        )}
+
+        {/* Document Attachments - Rendered OUTSIDE bubble, above it */}
+        {!isDeleted && files.length > 0 && (
+          <div className={cn('mb-2 flex flex-col gap-2', horizontalAlign)}>
+            {files.map((file, idx) => (
+              <a
+                key={idx}
+                href={file.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  'flex items-center gap-3 px-4 py-3 rounded-lg border min-w-[250px] max-w-[400px]',
+                  'transition-colors duration-150',
+                  isUser
+                    ? 'bg-white border-neutral-200 hover:bg-neutral-50'
+                    : 'bg-neutral-800 border-neutral-700 hover:bg-neutral-700'
+                )}
+              >
+                <FileText className={cn(
+                  'w-8 h-8 flex-shrink-0',
+                  isUser ? 'text-neutral-500' : 'text-neutral-400'
+                )} />
+                <div className="flex flex-col min-w-0">
+                  <span className={cn(
+                    'text-sm font-medium truncate',
+                    isUser ? 'text-neutral-900' : 'text-white'
+                  )}>
+                    {file.filename || t('conversations.document_attachment')}
+                  </span>
+                  <span className={cn(
+                    'text-xs',
+                    isUser ? 'text-neutral-500' : 'text-neutral-400'
+                  )}>
+                    {t('conversations.tap_to_open')}
+                  </span>
+                </div>
+              </a>
             ))}
           </div>
         )}

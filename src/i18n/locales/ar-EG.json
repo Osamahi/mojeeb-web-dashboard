@@ -791,7 +791,9 @@
     "message_deleted": "الرسالة دي اتمسحت",
     "message_sending": "بيبعت...",
     "copy_message": "انسخ الرسالة",
-    "copied": "اتنسخت!"
+    "copied": "اتنسخت!",
+    "document_attachment": "مستند",
+    "tap_to_open": "اضغط عشان تفتح"
   },
   "auth": {
     "login_title": "مرحباً بعودتك",
@@ -2008,7 +2010,19 @@
     "remove_audio_aria": "امسح الصوت {{index}}",
     "uploading_images_placeholder": "بيرفع {{count}} صورة...",
     "toggle_mode_aria": "غيّر الوضع. دلوقتي وضع {{mode}}",
-    "switch_mode_title": "اضغط عشان تغيّر لوضع {{mode}}"
+    "switch_mode_title": "اضغط عشان تغيّر لوضع {{mode}}",
+    "upload_photo": "ارفع صورة",
+    "upload_file": "ارفع ملف",
+    "upload_file_aria": "ارفع ملفات مستندات",
+    "attach_aria": "أرفق",
+    "attach_title": "أرفق ملف أو صورة",
+    "max_documents_error": "الحد الأقصى {{max}} مستند",
+    "invalid_document_type_error": "نوع الملف غلط: {{filename}}. المستندات بس PDF, DOCX, TXT, XLSX, XLS, و CSV.",
+    "document_too_large_error": "الملف كبير أوي: {{filename}}. الحد الأقصى {{maxSize}} ميجابايت.",
+    "document_upload_failed": "فشل رفع {{filename}}",
+    "document_upload_failed_generic": "فشل رفع المستند",
+    "wait_documents_uploading": "استنى لحد ما المستند يتحمل",
+    "remove_document_aria": "امسح المستند {{index}}"
   },
   "voice_recorder": {
     "start_recording_aria": "ابدأ التسجيل",
