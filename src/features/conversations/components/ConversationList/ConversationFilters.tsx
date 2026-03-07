@@ -3,7 +3,8 @@
  * Search input + toggle filters + platform multiselect dropdown
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, X, Globe, ChevronDown, Check, FlaskConical } from 'lucide-react';
 import { PlatformIcon } from '@/features/connections/components/PlatformIcon';
@@ -40,6 +41,8 @@ export function ConversationFilters({
   const [showPlatformDropdown, setShowPlatformDropdown] = useState(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
 
   // Debounce search input
   useEffect(() => {
@@ -59,12 +62,23 @@ export function ConversationFilters({
     };
   }, [localSearch]);
 
+  // Position dropdown portal beneath the trigger button
+  useLayoutEffect(() => {
+    if (!showPlatformDropdown || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+  }, [showPlatformDropdown]);
+
   // Close dropdown on outside click
   useEffect(() => {
     if (!showPlatformDropdown) return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(target) &&
+        triggerRef.current && !triggerRef.current.contains(target)
+      ) {
         setShowPlatformDropdown(false);
       }
     };
@@ -144,8 +158,9 @@ export function ConversationFilters({
         />
 
         {/* Platform multiselect dropdown */}
-        <div ref={dropdownRef} className="relative">
+        <div>
           <button
+            ref={triggerRef}
             onClick={() => setShowPlatformDropdown(!showPlatformDropdown)}
             className={cn(
               'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors',
@@ -161,9 +176,13 @@ export function ConversationFilters({
             )} />
           </button>
 
-          {/* Dropdown menu */}
-          {showPlatformDropdown && (
-            <div className="absolute top-full start-0 mt-1 w-48 bg-white border border-neutral-200 rounded-lg shadow-lg z-50 py-1">
+          {/* Dropdown menu - rendered via portal to escape overflow clipping */}
+          {showPlatformDropdown && createPortal(
+            <div
+              ref={dropdownRef}
+              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left }}
+              className="w-48 bg-white border border-neutral-200 rounded-lg shadow-lg z-[9999] py-1"
+            >
               {FIXED_PLATFORMS.map((source) => {
                   const isSelected = filters.selectedSources.includes(source);
                   return (
@@ -220,9 +239,10 @@ export function ConversationFilters({
                     </button>
                   </>
                 )}
-              </div>
-            )}
-          </div>
+              </div>,
+            document.body
+          )}
+        </div>
       </div>
     </div>
   );
