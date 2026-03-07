@@ -100,7 +100,11 @@ export interface MessageAttachment {
   url: string;
   type: string;
   filename?: string;
+  content_type?: string;
 }
+
+export const isVideoAttachment = (attachment: MessageAttachment): boolean =>
+  attachment.content_type?.startsWith('video/') === true;
 
 export interface MessageAttachments {
   images?: MessageAttachment[];

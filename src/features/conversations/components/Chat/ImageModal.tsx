@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Download, Share2, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import type { MessageAttachment } from '../../types';
+import { isVideoAttachment } from '../../types';
 import { chatToasts } from '../../utils/chatToasts';
 
 interface ImageModalProps {
@@ -65,7 +66,8 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = currentImage.filename || `image-${currentIndex + 1}.jpg`;
+      const isVideo = isVideoAttachment(currentImage);
+      a.download = currentImage.filename || (isVideo ? `video-${currentIndex + 1}.mp4` : `image-${currentIndex + 1}.jpg`);
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -144,7 +146,7 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
           </button>
         )}
 
-        {/* Image */}
+        {/* Image or Video */}
         {imageError ? (
           <div className="flex items-center justify-center bg-neutral-100 rounded-lg p-8 min-h-[400px]">
             <div className="text-center">
@@ -152,6 +154,16 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
               <p className="text-neutral-600">{t('image_modal.load_error')}</p>
             </div>
           </div>
+        ) : isVideoAttachment(currentImage) ? (
+          <video
+            src={currentImage.url}
+            controls
+            autoPlay
+            playsInline
+            className="max-w-full max-h-[80vh] rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+            onError={() => setImageError(true)}
+          />
         ) : (
           <img
             src={currentImage.url}

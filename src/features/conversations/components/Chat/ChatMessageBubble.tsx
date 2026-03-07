@@ -12,7 +12,7 @@ import { Copy, Check, Loader2, AlertCircle, RefreshCw, FileText } from 'lucide-r
 import { motion, AnimatePresence } from 'framer-motion';
 import DOMPurify from 'dompurify';
 import type { ChatMessage } from '../../types';
-import { isCustomerMessage, parseAttachments, isMessageDeleted } from '../../types';
+import { isCustomerMessage, parseAttachments, isMessageDeleted, isVideoAttachment } from '../../types';
 import { formatMessageTime } from '../../utils/timeFormatters';
 import { parseFormattedText, isArabicText } from '../../utils/textFormatters';
 import { cn } from '@/lib/utils';
@@ -122,34 +122,56 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
   return (
     <div className={cn('flex mb-4', horizontalAlign)}>
       <div className={cn('flex flex-col max-w-[70%]', verticalAlign)}>
-        {/* Images - Rendered OUTSIDE bubble, above it */}
+        {/* Images & Videos - Rendered OUTSIDE bubble, above it */}
         {!isDeleted && images.length > 0 && (
           <div className={cn('mb-2 flex flex-wrap gap-2', horizontalAlign)}>
             {images.map((img, idx) => {
               const isLoaded = loadedImages.has(idx);
               const imgHasError = errorImages.has(idx);
+              const isVideo = isVideoAttachment(img);
 
               return (
                 <div
                   key={idx}
-                  className="relative w-[15%] aspect-square rounded-lg overflow-hidden"
+                  className={cn(
+                    'relative rounded-lg overflow-hidden',
+                    isVideo ? 'w-[40%] max-w-[320px]' : 'w-[15%] aspect-square'
+                  )}
                 >
                   {/* Skeleton Placeholder */}
                   {!isLoaded && !imgHasError && (
-                    <div className="absolute inset-0 bg-neutral-200 animate-pulse">
+                    <div className={cn('bg-neutral-200 animate-pulse', isVideo ? 'aspect-video' : 'absolute inset-0')}>
                       <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" />
                     </div>
                   )}
 
                   {/* Error State */}
                   {imgHasError && (
-                    <div className="absolute inset-0 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
+                    <div className={cn(
+                      'bg-neutral-100 border border-neutral-200 flex items-center justify-center',
+                      isVideo ? 'aspect-video' : 'absolute inset-0'
+                    )}>
                       <AlertCircle className="w-6 h-6 text-neutral-400" />
                     </div>
                   )}
 
-                  {/* Actual Image (with smooth fade-in) */}
-                  {!imgHasError && (
+                  {/* Video or Image */}
+                  {!imgHasError && isVideo ? (
+                    <video
+                      src={img.url}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className={cn(
+                        'w-full rounded-lg',
+                        'transition-opacity duration-300',
+                        isLoaded ? 'opacity-100' : 'opacity-0'
+                      )}
+                      onLoadedData={() => handleImageLoad(idx)}
+                      onError={() => handleImageError(idx)}
+                      onClick={() => isLoaded && setSelectedImageIndex(idx)}
+                    />
+                  ) : !imgHasError ? (
                     <img
                       src={img.url}
                       alt={img.filename || 'Attachment'}
@@ -163,7 +185,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                       onError={() => handleImageError(idx)}
                       loading="lazy"
                     />
-                  )}
+                  ) : null}
                 </div>
               );
             })}
