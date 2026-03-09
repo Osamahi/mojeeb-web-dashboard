@@ -22,6 +22,7 @@ import {
   Puzzle,
   Layers,
   Workflow,
+  Paperclip,
   Timer,
   ListOrdered,
   Settings,
@@ -147,6 +148,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.actions',
     href: '/actions',
     icon: Workflow,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Attachments',
+    translationKey: 'navigation.attachments',
+    href: '/attachments',
+    icon: Paperclip,
     requireSuperAdmin: true,
   },
   {
