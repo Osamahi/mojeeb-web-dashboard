@@ -1,49 +1,44 @@
 /**
  * Modal for creating a new action
- * Uses React Hook Form with Zod validation
+ * Shows smart IntegrationActionConfig for integration type actions
  */
 
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { useCreateAction } from '../hooks/useMutateAction';
 import { useAgentContext } from '@/hooks/useAgentContext';
-import { createActionSchema, actionTypeOptions } from '../utils/validation';
-import { parseJsonSafely } from '../utils/validation';
-import { useState } from 'react';
+import { actionTypeOptions, parseJsonSafely } from '../utils/validation';
+import { useState, useCallback } from 'react';
 import type { CreateActionRequest } from '../types';
+import { IntegrationActionConfig, serializeIntegrationConfig } from './IntegrationActionConfig';
+import type { IntegrationConfigValue } from './IntegrationActionConfig';
+import {
+  type ActionFormData,
+  defaultIntegrationConfig,
+  validateOptionalJsonFields,
+  validateIntegrationConfig,
+} from '../utils/integrationUtils';
 
 interface CreateActionModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type FormData = {
-  name: string;
-  description: string;
-  triggerPrompt: string;
-  actionType: 'api_call' | 'webhook' | 'database' | 'email' | 'sms';
-  actionConfigJson: string;
-  requestExampleJson?: string;
-  responseExampleJson?: string;
-  responseMappingJson?: string;
-  testDataJson?: string;
-  sandboxOptionsJson?: string;
-  isActive: boolean;
-  priority: number;
-};
-
 export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
   const { agentId } = useAgentContext();
   const createMutation = useCreateAction();
   const [jsonErrors, setJsonErrors] = useState<Record<string, string>>({});
+  const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfigValue>(defaultIntegrationConfig);
+  const [connectionId, setConnectionId] = useState('');
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<FormData>({
+    watch,
+    setValue,
+  } = useForm<ActionFormData>({
     defaultValues: {
       name: '',
       description: '',
@@ -60,55 +55,45 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
     },
   });
 
+  const actionType = watch('actionType');
+  const isIntegration = actionType === 'integration';
+
   const handleClose = () => {
     reset();
     setJsonErrors({});
+    setIntegrationConfig(defaultIntegrationConfig);
+    setConnectionId('');
     onClose();
   };
 
-  const onSubmit = async (data: FormData) => {
-    // Validate JSON fields
+  const handleAutoFill = useCallback((fields: { name?: string; description?: string; triggerPrompt?: string }) => {
+    if (fields.name) setValue('name', fields.name);
+    if (fields.description) setValue('description', fields.description);
+    if (fields.triggerPrompt) setValue('triggerPrompt', fields.triggerPrompt);
+  }, [setValue]);
+
+  const onSubmit = async (data: ActionFormData) => {
+    if (!agentId) return;
+
     const errors: Record<string, string> = {};
+    let actionConfig: Record<string, any> | null = null;
 
-    const actionConfig = parseJsonSafely(data.actionConfigJson);
-    if (!actionConfig) {
-      errors.actionConfig = 'Invalid JSON format';
+    if (isIntegration) {
+      const integrationError = validateIntegrationConfig(integrationConfig, connectionId);
+      if (integrationError) {
+        errors.actionConfig = integrationError;
+      } else {
+        actionConfig = serializeIntegrationConfig(integrationConfig);
+      }
+    } else {
+      actionConfig = parseJsonSafely(data.actionConfigJson);
+      if (!actionConfig) {
+        errors.actionConfig = 'Invalid JSON format';
+      }
     }
 
-    const requestExample = data.requestExampleJson
-      ? parseJsonSafely(data.requestExampleJson)
-      : undefined;
-    if (data.requestExampleJson && !requestExample) {
-      errors.requestExample = 'Invalid JSON format';
-    }
-
-    const responseExample = data.responseExampleJson
-      ? parseJsonSafely(data.responseExampleJson)
-      : undefined;
-    if (data.responseExampleJson && !responseExample) {
-      errors.responseExample = 'Invalid JSON format';
-    }
-
-    const responseMapping = data.responseMappingJson
-      ? parseJsonSafely(data.responseMappingJson)
-      : undefined;
-    if (data.responseMappingJson && !responseMapping) {
-      errors.responseMapping = 'Invalid JSON format';
-    }
-
-    const testData = data.testDataJson
-      ? parseJsonSafely(data.testDataJson)
-      : undefined;
-    if (data.testDataJson && !testData) {
-      errors.testData = 'Invalid JSON format';
-    }
-
-    const sandboxOptions = data.sandboxOptionsJson
-      ? parseJsonSafely(data.sandboxOptionsJson)
-      : undefined;
-    if (data.sandboxOptionsJson && !sandboxOptions) {
-      errors.sandboxOptions = 'Invalid JSON format';
-    }
+    const { errors: jsonFieldErrors, parsed } = validateOptionalJsonFields(data);
+    Object.assign(errors, jsonFieldErrors);
 
     if (Object.keys(errors).length > 0) {
       setJsonErrors(errors);
@@ -118,23 +103,28 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
     setJsonErrors({});
 
     const request: CreateActionRequest = {
-      agentId: agentId!,
+      agentId,
       name: data.name,
       description: data.description,
       triggerPrompt: data.triggerPrompt,
       actionType: data.actionType,
       actionConfig: actionConfig!,
-      requestExample,
-      responseExample,
-      responseMapping,
-      testData,
-      sandboxOptions,
+      requestExample: parsed.requestExample,
+      responseExample: parsed.responseExample,
+      responseMapping: parsed.responseMapping,
+      testData: parsed.testData,
+      sandboxOptions: parsed.sandboxOptions,
       isActive: data.isActive,
       priority: data.priority,
+      integrationConnectionId: isIntegration ? connectionId : undefined,
     };
 
-    await createMutation.mutateAsync(request);
-    handleClose();
+    try {
+      await createMutation.mutateAsync(request);
+      handleClose();
+    } catch {
+      // Error is handled by TanStack Query's onError / mutation.error state
+    }
   };
 
   return (
@@ -148,6 +138,38 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
       closable={!createMutation.isPending}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Action Type — moved to top for integration flow */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
+            Action Type *
+          </label>
+          <select
+            {...register('actionType')}
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            {actionTypeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Integration Config — shown when actionType is integration */}
+        {isIntegration && (
+          <IntegrationActionConfig
+            connectionId={connectionId}
+            onConnectionChange={setConnectionId}
+            value={integrationConfig}
+            onChange={setIntegrationConfig}
+            onAutoFill={handleAutoFill}
+          />
+        )}
+
+        {jsonErrors.actionConfig && (
+          <p className="text-xs text-red-600">{jsonErrors.actionConfig}</p>
+        )}
+
         {/* Name */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">
@@ -171,7 +193,7 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
           </label>
           <textarea
             {...register('description', { required: 'Description is required' })}
-            rows={3}
+            rows={2}
             className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             placeholder="Describe what this action does..."
           />
@@ -180,23 +202,6 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
               {errors.description.message}
             </p>
           )}
-        </div>
-
-        {/* Action Type */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Action Type *
-          </label>
-          <select
-            {...register('actionType')}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {actionTypeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Trigger Prompt */}
@@ -210,7 +215,10 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
             })}
             rows={3}
             className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            placeholder="Describe when this action should trigger..."
+            placeholder={isIntegration
+              ? 'e.g., When the customer provides their name, email, and phone, extract these details and add a row to the Google Sheet.'
+              : 'Describe when this action should trigger...'
+            }
           />
           {errors.triggerPrompt && (
             <p className="text-xs text-red-600 mt-1">
@@ -241,121 +249,106 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
           )}
         </div>
 
-        {/* Action Configuration (JSON) */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Action Configuration (JSON) *
-          </label>
-          <textarea
-            {...register('actionConfigJson')}
-            rows={5}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
-            placeholder='{"key": "value"}'
-          />
-          {jsonErrors.actionConfig && (
-            <p className="text-xs text-red-600 mt-1">
-              {jsonErrors.actionConfig}
-            </p>
-          )}
-        </div>
-
-        {/* Optional JSON Fields (collapsed by default) */}
-        <details className="border border-neutral-200 rounded-lg p-3">
-          <summary className="cursor-pointer font-medium text-neutral-700 text-sm">
-            Optional Configuration (Click to expand)
-          </summary>
-          <div className="mt-4 space-y-4">
-            {/* Request Example */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Request Example (JSON)
-              </label>
-              <textarea
-                {...register('requestExampleJson')}
-                rows={4}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
-                placeholder='{"example": "request"}'
-              />
-              {jsonErrors.requestExample && (
-                <p className="text-xs text-red-600 mt-1">
-                  {jsonErrors.requestExample}
-                </p>
-              )}
-            </div>
-
-            {/* Response Example */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Response Example (JSON)
-              </label>
-              <textarea
-                {...register('responseExampleJson')}
-                rows={4}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
-                placeholder='{"example": "response"}'
-              />
-              {jsonErrors.responseExample && (
-                <p className="text-xs text-red-600 mt-1">
-                  {jsonErrors.responseExample}
-                </p>
-              )}
-            </div>
-
-            {/* Response Mapping */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Response Mapping (JSON)
-              </label>
-              <textarea
-                {...register('responseMappingJson')}
-                rows={4}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
-                placeholder='{"mapping": "config"}'
-              />
-              {jsonErrors.responseMapping && (
-                <p className="text-xs text-red-600 mt-1">
-                  {jsonErrors.responseMapping}
-                </p>
-              )}
-            </div>
-
-            {/* Test Data */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Test Data (JSON)
-              </label>
-              <textarea
-                {...register('testDataJson')}
-                rows={4}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
-                placeholder='{"test": "data"}'
-              />
-              {jsonErrors.testData && (
-                <p className="text-xs text-red-600 mt-1">
-                  {jsonErrors.testData}
-                </p>
-              )}
-            </div>
-
-            {/* Sandbox Options */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                Sandbox Options (JSON)
-              </label>
-              <textarea
-                {...register('sandboxOptionsJson')}
-                rows={4}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
-                placeholder='{"sandbox": "options"}'
-              />
-              {jsonErrors.sandboxOptions && (
-                <p className="text-xs text-red-600 mt-1">
-                  {jsonErrors.sandboxOptions}
-                </p>
-              )}
-            </div>
+        {/* Action Configuration (JSON) — only for non-integration types */}
+        {!isIntegration && (
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Action Configuration (JSON) *
+            </label>
+            <textarea
+              {...register('actionConfigJson')}
+              rows={5}
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
+              placeholder='{"key": "value"}'
+            />
+            {jsonErrors.actionConfig && (
+              <p className="text-xs text-red-600 mt-1">
+                {jsonErrors.actionConfig}
+              </p>
+            )}
           </div>
-        </details>
+        )}
+
+        {/* Optional JSON Fields (collapsed by default) — only for non-integration types */}
+        {!isIntegration && (
+          <details className="border border-neutral-200 rounded-lg p-3">
+            <summary className="cursor-pointer font-medium text-neutral-700 text-sm">
+              Optional Configuration (Click to expand)
+            </summary>
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  Request Example (JSON)
+                </label>
+                <textarea
+                  {...register('requestExampleJson')}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
+                  placeholder='{"example": "request"}'
+                />
+                {jsonErrors.requestExample && (
+                  <p className="text-xs text-red-600 mt-1">{jsonErrors.requestExample}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  Response Example (JSON)
+                </label>
+                <textarea
+                  {...register('responseExampleJson')}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
+                  placeholder='{"example": "response"}'
+                />
+                {jsonErrors.responseExample && (
+                  <p className="text-xs text-red-600 mt-1">{jsonErrors.responseExample}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  Response Mapping (JSON)
+                </label>
+                <textarea
+                  {...register('responseMappingJson')}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
+                  placeholder='{"mapping": "config"}'
+                />
+                {jsonErrors.responseMapping && (
+                  <p className="text-xs text-red-600 mt-1">{jsonErrors.responseMapping}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  Test Data (JSON)
+                </label>
+                <textarea
+                  {...register('testDataJson')}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
+                  placeholder='{"test": "data"}'
+                />
+                {jsonErrors.testData && (
+                  <p className="text-xs text-red-600 mt-1">{jsonErrors.testData}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  Sandbox Options (JSON)
+                </label>
+                <textarea
+                  {...register('sandboxOptionsJson')}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-xs"
+                  placeholder='{"sandbox": "options"}'
+                />
+                {jsonErrors.sandboxOptions && (
+                  <p className="text-xs text-red-600 mt-1">{jsonErrors.sandboxOptions}</p>
+                )}
+              </div>
+            </div>
+          </details>
+        )}
 
         {/* Is Active Checkbox */}
         <div className="flex items-center gap-2">

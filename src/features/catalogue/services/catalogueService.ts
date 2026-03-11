@@ -97,6 +97,7 @@ class CatalogueService {
       stripe_product_description: request.stripeProductDescription,
       stripe_livemode: request.stripeLivemode,
       sync_to_stripe: request.syncToStripe,
+      force_resync: request.forceResync,
     };
 
     const response = await api.patch<ApiResponse<ApiPlanCatalogueDetail>>(

@@ -10,7 +10,9 @@ export type {
   UpdateActionRequest,
   ActionFilters,
   CursorPaginatedActionsResponse,
+  CursorPaginatedExecutionsResponse,
   ActionExecution,
   ApiActionExecutionResponse,
   ActionExecutionHistoryResponse,
+  ExecutionFilters,
 } from './action.types';

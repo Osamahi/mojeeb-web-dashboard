@@ -80,6 +80,7 @@ export interface UpdatePlanRequest {
   stripeProductDescription?: string;
   stripeLivemode?: boolean;
   syncToStripe?: boolean; // Flag to sync to Stripe when saving
+  forceResync?: boolean; // Force recreate ALL Stripe prices from DB pricing
 }
 
 // ========================================
@@ -153,4 +154,5 @@ export interface ApiUpdatePlanRequest {
   stripe_product_description?: string;
   stripe_livemode?: boolean;
   sync_to_stripe?: boolean; // Flag to sync to Stripe when saving
+  force_resync?: boolean; // Force recreate ALL Stripe prices from DB pricing
 }

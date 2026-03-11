@@ -11,9 +11,11 @@ import type {
   UpdateActionRequest,
   ActionFilters,
   CursorPaginatedActionsResponse,
+  CursorPaginatedExecutionsResponse,
   ActionExecution,
   ApiActionExecutionResponse,
   ActionExecutionHistoryResponse,
+  ExecutionFilters,
 } from '../types';
 
 /**
@@ -46,6 +48,7 @@ function transformAction(apiAction: ApiActionResponse): Action {
     sandboxOptions: apiAction.sandbox_options,
     isActive: apiAction.is_active,
     priority: apiAction.priority,
+    integrationConnectionId: apiAction.integration_connection_id,
     createdAt: apiAction.created_at || new Date().toISOString(),
     updatedAt: apiAction.updated_at || new Date().toISOString(),
   };
@@ -69,6 +72,7 @@ function transformCreateRequest(request: CreateActionRequest): Record<string, an
     sandbox_options: request.sandboxOptions,
     is_active: request.isActive,
     priority: request.priority,
+    integration_connection_id: request.integrationConnectionId,
   };
 }
 
@@ -90,6 +94,7 @@ function transformUpdateRequest(request: UpdateActionRequest): Record<string, an
   if (request.sandboxOptions !== undefined) transformed.sandbox_options = request.sandboxOptions;
   if (request.isActive !== undefined) transformed.is_active = request.isActive;
   if (request.priority !== undefined) transformed.priority = request.priority;
+  if (request.integrationConnectionId !== undefined) transformed.integration_connection_id = request.integrationConnectionId;
 
   return transformed;
 }
@@ -101,6 +106,9 @@ function transformActionExecution(apiExecution: ApiActionExecutionResponse): Act
   return {
     id: apiExecution.id,
     actionId: apiExecution.action_id,
+    actionName: apiExecution.action_name,
+    actionType: apiExecution.action_type,
+    agentName: apiExecution.agent_name,
     conversationId: apiExecution.conversation_id,
     status: apiExecution.status,
     executedAt: apiExecution.executed_at,
@@ -232,6 +240,43 @@ class ActionService {
    */
   async deleteAction(actionId: string, agentId: string): Promise<void> {
     await api.delete(`/api/actions/${actionId}?agentId=${agentId}`);
+  }
+
+  /**
+   * Get ALL action executions with cursor pagination (SuperAdmin only)
+   */
+  async getAllExecutionsCursor(
+    limit: number = 50,
+    cursor?: string,
+    filters?: ExecutionFilters
+  ): Promise<{ executions: ActionExecution[]; nextCursor: string | null; hasMore: boolean }> {
+    const params = new URLSearchParams();
+    params.append('limit', limit.toString());
+
+    if (cursor) {
+      params.append('cursor', cursor);
+    }
+
+    if (filters?.status) {
+      params.append('status', filters.status);
+    }
+
+    if (filters?.actionType) {
+      params.append('actionType', filters.actionType);
+    }
+
+    if (filters?.search) {
+      params.append('search', filters.search);
+    }
+
+    const url = `/api/actions/executions/all?${params.toString()}`;
+    const { data } = await api.get<{ data: CursorPaginatedExecutionsResponse }>(url);
+
+    return {
+      executions: data.data.items.map(transformActionExecution),
+      nextCursor: data.data.next_cursor,
+      hasMore: data.data.has_more,
+    };
   }
 
   /**

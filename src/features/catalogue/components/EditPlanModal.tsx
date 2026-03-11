@@ -37,6 +37,7 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
   const [isStripeExpanded, setIsStripeExpanded] = useState(false); // Collapsed by default
   const [isStripeProductExpanded, setIsStripeProductExpanded] = useState(false); // Stripe Product section
   const [syncToStripe, setSyncToStripe] = useState(false); // Checkbox for syncing to Stripe
+  const [forceResync, setForceResync] = useState(false); // Force recreate all Stripe prices
 
   // Stripe product data state
   const [stripeProductData, setStripeProductData] = useState({
@@ -111,6 +112,7 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
           stripeProductName: stripeProductData.name,
           stripeProductDescription: stripeProductData.description,
           syncToStripe: true,
+          ...(forceResync && { forceResync: true }),
         }),
       };
 
@@ -557,13 +559,32 @@ export function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalProps) {
               <input
                 type="checkbox"
                 checked={syncToStripe}
-                onChange={(e) => setSyncToStripe(e.target.checked)}
+                onChange={(e) => {
+                  setSyncToStripe(e.target.checked);
+                  if (!e.target.checked) setForceResync(false);
+                }}
                 className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-2 focus:ring-primary-500/20"
               />
               <span className="text-sm font-medium text-neutral-700">
                 Also update Stripe
               </span>
             </label>
+            {syncToStripe && (
+              <label className="flex items-center gap-2 cursor-pointer ml-6">
+                <input
+                  type="checkbox"
+                  checked={forceResync}
+                  onChange={(e) => setForceResync(e.target.checked)}
+                  className="h-4 w-4 rounded border-neutral-300 text-orange-600 focus:ring-2 focus:ring-orange-500/20"
+                />
+                <span className="text-sm font-medium text-orange-700">
+                  Force resync all prices
+                </span>
+                <span className="text-xs text-neutral-500">
+                  (recreates all Stripe prices)
+                </span>
+              </label>
+            )}
           </div>
         ) : null}
 

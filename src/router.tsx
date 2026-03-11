@@ -25,7 +25,9 @@ const AdminConnectionsPage = lazy(() => import('./features/connections/pages/Adm
 const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthCallbackPage'));
 const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 const ActionsPage = lazy(() => import('./features/actions/pages/ActionsPage').then(m => ({ default: m.ActionsPage })));
+const ActionExecutionsPage = lazy(() => import('./features/actions/pages/ActionExecutionsPage').then(m => ({ default: m.ActionExecutionsPage })));
 const AttachmentsPage = lazy(() => import('./features/attachments/pages/AttachmentsPage').then(m => ({ default: m.AttachmentsPage })));
+const IntegrationsPage = lazy(() => import('./features/integrations/pages/IntegrationsPage'));
 const WhatsAppManagementPage = lazy(() => import('./features/whatsapp/pages/WhatsAppManagementPage'));
 const InstallWidgetPage = lazy(() => import('./pages/InstallWidgetPage').then(m => ({ default: m.InstallWidgetPage })));
 const AdminSubscriptionsPage = lazy(() => import('./features/subscriptions/pages/AdminSubscriptionsPage'));
@@ -254,6 +256,14 @@ export const router = createBrowserRouter([
         element: <ConnectionsPage />,
       },
       {
+        path: 'integrations',
+        element: (
+          <SuperAdminRoute>
+            <IntegrationsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
         path: 'leads',
         element: <LeadsPage />,
       },
@@ -266,6 +276,14 @@ export const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <ActionsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'action-executions',
+        element: (
+          <SuperAdminRoute>
+            <ActionExecutionsPage />
           </SuperAdminRoute>
         ),
       },

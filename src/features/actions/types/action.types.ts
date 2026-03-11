@@ -4,7 +4,7 @@
  */
 
 // Action types supported by the system
-export type ActionType = 'api_call' | 'webhook' | 'database' | 'email' | 'sms' | 'lead_generation';
+export type ActionType = 'api_call' | 'webhook' | 'database' | 'email' | 'sms' | 'lead_generation' | 'integration';
 
 // Action status
 export type ActionStatus = 'active' | 'inactive';
@@ -27,6 +27,7 @@ export interface Action {
   sandboxOptions: Record<string, any> | null;
   isActive: boolean;
   priority: number;
+  integrationConnectionId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -49,6 +50,7 @@ export interface ApiActionResponse {
   sandbox_options: Record<string, any> | null;
   is_active: boolean;
   priority: number;
+  integration_connection_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -70,6 +72,7 @@ export interface CreateActionRequest {
   sandboxOptions?: Record<string, any>;
   isActive: boolean;
   priority: number;
+  integrationConnectionId?: string;
 }
 
 /**
@@ -88,6 +91,7 @@ export interface UpdateActionRequest {
   sandboxOptions?: Record<string, any>;
   isActive?: boolean;
   priority?: number;
+  integrationConnectionId?: string;
 }
 
 /**
@@ -114,7 +118,10 @@ export interface CursorPaginatedActionsResponse {
 export interface ActionExecution {
   id: string;
   actionId: string;
-  conversationId: string;
+  actionName?: string | null;
+  actionType?: string | null;
+  agentName?: string | null;
+  conversationId: string | null;
   status: 'success' | 'failed' | 'pending';
   executedAt: string;
   executionTimeMs: number | null;
@@ -129,13 +136,34 @@ export interface ActionExecution {
 export interface ApiActionExecutionResponse {
   id: string;
   action_id: string;
-  conversation_id: string;
+  action_name?: string | null;
+  action_type?: string | null;
+  agent_name?: string | null;
+  conversation_id: string | null;
   status: 'success' | 'failed' | 'pending';
   executed_at: string;
   execution_time_ms: number | null;
   error_message: string | null;
   request_data: Record<string, any> | null;
   response_data: Record<string, any> | null;
+}
+
+/**
+ * Cursor-paginated executions response from backend
+ */
+export interface CursorPaginatedExecutionsResponse {
+  items: ApiActionExecutionResponse[];
+  next_cursor: string | null;
+  has_more: boolean;
+}
+
+/**
+ * Filters for global executions list
+ */
+export interface ExecutionFilters {
+  status?: string;
+  actionType?: string;
+  search?: string;
 }
 
 /**

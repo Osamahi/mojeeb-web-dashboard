@@ -236,6 +236,14 @@ export const queryKeys = {
    */
   mySubscription: () => ['subscription', 'me'] as const,
 
+  // ==================== Integration Queries ====================
+
+  /**
+   * Query key for fetching integration connections for the current organization
+   * @returns {readonly ['integration-connections']} Query key tuple
+   */
+  integrationConnections: () => ['integration-connections'] as const,
+
   // ==================== Comment Queries ====================
 
   /**

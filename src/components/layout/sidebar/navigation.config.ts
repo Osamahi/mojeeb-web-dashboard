@@ -27,6 +27,7 @@ import {
   ListOrdered,
   Settings,
   AlertTriangle,
+  Activity,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import type { NavigationItem } from './types';
@@ -61,6 +62,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.connect',
     href: '/connections',
     icon: Plug,
+  },
+  {
+    name: 'Integrations',
+    translationKey: 'navigation.integrations',
+    href: '/integrations',
+    icon: Network,
+    requireSuperAdmin: true,
   },
   {
     name: 'Clients',
@@ -148,6 +156,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.actions',
     href: '/actions',
     icon: Workflow,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Action Executions',
+    translationKey: 'navigation.action_executions',
+    href: '/action-executions',
+    icon: Activity,
     requireSuperAdmin: true,
   },
   {

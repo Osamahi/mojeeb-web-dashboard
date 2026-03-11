@@ -5,7 +5,7 @@
 
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { actionService } from '../services/actionService';
-import type { ActionFilters } from '../types';
+import type { ActionFilters, ExecutionFilters } from '../types';
 import { useAgentContext } from '@/hooks/useAgentContext';
 
 /**
@@ -70,5 +70,23 @@ export function useActionExecutions(actionId: string | undefined, limit: number 
     queryKey: ['actions', agentId, actionId, 'executions', limit],
     queryFn: () => actionService.getExecutionHistory(actionId!, agentId!, limit),
     enabled: !!actionId && !!agentId,
+  });
+}
+
+/**
+ * Infinite scroll hook for ALL action executions (SuperAdmin only)
+ */
+export function useInfiniteAllExecutions(filters?: ExecutionFilters) {
+  return useInfiniteQuery({
+    queryKey: ['action-executions', 'all', 'infinite-cursor', filters],
+    queryFn: ({ pageParam }) =>
+      actionService.getAllExecutionsCursor(50, pageParam, filters),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextCursor : undefined,
+    select: (data) => ({
+      executions: data.pages.flatMap((page) => page.executions),
+      hasMore: data.pages[data.pages.length - 1]?.hasMore ?? false,
+    }),
   });
 }
