@@ -2067,7 +2067,10 @@
     "document_upload_failed": "فشل رفع {{filename}}",
     "document_upload_failed_generic": "فشل رفع المستند",
     "wait_documents_uploading": "انتظر حتى يكتمل تحميل المستند",
-    "remove_document_aria": "إزالة المستند {{index}}"
+    "remove_document_aria": "إزالة المستند {{index}}",
+    "drop_files_here": "أفلت الملفات هنا",
+    "drop_files_supported": "صور أو صوتيات أو مستندات",
+    "unsupported_file_type": "نوع ملف غير مدعوم: {{filenames}}"
   },
   "voice_recorder": {
     "cancel_recording_aria": "إلغاء التسجيل",

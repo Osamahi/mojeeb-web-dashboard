@@ -2070,7 +2070,10 @@
     "document_upload_failed": "فشل رفع {{filename}}",
     "document_upload_failed_generic": "فشل رفع المستند",
     "wait_documents_uploading": "استنى لحد ما المستند يتحمل",
-    "remove_document_aria": "امسح المستند {{index}}"
+    "remove_document_aria": "امسح المستند {{index}}",
+    "drop_files_here": "سيب الملفات هنا",
+    "drop_files_supported": "صور أو صوتيات أو مستندات",
+    "unsupported_file_type": "نوع ملف مش مدعوم: {{filenames}}"
   },
   "voice_recorder": {
     "start_recording_aria": "ابدأ التسجيل",

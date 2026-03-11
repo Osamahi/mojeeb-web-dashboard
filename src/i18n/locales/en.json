@@ -2071,7 +2071,10 @@
     "document_upload_failed": "Failed to upload {{filename}}",
     "document_upload_failed_generic": "Failed to upload document",
     "wait_documents_uploading": "Wait for document upload to complete",
-    "remove_document_aria": "Remove document {{index}}"
+    "remove_document_aria": "Remove document {{index}}",
+    "drop_files_here": "Drop files here",
+    "drop_files_supported": "Images, audio, or documents",
+    "unsupported_file_type": "Unsupported file type: {{filenames}}"
   },
   "voice_recorder": {
     "cancel_recording_aria": "Cancel recording",

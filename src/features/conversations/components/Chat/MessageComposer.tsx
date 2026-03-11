@@ -7,7 +7,7 @@
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music, Image, FileText } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music, Image, FileText, Upload } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -125,6 +125,7 @@ export default memo(function MessageComposer({
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [isLocalSending, setIsLocalSending] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // ChatGPT-style upload-on-select: Track uploaded images with progress
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
@@ -141,6 +142,7 @@ export default memo(function MessageComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
+  const dragCounterRef = useRef(0); // Track nested drag enter/leave events
 
   // Auto-resize textarea (optimized with useCallback)
   const adjustTextareaHeight = useCallback(() => {
@@ -849,6 +851,119 @@ export default memo(function MessageComposer({
     setIsRecording(false);
   };
 
+  // ─── Drag & Drop Support ───────────────────────────────────────────────
+
+  /**
+   * Classify a file by its MIME type / extension and route to the appropriate upload handler.
+   * Returns 'image' | 'audio' | 'document' | 'unsupported'.
+   */
+  const classifyFile = useCallback((file: File): 'image' | 'audio' | 'document' | 'unsupported' => {
+    if (ALLOWED_IMAGE_TYPES.includes(file.type)) return 'image';
+    if (ALLOWED_AUDIO_TYPES.includes(file.type)) return 'audio';
+    if (ALLOWED_DOCUMENT_TYPES.includes(file.type)) return 'document';
+
+    // Fallback: check extension
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (['.jpg', '.jpeg', '.png'].includes(ext)) return 'image';
+    if (['.mp3', '.m4a', '.ogg', '.wav', '.aac', '.flac', '.webm'].includes(ext)) return 'audio';
+    if (ALLOWED_DOCUMENT_EXTENSIONS.includes(ext)) return 'document';
+
+    return 'unsupported';
+  }, []);
+
+  /**
+   * Process dropped files by routing them to the correct upload handler.
+   * Synthesizes ChangeEvent-compatible objects for reuse of existing handlers.
+   */
+  const processDroppedFiles = useCallback((files: File[]) => {
+    const images: File[] = [];
+    const audio: File[] = [];
+    const documents: File[] = [];
+    const unsupported: string[] = [];
+
+    for (const file of files) {
+      switch (classifyFile(file)) {
+        case 'image': images.push(file); break;
+        case 'audio': audio.push(file); break;
+        case 'document': documents.push(file); break;
+        default: unsupported.push(file.name); break;
+      }
+    }
+
+    // Show warning for unsupported files
+    if (unsupported.length > 0) {
+      toast.error(t('message_composer.unsupported_file_type', {
+        filenames: unsupported.join(', '),
+        defaultValue: `Unsupported file type: ${unsupported.join(', ')}`,
+      }));
+    }
+
+    // Route files to existing handlers via synthetic events
+    if (images.length > 0) {
+      const dt = new DataTransfer();
+      images.forEach(f => dt.items.add(f));
+      const syntheticEvent = { target: { files: dt.files } } as React.ChangeEvent<HTMLInputElement>;
+      handleFileSelect(syntheticEvent);
+    }
+
+    if (audio.length > 0) {
+      const dt = new DataTransfer();
+      audio.forEach(f => dt.items.add(f));
+      const syntheticEvent = { target: { files: dt.files } } as React.ChangeEvent<HTMLInputElement>;
+      handleAudioSelect(syntheticEvent);
+    }
+
+    if (documents.length > 0) {
+      const dt = new DataTransfer();
+      documents.forEach(f => dt.items.add(f));
+      const syntheticEvent = { target: { files: dt.files } } as React.ChangeEvent<HTMLInputElement>;
+      handleDocumentSelect(syntheticEvent);
+    }
+  }, [classifyFile, t]);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current += 1;
+
+    // Only show overlay if files are being dragged (not text/links)
+    if (e.dataTransfer.types.includes('Files')) {
+      setIsDragging(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current -= 1;
+
+    // Only hide when fully leaving (counter back to 0)
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current = 0;
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+
+    logger.info(`Drag & drop: ${files.length} file(s) dropped`, {
+      files: files.map(f => ({ name: f.name, type: f.type, size: f.size })),
+    });
+
+    processDroppedFiles(files);
+  }, [processDroppedFiles]);
+
   // Show voice recorder when recording
   if (isRecording) {
     return (
@@ -870,9 +985,27 @@ export default memo(function MessageComposer({
         'focus-within:border-neutral-500',
         'focus-within:shadow-sm',
         'transition-all duration-200',
-        'relative'
+        'relative',
+        isDragging && 'border-brand-mojeeb border-2 bg-brand-mojeeb/5'
       )}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
+      {/* Drag & Drop Overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-3xl bg-brand-mojeeb/10 border-2 border-dashed border-brand-mojeeb pointer-events-none">
+          <Upload className="w-8 h-8 text-brand-mojeeb mb-2" />
+          <span className="text-sm font-medium text-brand-mojeeb">
+            {t('message_composer.drop_files_here', { defaultValue: 'Drop files here' })}
+          </span>
+          <span className="text-xs text-brand-mojeeb/70 mt-1">
+            {t('message_composer.drop_files_supported', { defaultValue: 'Images, audio, or documents' })}
+          </span>
+        </div>
+      )}
+
       {/* Hidden File Inputs */}
       <input
         ref={fileInputRef}
