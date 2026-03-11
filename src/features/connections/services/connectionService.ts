@@ -69,8 +69,8 @@ class ConnectionService {
       platformPictureUrl: apiConnection.platform_picture_url ?? null,
       parentPageId,
       isActive: apiConnection.is_active,
-      respondToMessages: (apiConnection as any).respond_to_messages ?? true,
-      respondToComments: (apiConnection as any).respond_to_comments ?? false,
+      respondToMessages: apiConnection.respond_to_messages ?? true,
+      respondToComments: apiConnection.respond_to_comments ?? false,
       createdAt: apiConnection.created_at,
       updatedAt: apiConnection.updated_at,
       platformMetadata: apiConnection.metadata ?? null,
@@ -112,6 +112,21 @@ class ConnectionService {
       await api.delete(API_PATHS.CONNECTION(connectionId));
     } catch (error) {
       logger.error('Error disconnecting platform', { connectionId, error });
+      handleApiError(error, 'Connection', connectionId);
+    }
+  }
+
+  /**
+   * Update connection settings (respond_to_messages, respond_to_comments)
+   */
+  async updateConnectionSettings(
+    connectionId: string,
+    settings: { respond_to_messages?: boolean; respond_to_comments?: boolean }
+  ): Promise<void> {
+    try {
+      await api.patch(API_PATHS.CONNECTION_SETTINGS(connectionId), settings);
+    } catch (error) {
+      logger.error('Error updating connection settings', { connectionId, error });
       handleApiError(error, 'Connection', connectionId);
     }
   }

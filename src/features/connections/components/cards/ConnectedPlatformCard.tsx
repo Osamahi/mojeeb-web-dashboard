@@ -4,7 +4,7 @@
  * Used in the "Connected Platforms" section
  */
 
-import { MoreVertical, HelpCircle } from 'lucide-react';
+import { MoreVertical, HelpCircle, BotMessageSquare, BotOff, Unplug } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -55,6 +55,7 @@ export interface ConnectedPlatformCardProps {
   connection: PlatformConnection;
   onManage?: (connection: PlatformConnection) => void;
   onDisconnect?: (connection: PlatformConnection) => void;
+  onToggleAIResponse?: (connection: PlatformConnection, enabled: boolean) => void;
   className?: string;
 }
 
@@ -62,6 +63,7 @@ export function ConnectedPlatformCard({
   connection,
   onManage,
   onDisconnect,
+  onToggleAIResponse,
   className,
 }: ConnectedPlatformCardProps) {
   const { t } = useTranslation();
@@ -179,28 +181,35 @@ export function ConnectedPlatformCard({
               : t('connections.connected_days_ago', { days: daysSinceConnection })}
           </span>
 
-          {connection.isActive && (
+          <span>•</span>
+          {connection.isActive ? (
+            connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED' ? (
+              <Tooltip delayDuration={200}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={handleOpenSupport}
+                    className="whitespace-nowrap text-yellow-600 font-medium inline-flex items-center gap-1 cursor-pointer hover:text-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1 rounded px-1 -mx-1"
+                    aria-label={t('connections.details.contact_support')}
+                  >
+                    {t('connections.details.pending_verification')}
+                    <HelpCircle className="w-3.5 h-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="center">
+                  {t('connections.details.verification_help_tooltip')}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <span className="whitespace-nowrap text-green-600 font-medium">{t('connections.status_connected')}</span>
+            )
+          ) : (
+            <span className="whitespace-nowrap text-red-500 font-medium">{t('connections.status_disconnected')}</span>
+          )}
+
+          {connection.isActive && !connection.respondToMessages && (
             <>
               <span>•</span>
-              {connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED' ? (
-                <Tooltip delayDuration={200}>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={handleOpenSupport}
-                      className="whitespace-nowrap text-yellow-600 font-medium inline-flex items-center gap-1 cursor-pointer hover:text-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1 rounded px-1 -mx-1"
-                      aria-label={t('connections.details.contact_support')}
-                    >
-                      {t('connections.details.pending_verification')}
-                      <HelpCircle className="w-3.5 h-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" align="center">
-                    {t('connections.details.verification_help_tooltip')}
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <span className="whitespace-nowrap text-green-600 font-medium">{t('connections.status_connected')}</span>
-              )}
+              <span className="whitespace-nowrap text-orange-500 font-medium">{t('connections.ai_off_label')}</span>
             </>
           )}
         </div>
@@ -219,11 +228,30 @@ export function ConnectedPlatformCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {onToggleAIResponse && connection.isActive && (
+              <DropdownMenuItem
+                onClick={() => onToggleAIResponse(connection, !connection.respondToMessages)}
+                className="whitespace-nowrap"
+              >
+                {connection.respondToMessages ? (
+                  <>
+                    <BotOff className="h-4 w-4 me-2" />
+                    {t('connections.deactivate_ai_response')}
+                  </>
+                ) : (
+                  <>
+                    <BotMessageSquare className="h-4 w-4 me-2" />
+                    {t('connections.activate_ai_response')}
+                  </>
+                )}
+              </DropdownMenuItem>
+            )}
             {onDisconnect && (
               <DropdownMenuItem
                 onClick={handleDisconnect}
-                className="text-red-600 focus:text-red-600"
+                className=""
               >
+                <Unplug className="h-4 w-4 me-2" />
                 {t('connections.disconnect')}
               </DropdownMenuItem>
             )}
@@ -231,14 +259,6 @@ export function ConnectedPlatformCard({
         </DropdownMenu>
       </div>
 
-      {/* Inactive State Overlay */}
-      {!connection.isActive && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
-          <span className="text-xs font-medium text-neutral-600 bg-white px-2.5 py-1 rounded-md border border-neutral-300">
-            {t('connections.inactive')}
-          </span>
-        </div>
-      )}
     </div>
   );
 }

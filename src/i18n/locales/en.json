@@ -571,7 +571,18 @@
     "health_check": "Health Check",
     "disconnect": "Disconnect",
     "reconnect": "Reconnect",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "ai_response_toggle": "Toggle AI auto-response",
+    "ai_response_label": "AI",
+    "activate_ai_response": "Activate AI",
+    "deactivate_ai_response": "Deactivate AI",
+    "ai_activated_toast": "AI response activated",
+    "ai_deactivated_toast": "AI response deactivated",
+    "ai_toggle_error_toast": "Failed to update AI response setting",
+    "disconnect_success_toast": "Platform disconnected successfully",
+    "disconnect_error_toast": "Failed to disconnect platform",
+    "status_disconnected": "Disconnected",
+    "ai_off_label": "AI Off"
   },
   "lead_summary": {
     "title": "Summary",

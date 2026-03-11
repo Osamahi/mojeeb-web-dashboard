@@ -3,11 +3,11 @@
  * Display and manage platform connections for the selected agent
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link2, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useConnections, useDisconnectPlatform } from '../hooks/useConnections';
+import { useConnections, useDisconnectPlatform, useToggleAIResponse } from '../hooks/useConnections';
 import { ConnectedPlatformsSection } from '../components/sections/ConnectedPlatformsSection';
 import { AvailablePlatformsSection } from '../components/sections/AvailablePlatformsSection';
 import { AddConnectionModal } from '../components/AddConnectionModal';
@@ -37,6 +37,15 @@ export default function ConnectionsPage() {
 
   const { data: connections, isLoading, error, refetch, isFetching } = useConnections();
   const disconnectMutation = useDisconnectPlatform();
+  const { toggleAIResponse } = useToggleAIResponse();
+
+  // Handle AI response toggle
+  const handleToggleAIResponse = useCallback(
+    (connection: PlatformConnection, enabled: boolean) => {
+      toggleAIResponse(connection, enabled);
+    },
+    [toggleAIResponse]
+  );
 
   // Handle platform connection
   const handleConnect = (platformId: PlatformType) => {
@@ -140,6 +149,7 @@ export default function ConnectionsPage() {
               isLoading={false}
               onManage={handleManageConnection}
               onDisconnect={handleDisconnect}
+              onToggleAIResponse={handleToggleAIResponse}
             />
           </motion.div>
 

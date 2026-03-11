@@ -1,4 +1,6 @@
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { queryKeys } from '@/lib/queryKeys';
 import { isAxiosError } from '@/lib/errors';
@@ -97,6 +99,7 @@ export function useConnections() {
  * ```
  */
 export function useDisconnectPlatform() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { agentId } = useAgentContext();
 
@@ -126,15 +129,68 @@ export function useDisconnectPlatform() {
       if (context?.previousConnections) {
         queryClient.setQueryData(queryKeys.connections(agentId), context.previousConnections);
       }
-      toast.error('Failed to disconnect platform');
+      toast.error(t('connections.disconnect_error_toast'));
     },
     onSuccess: () => {
-      toast.success('Platform disconnected successfully');
+      toast.success(t('connections.disconnect_success_toast'));
     },
     onSettled: () => {
       // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: queryKeys.connections(agentId) });
     },
   });
+}
+
+/**
+ * Mutation hook for toggling AI response on a connection.
+ * Uses optimistic updates with rollback on error.
+ */
+export function useToggleAIResponse() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { agentId } = useAgentContext();
+
+  const mutation = useMutation({
+    mutationFn: ({ connectionId, respondToMessages }: { connectionId: string; respondToMessages: boolean }) =>
+      connectionService.updateConnectionSettings(connectionId, { respond_to_messages: respondToMessages }),
+    onMutate: async ({ connectionId, respondToMessages }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.connections(agentId) });
+
+      const previousConnections = queryClient.getQueryData<PlatformConnection[]>(
+        queryKeys.connections(agentId)
+      );
+
+      if (previousConnections) {
+        queryClient.setQueryData<PlatformConnection[]>(queryKeys.connections(agentId), old =>
+          old?.map(conn =>
+            conn.id === connectionId ? { ...conn, respondToMessages } : conn
+          )
+        );
+      }
+
+      return { previousConnections };
+    },
+    onSuccess: (_data, { respondToMessages }) => {
+      toast.success(respondToMessages ? t('connections.ai_activated_toast') : t('connections.ai_deactivated_toast'));
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousConnections) {
+        queryClient.setQueryData(queryKeys.connections(agentId), context.previousConnections);
+      }
+      toast.error(t('connections.ai_toggle_error_toast'));
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.connections(agentId) });
+    },
+  });
+
+  const toggleAIResponse = useCallback(
+    (connection: PlatformConnection, enabled: boolean) => {
+      mutation.mutate({ connectionId: connection.id, respondToMessages: enabled });
+    },
+    [mutation]
+  );
+
+  return { toggleAIResponse, isPending: mutation.isPending };
 }
 

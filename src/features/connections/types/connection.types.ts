@@ -158,6 +158,8 @@ export interface ApiPlatformConnectionResponse {
   updated_at: string;
   last_sync_at?: string | null;
   code_verification_status?: string | null; // WhatsApp verification status
+  respond_to_messages?: boolean;
+  respond_to_comments?: boolean;
   metadata?: {
     parent_page_id?: string;
     follower_count?: number;

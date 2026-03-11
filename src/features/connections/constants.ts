@@ -19,6 +19,7 @@ export const CACHE_TIMES = {
 export const API_PATHS = {
   CONNECTIONS: '/api/social/connections',
   CONNECTION: (id: string) => `/api/social/connections/${id}`,
+  CONNECTION_SETTINGS: (id: string) => `/api/social/connections/${id}/settings`,
   // OAuth endpoints
   OAUTH_AUTHORIZE: '/api/FacebookBusinessOAuth/authorize',
   OAUTH_PAGES: (tempConnectionId: string) => `/api/FacebookBusinessOAuth/pages/${tempConnectionId}`,

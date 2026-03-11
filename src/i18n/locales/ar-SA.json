@@ -568,7 +568,18 @@
     "health_check": "فحص الصحة",
     "disconnect": "قطع الاتصال",
     "reconnect": "إعادة الاتصال",
-    "inactive": "غير نشط"
+    "inactive": "غير نشط",
+    "ai_response_toggle": "تبديل الرد التلقائي بالذكاء الاصطناعي",
+    "ai_response_label": "AI",
+    "activate_ai_response": "تفعيل الذكاء الاصطناعي",
+    "deactivate_ai_response": "إيقاف الذكاء الاصطناعي",
+    "ai_activated_toast": "تم تفعيل الرد بالذكاء الاصطناعي",
+    "ai_deactivated_toast": "تم إيقاف الرد بالذكاء الاصطناعي",
+    "ai_toggle_error_toast": "فشل تحديث إعداد الرد بالذكاء الاصطناعي",
+    "disconnect_success_toast": "تم قطع الاتصال بنجاح",
+    "disconnect_error_toast": "فشل قطع الاتصال",
+    "status_disconnected": "غير متصل",
+    "ai_off_label": "AI متوقف"
   },
   "lead_summary": {
     "title": "الملخص",
