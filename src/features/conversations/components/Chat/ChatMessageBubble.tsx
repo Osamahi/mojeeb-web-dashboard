@@ -117,12 +117,19 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                   key={idx}
                   className={cn(
                     'relative rounded-lg overflow-hidden border border-neutral-200',
-                    isVideo ? 'w-[40%] max-w-[320px]' : 'w-[15%] aspect-square'
+                    isVideo
+                      ? 'w-[40%] max-w-[320px]'
+                      : images.length === 1
+                        ? 'w-[50%] max-w-[400px]'
+                        : 'w-[15%] aspect-square'
                   )}
                 >
                   {/* Skeleton Placeholder */}
                   {!isLoaded && !imgHasError && (
-                    <div className={cn('bg-neutral-200 animate-pulse', isVideo ? 'aspect-video' : 'absolute inset-0')}>
+                    <div className={cn(
+                      'bg-neutral-200 animate-pulse',
+                      isVideo ? 'aspect-video' : images.length === 1 ? 'aspect-[4/3]' : 'absolute inset-0'
+                    )}>
                       <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent" />
                     </div>
                   )}
@@ -131,7 +138,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                   {imgHasError && (
                     <div className={cn(
                       'bg-neutral-100 border border-neutral-200 flex items-center justify-center',
-                      isVideo ? 'aspect-video' : 'absolute inset-0'
+                      isVideo ? 'aspect-video' : images.length === 1 ? 'aspect-[4/3]' : 'absolute inset-0'
                     )}>
                       <AlertCircle className="w-6 h-6 text-neutral-400" />
                     </div>
@@ -158,9 +165,10 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                       src={img.url}
                       alt={img.filename || 'Attachment'}
                       className={cn(
-                        'w-full h-full object-contain cursor-pointer hover:opacity-90',
+                        'w-full cursor-pointer hover:opacity-90',
                         'transition-opacity duration-300',
-                        isLoaded ? 'opacity-100' : 'opacity-0'
+                        isLoaded ? 'opacity-100' : 'opacity-0',
+                        images.length === 1 ? 'object-cover rounded-lg' : 'h-full object-cover'
                       )}
                       onClick={() => isLoaded && setSelectedImageIndex(idx)}
                       onLoad={() => handleImageLoad(idx)}
