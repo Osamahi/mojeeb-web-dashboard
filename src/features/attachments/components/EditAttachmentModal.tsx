@@ -5,6 +5,7 @@
 
 import { useForm } from 'react-hook-form';
 import { useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { useUpdateAttachment } from '../hooks/useMutateAttachment';
 import { attachmentTypeOptions } from '../utils/validation';
@@ -30,6 +31,7 @@ export function EditAttachmentModal({
   onClose,
   attachment,
 }: EditAttachmentModalProps) {
+  const { t } = useTranslation();
   const updateMutation = useUpdateAttachment();
 
   const {
@@ -73,6 +75,7 @@ export function EditAttachmentModal({
     try {
       await updateMutation.mutateAsync({
         attachmentId: attachment.id,
+        agentId: attachment.agentId,
         request,
       });
       handleClose();
@@ -85,7 +88,7 @@ export function EditAttachmentModal({
     <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Edit Attachment"
+      title={t('attachments.edit_title', 'Edit Attachment')}
       subtitle={attachment?.name || ''}
       maxWidth="lg"
       isLoading={updateMutation.isPending}
@@ -95,12 +98,12 @@ export function EditAttachmentModal({
         {/* Name */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Name *
+            {t('attachments.field_name', 'Name')} *
           </label>
           <input
-            {...register('name', { required: 'Name is required' })}
+            {...register('name', { required: t('attachments.name_required', 'Name is required') })}
             type="text"
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
           />
           {errors.name && (
             <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>
@@ -110,23 +113,23 @@ export function EditAttachmentModal({
         {/* Description */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Description
+            {t('attachments.field_description', 'Description')}
           </label>
           <textarea
             {...register('description')}
             rows={2}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb resize-none"
           />
         </div>
 
         {/* Attachment Type */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Attachment Type *
+            {t('attachments.field_type', 'Attachment Type')} *
           </label>
           <select
             {...register('attachmentType')}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
           >
             {attachmentTypeOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -139,14 +142,14 @@ export function EditAttachmentModal({
         {/* Trigger Prompt */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Trigger Prompt *
+            {t('attachments.field_trigger', 'Trigger Prompt')} *
           </label>
           <textarea
             {...register('triggerPrompt', {
-              required: 'Trigger prompt is required',
+              required: t('attachments.trigger_required', 'Trigger prompt is required'),
             })}
             rows={3}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb resize-none"
           />
           {errors.triggerPrompt && (
             <p className="text-xs text-red-600 mt-1">
@@ -158,16 +161,16 @@ export function EditAttachmentModal({
         {/* Priority */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Priority (0-1000)
+            {t('attachments.field_priority', 'Priority (0-1000)')}
           </label>
           <input
             {...register('priority', {
               valueAsNumber: true,
-              min: { value: 0, message: 'Priority must be at least 0' },
-              max: { value: 1000, message: 'Priority cannot exceed 1000' },
+              min: { value: 0, message: t('attachments.priority_min', 'Priority must be at least 0') },
+              max: { value: 1000, message: t('attachments.priority_max', 'Priority cannot exceed 1000') },
             })}
             type="number"
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
           />
           {errors.priority && (
             <p className="text-xs text-red-600 mt-1">
@@ -182,10 +185,10 @@ export function EditAttachmentModal({
             {...register('isActive')}
             type="checkbox"
             id="editIsActive"
-            className="w-4 h-4 text-blue-600 border-neutral-300 rounded focus:ring-blue-500"
+            className="w-4 h-4 text-brand-mojeeb border-neutral-300 rounded focus:ring-brand-mojeeb/20"
           />
           <label htmlFor="editIsActive" className="text-sm text-neutral-700">
-            Active (attachment can be sent by AI)
+            {t('attachments.active_label', 'Active (attachment can be sent by AI)')}
           </label>
         </div>
 
@@ -197,14 +200,14 @@ export function EditAttachmentModal({
             disabled={updateMutation.isPending}
             className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {t('common.cancel', 'Cancel')}
           </button>
           <button
             type="submit"
             disabled={updateMutation.isPending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-brand-mojeeb text-white rounded-lg hover:bg-brand-mojeeb-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+            {updateMutation.isPending ? t('attachments.saving', 'Saving...') : t('attachments.save_changes', 'Save Changes')}
           </button>
         </div>
       </form>

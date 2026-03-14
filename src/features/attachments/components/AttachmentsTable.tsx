@@ -1,10 +1,11 @@
 /**
  * Table view for attachments
- * Shows attachments with toggle switch, infinite scroll, edit/delete buttons
+ * Shows attachments with agent name, toggle switch, infinite scroll, edit/delete buttons
  */
 
 import { useCallback, useRef, useEffect } from 'react';
 import { Pencil, Trash2, Upload, Image, FileText, Film } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Attachment } from '../types/attachment.types';
 import { AttachmentTypeBadge } from './AttachmentTypeBadge';
 import { truncateText, getPriorityColor, hasMedia } from '../utils/formatting';
@@ -13,6 +14,7 @@ import { useToggleAttachment } from '../hooks/useMutateAttachment';
 
 interface AttachmentsTableProps {
   attachments: Attachment[];
+  agentNameMap: Record<string, string>;
   hasMore: boolean;
   isLoading: boolean;
   isFetchingNextPage: boolean;
@@ -24,6 +26,7 @@ interface AttachmentsTableProps {
 
 export function AttachmentsTable({
   attachments,
+  agentNameMap,
   hasMore,
   isLoading,
   isFetchingNextPage,
@@ -32,6 +35,7 @@ export function AttachmentsTable({
   onDelete,
   onUpload,
 }: AttachmentsTableProps) {
+  const { t } = useTranslation();
   const { formatSmartTimestamp } = useDateLocale();
   const toggleMutation = useToggleAttachment();
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -67,6 +71,7 @@ export function AttachmentsTable({
     (attachment: Attachment) => {
       toggleMutation.mutate({
         attachmentId: attachment.id,
+        agentId: attachment.agentId,
         isActive: !attachment.isActive,
       });
     },
@@ -78,7 +83,7 @@ export function AttachmentsTable({
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-neutral-200">
         <div className="text-neutral-500 text-sm">
-          No attachments found. Create your first attachment to get started.
+          {t('attachments.empty', 'No attachments found. Create your first attachment to get started.')}
         </div>
       </div>
     );
@@ -92,28 +97,31 @@ export function AttachmentsTable({
           <thead className="bg-neutral-50 border-b border-neutral-200">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                Name
+                {t('attachments.column_name', 'Name')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                Type
+                {t('attachments.column_agent', 'Agent')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                Description
+                {t('attachments.column_type', 'Type')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                Media
+                {t('attachments.column_description', 'Description')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                Active
+                {t('attachments.column_media', 'Media')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                Priority
+                {t('attachments.column_active', 'Active')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                Created
+                {t('attachments.column_priority', 'Priority')}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
+                {t('attachments.column_created', 'Created')}
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                Actions
+                {t('attachments.column_actions', 'Actions')}
               </th>
             </tr>
           </thead>
@@ -126,10 +134,15 @@ export function AttachmentsTable({
                   </span>
                 </td>
                 <td className="px-4 py-3">
+                  <span className="text-sm text-neutral-600 truncate max-w-[150px] block">
+                    {agentNameMap[attachment.agentId] || t('attachments.unknown_agent', 'Unknown Agent')}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
                   <AttachmentTypeBadge type={attachment.attachmentType} />
                 </td>
                 <td className="px-4 py-3">
-                  <span className="text-sm text-neutral-600 line-clamp-2 max-w-[300px]">
+                  <span className="text-sm text-neutral-600 line-clamp-2 max-w-[250px]">
                     {attachment.description || '-'}
                   </span>
                 </td>
@@ -159,25 +172,25 @@ export function AttachmentsTable({
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => onUpload(attachment)}
-                      className="p-1.5 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                      title="Upload Media"
-                      aria-label={`Upload media for ${attachment.name}`}
+                      className="p-1.5 text-neutral-600 hover:text-brand-mojeeb hover:bg-brand-mojeeb/10 rounded transition-colors"
+                      title={t('attachments.upload_media', 'Upload Media')}
+                      aria-label={t('attachments.upload_media_for', `Upload media for ${attachment.name}`)}
                     >
                       <Upload className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => onEdit(attachment)}
-                      className="p-1.5 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                      title="Edit"
-                      aria-label={`Edit ${attachment.name}`}
+                      className="p-1.5 text-neutral-600 hover:text-brand-mojeeb hover:bg-brand-mojeeb/10 rounded transition-colors"
+                      title={t('common.edit', 'Edit')}
+                      aria-label={t('attachments.edit_label', `Edit ${attachment.name}`)}
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => onDelete(attachment)}
                       className="p-1.5 text-neutral-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                      title="Delete"
-                      aria-label={`Delete ${attachment.name}`}
+                      title={t('common.delete', 'Delete')}
+                      aria-label={t('attachments.delete_label', `Delete ${attachment.name}`)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -198,6 +211,9 @@ export function AttachmentsTable({
                 <h3 className="text-base font-semibold text-neutral-900 truncate">
                   {attachment.name}
                 </h3>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  {agentNameMap[attachment.agentId] || t('attachments.unknown_agent', 'Unknown Agent')}
+                </p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <AttachmentTypeBadge type={attachment.attachmentType} />
                   <MediaIndicator attachment={attachment} />
@@ -206,22 +222,22 @@ export function AttachmentsTable({
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => onUpload(attachment)}
-                  className="p-2 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                  aria-label={`Upload media for ${attachment.name}`}
+                  className="p-2 text-neutral-600 hover:text-brand-mojeeb hover:bg-brand-mojeeb/10 rounded transition-colors"
+                  aria-label={t('attachments.upload_media_for', `Upload media for ${attachment.name}`)}
                 >
                   <Upload className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => onEdit(attachment)}
-                  className="p-2 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                  aria-label={`Edit ${attachment.name}`}
+                  className="p-2 text-neutral-600 hover:text-brand-mojeeb hover:bg-brand-mojeeb/10 rounded transition-colors"
+                  aria-label={t('attachments.edit_label', `Edit ${attachment.name}`)}
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => onDelete(attachment)}
                   className="p-2 text-neutral-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                  aria-label={`Delete ${attachment.name}`}
+                  aria-label={t('attachments.delete_label', `Delete ${attachment.name}`)}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -257,7 +273,7 @@ export function AttachmentsTable({
       {hasMore && (
         <div ref={observerTarget} className="py-4 text-center border-t border-neutral-200">
           {isFetchingNextPage ? (
-            <div className="text-neutral-500 text-sm">Loading more...</div>
+            <div className="text-neutral-500 text-sm">{t('common.loading_more', 'Loading more...')}</div>
           ) : null}
         </div>
       )}
@@ -284,13 +300,13 @@ function ToggleSwitch({
       aria-checked={checked}
       onClick={onChange}
       disabled={disabled}
-      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-        checked ? 'bg-blue-600' : 'bg-neutral-200'
+      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+        checked ? 'bg-brand-mojeeb' : 'bg-neutral-200'
       }`}
     >
       <span
         className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-          checked ? 'translate-x-4' : 'translate-x-0'
+          checked ? 'ltr:translate-x-4 rtl:-translate-x-4' : 'translate-x-0'
         }`}
       />
     </button>
@@ -322,7 +338,7 @@ function MediaIndicator({ attachment }: { attachment: Attachment }) {
       : '1 file';
 
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-green-600">
+    <span className="inline-flex items-center gap-1 text-xs text-brand-mojeeb">
       <Icon className="w-3.5 h-3.5" />
       {count}
     </span>

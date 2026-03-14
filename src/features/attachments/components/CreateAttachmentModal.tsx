@@ -1,13 +1,14 @@
 /**
  * Two-step modal for creating a new attachment
- * Step 1: Form (metadata) → Step 2: File upload
+ * Step 1: Form (metadata with agent selector) → Step 2: File upload
  */
 
 import { useState, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { useCreateAttachment, useUploadAttachmentFile, useUploadAlbumFiles } from '../hooks/useMutateAttachment';
-import { useAgentContext } from '@/hooks/useAgentContext';
+import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { attachmentTypeOptions, FILE_LIMITS, validateFile, validateAlbumFiles } from '../utils/validation';
 import type { CreateAttachmentRequest, AttachmentType } from '../types/attachment.types';
 
@@ -17,6 +18,7 @@ interface CreateAttachmentModalProps {
 }
 
 type AttachmentFormData = {
+  agentId: string;
   name: string;
   description: string;
   triggerPrompt: string;
@@ -26,13 +28,15 @@ type AttachmentFormData = {
 };
 
 export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModalProps) {
-  const { agentId } = useAgentContext();
+  const { t } = useTranslation();
+  const agents = useAgentStore((state) => state.agents);
   const createMutation = useCreateAttachment();
   const uploadFileMutation = useUploadAttachmentFile();
   const uploadAlbumMutation = useUploadAlbumFiles();
 
   const [step, setStep] = useState<1 | 2>(1);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [createdAgentId, setCreatedAgentId] = useState<string | null>(null);
   const [createdType, setCreatedType] = useState<AttachmentType>('photo');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -45,6 +49,7 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
     reset,
   } = useForm<AttachmentFormData>({
     defaultValues: {
+      agentId: '',
       name: '',
       description: '',
       triggerPrompt: '',
@@ -58,6 +63,7 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
     reset();
     setStep(1);
     setCreatedId(null);
+    setCreatedAgentId(null);
     setCreatedType('photo');
     setUploadProgress(0);
     setFileError(null);
@@ -65,10 +71,10 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
   }, [reset, onClose]);
 
   const onSubmitForm = async (data: AttachmentFormData) => {
-    if (!agentId) return;
+    if (!data.agentId) return;
 
     const request: CreateAttachmentRequest = {
-      agentId,
+      agentId: data.agentId,
       name: data.name,
       description: data.description || undefined,
       triggerPrompt: data.triggerPrompt,
@@ -80,6 +86,7 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
     try {
       const result = await createMutation.mutateAsync(request);
       setCreatedId(result.id);
+      setCreatedAgentId(data.agentId);
       setCreatedType(data.attachmentType);
       setStep(2);
     } catch {
@@ -89,7 +96,7 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0 || !createdId) return;
+    if (!files || files.length === 0 || !createdId || !createdAgentId) return;
 
     setFileError(null);
     setUploadProgress(0);
@@ -105,6 +112,7 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
 
         await uploadAlbumMutation.mutateAsync({
           attachmentId: createdId,
+          agentId: createdAgentId,
           files: fileArray,
           onProgress: setUploadProgress,
         });
@@ -118,6 +126,7 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
 
         await uploadFileMutation.mutateAsync({
           attachmentId: createdId,
+          agentId: createdAgentId,
           file,
           onProgress: setUploadProgress,
         });
@@ -125,8 +134,6 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
 
       handleClose();
     } catch {
-      // Error already handled by mutation onError (toast)
-      // Reset file input so user can retry with same file
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -140,10 +147,10 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
     <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
-      title={step === 1 ? 'Create Attachment' : 'Upload Media'}
+      title={step === 1 ? t('attachments.create', 'Create Attachment') : t('attachments.upload_media', 'Upload Media')}
       subtitle={
         step === 1
-          ? 'Configure a new attachment for your AI agent'
+          ? t('attachments.create_subtitle', 'Configure a new attachment for your AI agent')
           : `Upload ${createdType === 'album' ? 'images (max 10)' : 'a file'} for this attachment`
       }
       maxWidth="lg"
@@ -152,16 +159,37 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
     >
       {step === 1 ? (
         <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-4">
+          {/* Agent Selection */}
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              {t('attachments.field_agent', 'Agent')} *
+            </label>
+            <select
+              {...register('agentId', { required: t('attachments.agent_required', 'Agent is required') })}
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
+            >
+              <option value="">{t('attachments.select_agent', 'Select an agent...')}</option>
+              {agents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.name}
+                </option>
+              ))}
+            </select>
+            {errors.agentId && (
+              <p className="text-xs text-red-600 mt-1">{errors.agentId.message}</p>
+            )}
+          </div>
+
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Name *
+              {t('attachments.field_name', 'Name')} *
             </label>
             <input
-              {...register('name', { required: 'Name is required' })}
+              {...register('name', { required: t('attachments.name_required', 'Name is required') })}
               type="text"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., Product Catalog"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
+              placeholder={t('attachments.name_placeholder', 'e.g., Product Catalog')}
             />
             {errors.name && (
               <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>
@@ -171,24 +199,24 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Description
+              {t('attachments.field_description', 'Description')}
             </label>
             <textarea
               {...register('description')}
               rows={2}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Describe what this attachment contains..."
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb resize-none"
+              placeholder={t('attachments.description_placeholder', 'Describe what this attachment contains...')}
             />
           </div>
 
           {/* Attachment Type */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Attachment Type *
+              {t('attachments.field_type', 'Attachment Type')} *
             </label>
             <select
               {...register('attachmentType')}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
             >
               {attachmentTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -201,15 +229,15 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
           {/* Trigger Prompt */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Trigger Prompt *
+              {t('attachments.field_trigger', 'Trigger Prompt')} *
             </label>
             <textarea
               {...register('triggerPrompt', {
-                required: 'Trigger prompt is required',
+                required: t('attachments.trigger_required', 'Trigger prompt is required'),
               })}
               rows={3}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Describe when this attachment should be sent..."
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb resize-none"
+              placeholder={t('attachments.trigger_placeholder', 'Describe when this attachment should be sent...')}
             />
             {errors.triggerPrompt && (
               <p className="text-xs text-red-600 mt-1">
@@ -221,16 +249,16 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
           {/* Priority */}
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Priority (0-1000)
+              {t('attachments.field_priority', 'Priority (0-1000)')}
             </label>
             <input
               {...register('priority', {
                 valueAsNumber: true,
-                min: { value: 0, message: 'Priority must be at least 0' },
-                max: { value: 1000, message: 'Priority cannot exceed 1000' },
+                min: { value: 0, message: t('attachments.priority_min', 'Priority must be at least 0') },
+                max: { value: 1000, message: t('attachments.priority_max', 'Priority cannot exceed 1000') },
               })}
               type="number"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
             />
             {errors.priority && (
               <p className="text-xs text-red-600 mt-1">
@@ -245,10 +273,10 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
               {...register('isActive')}
               type="checkbox"
               id="createIsActive"
-              className="w-4 h-4 text-blue-600 border-neutral-300 rounded focus:ring-blue-500"
+              className="w-4 h-4 text-brand-mojeeb border-neutral-300 rounded focus:ring-brand-mojeeb/20"
             />
             <label htmlFor="createIsActive" className="text-sm text-neutral-700">
-              Active (attachment can be sent by AI)
+              {t('attachments.active_label', 'Active (attachment can be sent by AI)')}
             </label>
           </div>
 
@@ -260,14 +288,14 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
               disabled={createMutation.isPending}
               className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-brand-mojeeb text-white rounded-lg hover:bg-brand-mojeeb-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {createMutation.isPending ? 'Creating...' : 'Next: Upload Media'}
+              {createMutation.isPending ? t('attachments.creating', 'Creating...') : t('attachments.next_upload', 'Next: Upload Media')}
             </button>
           </div>
         </form>
@@ -276,7 +304,7 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
           {/* File Upload Area */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-neutral-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
+            className="border-2 border-dashed border-neutral-300 rounded-lg p-8 text-center cursor-pointer hover:border-brand-mojeeb hover:bg-brand-mojeeb-light transition-colors"
           >
             <div className="text-neutral-500 text-sm">
               <p className="font-medium mb-1">
@@ -302,12 +330,12 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
           {isUploading && (
             <div>
               <div className="flex justify-between text-sm text-neutral-600 mb-1">
-                <span>Uploading...</span>
+                <span>{t('attachments.uploading', 'Uploading...')}</span>
                 <span>{uploadProgress}%</span>
               </div>
               <div className="w-full bg-neutral-200 rounded-full h-2">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-brand-mojeeb h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
@@ -327,7 +355,7 @@ export function CreateAttachmentModal({ isOpen, onClose }: CreateAttachmentModal
               disabled={isUploading}
               className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Skip
+              {t('attachments.skip', 'Skip')}
             </button>
           </div>
         </div>

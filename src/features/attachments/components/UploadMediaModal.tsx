@@ -3,6 +3,7 @@
  */
 
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { useUploadAttachmentFile, useUploadAlbumFiles } from '../hooks/useMutateAttachment';
 import { FILE_LIMITS, validateFile, validateAlbumFiles } from '../utils/validation';
@@ -16,6 +17,7 @@ interface UploadMediaModalProps {
 }
 
 export function UploadMediaModal({ isOpen, onClose, attachment }: UploadMediaModalProps) {
+  const { t } = useTranslation();
   const uploadFileMutation = useUploadAttachmentFile();
   const uploadAlbumMutation = useUploadAlbumFiles();
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -51,6 +53,7 @@ export function UploadMediaModal({ isOpen, onClose, attachment }: UploadMediaMod
 
         await uploadAlbumMutation.mutateAsync({
           attachmentId: attachment.id,
+          agentId: attachment.agentId,
           files: fileArray,
           onProgress: setUploadProgress,
         });
@@ -64,6 +67,7 @@ export function UploadMediaModal({ isOpen, onClose, attachment }: UploadMediaMod
 
         await uploadFileMutation.mutateAsync({
           attachmentId: attachment.id,
+          agentId: attachment.agentId,
           file,
           onProgress: setUploadProgress,
         });
@@ -71,7 +75,6 @@ export function UploadMediaModal({ isOpen, onClose, attachment }: UploadMediaMod
 
       handleClose();
     } catch {
-      // Error already handled by mutation onError (toast)
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -82,7 +85,7 @@ export function UploadMediaModal({ isOpen, onClose, attachment }: UploadMediaMod
     <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Upload Media"
+      title={t('attachments.upload_media', 'Upload Media')}
       subtitle={attachment?.name || ''}
       maxWidth="md"
       isLoading={isUploading}
@@ -91,14 +94,14 @@ export function UploadMediaModal({ isOpen, onClose, attachment }: UploadMediaMod
       <div className="space-y-4">
         {alreadyHasMedia && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-700">
-            This attachment already has media. Uploading will replace the existing file(s).
+            {t('attachments.replace_warning', 'This attachment already has media. Uploading will replace the existing file(s).')}
           </div>
         )}
 
         {/* File Upload Area */}
         <div
           onClick={() => fileInputRef.current?.click()}
-          className="border-2 border-dashed border-neutral-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
+          className="border-2 border-dashed border-neutral-300 rounded-lg p-8 text-center cursor-pointer hover:border-brand-mojeeb hover:bg-brand-mojeeb-light transition-colors"
         >
           <div className="text-neutral-500 text-sm">
             <p className="font-medium mb-1">
@@ -124,12 +127,12 @@ export function UploadMediaModal({ isOpen, onClose, attachment }: UploadMediaMod
         {isUploading && (
           <div>
             <div className="flex justify-between text-sm text-neutral-600 mb-1">
-              <span>Uploading...</span>
+              <span>{t('attachments.uploading', 'Uploading...')}</span>
               <span>{uploadProgress}%</span>
             </div>
             <div className="w-full bg-neutral-200 rounded-full h-2">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-brand-mojeeb h-2 rounded-full transition-all duration-300"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>
@@ -149,7 +152,7 @@ export function UploadMediaModal({ isOpen, onClose, attachment }: UploadMediaMod
             disabled={isUploading}
             className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {t('common.cancel', 'Cancel')}
           </button>
         </div>
       </div>

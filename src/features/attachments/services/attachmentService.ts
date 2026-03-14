@@ -111,6 +111,43 @@ class AttachmentService {
   }
 
   /**
+   * Get ALL attachments across all agents (SuperAdmin only)
+   */
+  async getAllAttachmentsCursor(
+    limit: number = 50,
+    cursor?: string,
+    filters?: AttachmentFilters
+  ): Promise<{ attachments: Attachment[]; nextCursor: string | null; hasMore: boolean }> {
+    const params = new URLSearchParams();
+    params.append('limit', limit.toString());
+
+    if (cursor) {
+      params.append('cursor', cursor);
+    }
+
+    if (filters?.attachmentType) {
+      params.append('attachmentType', filters.attachmentType);
+    }
+
+    if (filters?.isActive !== undefined) {
+      params.append('isActive', filters.isActive.toString());
+    }
+
+    if (filters?.search) {
+      params.append('search', filters.search);
+    }
+
+    const url = `/api/attachments/all?${params.toString()}`;
+    const { data } = await api.get<{ data: CursorPaginatedAttachmentsResponse }>(url);
+
+    return {
+      attachments: data.data.items.map(transformAttachment),
+      nextCursor: data.data.next_cursor,
+      hasMore: data.data.has_more,
+    };
+  }
+
+  /**
    * Create a new attachment
    * Note: Backend returns raw object (CreatedAtAction), not {data:...} wrapper
    */

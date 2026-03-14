@@ -1,10 +1,11 @@
 /**
- * Main Attachments management page
- * Lists all attachments for the selected agent with infinite scroll
+ * Main Attachments management page (SuperAdmin only)
+ * Lists ALL attachments across all agents with infinite scroll
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Plus, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { useInfiniteAttachments } from '../hooks/useAttachments';
 import { useDeleteAttachment } from '../hooks/useMutateAttachment';
@@ -15,8 +16,10 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CreateAttachmentModal } from '../components/CreateAttachmentModal';
 import { EditAttachmentModal } from '../components/EditAttachmentModal';
 import { UploadMediaModal } from '../components/UploadMediaModal';
+import { useAgentStore } from '@/features/agents/stores/agentStore';
 
 export function AttachmentsPage() {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<AttachmentFilters>({});
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -25,6 +28,16 @@ export function AttachmentsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+
+  // Build agent name map from store
+  const agents = useAgentStore((state) => state.agents);
+  const agentNameMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const agent of agents) {
+      map[agent.id] = agent.name;
+    }
+    return map;
+  }, [agents]);
 
   // Debounce search input (300ms)
   useEffect(() => {
@@ -77,7 +90,10 @@ export function AttachmentsPage() {
     if (!selectedAttachment) return;
 
     try {
-      await deleteMutation.mutateAsync(selectedAttachment.id);
+      await deleteMutation.mutateAsync({
+        attachmentId: selectedAttachment.id,
+        agentId: selectedAttachment.agentId,
+      });
       setShowDeleteConfirm(false);
       setSelectedAttachment(null);
     } catch {
@@ -103,10 +119,10 @@ export function AttachmentsPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <BaseHeader
-        title="Attachments"
-        subtitle="Manage AI agent attachments (photos, albums, videos, documents)"
+        title={t('attachments.title', 'Attachments')}
+        subtitle={t('attachments.subtitle', 'Manage AI agent attachments across all agents')}
         primaryAction={{
-          label: 'Create Attachment',
+          label: t('attachments.create', 'Create Attachment'),
           icon: Plus,
           onClick: handleCreateClick,
         }}
@@ -117,11 +133,11 @@ export function AttachmentsPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
         <input
           type="text"
-          placeholder="Search attachments by name or description..."
+          placeholder={t('attachments.search_placeholder', 'Search attachments by name or description...')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search attachments"
-          className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          aria-label={t('attachments.search_label', 'Search attachments')}
+          className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
         />
       </div>
 
@@ -131,6 +147,7 @@ export function AttachmentsPage() {
       ) : (
         <AttachmentsTable
           attachments={data?.attachments || []}
+          agentNameMap={agentNameMap}
           hasMore={hasNextPage || false}
           isLoading={isLoading}
           isFetchingNextPage={isFetchingNextPage}
@@ -146,9 +163,9 @@ export function AttachmentsPage() {
         isOpen={showDeleteConfirm}
         onClose={handleCloseDeleteConfirm}
         onConfirm={confirmDelete}
-        title="Delete Attachment"
-        message={`Are you sure you want to delete "${selectedAttachment?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
+        title={t('attachments.delete_title', 'Delete Attachment')}
+        message={t('attachments.delete_message', `Are you sure you want to delete "${selectedAttachment?.name}"? This action cannot be undone.`)}
+        confirmText={t('common.delete', 'Delete')}
         variant="danger"
         isLoading={deleteMutation.isPending}
       />

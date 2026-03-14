@@ -1,11 +1,11 @@
 /**
  * React Query mutation hooks for attachment CRUD operations
+ * All mutations accept agentId explicitly (not from agent context)
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { attachmentService } from '../services/attachmentService';
 import type { CreateAttachmentRequest, UpdateAttachmentRequest } from '../types/attachment.types';
-import { useAgentContext } from '@/hooks/useAgentContext';
 import { toast } from 'sonner';
 import { isAxiosError } from 'axios';
 
@@ -21,13 +21,12 @@ function getErrorMessage(error: unknown, fallback: string): string {
  */
 export function useCreateAttachment() {
   const queryClient = useQueryClient();
-  const { agentId } = useAgentContext();
 
   return useMutation({
     mutationFn: (request: CreateAttachmentRequest) =>
       attachmentService.createAttachment(request),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attachments', agentId] });
+      queryClient.invalidateQueries({ queryKey: ['attachments'] });
       toast.success('Attachment created successfully');
     },
     onError: (error: unknown) => {
@@ -41,21 +40,21 @@ export function useCreateAttachment() {
  */
 export function useUpdateAttachment() {
   const queryClient = useQueryClient();
-  const { agentId } = useAgentContext();
 
   return useMutation({
     mutationFn: ({
       attachmentId,
+      agentId,
       request,
     }: {
       attachmentId: string;
+      agentId: string;
       request: UpdateAttachmentRequest;
     }) => {
-      if (!agentId) throw new Error('No agent selected');
       return attachmentService.updateAttachment(attachmentId, agentId, request);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attachments', agentId] });
+      queryClient.invalidateQueries({ queryKey: ['attachments'] });
       toast.success('Attachment updated successfully');
     },
     onError: (error: unknown) => {
@@ -69,15 +68,13 @@ export function useUpdateAttachment() {
  */
 export function useDeleteAttachment() {
   const queryClient = useQueryClient();
-  const { agentId } = useAgentContext();
 
   return useMutation({
-    mutationFn: (attachmentId: string) => {
-      if (!agentId) throw new Error('No agent selected');
+    mutationFn: ({ attachmentId, agentId }: { attachmentId: string; agentId: string }) => {
       return attachmentService.deleteAttachment(attachmentId, agentId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attachments', agentId] });
+      queryClient.invalidateQueries({ queryKey: ['attachments'] });
       toast.success('Attachment deleted successfully');
     },
     onError: (error: unknown) => {
@@ -91,21 +88,21 @@ export function useDeleteAttachment() {
  */
 export function useToggleAttachment() {
   const queryClient = useQueryClient();
-  const { agentId } = useAgentContext();
 
   return useMutation({
     mutationFn: ({
       attachmentId,
+      agentId,
       isActive,
     }: {
       attachmentId: string;
+      agentId: string;
       isActive: boolean;
     }) => {
-      if (!agentId) throw new Error('No agent selected');
       return attachmentService.toggleAttachment(attachmentId, agentId, isActive);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attachments', agentId] });
+      queryClient.invalidateQueries({ queryKey: ['attachments'] });
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, 'Failed to toggle attachment'));
@@ -118,23 +115,23 @@ export function useToggleAttachment() {
  */
 export function useUploadAttachmentFile() {
   const queryClient = useQueryClient();
-  const { agentId } = useAgentContext();
 
   return useMutation({
     mutationFn: ({
       attachmentId,
+      agentId,
       file,
       onProgress,
     }: {
       attachmentId: string;
+      agentId: string;
       file: File;
       onProgress?: (percent: number) => void;
     }) => {
-      if (!agentId) throw new Error('No agent selected');
       return attachmentService.uploadFile(attachmentId, agentId, file, onProgress);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attachments', agentId] });
+      queryClient.invalidateQueries({ queryKey: ['attachments'] });
       toast.success('File uploaded successfully');
     },
     onError: (error: unknown) => {
@@ -148,23 +145,23 @@ export function useUploadAttachmentFile() {
  */
 export function useUploadAlbumFiles() {
   const queryClient = useQueryClient();
-  const { agentId } = useAgentContext();
 
   return useMutation({
     mutationFn: ({
       attachmentId,
+      agentId,
       files,
       onProgress,
     }: {
       attachmentId: string;
+      agentId: string;
       files: File[];
       onProgress?: (percent: number) => void;
     }) => {
-      if (!agentId) throw new Error('No agent selected');
       return attachmentService.uploadAlbum(attachmentId, agentId, files, onProgress);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attachments', agentId] });
+      queryClient.invalidateQueries({ queryKey: ['attachments'] });
       toast.success('Album uploaded successfully');
     },
     onError: (error: unknown) => {
