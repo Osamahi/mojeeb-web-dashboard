@@ -6,13 +6,10 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MessageCircleReply } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useAuthStore } from '@/features/auth/stores/authStore';
-import { Role } from '@/features/auth/types/auth.types';
 import NoAgentEmptyState from '@/features/agents/components/NoAgentEmptyState';
 import { useConnections } from '@/features/connections/hooks/useConnections';
 import { PostList } from '../components/PostList';
@@ -26,8 +23,6 @@ export function CommentsPage() {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_comments');
   const isMobile = useIsMobile();
-  const user = useAuthStore((state) => state.user);
-  const isSuperAdmin = user?.role === Role.SuperAdmin;
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
 
   const [selectedPost, setSelectedPost] = useState<SocialPost | null>(null);
@@ -86,23 +81,6 @@ export function CommentsPage() {
   const handleLoadMore = useCallback(() => {
     fetchNextPage();
   }, [fetchNextPage]);
-
-  // Show "Coming Soon" for non-super-admin users
-  if (!isSuperAdmin) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-        <div className="rounded-full bg-brand-mojeeb/10 p-4 mb-4">
-          <MessageCircleReply className="h-10 w-10 text-brand-mojeeb" />
-        </div>
-        <h2 className="text-xl font-semibold text-neutral-900 mb-2">
-          {t('comments_page.coming_soon_title')}
-        </h2>
-        <p className="text-sm text-neutral-500 max-w-sm">
-          {t('comments_page.coming_soon_message')}
-        </p>
-      </div>
-    );
-  }
 
   if (!globalSelectedAgent) {
     return (
