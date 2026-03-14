@@ -79,6 +79,15 @@ export const queryKeys = {
   knowledgeBase: (knowledgeBaseId: string | undefined, agentId: string | undefined) =>
     ['knowledge-base', knowledgeBaseId, agentId] as const,
 
+  // ==================== Attachment Queries ====================
+
+  /**
+   * Query key for fetching attachments for a specific agent (Studio page)
+   * @param {string | undefined} agentId - The agent ID
+   * @returns {readonly ['attachments', 'agent', string | undefined]} Query key tuple
+   */
+  agentAttachments: (agentId: string | undefined) => ['attachments', 'agent', agentId] as const,
+
   // ==================== Document Processing Job Queries ====================
 
   /**

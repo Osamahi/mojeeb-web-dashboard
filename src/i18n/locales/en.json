@@ -852,6 +852,7 @@
     "agent_not_found_description": "The agent you're looking for doesn't exist or you don't have access to it.",
     "back_to_agents": "Back to Agents",
     "no_knowledge_message": "Add knowledge below to help your agent provide better answers.",
+    "empty_knowledge_subtitle": "Your agent uses this to answer questions",
     "main_instructions_title": "Main Instructions",
     "main_instructions_edit_label": "Edit main instructions",
     "main_instructions_delete_disabled": "Main Instructions cannot be deleted",
@@ -867,7 +868,11 @@
     "edit_label": "Edit",
     "delete_label": "Delete",
     "follow_ups": "Follow-ups",
-    "automated_follow_ups": "Automated Follow-ups"
+    "automated_follow_ups": "Automated Follow-ups",
+    "add_attachment": "Add Attachment",
+    "attachments_section_title": "Attachments",
+    "no_attachments_message": "Add attachments to let your agent send photos, videos, and documents.",
+    "empty_attachments_subtitle": "Sent automatically based on your instructions"
   },
   "follow_up": {
     "title": "Follow-Up Settings",
@@ -2662,7 +2667,7 @@
     "title": "Attachments",
     "subtitle": "Manage AI agent attachments across all agents",
     "create": "Create Attachment",
-    "create_subtitle": "Configure a new attachment for your AI agent",
+    "create_subtitle": "Add media that your AI agent can send to customers",
     "search_placeholder": "Search attachments by name or description...",
     "search_label": "Search attachments",
     "empty": "No attachments found. Create your first attachment to get started.",
@@ -2690,8 +2695,18 @@
     "name_required": "Name is required",
     "name_placeholder": "e.g., Product Catalog",
     "description_placeholder": "Describe what this attachment contains...",
-    "trigger_required": "Trigger prompt is required",
-    "trigger_placeholder": "Describe when this attachment should be sent...",
+    "trigger_required": "Instructions are required",
+    "trigger_placeholder": "e.g., Send this when the customer asks about our products...",
+    "instructions_label": "Instructions",
+    "instructions_helper": "Give AI clear instructions about this attachment and when to use it",
+    "field_files": "Files",
+    "files_required": "Please add at least one file",
+    "drop_zone_text": "Drag files here or click to browse",
+    "drop_zone_active": "Drop files here",
+    "mixed_types_error": "Please upload files of the same type",
+    "single_file_only": "Only one file allowed for this type. Remove the existing file first.",
+    "creating_uploading": "Uploading...",
+    "create_button": "Create Attachment",
     "priority_min": "Priority must be at least 0",
     "priority_max": "Priority cannot exceed 1000",
     "active_label": "Active (attachment can be sent by AI)",
@@ -2703,6 +2718,10 @@
     "column_active": "Active",
     "column_priority": "Priority",
     "column_created": "Created",
-    "column_actions": "Actions"
+    "column_actions": "Actions",
+    "trigger_label": "Trigger Prompt",
+    "no_media_uploaded": "No media",
+    "delete_confirm_title": "Delete Attachment",
+    "delete_confirm_message": "Are you sure you want to delete \"{{name}}\"?"
   }
 }

@@ -143,8 +143,8 @@ export default function KnowledgeBaseItem({
           {/* Chevron indicator */}
           <ChevronRight
             className={cn(
-              'w-5 h-5 text-neutral-400 transition-transform duration-200 flex-shrink-0',
-              isExpanded && 'rotate-90'
+              'w-5 h-5 text-neutral-400 transition-transform duration-200 flex-shrink-0 rtl:rotate-180',
+              isExpanded && 'rotate-90 rtl:rotate-90'
             )}
           />
 

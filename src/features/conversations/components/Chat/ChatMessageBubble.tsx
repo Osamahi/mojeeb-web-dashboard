@@ -116,7 +116,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                 <div
                   key={idx}
                   className={cn(
-                    'relative rounded-lg overflow-hidden',
+                    'relative rounded-lg overflow-hidden border border-neutral-200',
                     isVideo ? 'w-[40%] max-w-[320px]' : 'w-[15%] aspect-square'
                   )}
                 >
@@ -158,7 +158,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
                       src={img.url}
                       alt={img.filename || 'Attachment'}
                       className={cn(
-                        'w-full h-full object-cover cursor-pointer hover:opacity-90',
+                        'w-full h-full object-contain cursor-pointer hover:opacity-90',
                         'transition-opacity duration-300',
                         isLoaded ? 'opacity-100' : 'opacity-0'
                       )}

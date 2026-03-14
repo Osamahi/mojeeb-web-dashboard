@@ -4,10 +4,10 @@
  * Contains agent prompt - NOT deletable (only editable)
  * Auto-detects selected agent using useAgentContext
  * View/Edit mode pattern matching Knowledge Base cards
- * Expands by default if no knowledge bases exist
+ * Collapsed by default
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -33,19 +33,6 @@ export default function MainInstructionCard() {
     enabled: !!agentId,
   });
 
-  // Fetch knowledge bases to check if any exist
-  const { data: knowledgeBases } = useQuery({
-    queryKey: queryKeys.knowledgeBases(agentId),
-    queryFn: () => agentService.getKnowledgeBases(agentId!),
-    enabled: !!agentId,
-  });
-
-  // Expand by default if no knowledge bases exist
-  useEffect(() => {
-    if (knowledgeBases !== undefined && knowledgeBases.length === 0) {
-      setIsExpanded(true);
-    }
-  }, [knowledgeBases]);
 
   // Loading skeleton
   if (isLoading || !agent) {
@@ -69,8 +56,8 @@ export default function MainInstructionCard() {
         {/* Chevron indicator */}
         <ChevronRight
           className={cn(
-            'w-5 h-5 text-neutral-400 transition-transform duration-200 flex-shrink-0',
-            isExpanded && 'rotate-90'
+            'w-5 h-5 text-neutral-400 transition-transform duration-200 flex-shrink-0 rtl:rotate-180',
+            isExpanded && 'rotate-90 rtl:rotate-90'
           )}
         />
 

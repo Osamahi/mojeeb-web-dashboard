@@ -1,15 +1,16 @@
 /**
  * Image Modal Component
- * Full-screen modal for viewing images with download, share, and carousel features
+ * Full-size media viewer with subtle corner close button.
+ * Supports carousel navigation for multiple images/videos.
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Download, Share2, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
-import { BaseModal } from '@/components/ui/BaseModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import type { MessageAttachment } from '../../types';
 import { isVideoAttachment } from '../../types';
-import { chatToasts } from '../../utils/chatToasts';
 
 interface ImageModalProps {
   images: MessageAttachment[];
@@ -33,7 +34,13 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
     setImageError(false);
   }, [currentIndex]);
 
-  // Carousel navigation handlers (memoized to prevent useEffect re-runs)
+  // Lock body scroll while open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
+
+  // Carousel navigation handlers
   const handlePrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   }, [images.length]);
@@ -58,147 +65,104 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [hasMultipleImages, onClose, handlePrevious, handleNext]);
 
-  // Download image handler
-  const handleDownload = async () => {
-    try {
-      const response = await fetch(currentImage.url);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      const isVideo = isVideoAttachment(currentImage);
-      a.download = currentImage.filename || (isVideo ? `video-${currentIndex + 1}.mp4` : `image-${currentIndex + 1}.jpg`);
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      chatToasts.success(t('image_modal.download_success'));
-    } catch (error) {
-      chatToasts.error(t('image_modal.download_error'));
-    }
-  };
+  const modal = (
+    <AnimatePresence>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999]"
+        onClick={onClose}
+      />
 
-  // Share image handler
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: t('image_modal.share_title'),
-          text: currentImage.filename || t('image_modal.share_text'),
-          url: currentImage.url,
-        });
-      } catch (error) {
-        // User cancelled share or error occurred
-        if (import.meta.env.DEV) {
-          console.log('Share cancelled or failed:', error);
-        }
-      }
-    } else {
-      // Fallback: copy URL to clipboard
-      navigator.clipboard.writeText(currentImage.url);
-      chatToasts.success(t('image_modal.url_copied'));
-    }
-  };
-
-  return (
-    <BaseModal
-      isOpen={true}
-      onClose={onClose}
-      title={currentImage.filename || t('image_modal.image_title', { number: currentIndex + 1 })}
-      maxWidth="2xl"
-      className="bg-black/90"
-      contentClassName="!p-0"
-    >
-      <div className="relative flex flex-col items-center -m-4">
-
-        {/* Image counter - only show if multiple images */}
-        {hasMultipleImages && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/50 text-white text-sm rounded-full">
-            {currentIndex + 1} / {images.length}
-          </div>
-        )}
-
-        {/* Previous button - only show if multiple images */}
-        {hasMultipleImages && (
+      {/* Modal */}
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2, type: 'spring', stiffness: 300, damping: 30 }}
+          className="relative bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+        >
+          {/* Close button — subtle top-right corner */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handlePrevious();
-            }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-            title={t('image_modal.previous')}
+            onClick={onClose}
+            className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-white/80 hover:bg-neutral-100 transition-colors shadow-sm border border-neutral-200/50"
+            aria-label={t('common.close')}
           >
-            <ChevronLeft className="w-8 h-8 text-white" />
+            <X className="w-4 h-4 text-neutral-600" />
           </button>
-        )}
 
-        {/* Next button - only show if multiple images */}
-        {hasMultipleImages && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNext();
-            }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
-            title={t('image_modal.next')}
-          >
-            <ChevronRight className="w-8 h-8 text-white" />
-          </button>
-        )}
-
-        {/* Image or Video */}
-        {imageError ? (
-          <div className="flex items-center justify-center bg-neutral-100 rounded-lg p-8 min-h-[400px]">
-            <div className="text-center">
-              <AlertCircle className="w-12 h-12 text-neutral-400 mx-auto mb-2" />
-              <p className="text-neutral-600">{t('image_modal.load_error')}</p>
+          {/* Image counter */}
+          {hasMultipleImages && (
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-1 bg-neutral-900/60 text-white text-xs font-medium rounded-full">
+              {currentIndex + 1} / {images.length}
             </div>
-          </div>
-        ) : isVideoAttachment(currentImage) ? (
-          <video
-            src={currentImage.url}
-            controls
-            autoPlay
-            playsInline
-            className="max-w-full max-h-[80vh] rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <img
-            src={currentImage.url}
-            alt={currentImage.filename || t('image_modal.image_title', { number: currentIndex + 1 })}
-            className="max-w-full max-h-[80vh] object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-            onError={() => setImageError(true)}
-          />
-        )}
+          )}
 
-        {/* Action buttons */}
-        <div className="flex gap-3 mt-4">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDownload();
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-neutral-100 text-black rounded-lg transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            <span className="text-sm font-medium">{t('image_modal.download_button')}</span>
-          </button>
+          {/* Previous button */}
+          {hasMultipleImages && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handlePrevious(); }}
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-1.5 rounded-full bg-white/80 hover:bg-neutral-100 transition-colors shadow-sm border border-neutral-200/50"
+              title={t('image_modal.previous')}
+            >
+              <ChevronLeft className="w-5 h-5 text-neutral-700" />
+            </button>
+          )}
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleShare();
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-neutral-100 text-black rounded-lg transition-colors"
-          >
-            <Share2 className="w-4 h-4" />
-            <span className="text-sm font-medium">{t('image_modal.share_button')}</span>
-          </button>
-        </div>
+          {/* Next button */}
+          {hasMultipleImages && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleNext(); }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-1.5 rounded-full bg-white/80 hover:bg-neutral-100 transition-colors shadow-sm border border-neutral-200/50"
+              title={t('image_modal.next')}
+            >
+              <ChevronRight className="w-5 h-5 text-neutral-700" />
+            </button>
+          )}
+
+          {/* Media — square container for images, natural aspect for video */}
+          {imageError ? (
+            <div className="aspect-square flex items-center justify-center bg-neutral-50 w-full">
+              <div className="text-center">
+                <AlertCircle className="w-12 h-12 text-neutral-400 mx-auto mb-2" />
+                <p className="text-neutral-600">{t('image_modal.load_error')}</p>
+              </div>
+            </div>
+          ) : isVideoAttachment(currentImage) ? (
+            <video
+              src={currentImage.url}
+              controls
+              autoPlay
+              playsInline
+              className="w-full max-h-[90vh] object-contain bg-neutral-50"
+              onClick={(e) => e.stopPropagation()}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="aspect-square w-full max-h-[85vh] bg-neutral-50 flex items-center justify-center p-4">
+              <img
+                src={currentImage.url}
+                alt={currentImage.filename || t('image_modal.image_title', { number: currentIndex + 1 })}
+                className="max-w-full max-h-full object-contain"
+                onClick={(e) => e.stopPropagation()}
+                onError={() => setImageError(true)}
+              />
+            </div>
+          )}
+        </motion.div>
       </div>
-    </BaseModal>
+    </AnimatePresence>
   );
+
+  return createPortal(modal, document.body);
 }

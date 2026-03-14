@@ -850,6 +850,7 @@
     "agent_not_found_description": "الوكيل الذي تبحث عنه غير موجود أو ليس لديك إذن للوصول إليه.",
     "back_to_agents": "العودة للوكلاء",
     "no_knowledge_message": "أضف المعرفة أدناه لمساعدة وكيلك على تقديم إجابات أفضل.",
+    "empty_knowledge_subtitle": "يستخدمها الوكيل للإجابة على الأسئلة",
     "main_instructions_title": "التعليمات الرئيسية",
     "main_instructions_edit_label": "تعديل التعليمات الرئيسية",
     "main_instructions_delete_disabled": "لا يمكن حذف التعليمات الرئيسية",
@@ -865,7 +866,11 @@
     "edit_label": "تعديل",
     "delete_label": "حذف",
     "follow_ups": "المتابعات",
-    "automated_follow_ups": "المتابعات التلقائية"
+    "automated_follow_ups": "المتابعات التلقائية",
+    "add_attachment": "إضافة مرفق",
+    "attachments_section_title": "المرفقات",
+    "no_attachments_message": "أضف مرفقات ليتمكن الوكيل من إرسال صور وفيديوهات ومستندات.",
+    "empty_attachments_subtitle": "تُرسل تلقائياً حسب تعليماتك"
   },
   "follow_up": {
     "title": "إعدادات المتابعة",
@@ -2535,7 +2540,7 @@
     "title": "المرفقات",
     "subtitle": "إدارة مرفقات الوكلاء الذكية عبر جميع الوكلاء",
     "create": "إنشاء مرفق",
-    "create_subtitle": "إعداد مرفق جديد لوكيلك الذكي",
+    "create_subtitle": "أضف ملفات يستطيع الوكيل الذكي إرسالها للعملاء",
     "search_placeholder": "البحث في المرفقات بالاسم أو الوصف...",
     "search_label": "البحث في المرفقات",
     "empty": "لم يتم العثور على مرفقات. أنشئ أول مرفق للبدء.",
@@ -2563,8 +2568,18 @@
     "name_required": "الاسم مطلوب",
     "name_placeholder": "مثال: كتالوج المنتجات",
     "description_placeholder": "صف محتوى هذا المرفق...",
-    "trigger_required": "أمر التفعيل مطلوب",
-    "trigger_placeholder": "صف متى يجب إرسال هذا المرفق...",
+    "trigger_required": "التعليمات مطلوبة",
+    "trigger_placeholder": "مثال: أرسل هذا عندما يسأل العميل عن منتجاتنا...",
+    "instructions_label": "التعليمات",
+    "instructions_helper": "أعطِ الذكاء الاصطناعي تعليمات واضحة عن هذا المرفق ومتى يستخدمه",
+    "field_files": "الملفات",
+    "files_required": "يجب إضافة ملف واحد على الأقل",
+    "drop_zone_text": "اسحب الملفات هنا أو انقر للاختيار",
+    "drop_zone_active": "أفلت الملفات هنا",
+    "mixed_types_error": "يجب أن تكون الملفات من نفس النوع",
+    "single_file_only": "مسموح بملف واحد فقط لهذا النوع. احذف الملف الحالي أولاً.",
+    "creating_uploading": "جارِ الرفع...",
+    "create_button": "إنشاء المرفق",
     "priority_min": "يجب أن تكون الأولوية 0 على الأقل",
     "priority_max": "لا يمكن أن تتجاوز الأولوية 1000",
     "active_label": "نشط (يمكن للذكاء الاصطناعي إرسال المرفق)",
@@ -2576,6 +2591,10 @@
     "column_active": "نشط",
     "column_priority": "الأولوية",
     "column_created": "تاريخ الإنشاء",
-    "column_actions": "الإجراءات"
+    "column_actions": "الإجراءات",
+    "trigger_label": "أمر التشغيل",
+    "no_media_uploaded": "بدون ملفات",
+    "delete_confirm_title": "حذف المرفق",
+    "delete_confirm_message": "هل أنت متأكد من حذف \"{{name}}\"؟"
   }
 }

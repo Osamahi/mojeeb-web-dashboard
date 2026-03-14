@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus, MessageSquare, Plug, Bell, MoreVertical } from 'lucide-react';
+import { Plus, MessageSquare, Plug, Bell, MoreVertical, Paperclip, BookOpen } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
@@ -30,6 +30,9 @@ import DocumentUploadProgressCard from '../components/DocumentUploadProgressCard
 import FollowUpSettingsModal from '../components/FollowUpSettingsModal';
 import TestChat from '../components/TestChat';
 import TestChatPanel from '../components/TestChatPanel';
+import { useAgentAttachments } from '@/features/attachments/hooks/useAgentAttachments';
+import AttachmentItem from '@/features/attachments/components/AttachmentItem';
+import { CreateAttachmentModal } from '@/features/attachments/components/CreateAttachmentModal';
 import { logger } from '@/lib/logger';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
@@ -52,6 +55,7 @@ export default function StudioPage() {
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const isDesktop = useIsDesktop();
   const [isAddKBModalOpen, setIsAddKBModalOpen] = useState(false);
+  const [isAddAttachmentModalOpen, setIsAddAttachmentModalOpen] = useState(false);
   const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
   const [activeUploadJobs, setActiveUploadJobs] = useState<string[]>([]);
@@ -86,6 +90,12 @@ export default function StudioPage() {
 
   // Merge optimistic uploads with backend jobs (remove duplicates)
   const allActiveJobIds = mergeJobIds(activeUploadJobs, backendActiveJobs);
+
+  // Fetch agent attachments
+  const {
+    data: attachments,
+    refetch: refetchAttachments,
+  } = useAgentAttachments(agentId);
 
   // Log errors
   useEffect(() => {
@@ -169,6 +179,10 @@ export default function StudioPage() {
                       <Plus className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
                       <span>{t('studio.add_knowledge')}</span>
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsAddAttachmentModalOpen(true)}>
+                      <Paperclip className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+                      <span>{t('studio.add_attachment', 'Add Attachment')}</span>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setIsFollowUpModalOpen(true)}>
                       <Bell className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
                       <span>{t('studio.automated_follow_ups')}</span>
@@ -176,15 +190,6 @@ export default function StudioPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Add Knowledge - Header Button (Mobile/Tablet only) */}
-                <button
-                  onClick={() => setIsAddKBModalOpen(true)}
-                  className="lg:hidden flex items-center gap-1.5 px-3 py-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors"
-                  aria-label={t('studio.add_knowledge_label')}
-                >
-                  <Plus className="w-4 h-4 text-neutral-700" />
-                  <span className="text-sm font-medium text-neutral-700">{t('common.add')}</span>
-                </button>
               </div>
             </div>
           </div>
@@ -194,6 +199,17 @@ export default function StudioPage() {
             <div className="px-4 py-4 sm:px-6 sm:py-6 pb-20 lg:pb-6 space-y-3 sm:space-y-4">
               {/* Main Instruction Card */}
               <MainInstructionCard />
+
+              {/* ── Knowledge Section ── */}
+              <div className="flex items-center gap-2 pt-4 mt-2">
+                <BookOpen className="w-4 h-4 text-neutral-400" />
+                <h2 className="text-sm font-medium text-neutral-500">
+                  {t('studio.knowledge_section_title', 'Knowledge')}
+                </h2>
+                {knowledgeBases && knowledgeBases.length > 0 && (
+                  <span className="text-xs text-neutral-400">({knowledgeBases.length})</span>
+                )}
+              </div>
 
               {/* Knowledge Base Cards */}
               {isLoadingKBs ? (
@@ -211,9 +227,22 @@ export default function StudioPage() {
                   ))}
                 </>
               ) : (
-                <div className="text-center py-8 text-sm text-neutral-500">
-                  {t('studio.no_knowledge_message')}
-                </div>
+                <button
+                  onClick={() => setIsAddKBModalOpen(true)}
+                  className="w-full rounded-lg border border-dashed border-neutral-300 hover:border-neutral-400 bg-white hover:bg-neutral-50/50 transition-all duration-200 cursor-pointer group/empty animate-[pulse_1.5s_ease-in-out_infinite] hover:animate-none"
+                >
+                  <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
+                    <Plus className="w-5 h-5 text-neutral-300 group-hover/empty:text-brand-mojeeb transition-colors flex-shrink-0" />
+                    <div className="text-start min-w-0">
+                      <span className="text-base font-semibold text-neutral-400 group-hover/empty:text-neutral-600 transition-colors block">
+                        {t('studio.add_knowledge')}
+                      </span>
+                      <span className="text-xs text-neutral-400 block mt-0.5">
+                        {t('studio.empty_knowledge_subtitle', 'Your agent uses this to answer questions')}
+                      </span>
+                    </div>
+                  </div>
+                </button>
               )}
 
               {/* Active Document Processing Jobs (persists across reloads + optimistic) */}
@@ -233,17 +262,48 @@ export default function StudioPage() {
                 />
               ))}
 
-              {/* Action Buttons - Desktop only */}
-              <div className="hidden lg:flex justify-center gap-3 pt-2">
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setIsAddKBModalOpen(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t('studio.add_knowledge')}
-                </Button>
-              </div>
+              {/* ── Attachments Section (hidden when no knowledge bases yet) ── */}
+              {(knowledgeBases && knowledgeBases.length > 0) || (attachments && attachments.length > 0) ? (
+                <>
+                  <div className="flex items-center gap-2 pt-4 mt-2">
+                    <Paperclip className="w-4 h-4 text-neutral-400" />
+                    <h2 className="text-sm font-medium text-neutral-500">
+                      {t('studio.attachments_section_title', 'Attachments')}
+                    </h2>
+                    {attachments && attachments.length > 0 && (
+                      <span className="text-xs text-neutral-400">({attachments.length})</span>
+                    )}
+                  </div>
+
+                  {attachments && attachments.length > 0 ? (
+                    attachments.map((attachment) => (
+                      <AttachmentItem
+                        key={attachment.id}
+                        attachment={attachment}
+                        onUpdate={() => refetchAttachments()}
+                      />
+                    ))
+                  ) : (
+                    <button
+                      onClick={() => setIsAddAttachmentModalOpen(true)}
+                      className="w-full rounded-lg border border-dashed border-neutral-300 hover:border-neutral-400 bg-white hover:bg-neutral-50/50 transition-all duration-200 cursor-pointer group/empty"
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
+                        <Plus className="w-5 h-5 text-neutral-300 group-hover/empty:text-brand-mojeeb transition-colors flex-shrink-0" />
+                        <div className="text-start min-w-0">
+                          <span className="text-base font-semibold text-neutral-400 group-hover/empty:text-neutral-600 transition-colors block">
+                            {t('studio.add_attachment', 'Add Attachment')}
+                          </span>
+                          <span className="text-xs text-neutral-400 block mt-0.5">
+                            {t('studio.empty_attachments_subtitle', 'Sent automatically based on your instructions')}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  )}
+                </>
+              ) : null}
+
             </div>
           </div>
         </div>
@@ -318,6 +378,16 @@ export default function StudioPage() {
           // Add to optimistic state for instant display
           setActiveUploadJobs(prev => [...prev, jobId]);
         }}
+      />
+
+      {/* Add Attachment Modal */}
+      <CreateAttachmentModal
+        isOpen={isAddAttachmentModalOpen}
+        onClose={() => {
+          setIsAddAttachmentModalOpen(false);
+          refetchAttachments();
+        }}
+        agentId={agent.id}
       />
 
       {/* Follow-Up Settings Modal */}
