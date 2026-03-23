@@ -182,9 +182,17 @@ class BillingService {
     });
 
     try {
+      // Transform camelCase to snake_case for C# backend
+      const backendRequest = request
+        ? {
+            return_url: request.returnUrl,
+            ...(request.flowType && { flow_type: request.flowType }),
+          }
+        : {};
+
       const response = await api.post<ApiResponse<ApiBillingPortalResponse>>(
         `${this.baseUrl}/billing-portal`,
-        request || {}
+        backendRequest
       );
 
       const session = this.transformBillingPortalSession(response.data.data);

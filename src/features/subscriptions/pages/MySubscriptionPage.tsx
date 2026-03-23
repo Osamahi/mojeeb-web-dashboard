@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
-import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X } from 'lucide-react';
+import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, CreditCard } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { PlanCode } from '../types/subscription.types';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { PlanChangeWizard } from '../components/PlanChangeWizard';
 import { CancelSubscriptionModal } from '@/features/billing/components/CancelSubscriptionModal';
+import { useCreateBillingPortalMutation } from '@/features/billing/hooks/useCreateBillingPortalMutation';
 import { AddonListItem, AddonQuantityModal } from '@/features/addons/components';
 import { useAvailableAddons, useCreateAddonCheckout } from '@/features/addons/hooks/useAddonPurchase';
 import { useCurrency } from '@/lib/currency';
@@ -37,12 +38,21 @@ export default function MySubscriptionPage() {
   const checkoutMutation = useCreateAddonCheckout();
   const { currency } = useCurrency();
 
+  const billingPortalMutation = useCreateBillingPortalMutation({ autoRedirect: true });
+
   const messageAddons = addons?.filter(a => a.addon_type === 'message_credits') || [];
   const agentAddons = addons?.filter(a => a.addon_type === 'agent_slots') || [];
 
   const handleUpgradeClick = useCallback(() => {
     setShowWizard(true);
   }, []);
+
+  const handleChangeCard = useCallback(() => {
+    billingPortalMutation.mutate({
+      returnUrl: window.location.href,
+      flowType: 'payment_method_update',
+    });
+  }, [billingPortalMutation]);
 
   const handleAddonClick = useCallback((addon: AddonPlan) => {
     setSelectedAddon(addon);
@@ -109,6 +119,15 @@ export default function MySubscriptionPage() {
                   <Receipt className="me-2 h-4 w-4" />
                   {t('billing.view_invoices')}
                 </DropdownMenuItem> */}
+                {subscription?.paymentMethod === 'stripe' && (
+                  <DropdownMenuItem
+                    onClick={handleChangeCard}
+                    disabled={billingPortalMutation.isPending}
+                  >
+                    <CreditCard className="me-2 h-4 w-4" />
+                    {billingPortalMutation.isPending ? t('billing.changing_card') : t('billing.change_card')}
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={() => setShowCancelModal(true)}
                   className="text-red-600 focus:text-red-600"

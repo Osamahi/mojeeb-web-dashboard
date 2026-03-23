@@ -45,6 +45,7 @@ export interface CreateCheckoutRequest {
  */
 export interface CreateBillingPortalRequest {
   returnUrl?: string; // Optional return URL after portal exit
+  flowType?: string; // Optional deep link type (e.g., "payment_method_update")
 }
 
 /**
