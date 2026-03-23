@@ -64,7 +64,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
 
           logger.info('[SubscriptionStore]', 'refreshSubscription - success:', {
             plan: data.subscription.planCode,
-            usage: `${data.usage.messagesUsed}/${data.usage.messagesLimit}`
+            usage: data.usage ? `${data.usage.messagesUsed}/${data.usage.messagesLimit}` : 'n/a'
           });
         } catch (error) {
           // 404 means no subscription exists for this user (e.g., super admin) - this is expected

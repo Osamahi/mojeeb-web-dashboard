@@ -45,14 +45,14 @@ export function PlanChangeWizard({
   }, [isOpen]);
 
   const handleSelectPlan = useCallback((plan: SubscriptionPlan) => {
-    // Prevent selecting current plan
-    if (plan.code === currentSubscription.planCode) {
+    // Prevent selecting current plan (unless cancelled — allow re-subscribe)
+    if (plan.code === currentSubscription.planCode && currentSubscription.status !== 'canceled') {
       return;
     }
 
     setSelectedPlan(plan);
     setStep('confirm');
-  }, [currentSubscription.planCode]);
+  }, [currentSubscription.planCode, currentSubscription.status]);
 
   const handleBack = useCallback(() => {
     setStep('select-plan');
@@ -68,8 +68,8 @@ export function PlanChangeWizard({
       return;
     }
 
-    // Validation: Prevent changing to current plan (defense-in-depth)
-    if (selectedPlan.code === currentSubscription.planCode) {
+    // Validation: Prevent changing to current plan (unless cancelled — allow re-subscribe)
+    if (selectedPlan.code === currentSubscription.planCode && currentSubscription.status !== 'canceled') {
       toast.error(t('plan_change_wizard.cannot_change_current'), {
         description: t('plan_change_wizard.already_on_plan'),
       });
@@ -153,8 +153,9 @@ export function PlanChangeWizard({
     : false;
 
   // Check if plan change requires Stripe payment
+  // Cancelled subscriptions always need payment (no active billing to modify)
   const needsPayment = selectedPlan
-    ? requiresPayment(currentSubscription.planCode, selectedPlan.code)
+    ? (currentSubscription.status === 'canceled' || requiresPayment(currentSubscription.planCode, selectedPlan.code))
     : false;
 
   // Slide transition variants
@@ -204,7 +205,7 @@ export function PlanChangeWizard({
                 currency={currentSubscription.currency}
                 onSelectPlan={handleSelectPlan}
                 showCurrentBadge={true}
-                allowSelectCurrent={false}
+                allowSelectCurrent={currentSubscription.status === 'canceled'}
               />
             </motion.div>
           )}

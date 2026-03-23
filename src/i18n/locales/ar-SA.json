@@ -1116,6 +1116,7 @@
     "my_subtitle": "إدارة خطتك وعرض إحصائيات الاستخدام",
     "upgrade_plan": "ترقية الباقة",
     "change_plan": "تغيير الباقة",
+    "subscribe": "اشترك",
     "edit_limits": "تعديل الحدود",
     "view_usage": "عرض الاستخدام",
     "renew_subscription": "تجديد الاشتراك",
@@ -1779,6 +1780,7 @@
     "year": "سنة",
     "month": "شهر",
     "current_plan_button": "الخطة الحالية",
+    "subscribe_button": "اشترك",
     "upgrade_button": "ترقية",
     "downgrade_button": "تخفيض",
     "select_plan_button": "اختيار الخطة"
@@ -1814,7 +1816,9 @@
     "limits_take_effect": "ستدخل حدودك الجديدة حيز التنفيذ فوراً",
     "next_billing": "الفوترة القادمة",
     "upgrading": "جاري الترقية...",
-    "downgrading": "جاري التخفيض..."
+    "downgrading": "جاري التخفيض...",
+    "confirm_change": "تأكيد",
+    "changing": "جاري التغيير..."
   },
   "user_profile": {
     "settings": "الإعدادات",

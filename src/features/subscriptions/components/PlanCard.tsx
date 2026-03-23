@@ -137,8 +137,10 @@ export const PlanCard = memo(({
         onClick={handleButtonClick}
         disabled={!allowSelectCurrent && isCurrent}
         className={`w-full rounded-md h-10 px-6 text-base font-medium transition-colors mt-6 ${
-          isCurrent
+          isCurrent && !allowSelectCurrent
             ? 'bg-green-100 text-green-700 cursor-not-allowed'
+            : isCurrent && allowSelectCurrent
+            ? 'bg-neutral-950 text-white hover:bg-neutral-900'
             : isUpgrade
             ? 'bg-neutral-950 text-white hover:bg-neutral-900'
             : isDowngrade
@@ -146,8 +148,10 @@ export const PlanCard = memo(({
             : 'bg-neutral-950 text-white hover:bg-neutral-900'
         }`}
       >
-        {isCurrent
+        {isCurrent && !allowSelectCurrent
           ? t('plan_card.current_plan_button')
+          : isCurrent && allowSelectCurrent
+          ? t('plan_card.subscribe_button', t('plan_card.select_plan_button'))
           : isUpgrade
           ? t('plan_card.upgrade_button')
           : isDowngrade

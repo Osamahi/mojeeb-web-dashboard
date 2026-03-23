@@ -1118,6 +1118,7 @@
     "my_subtitle": "Manage your plan and view usage statistics",
     "upgrade_plan": "Upgrade Plan",
     "change_plan": "Change Plan",
+    "subscribe": "Subscribe",
     "edit_limits": "Edit Limits",
     "view_usage": "View Usage",
     "renew_subscription": "Renew Subscription",
@@ -1783,6 +1784,7 @@
     "year": "year",
     "month": "month",
     "current_plan_button": "Current Plan",
+    "subscribe_button": "Subscribe",
     "upgrade_button": "Upgrade",
     "downgrade_button": "Downgrade",
     "select_plan_button": "Select Plan"
@@ -1818,7 +1820,9 @@
     "limits_take_effect": "Your new limits will take effect immediately",
     "next_billing": "Next billing",
     "upgrading": "Upgrading...",
-    "downgrading": "Downgrading..."
+    "downgrading": "Downgrading...",
+    "confirm_change": "Confirm",
+    "changing": "Processing..."
   },
   "user_profile": {
     "settings": "Settings",

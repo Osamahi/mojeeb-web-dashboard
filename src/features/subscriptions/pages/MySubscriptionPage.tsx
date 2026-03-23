@@ -133,7 +133,7 @@ export default function MySubscriptionPage() {
   const isNearLimit = messagePercentage >= 80;
 
   // Show error state if loading finished but no data
-  const hasError = !loading && (!subscription || !usage);
+  const hasError = !loading && !subscription;
 
   return (
     <div className="space-y-6 p-6">
@@ -143,51 +143,47 @@ export default function MySubscriptionPage() {
         subtitle={t('subscriptions.my_subtitle')}
         additionalActions={
           <>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white p-2 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                  {billingPortalMutation.isPending ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Settings className="h-5 w-5" />
+            {subscription?.status !== 'canceled' && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white p-2 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                    {billingPortalMutation.isPending ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Settings className="h-5 w-5" />
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {subscription?.paymentMethod === 'stripe' && (
+                    <DropdownMenuItem
+                      onClick={handleChangeCard}
+                      disabled={billingPortalMutation.isPending}
+                    >
+                      <CreditCard className="me-2 h-4 w-4" />
+                      {billingPortalMutation.isPending ? t('billing.changing_card') : t('billing.change_card')}
+                    </DropdownMenuItem>
                   )}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {/* Hidden: Payment Method */}
-                {/* <DropdownMenuItem onClick={() => setShowPaymentModal(true)}>
-                  <CreditCard className="me-2 h-4 w-4" />
-                  {t('billing.payment_method')}
-                </DropdownMenuItem> */}
-                {/* Hidden: View Invoices */}
-                {/* <DropdownMenuItem onClick={() => setShowInvoicesModal(true)}>
-                  <Receipt className="me-2 h-4 w-4" />
-                  {t('billing.view_invoices')}
-                </DropdownMenuItem> */}
-                {subscription?.paymentMethod === 'stripe' && (
                   <DropdownMenuItem
-                    onClick={handleChangeCard}
-                    disabled={billingPortalMutation.isPending}
+                    onClick={() => setShowCancelModal(true)}
+                    className="text-red-600 focus:text-red-600"
                   >
-                    <CreditCard className="me-2 h-4 w-4" />
-                    {billingPortalMutation.isPending ? t('billing.changing_card') : t('billing.change_card')}
+                    <X className="me-2 h-4 w-4" />
+                    {t('billing.cancel_subscription')}
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuItem
-                  onClick={() => setShowCancelModal(true)}
-                  className="text-red-600 focus:text-red-600"
-                >
-                  <X className="me-2 h-4 w-4" />
-                  {t('billing.cancel_subscription')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <button
               onClick={handleUpgradeClick}
               className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
               <Rocket className="h-4 w-4" />
-              {subscription?.planCode === PlanCode.Free ? t('subscriptions.upgrade_plan') : t('subscriptions.change_plan')}
+              {subscription?.status === 'canceled'
+                ? t('subscriptions.subscribe')
+                : subscription?.planCode === PlanCode.Free
+                  ? t('subscriptions.upgrade_plan')
+                  : t('subscriptions.change_plan')}
             </button>
           </>
         }
@@ -246,7 +242,7 @@ export default function MySubscriptionPage() {
                 </div>
               ) : subscription ? (
                 /* Real Data */
-                <div className="flex flex-col gap-6 md:flex-row md:justify-between">
+                <div className={`flex flex-col gap-6 md:flex-row md:justify-between ${subscription.status === 'canceled' ? 'opacity-60' : ''}`}>
                   {/* Plan Name */}
                   <div>
                     <p className="text-sm font-medium text-gray-500">{t('subscriptions.plan_label')}</p>
@@ -257,6 +253,8 @@ export default function MySubscriptionPage() {
                       className={`mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                         subscription.status === 'active'
                           ? 'bg-green-100 text-green-800'
+                          : subscription.status === 'canceled'
+                          ? 'bg-red-100 text-red-800'
                           : subscription.status === 'paused'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-gray-100 text-gray-800'
@@ -318,24 +316,26 @@ export default function MySubscriptionPage() {
                     )}
                   </div>
 
-                  {/* Next Renewal */}
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">{t('subscriptions.next_renewal_label')}</p>
-                    <p className="mt-1 text-lg font-semibold text-gray-900">
-                      {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {t('subscriptions.days_remaining', { days: daysRemaining })}
-                    </p>
-                  </div>
+                  {/* Next Renewal - hidden for cancelled subscriptions */}
+                  {subscription.status !== 'canceled' && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">{t('subscriptions.next_renewal_label')}</p>
+                      <p className="mt-1 text-lg font-semibold text-gray-900">
+                        {format(new Date(subscription.currentPeriodEnd), 'MMM d, yyyy')}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {t('subscriptions.days_remaining', { days: daysRemaining })}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
               ) : null}
             </div>
           </div>
 
-          {/* Usage Statistics */}
-          <div className="overflow-hidden rounded-lg bg-white shadow">
+          {/* Usage Statistics - hidden for cancelled subscriptions */}
+          {subscription?.status !== 'canceled' && <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
               <h2 className="text-lg font-medium text-gray-900">{t('subscriptions.usage_statistics')}</h2>
             </div>
@@ -459,7 +459,7 @@ export default function MySubscriptionPage() {
                 </>
               ) : null}
             </div>
-          </div>
+          </div>}
 
           {/* Add-ons Section */}
           <div className="overflow-hidden rounded-lg bg-white shadow">

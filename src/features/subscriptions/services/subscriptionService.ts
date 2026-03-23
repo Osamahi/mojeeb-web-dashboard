@@ -99,18 +99,20 @@ class SubscriptionService {
    */
   async getMySubscriptionWithUsage(): Promise<{
     subscription: SubscriptionDetails;
-    usage: UsageSummary;
+    usage: UsageSummary | null;
   }> {
     const response = await api.get<ApiResponse<{
       subscription: ApiSubscriptionResponse;
-      usage: ApiUsageResponse;
+      usage: ApiUsageResponse | null;
     }>>(
       '/api/subscriptions/me'
     );
 
     return {
       subscription: this.transformSubscriptionResponse(response.data.data.subscription),
-      usage: this.transformUsageResponse(response.data.data.usage),
+      usage: response.data.data.usage
+        ? this.transformUsageResponse(response.data.data.usage)
+        : null,
     };
   }
 
