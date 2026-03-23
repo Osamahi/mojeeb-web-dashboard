@@ -88,7 +88,7 @@ export interface ApiCheckoutSessionResponse {
  * API response for billing portal session creation (snake_case from backend)
  */
 export interface ApiBillingPortalResponse {
-  session_url: string; // URL to redirect user to Stripe billing portal
+  portal_url: string; // URL to redirect user to Stripe billing portal
 }
 
 /**

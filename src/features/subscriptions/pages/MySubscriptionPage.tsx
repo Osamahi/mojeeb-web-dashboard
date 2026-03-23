@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, CreditCard } from 'lucide-react';
+import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, CreditCard, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { PlanCode } from '../types/subscription.types';
@@ -105,7 +105,11 @@ export default function MySubscriptionPage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white p-2 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                  <Settings className="h-5 w-5" />
+                  {billingPortalMutation.isPending ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Settings className="h-5 w-5" />
+                  )}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

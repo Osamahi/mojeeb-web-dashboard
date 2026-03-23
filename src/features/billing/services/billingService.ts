@@ -56,7 +56,7 @@ class BillingService {
     apiResponse: ApiBillingPortalResponse
   ): BillingPortalSession {
     return {
-      sessionUrl: apiResponse.session_url,
+      sessionUrl: apiResponse.portal_url,
     };
   }
 
