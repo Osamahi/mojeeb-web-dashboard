@@ -1264,6 +1264,8 @@
     "cancel_modal_subtitle": "Choose when you'd like your subscription to end",
     "cancel_important": "Important",
     "cancel_warning": "Canceling your subscription will remove access to all features and data. This action cannot be undone.",
+    "cancel_warning_title": "Are you sure?",
+    "cancel_warning_message": "Canceling your subscription will remove access to all features at the end of your billing period.",
     "cancel_at_period_end": "Cancel at period end",
     "cancel_at_period_end_desc": "You'll retain access until the end of your current billing period",
     "cancel_at_period_end_detail": "You'll retain access until the end of your current billing period on {{date}}. After that, your account will be downgraded to the free plan.",
