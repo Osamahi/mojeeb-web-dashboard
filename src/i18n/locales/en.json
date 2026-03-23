@@ -1284,6 +1284,7 @@
     "change_card": "Change Card",
     "changing_card": "Redirecting...",
     "manage_payment_method": "Manage your payment method",
+    "expires_date": "Expires {{month}}/{{year}}",
     "invoices_failed_load": "Failed to load invoices",
     "no_invoices_yet": "No invoices yet",
     "invoice_history_desc": "Your invoice history will appear here",

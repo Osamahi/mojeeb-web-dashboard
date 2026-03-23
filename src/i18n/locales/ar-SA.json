@@ -1280,6 +1280,7 @@
     "change_card": "تغيير البطاقة",
     "changing_card": "جاري التحويل...",
     "manage_payment_method": "إدارة طريقة الدفع",
+    "expires_date": "تنتهي {{month}}/{{year}}",
     "invoices_failed_load": "فشل تحميل الفواتير",
     "no_invoices_yet": "لا توجد فواتير بعد",
     "invoice_history_desc": "سيظهر سجل فواتيرك هنا",

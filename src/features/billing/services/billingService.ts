@@ -19,6 +19,8 @@ import type {
   ApiChangePlanResponse,
   ApiInvoiceListResponse,
   ApiInvoice,
+  ApiPaymentMethodResponse,
+  PaymentMethodDisplay,
 } from '../types/billing.types';
 
 /**
@@ -316,6 +318,36 @@ class BillingService {
     } catch (error) {
       logger.error('[BillingService]', 'Failed to fetch invoices', error);
       throw error;
+    }
+  }
+
+  /**
+   * Get the default payment method (card) for the current subscription
+   *
+   * @returns Payment method details or null if none on file
+   */
+  async getPaymentMethod(): Promise<PaymentMethodDisplay | null> {
+    try {
+      const response = await api.get<ApiResponse<ApiPaymentMethodResponse | null>>(
+        `${this.baseUrl}/payment-method`
+      );
+
+      const data = response.data.data;
+      if (!data) return null;
+
+      const now = new Date();
+      const expDate = new Date(data.exp_year, data.exp_month - 1);
+      const sixtyDaysFromNow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+
+      return {
+        brand: data.brand,
+        last4: data.last4,
+        expiryMonth: data.exp_month,
+        expiryYear: data.exp_year,
+        isExpiringSoon: expDate <= sixtyDaysFromNow,
+      };
+    } catch {
+      return null;
     }
   }
 }

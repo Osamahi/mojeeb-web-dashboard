@@ -92,6 +92,16 @@ export interface ApiBillingPortalResponse {
 }
 
 /**
+ * API response for payment method details (snake_case from backend)
+ */
+export interface ApiPaymentMethodResponse {
+  brand: string;
+  last4: string;
+  exp_month: number;
+  exp_year: number;
+}
+
+/**
  * API response for subscription cancellation (snake_case from backend)
  */
 export interface ApiCancelSubscriptionResponse {

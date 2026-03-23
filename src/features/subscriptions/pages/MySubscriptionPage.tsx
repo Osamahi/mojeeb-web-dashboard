@@ -1,12 +1,14 @@
 import { useState, useCallback } from 'react';
-import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, CreditCard, Loader2 } from 'lucide-react';
+import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, CreditCard, Loader2, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { PlanCode } from '../types/subscription.types';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { PlanChangeWizard } from '../components/PlanChangeWizard';
 import { CancelSubscriptionModal } from '@/features/billing/components/CancelSubscriptionModal';
 import { useCreateBillingPortalMutation } from '@/features/billing/hooks/useCreateBillingPortalMutation';
+import { billingService } from '@/features/billing/services/billingService';
 import { AddonListItem, AddonQuantityModal } from '@/features/addons/components';
 import { useAvailableAddons, useCreateAddonCheckout } from '@/features/addons/hooks/useAddonPurchase';
 import { useCurrency } from '@/lib/currency';
@@ -20,6 +22,38 @@ import {
 import { differenceInDays } from 'date-fns';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+
+/** Minimal card brand icon using inline SVG */
+function CardBrandIcon({ brand }: { brand: string }) {
+  const b = brand.toLowerCase();
+  if (b === 'visa') {
+    return (
+      <svg viewBox="0 0 48 32" className="h-4 w-6" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="32" rx="4" fill="#1A1F71" />
+        <text x="24" y="20" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold" fontFamily="Arial">VISA</text>
+      </svg>
+    );
+  }
+  if (b === 'mastercard') {
+    return (
+      <svg viewBox="0 0 48 32" className="h-4 w-6" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="32" rx="4" fill="#252525" />
+        <circle cx="19" cy="16" r="8" fill="#EB001B" />
+        <circle cx="29" cy="16" r="8" fill="#F79E1B" />
+        <path d="M24 9.5a8 8 0 010 13 8 8 0 010-13z" fill="#FF5F00" />
+      </svg>
+    );
+  }
+  if (b === 'amex' || b === 'american_express') {
+    return (
+      <svg viewBox="0 0 48 32" className="h-4 w-6" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="32" rx="4" fill="#006FCF" />
+        <text x="24" y="20" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold" fontFamily="Arial">AMEX</text>
+      </svg>
+    );
+  }
+  return <CreditCard className="h-4 w-4 text-gray-400" />;
+}
 
 export default function MySubscriptionPage() {
   const { t } = useTranslation();
@@ -39,6 +73,13 @@ export default function MySubscriptionPage() {
   const { currency } = useCurrency();
 
   const billingPortalMutation = useCreateBillingPortalMutation({ autoRedirect: true });
+
+  const { data: paymentMethod, isLoading: isLoadingPaymentMethod } = useQuery({
+    queryKey: ['payment-method'],
+    queryFn: () => billingService.getPaymentMethod(),
+    enabled: subscription?.paymentMethod === 'stripe',
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
   const messageAddons = addons?.filter(a => a.addon_type === 'message_credits') || [];
   const agentAddons = addons?.filter(a => a.addon_type === 'agent_slots') || [];
@@ -205,14 +246,24 @@ export default function MySubscriptionPage() {
                 </div>
               ) : subscription ? (
                 /* Real Data */
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                <div className="flex flex-col gap-6 md:flex-row md:justify-between">
                   {/* Plan Name */}
                   <div>
                     <p className="text-sm font-medium text-gray-500">{t('subscriptions.plan_label')}</p>
                     <p className="mt-1 text-2xl font-semibold text-gray-900">
                       {subscription.planName}
                     </p>
-                    <p className="mt-1 text-sm text-gray-500">{subscription.planCode}</p>
+                    <span
+                      className={`mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        subscription.status === 'active'
+                          ? 'bg-green-100 text-green-800'
+                          : subscription.status === 'paused'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {subscription.status}
+                    </span>
                   </div>
 
                   {/* Billing */}
@@ -237,27 +288,34 @@ export default function MySubscriptionPage() {
                         </div>
                       </>
                     )}
-                  </div>
-
-                  {/* Status */}
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">{t('subscriptions.status_label')}</p>
-                    <div className="mt-1">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
-                          subscription.status === 'active'
-                            ? 'bg-green-100 text-green-800'
-                            : subscription.status === 'paused'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {subscription.status}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {subscription.paymentMethod}
-                    </p>
+                    {/* Card details inline */}
+                    {subscription.paymentMethod === 'stripe' && (
+                      <div className="mt-2 flex items-center gap-2">
+                        {isLoadingPaymentMethod ? (
+                          <div className="flex items-center gap-2">
+                            <div className="h-4 w-6 animate-pulse rounded bg-gray-200" />
+                            <div className="h-3 w-16 animate-pulse rounded bg-gray-200" />
+                          </div>
+                        ) : paymentMethod ? (
+                          <>
+                            <CardBrandIcon brand={paymentMethod.brand} />
+                            <span className="text-sm text-gray-600">{paymentMethod.last4}</span>
+                            <button
+                              onClick={handleChangeCard}
+                              disabled={billingPortalMutation.isPending}
+                              className="ms-1 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                              title={t('billing.update_card')}
+                            >
+                              {billingPortalMutation.isPending ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Pencil className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          </>
+                        ) : null}
+                      </div>
+                    )}
                   </div>
 
                   {/* Next Renewal */}
@@ -271,6 +329,7 @@ export default function MySubscriptionPage() {
                     </p>
                   </div>
                 </div>
+
               ) : null}
             </div>
           </div>
