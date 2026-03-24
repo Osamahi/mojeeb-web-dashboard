@@ -178,6 +178,21 @@ export default function AdminSubscriptionsPage() {
     }
   };
 
+  const handleUpdateStatus = async (id: string, status: string) => {
+    try {
+      await subscriptionService.updateStatus(id, status);
+      // Update just this subscription in local state instead of full refresh
+      setSubscriptions(prev =>
+        prev.map(sub => sub.id === id ? { ...sub, status } : sub)
+      );
+      toast.success(t('subscriptions.status_update_success', 'Subscription status updated'));
+    } catch (error: any) {
+      console.error('Failed to update status:', error);
+      const message = error?.response?.data?.message || t('subscriptions.status_update_failed', 'Failed to update status');
+      toast.error(message);
+    }
+  };
+
   const handleChangePlan = (subscription: SubscriptionDetails) => {
     setSelectedSubscription(subscription);
     setShowChangePlanModal(true);
@@ -365,6 +380,7 @@ export default function AdminSubscriptionsPage() {
               onViewUsage={handleViewUsage}
               onTriggerCollection={handleTriggerCollection}
               triggeringCollectionId={triggeringCollectionId}
+              onUpdateStatus={handleUpdateStatus}
             />
 
             {/* Infinite Scroll Indicator */}

@@ -355,6 +355,14 @@ class SubscriptionService {
   }
 
   /**
+   * Update subscription status (active, paused, canceled).
+   * PATCH /api/admin/subscriptions/{id}/status
+   */
+  async updateStatus(subscriptionId: string, status: string): Promise<void> {
+    await api.patch(`/api/admin/subscriptions/${subscriptionId}/status`, { status });
+  }
+
+  /**
    * Trigger immediate payment collection on the latest open invoice for a subscription.
    * Used after a customer updates their payment method to retry a failed payment.
    * POST /api/admin/subscriptions/{id}/trigger-collection

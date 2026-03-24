@@ -14,6 +14,7 @@ interface SubscriptionTableProps {
   onViewUsage: (subscription: SubscriptionDetails) => void;
   onTriggerCollection: (subscription: SubscriptionDetails) => void;
   triggeringCollectionId: string | null;
+  onUpdateStatus: (id: string, status: string) => void;
 }
 
 export function SubscriptionTable({
@@ -26,6 +27,7 @@ export function SubscriptionTable({
   onViewUsage,
   onTriggerCollection,
   triggeringCollectionId,
+  onUpdateStatus,
 }: SubscriptionTableProps) {
   const { t } = useTranslation();
   const { format } = useDateLocale();
@@ -93,18 +95,18 @@ export function SubscriptionTable({
     return Math.min((used / limit) * 100, 100);
   };
 
-  const getStatusBadgeClasses = (status: string) => {
+  const getStatusColor = (status: string): string => {
     switch (status.toLowerCase()) {
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return '#16a34a';
       case 'paused':
-        return 'bg-yellow-100 text-yellow-800';
+        return '#ca8a04';
       case 'canceled':
-        return 'bg-red-100 text-red-800';
+        return '#dc2626';
       case 'expired':
-        return 'bg-gray-100 text-gray-800';
+        return '#6b7280';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return '#6b7280';
     }
   };
 
@@ -157,11 +159,28 @@ export function SubscriptionTable({
               </td>
               <td className="whitespace-nowrap px-6 py-4">
                 <div className="flex flex-col gap-1">
-                  <span
-                    className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold leading-5 ${getStatusBadgeClasses(subscription.status)}`}
+                  <select
+                    value={subscription.status.toLowerCase()}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      onUpdateStatus(subscription.id, e.target.value);
+                    }}
+                    className="px-1 py-1 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none"
+                    style={{
+                      color: getStatusColor(subscription.status),
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: 'right 0.25rem center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '1.25em 1.25em',
+                      paddingRight: '1.75rem',
+                    }}
                   >
-                    {subscription.status}
-                  </span>
+                    {['active', 'paused', 'canceled'].map((status) => (
+                      <option key={status} value={status}>
+                        {t(`subscriptions.status_${status}`, status)}
+                      </option>
+                    ))}
+                  </select>
                   {subscription.isFlaggedNonPaying && (
                     <span className="inline-flex items-center gap-1 text-xs text-orange-600">
                       <Flag className="h-3 w-3" />
