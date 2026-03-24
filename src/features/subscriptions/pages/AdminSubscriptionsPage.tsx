@@ -159,6 +159,25 @@ export default function AdminSubscriptionsPage() {
     }
   };
 
+  const [triggeringCollectionId, setTriggeringCollectionId] = useState<string | null>(null);
+
+  const handleTriggerCollection = async (subscription: SubscriptionDetails) => {
+    if (triggeringCollectionId) return;
+    setTriggeringCollectionId(subscription.id);
+    try {
+      const result = await subscriptionService.triggerCollection(subscription.id);
+      const amount = (result.amountPaid / 100).toFixed(2);
+      toast.success(`${t('subscriptions.trigger_collection_success', 'Payment collected')}: ${result.currency} ${amount}`);
+      handleRefresh();
+    } catch (error: any) {
+      console.error('Failed to trigger collection:', error);
+      const message = error?.response?.data?.message || t('subscriptions.trigger_collection_failed', 'Failed to trigger payment collection');
+      toast.error(message);
+    } finally {
+      setTriggeringCollectionId(null);
+    }
+  };
+
   const handleChangePlan = (subscription: SubscriptionDetails) => {
     setSelectedSubscription(subscription);
     setShowChangePlanModal(true);
@@ -344,6 +363,8 @@ export default function AdminSubscriptionsPage() {
               onChangePlan={handleChangePlan}
               onEditLimits={handleEditLimits}
               onViewUsage={handleViewUsage}
+              onTriggerCollection={handleTriggerCollection}
+              triggeringCollectionId={triggeringCollectionId}
             />
 
             {/* Infinite Scroll Indicator */}

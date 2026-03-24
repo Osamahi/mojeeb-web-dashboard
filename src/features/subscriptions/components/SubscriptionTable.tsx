@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit, BarChart3, Sliders } from 'lucide-react';
+import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit, BarChart3, Sliders, CreditCard, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SubscriptionDetails } from '../types/subscription.types';
 import { useDateLocale } from '@/lib/dateConfig';
@@ -12,6 +12,8 @@ interface SubscriptionTableProps {
   onChangePlan: (subscription: SubscriptionDetails) => void;
   onEditLimits: (subscription: SubscriptionDetails) => void;
   onViewUsage: (subscription: SubscriptionDetails) => void;
+  onTriggerCollection: (subscription: SubscriptionDetails) => void;
+  triggeringCollectionId: string | null;
 }
 
 export function SubscriptionTable({
@@ -22,6 +24,8 @@ export function SubscriptionTable({
   onChangePlan,
   onEditLimits,
   onViewUsage,
+  onTriggerCollection,
+  triggeringCollectionId,
 }: SubscriptionTableProps) {
   const { t } = useTranslation();
   const { format } = useDateLocale();
@@ -284,6 +288,25 @@ export function SubscriptionTable({
                             <Flag className="h-4 w-4" />
                             {subscription.isFlaggedNonPaying ? t('subscriptions.unflag') : t('subscriptions.flag_non_paying')}
                           </button>
+
+                          {subscription.paymentMethod === 'stripe' && (
+                            <button
+                              onClick={() => {
+                                onTriggerCollection(subscription);
+                                setOpenMenuId(null);
+                                setMenuPosition(null);
+                              }}
+                              disabled={triggeringCollectionId === subscription.id}
+                              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {triggeringCollectionId === subscription.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <CreditCard className="h-4 w-4" />
+                              )}
+                              {t('subscriptions.trigger_collection', 'Trigger Collection')}
+                            </button>
+                          )}
 
                           <button
                             onClick={() => {

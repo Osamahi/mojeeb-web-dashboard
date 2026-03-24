@@ -71,6 +71,22 @@ interface ApiResponse<T> {
   data: T;
 }
 
+interface ApiTriggerCollectionResponse {
+  invoice_id: string;
+  status: string;
+  amount_due: number;
+  amount_paid: number;
+  currency: string;
+  paid_at: string | null;
+}
+
+export interface TriggerCollectionResult {
+  invoiceId: string;
+  status: string;
+  amountPaid: number;
+  currency: string;
+}
+
 interface PaginatedApiResponse<T> {
   data: T[];
   pagination: {
@@ -336,6 +352,24 @@ class SubscriptionService {
       `/api/admin/subscriptions/${subscriptionId}/usage`
     );
     return this.transformUsageResponse(response.data.data);
+  }
+
+  /**
+   * Trigger immediate payment collection on the latest open invoice for a subscription.
+   * Used after a customer updates their payment method to retry a failed payment.
+   * POST /api/admin/subscriptions/{id}/trigger-collection
+   */
+  async triggerCollection(subscriptionId: string): Promise<TriggerCollectionResult> {
+    const response = await api.post<ApiResponse<ApiTriggerCollectionResponse>>(
+      `/api/admin/subscriptions/${subscriptionId}/trigger-collection`
+    );
+    const data = response.data.data;
+    return {
+      invoiceId: data.invoice_id,
+      status: data.status,
+      amountPaid: data.amount_paid,
+      currency: data.currency,
+    };
   }
 
   /**
