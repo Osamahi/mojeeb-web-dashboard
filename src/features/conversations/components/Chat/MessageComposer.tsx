@@ -1066,7 +1066,7 @@ export default memo(function MessageComposer({
       const syntheticEvent = { target: { files: dt.files } } as React.ChangeEvent<HTMLInputElement>;
       handleVideoSelect(syntheticEvent);
     }
-  }, [classifyFile, t]);
+  }, [classifyFile, t, handleFileSelect, handleAudioSelect, handleDocumentSelect, handleVideoSelect]);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
