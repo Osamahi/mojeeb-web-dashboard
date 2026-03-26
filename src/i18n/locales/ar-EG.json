@@ -2082,6 +2082,8 @@
     "switch_mode_title": "اضغط عشان تغيّر لوضع {{mode}}",
     "upload_photo": "ارفع صورة",
     "upload_file": "ارفع ملف",
+    "upload_video": "ارفع فيديو",
+    "upload_video_aria": "ارفع فيديو",
     "upload_file_aria": "ارفع ملفات مستندات",
     "attach_aria": "أرفق",
     "attach_title": "أرفق ملف أو صورة",

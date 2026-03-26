@@ -2083,6 +2083,8 @@
     "switch_mode_title": "Click to switch to {{mode}} mode",
     "upload_photo": "Upload Photo",
     "upload_file": "Upload File",
+    "upload_video": "Upload Video",
+    "upload_video_aria": "Upload video",
     "upload_file_aria": "Upload document files",
     "attach_aria": "Attach",
     "attach_title": "Attach file or image",

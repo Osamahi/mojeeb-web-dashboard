@@ -1186,7 +1186,7 @@ export default memo(function MessageComposer({
         accept="video/mp4,video/3gpp,video/webm,video/quicktime,.mp4,.3gp,.webm,.mov"
         onChange={handleVideoSelect}
         className="hidden"
-        aria-label={t('message_composer.upload_video_aria', { defaultValue: 'Upload video' })}
+        aria-label={t('message_composer.upload_video_aria')}
       />
 
       {/* Image Previews - ChatGPT Style with Upload Progress */}
@@ -1507,7 +1507,7 @@ export default memo(function MessageComposer({
                   className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors border-t border-neutral-100"
                 >
                   <Video className="w-4 h-4 text-neutral-500" />
-                  {t('message_composer.upload_video', { defaultValue: 'Video' })}
+                  {t('message_composer.upload_video')}
                 </button>
               </div>
             )}
