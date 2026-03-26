@@ -2665,6 +2665,8 @@
     "status_disconnected": "Disconnected",
     "test": "Test",
     "testing": "Testing...",
+    "reconnect": "Reconnect",
+    "reconnecting": "Reconnecting...",
     "select_connection": "Google Sheets Connection",
     "select_connection_placeholder": "-- Select a connection --",
     "select_tab": "Sheet Tab",

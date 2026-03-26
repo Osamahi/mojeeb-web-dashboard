@@ -1,9 +1,13 @@
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trash2, FileSpreadsheet, AlertTriangle } from 'lucide-react';
+import { Trash2, FileSpreadsheet, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useDateLocale } from '@/lib/dateConfig';
 import type { IntegrationConnection } from '../types';
 import ConnectionStatusBadge from './ConnectionStatusBadge';
 import TestConnectionButton from './TestConnectionButton';
+import { useInitiateGoogleOAuth, useReconnectConnection } from '../hooks/useIntegrations';
+import { openOAuthPopup, getOAuthErrorMessage, cleanupOAuthStorage } from '@/features/connections/utils/oauthManager';
+import { toast } from 'sonner';
 
 interface IntegrationConnectionCardProps {
   connection: IntegrationConnection;
@@ -27,6 +31,27 @@ export default function IntegrationConnectionCard({
   const { t } = useTranslation();
   const { formatSmartTimestamp } = useDateLocale();
   const Icon = connectorIcons[connection.connectorType] || FileSpreadsheet;
+  const initiateOAuth = useInitiateGoogleOAuth();
+  const reconnectMutation = useReconnectConnection();
+  const [isReconnecting, setIsReconnecting] = useState(false);
+
+  const handleReconnect = useCallback(async () => {
+    setIsReconnecting(true);
+    try {
+      const authUrl = await initiateOAuth.mutateAsync();
+      const result = await openOAuthPopup(authUrl);
+      await reconnectMutation.mutateAsync({
+        connectionId: connection.id,
+        tempConnectionId: result.tempConnectionId,
+      });
+      cleanupOAuthStorage();
+    } catch (error) {
+      const message = getOAuthErrorMessage(error);
+      toast.error(message);
+    } finally {
+      setIsReconnecting(false);
+    }
+  }, [initiateOAuth, reconnectMutation, connection.id]);
 
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
@@ -87,6 +112,16 @@ export default function IntegrationConnectionCard({
           }
         </div>
         <div className="flex items-center gap-2">
+          {(connection.isTokenExpired || connection.status === 'error') && (
+            <button
+              onClick={handleReconnect}
+              disabled={isReconnecting}
+              className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-white px-3 py-1.5 text-sm font-medium text-amber-600 hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <RefreshCw className={`h-4 w-4 ${isReconnecting ? 'animate-spin' : ''}`} />
+              {isReconnecting ? t('integrations.reconnecting') : t('integrations.reconnect')}
+            </button>
+          )}
           <TestConnectionButton connectionId={connection.id} />
           <button
             onClick={() => onDelete(connection.id)}

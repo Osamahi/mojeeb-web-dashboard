@@ -2538,6 +2538,8 @@
     "status_disconnected": "غير متصل",
     "test": "اختبار",
     "testing": "جاري الاختبار...",
+    "reconnect": "إعادة الاتصال",
+    "reconnecting": "جاري إعادة الاتصال...",
     "select_connection": "اتصال Google Sheets",
     "select_connection_placeholder": "-- اختر اتصال --",
     "select_tab": "تبويب الجدول",

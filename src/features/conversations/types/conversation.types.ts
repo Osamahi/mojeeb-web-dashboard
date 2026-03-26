@@ -228,10 +228,12 @@ export const parseAttachments = (attachmentsJson: string | object | null): Messa
     // Log parsed structure for debugging
     logger.debug('[parseAttachments]', 'Parsed structure:', {
       hasImages: !!parsed.images,
+      hasVideos: !!parsed.videos,
       hasAudio: !!parsed.audio,
       hasFiles: !!parsed.files,
       hasDocuments: !!parsed.documents,
       imageCount: parsed.images?.length ?? 0,
+      videoCount: parsed.videos?.length ?? 0,
       audioCount: parsed.audio?.length ?? 0,
       fileCount: (parsed.files || parsed.documents)?.length ?? 0,
       rawKeys: Object.keys(parsed),
@@ -247,7 +249,8 @@ export const parseAttachments = (attachmentsJson: string | object | null): Messa
 
     // Extract and validate arrays
     // Handle both 'files' (display/Supabase) and 'documents' (backend AttachmentsWrapper) keys
-    const images = normalize(parsed.images || []);
+    // Videos are merged into images array since the renderer detects them via content_type
+    const images = normalize([...(parsed.images || []), ...(parsed.videos || [])]);
     const audio = normalize(parsed.audio || []);
     const files = normalize(parsed.files || parsed.documents || []);
 

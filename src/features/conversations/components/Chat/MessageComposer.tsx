@@ -7,7 +7,7 @@
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music, Image, FileText, Upload } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music, Image, FileText, Upload, Video } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -41,6 +41,10 @@ const ALLOWED_DOCUMENT_TYPES = [
   'text/csv', // .csv
 ];
 const ALLOWED_DOCUMENT_EXTENSIONS = ['.pdf', '.docx', '.xlsx', '.xls', '.txt', '.csv'];
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/3gpp', 'video/webm', 'video/quicktime'];
+const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.3gp', '.webm', '.mov'];
+const MAX_VIDEO_SIZE_MB = 16; // Backend video limit
+const MAX_VIDEO_SIZE_BYTES = MAX_VIDEO_SIZE_MB * 1024 * 1024;
 const THUMBNAIL_SIZE_PX = 80;
 
 /**
@@ -110,6 +114,18 @@ interface UploadedDocument {
   isUploading: boolean;
 }
 
+/**
+ * Upload state for individual video files
+ */
+interface UploadedVideo {
+  id: string;
+  file: File;
+  attachment?: MediaAttachment;
+  progress: number;
+  error?: string;
+  isUploading: boolean;
+}
+
 export default memo(function MessageComposer({
   onSendMessage,
   isSending,
@@ -136,12 +152,16 @@ export default memo(function MessageComposer({
   // Track uploaded documents
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
 
+  // Track uploaded videos
+  const [uploadedVideos, setUploadedVideos] = useState<UploadedVideo[]>([]);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const attachMenuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0); // Track nested drag enter/leave events
 
   // Auto-resize textarea (optimized with useCallback)
@@ -285,6 +305,13 @@ export default memo(function MessageComposer({
       return;
     }
 
+    // Check if any videos are still uploading
+    const hasUploadingVideos = uploadedVideos.some(vid => vid.isUploading);
+    if (hasUploadingVideos) {
+      toast.error(t('message_composer.wait_videos_uploading', { defaultValue: 'Please wait for video upload to complete' }));
+      return;
+    }
+
     // Check if any images failed to upload
     const hasFailedImages = uploadedImages.some(img => img.error);
     if (hasFailedImages) {
@@ -306,8 +333,15 @@ export default memo(function MessageComposer({
       return;
     }
 
+    // Check if any videos failed to upload
+    const hasFailedVideos = uploadedVideos.some(vid => vid.error);
+    if (hasFailedVideos) {
+      toast.error(t('message_composer.video_upload_failed_generic', { defaultValue: 'Please remove failed video before sending' }));
+      return;
+    }
+
     // Allow empty message if there are attachments (WhatsApp-style voice messages)
-    const hasAttachments = uploadedImages.length > 0 || uploadedAudio.length > 0 || uploadedDocuments.length > 0;
+    const hasAttachments = uploadedImages.length > 0 || uploadedAudio.length > 0 || uploadedDocuments.length > 0 || uploadedVideos.length > 0;
     if (!sanitizedMessage && !hasAttachments) {
       // Empty message with no attachments - do nothing
       return;
@@ -335,17 +369,23 @@ export default memo(function MessageComposer({
         .filter(doc => doc.attachment && !doc.error)
         .map(doc => doc.attachment!);
 
-      if (successfulImageUploads.length > 0 || successfulAudioUploads.length > 0 || successfulDocUploads.length > 0) {
-        const wrapper: { images?: MediaAttachment[]; audio?: MediaAttachment[]; documents?: MediaAttachment[] } = {};
+      const successfulVideoUploads = uploadedVideos
+        .filter(vid => vid.attachment && !vid.error)
+        .map(vid => vid.attachment!);
+
+      if (successfulImageUploads.length > 0 || successfulAudioUploads.length > 0 || successfulDocUploads.length > 0 || successfulVideoUploads.length > 0) {
+        const wrapper: { images?: MediaAttachment[]; audio?: MediaAttachment[]; documents?: MediaAttachment[]; videos?: MediaAttachment[] } = {};
         if (successfulImageUploads.length > 0) wrapper.images = successfulImageUploads;
         if (successfulAudioUploads.length > 0) wrapper.audio = successfulAudioUploads;
         if (successfulDocUploads.length > 0) wrapper.documents = successfulDocUploads;
+        if (successfulVideoUploads.length > 0) wrapper.videos = successfulVideoUploads;
 
         attachmentsJson = JSON.stringify(wrapper);
         logger.info('Using pre-uploaded attachments', {
           images: successfulImageUploads.length,
           audio: successfulAudioUploads.length,
           documents: successfulDocUploads.length,
+          videos: successfulVideoUploads.length,
         });
       }
 
@@ -354,6 +394,7 @@ export default memo(function MessageComposer({
       setUploadedImages([]);
       setUploadedAudio([]);
       setUploadedDocuments([]);
+      setUploadedVideos([]);
 
       // Reset textarea height
       if (textareaRef.current) {
@@ -775,6 +816,96 @@ export default memo(function MessageComposer({
     logger.info('Removed document', { index });
   };
 
+  const handleRemoveVideo = (index: number) => {
+    setUploadedVideos(prev => prev.filter((_, i) => i !== index));
+    logger.info('Removed video', { index });
+  };
+
+  const handleVideoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    // Only 1 video per message
+    if (uploadedVideos.length + files.length > 1) {
+      toast.error(t('message_composer.max_videos_error', { defaultValue: 'Only 1 video per message' }));
+      return;
+    }
+
+    const validFiles: File[] = [];
+    for (const file of files) {
+      const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+      if (!ALLOWED_VIDEO_TYPES.includes(file.type) && !ALLOWED_VIDEO_EXTENSIONS.includes(extension)) {
+        toast.error(t('message_composer.invalid_video_type_error', { filename: file.name, defaultValue: `Unsupported video type: ${file.name}` }));
+        continue;
+      }
+
+      if (file.size > MAX_VIDEO_SIZE_BYTES) {
+        toast.error(t('message_composer.video_too_large_error', { filename: file.name, maxSize: MAX_VIDEO_SIZE_MB, defaultValue: `Video ${file.name} exceeds ${MAX_VIDEO_SIZE_MB}MB limit` }));
+        continue;
+      }
+
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) {
+      if (videoInputRef.current) videoInputRef.current.value = '';
+      return;
+    }
+
+    const tempMessageId = crypto.randomUUID();
+
+    const newUploads: UploadedVideo[] = validFiles.map(file => ({
+      id: crypto.randomUUID(),
+      file,
+      progress: 0,
+      isUploading: true,
+    }));
+
+    setUploadedVideos(prev => [...prev, ...newUploads]);
+
+    logger.info(`Starting upload-on-select for ${validFiles.length} video(s)`);
+
+    newUploads.forEach(async (uploadedVideo) => {
+      try {
+        logger.info(`Starting video upload for ${uploadedVideo.file.name}`, { id: uploadedVideo.id });
+
+        const attachment = await chatApiService.uploadVideoWithProgress({
+          file: uploadedVideo.file,
+          conversationId,
+          messageId: tempMessageId,
+          onProgress: (progress) => {
+            setUploadedVideos(prev =>
+              prev.map(vid =>
+                vid.id === uploadedVideo.id ? { ...vid, progress } : vid
+              )
+            );
+          },
+        });
+
+        logger.info(`Video upload complete: ${uploadedVideo.file.name}`, { id: uploadedVideo.id });
+        setUploadedVideos(prev =>
+          prev.map(vid =>
+            vid.id === uploadedVideo.id
+              ? { ...vid, attachment, progress: 100, isUploading: false }
+              : vid
+          )
+        );
+      } catch (error) {
+        logger.error(`Video upload failed: ${uploadedVideo.file.name}`, error, { id: uploadedVideo.id });
+        setUploadedVideos(prev =>
+          prev.map(vid =>
+            vid.id === uploadedVideo.id
+              ? { ...vid, error: 'Upload failed', isUploading: false, progress: 0 }
+              : vid
+          )
+        );
+        toast.error(t('message_composer.video_upload_failed', { filename: uploadedVideo.file.name, defaultValue: `Failed to upload ${uploadedVideo.file.name}` }));
+      }
+    });
+
+    // Reset file input
+    if (videoInputRef.current) videoInputRef.current.value = '';
+  };
+
   const handleAttachmentClick = () => {
     setShowAttachMenu(prev => !prev);
   };
@@ -787,6 +918,11 @@ export default memo(function MessageComposer({
   const handleFileOption = () => {
     setShowAttachMenu(false);
     documentInputRef.current?.click();
+  };
+
+  const handleVideoOption = () => {
+    setShowAttachMenu(false);
+    videoInputRef.current?.click();
   };
 
   const handleAudioButtonClick = () => {
@@ -857,14 +993,16 @@ export default memo(function MessageComposer({
    * Classify a file by its MIME type / extension and route to the appropriate upload handler.
    * Returns 'image' | 'audio' | 'document' | 'unsupported'.
    */
-  const classifyFile = useCallback((file: File): 'image' | 'audio' | 'document' | 'unsupported' => {
+  const classifyFile = useCallback((file: File): 'image' | 'audio' | 'document' | 'video' | 'unsupported' => {
     if (ALLOWED_IMAGE_TYPES.includes(file.type)) return 'image';
+    if (ALLOWED_VIDEO_TYPES.includes(file.type)) return 'video';
     if (ALLOWED_AUDIO_TYPES.includes(file.type)) return 'audio';
     if (ALLOWED_DOCUMENT_TYPES.includes(file.type)) return 'document';
 
     // Fallback: check extension
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
     if (['.jpg', '.jpeg', '.png'].includes(ext)) return 'image';
+    if (ALLOWED_VIDEO_EXTENSIONS.includes(ext)) return 'video';
     if (['.mp3', '.m4a', '.ogg', '.wav', '.aac', '.flac', '.webm'].includes(ext)) return 'audio';
     if (ALLOWED_DOCUMENT_EXTENSIONS.includes(ext)) return 'document';
 
@@ -879,6 +1017,7 @@ export default memo(function MessageComposer({
     const images: File[] = [];
     const audio: File[] = [];
     const documents: File[] = [];
+    const videos: File[] = [];
     const unsupported: string[] = [];
 
     for (const file of files) {
@@ -886,6 +1025,7 @@ export default memo(function MessageComposer({
         case 'image': images.push(file); break;
         case 'audio': audio.push(file); break;
         case 'document': documents.push(file); break;
+        case 'video': videos.push(file); break;
         default: unsupported.push(file.name); break;
       }
     }
@@ -918,6 +1058,13 @@ export default memo(function MessageComposer({
       documents.forEach(f => dt.items.add(f));
       const syntheticEvent = { target: { files: dt.files } } as React.ChangeEvent<HTMLInputElement>;
       handleDocumentSelect(syntheticEvent);
+    }
+
+    if (videos.length > 0) {
+      const dt = new DataTransfer();
+      videos.forEach(f => dt.items.add(f));
+      const syntheticEvent = { target: { files: dt.files } } as React.ChangeEvent<HTMLInputElement>;
+      handleVideoSelect(syntheticEvent);
     }
   }, [classifyFile, t]);
 
@@ -1032,6 +1179,14 @@ export default memo(function MessageComposer({
         onChange={handleDocumentSelect}
         className="hidden"
         aria-label={t('message_composer.upload_file_aria')}
+      />
+      <input
+        ref={videoInputRef}
+        type="file"
+        accept="video/mp4,video/3gpp,video/webm,video/quicktime,.mp4,.3gp,.webm,.mov"
+        onChange={handleVideoSelect}
+        className="hidden"
+        aria-label={t('message_composer.upload_video_aria', { defaultValue: 'Upload video' })}
       />
 
       {/* Image Previews - ChatGPT Style with Upload Progress */}
@@ -1203,6 +1358,59 @@ export default memo(function MessageComposer({
         </div>
       )}
 
+      {/* Video Previews */}
+      {uploadedVideos.length > 0 && (
+        <div className="flex flex-col gap-2 mb-3">
+          {uploadedVideos.map((uploadedVideo, index) => (
+            <div
+              key={uploadedVideo.id}
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-lg border",
+                uploadedVideo.error ? "border-red-300 bg-red-50" : "border-neutral-200 bg-neutral-50"
+              )}
+            >
+              <Video className="w-5 h-5 text-neutral-500 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-neutral-900 truncate">
+                  {uploadedVideo.file.name}
+                </div>
+                <div className="text-xs text-neutral-500">
+                  {(uploadedVideo.file.size / 1024 / 1024).toFixed(2)} MB
+                </div>
+              </div>
+              {uploadedVideo.isUploading && (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Loader2 className="w-4 h-4 text-neutral-600 animate-spin" />
+                  <span className="text-xs font-medium text-neutral-600 min-w-[3ch]">
+                    {uploadedVideo.progress}%
+                  </span>
+                </div>
+              )}
+              {uploadedVideo.error && (
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <span className="text-xs text-red-600">{t('conversations.upload_failed')}</span>
+                </div>
+              )}
+              <button
+                onClick={() => handleRemoveVideo(index)}
+                disabled={uploadedVideo.isUploading}
+                className={cn(
+                  "p-1.5 rounded-md",
+                  "text-neutral-500 hover:text-neutral-700",
+                  "hover:bg-neutral-200",
+                  "transition-colors",
+                  uploadedVideo.isUploading && "opacity-50 cursor-not-allowed"
+                )}
+                aria-label={t('message_composer.remove_video_aria', { index: index + 1, defaultValue: `Remove video ${index + 1}` })}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Line 1: Input Field */}
       <textarea
         ref={textareaRef}
@@ -1294,6 +1502,13 @@ export default memo(function MessageComposer({
                   <FileText className="w-4 h-4 text-neutral-500" />
                   {t('message_composer.upload_file')}
                 </button>
+                <button
+                  onClick={handleVideoOption}
+                  className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors border-t border-neutral-100"
+                >
+                  <Video className="w-4 h-4 text-neutral-500" />
+                  {t('message_composer.upload_video', { defaultValue: 'Video' })}
+                </button>
               </div>
             )}
           </div>
@@ -1379,29 +1594,29 @@ export default memo(function MessageComposer({
 
         {/* Right: Send/Microphone Button - WhatsApp-style toggle */}
         <button
-          onClick={message.trim() ? handleSend : handleAudioButtonClick}
-          disabled={message.trim() ? (!message.trim() || isSending || isLocalSending) : false}
+          onClick={(message.trim() || uploadedImages.length > 0 || uploadedAudio.length > 0 || uploadedDocuments.length > 0 || uploadedVideos.length > 0) ? handleSend : handleAudioButtonClick}
+          disabled={(message.trim() || uploadedImages.length > 0 || uploadedAudio.length > 0 || uploadedDocuments.length > 0 || uploadedVideos.length > 0) ? (isSending || isLocalSending) : false}
           className={cn(
             'rounded-full w-10 h-10',
             'flex items-center justify-center',
             'flex-shrink-0',
             'transition-all duration-200',
-            message.trim() && !isSending && !isLocalSending
+            (message.trim() || uploadedImages.length > 0 || uploadedAudio.length > 0 || uploadedDocuments.length > 0 || uploadedVideos.length > 0) && !isSending && !isLocalSending
               ? 'bg-neutral-950 text-white hover:bg-neutral-800 hover:scale-105'
               : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
           )}
           title={
-            message.trim()
+            (message.trim() || uploadedImages.length > 0 || uploadedAudio.length > 0 || uploadedDocuments.length > 0 || uploadedVideos.length > 0)
               ? isSending || isLocalSending
                 ? t('message_composer.sending')
-                : uploadedImages.some(img => img.isUploading) || uploadedAudio.some(aud => aud.isUploading)
+                : uploadedImages.some(img => img.isUploading) || uploadedAudio.some(aud => aud.isUploading) || uploadedVideos.some(vid => vid.isUploading)
                 ? t('message_composer.wait_for_uploads')
                 : t('message_composer.send_message_hint')
               : t('message_composer.attach_audio_hint')
           }
-          aria-label={message.trim() ? t('message_composer.send_message_aria') : t('message_composer.attach_audio_aria')}
+          aria-label={(message.trim() || uploadedImages.length > 0 || uploadedAudio.length > 0 || uploadedDocuments.length > 0 || uploadedVideos.length > 0) ? t('message_composer.send_message_aria') : t('message_composer.attach_audio_aria')}
         >
-          {message.trim() ? (
+          {(message.trim() || uploadedImages.length > 0 || uploadedAudio.length > 0 || uploadedDocuments.length > 0 || uploadedVideos.length > 0) ? (
             isSending || isLocalSending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (

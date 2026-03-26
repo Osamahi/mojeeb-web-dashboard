@@ -121,6 +121,17 @@ class IntegrationService {
   }
 
   /**
+   * Reconnect an existing integration connection with fresh OAuth tokens
+   */
+  async reconnectConnection(connectionId: string, tempConnectionId: string): Promise<IntegrationConnection> {
+    const { data } = await api.post<{ data: ApiIntegrationConnectionResponse }>(
+      `/api/integrations/connections/${connectionId}/reconnect`,
+      { temp_connection_id: tempConnectionId }
+    );
+    return transformConnection(data.data);
+  }
+
+  /**
    * Test an integration connection
    */
   async testConnection(connectionId: string): Promise<TestConnectionResult> {

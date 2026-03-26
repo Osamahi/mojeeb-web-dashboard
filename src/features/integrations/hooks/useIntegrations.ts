@@ -81,6 +81,25 @@ export function useUpdateConnection() {
 }
 
 /**
+ * Reconnect an existing integration connection with fresh OAuth tokens
+ */
+export function useReconnectConnection() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ connectionId, tempConnectionId }: { connectionId: string; tempConnectionId: string }) =>
+      integrationService.reconnectConnection(connectionId, tempConnectionId),
+    onSuccess: () => {
+      toast.success('Connection reconnected successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.integrationConnections() });
+    },
+    onError: () => {
+      toast.error('Failed to reconnect connection');
+    },
+  });
+}
+
+/**
  * Delete an integration connection
  */
 export function useDeleteConnection() {
