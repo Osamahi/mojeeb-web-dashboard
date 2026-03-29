@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { TestTube2, HelpCircle } from 'lucide-react';
+import { TestTube2, HelpCircle, MessageSquare, MessageCircle } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -230,6 +230,41 @@ export function ConnectionDetailsModal({
                   </div>
                   <div className="text-sm text-neutral-900">
                     {connection.organizationName || t('common.none')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Response Settings */}
+          <div>
+            <h3 className="text-sm font-medium text-neutral-900 mb-3">
+              {t('connections.details.ai_response_settings', 'AI Response Settings')}
+            </h3>
+            <div className="bg-neutral-50 rounded-lg p-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className={`w-4 h-4 ${connection.respondToMessages ? 'text-green-600' : 'text-neutral-400'}`} />
+                    <span className="text-sm text-neutral-700">{t('connections.details.messages', 'Messages')}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${connection.respondToMessages ? 'bg-green-500' : 'bg-neutral-300'}`} />
+                    <span className={`text-xs font-medium ${connection.respondToMessages ? 'text-green-700' : 'text-neutral-400'}`}>
+                      {connection.respondToMessages ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className={`w-4 h-4 ${connection.respondToComments ? 'text-green-600' : 'text-neutral-400'}`} />
+                    <span className="text-sm text-neutral-700">{t('connections.details.comments', 'Comments')}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${connection.respondToComments ? 'bg-green-500' : 'bg-neutral-300'}`} />
+                    <span className={`text-xs font-medium ${connection.respondToComments ? 'text-green-700' : 'text-neutral-400'}`}>
+                      {connection.respondToComments ? 'ON' : 'OFF'}
+                    </span>
                   </div>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, ChevronLeft, ChevronRight, MessageSquare, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import type { AdminConnectionListItem } from '../services/adminConnectionService';
@@ -83,6 +83,9 @@ export function AdminConnectionsTable({
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
                 {t('connections.table.status')}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
+                {t('connections.table.ai_responds_to', 'AI Responds To')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
                 {t('connections.table.metadata')}
@@ -171,6 +174,24 @@ export function AdminConnectionsTable({
                     >
                       {connection.isActive ? t('common.active') : t('common.inactive')}
                     </span>
+                  </td>
+
+                  {/* AI Responds To */}
+                  <td className="px-4 py-4">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`inline-block w-2 h-2 rounded-full ${connection.respondToMessages ? 'bg-green-500' : 'bg-neutral-300'}`} />
+                        <span className={`text-xs ${connection.respondToMessages ? 'text-neutral-700' : 'text-neutral-400'}`}>
+                          {t('connections.table.messages', 'Messages')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`inline-block w-2 h-2 rounded-full ${connection.respondToComments ? 'bg-green-500' : 'bg-neutral-300'}`} />
+                        <span className={`text-xs ${connection.respondToComments ? 'text-neutral-700' : 'text-neutral-400'}`}>
+                          {t('connections.table.comments', 'Comments')}
+                        </span>
+                      </div>
+                    </div>
                   </td>
 
                   {/* Metadata */}

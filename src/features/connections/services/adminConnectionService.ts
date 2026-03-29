@@ -33,6 +33,8 @@ export interface AdminConnectionListItem {
   businessCategory: string | null;
   parentPageId: string | null;
   codeVerificationStatus: string | null;
+  respondToMessages: boolean;
+  respondToComments: boolean;
   createdAt: string;
 }
 
@@ -74,6 +76,8 @@ interface ApiAdminConnectionListItem {
   business_category: string | null;
   parent_page_id: string | null;
   code_verification_status: string | null;
+  respond_to_messages: boolean;
+  respond_to_comments: boolean;
   created_at: string;
 }
 
@@ -121,6 +125,8 @@ class AdminConnectionService {
       businessCategory: apiConnection.business_category,
       parentPageId: apiConnection.parent_page_id,
       codeVerificationStatus: apiConnection.code_verification_status,
+      respondToMessages: apiConnection.respond_to_messages,
+      respondToComments: apiConnection.respond_to_comments,
       createdAt: apiConnection.created_at,
     };
   }
