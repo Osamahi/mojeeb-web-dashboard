@@ -38,7 +38,7 @@ export function DropdownMenu({ children }: DropdownMenuProps) {
 
   return (
     <DropdownMenuContext.Provider value={{ isOpen, setIsOpen }}>
-      <div ref={menuRef} className="relative inline-block">
+      <div ref={menuRef} className={cn('relative inline-block', isOpen && 'z-50')}>
         {children}
       </div>
     </DropdownMenuContext.Provider>

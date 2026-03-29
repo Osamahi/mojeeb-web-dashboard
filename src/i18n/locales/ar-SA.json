@@ -465,7 +465,10 @@
       "test_token": "اختبار الرمز",
       "pending_verification": "في انتظار التحقق",
       "verification_help_tooltip": "التواصل مع الدعم",
-      "contact_support": "التواصل مع الدعم"
+      "contact_support": "التواصل مع الدعم",
+      "ai_response_settings": "إعدادات الرد الآلي",
+      "messages": "الرسائل",
+      "comments": "التعليقات"
     },
     "add_title": "إضافة اتصال",
     "connect_platform": "ربط {{platform}}",
@@ -579,7 +582,12 @@
     "disconnect_success_toast": "تم قطع الاتصال بنجاح",
     "disconnect_error_toast": "فشل قطع الاتصال",
     "status_disconnected": "غير متصل",
-    "ai_off_label": "AI متوقف"
+    "ai_off_label": "AI متوقف",
+    "messages_on": "الرسائل مفعّلة",
+    "messages_off": "الرسائل متوقفة",
+    "comments_on": "التعليقات مفعّلة",
+    "comments_off": "التعليقات متوقفة",
+    "reconnect": "إعادة الاتصال"
   },
   "lead_summary": {
     "title": "الملخص",

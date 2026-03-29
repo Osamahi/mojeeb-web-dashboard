@@ -7,7 +7,7 @@ import { useState, useCallback } from 'react';
 import { Link2, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useConnections, useDisconnectPlatform, useToggleAIResponse } from '../hooks/useConnections';
+import { useConnections, useDisconnectPlatform, useToggleAIResponse, useToggleConnectionSetting } from '../hooks/useConnections';
 import { ConnectedPlatformsSection } from '../components/sections/ConnectedPlatformsSection';
 import { AvailablePlatformsSection } from '../components/sections/AvailablePlatformsSection';
 import { AddConnectionModal } from '../components/AddConnectionModal';
@@ -38,6 +38,7 @@ export default function ConnectionsPage() {
   const { data: connections, isLoading, error, refetch, isFetching } = useConnections();
   const disconnectMutation = useDisconnectPlatform();
   const { toggleAIResponse } = useToggleAIResponse();
+  const { toggleSetting } = useToggleConnectionSetting();
 
   // Handle AI response toggle
   const handleToggleAIResponse = useCallback(
@@ -47,11 +48,28 @@ export default function ConnectionsPage() {
     [toggleAIResponse]
   );
 
+  // Handle connection setting toggle (messages/comments)
+  const handleToggleSetting = useCallback(
+    (connection: PlatformConnection, setting: 'respond_to_messages' | 'respond_to_comments', enabled: boolean) => {
+      toggleSetting(connection, setting, enabled);
+    },
+    [toggleSetting]
+  );
+
   // Handle platform connection
   const handleConnect = (platformId: PlatformType) => {
     setSelectedPlatform(platformId);
     setIsAddModalOpen(true);
   };
+
+  // Handle reconnect (opens add connection modal for that platform)
+  const handleReconnect = useCallback(
+    (connection: PlatformConnection) => {
+      setSelectedPlatform(connection.platform as PlatformType);
+      setIsAddModalOpen(true);
+    },
+    []
+  );
 
   // Handle widget customization
   const handleCustomize = (platformId: PlatformType) => {
@@ -150,6 +168,8 @@ export default function ConnectionsPage() {
               onManage={handleManageConnection}
               onDisconnect={handleDisconnect}
               onToggleAIResponse={handleToggleAIResponse}
+              onToggleSetting={handleToggleSetting}
+              onReconnect={handleReconnect}
             />
           </motion.div>
 

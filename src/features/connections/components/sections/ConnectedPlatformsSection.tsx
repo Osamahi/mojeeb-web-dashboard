@@ -14,6 +14,8 @@ export interface ConnectedPlatformsSectionProps {
   onManage?: (connection: PlatformConnection) => void;
   onDisconnect?: (connection: PlatformConnection) => void;
   onToggleAIResponse?: (connection: PlatformConnection, enabled: boolean) => void;
+  onToggleSetting?: (connection: PlatformConnection, setting: 'respond_to_messages' | 'respond_to_comments', enabled: boolean) => void;
+  onReconnect?: (connection: PlatformConnection) => void;
 }
 
 export function ConnectedPlatformsSection({
@@ -22,6 +24,8 @@ export function ConnectedPlatformsSection({
   onManage,
   onDisconnect,
   onToggleAIResponse,
+  onToggleSetting,
+  onReconnect,
 }: ConnectedPlatformsSectionProps) {
   const { t } = useTranslation();
 
@@ -81,6 +85,8 @@ export function ConnectedPlatformsSection({
               onManage={onManage}
               onDisconnect={onDisconnect}
               onToggleAIResponse={onToggleAIResponse}
+              onToggleSetting={onToggleSetting}
+              onReconnect={onReconnect}
             />
           ))}
         </div>

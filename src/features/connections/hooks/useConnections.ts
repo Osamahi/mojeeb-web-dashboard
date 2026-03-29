@@ -194,3 +194,65 @@ export function useToggleAIResponse() {
   return { toggleAIResponse, isPending: mutation.isPending };
 }
 
+/**
+ * Mutation hook for toggling connection settings (messages or comments).
+ * Uses optimistic updates with rollback on error.
+ */
+export function useToggleConnectionSetting() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { agentId } = useAgentContext();
+
+  const mutation = useMutation({
+    mutationFn: ({ connectionId, setting, enabled }: {
+      connectionId: string;
+      setting: 'respond_to_messages' | 'respond_to_comments';
+      enabled: boolean;
+    }) =>
+      connectionService.updateConnectionSettings(connectionId, { [setting]: enabled }),
+    onMutate: async ({ connectionId, setting, enabled }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.connections(agentId) });
+
+      const previousConnections = queryClient.getQueryData<PlatformConnection[]>(
+        queryKeys.connections(agentId)
+      );
+
+      if (previousConnections) {
+        const field = setting === 'respond_to_messages' ? 'respondToMessages' : 'respondToComments';
+        queryClient.setQueryData<PlatformConnection[]>(queryKeys.connections(agentId), old =>
+          old?.map(conn =>
+            conn.id === connectionId ? { ...conn, [field]: enabled } : conn
+          )
+        );
+      }
+
+      return { previousConnections };
+    },
+    onSuccess: (_data, { setting, enabled }) => {
+      if (setting === 'respond_to_messages') {
+        toast.success(enabled ? t('connections.messages_on') : t('connections.messages_off'));
+      } else {
+        toast.success(enabled ? t('connections.comments_on') : t('connections.comments_off'));
+      }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousConnections) {
+        queryClient.setQueryData(queryKeys.connections(agentId), context.previousConnections);
+      }
+      toast.error(t('connections.ai_toggle_error_toast'));
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.connections(agentId) });
+    },
+  });
+
+  const toggleSetting = useCallback(
+    (connection: PlatformConnection, setting: 'respond_to_messages' | 'respond_to_comments', enabled: boolean) => {
+      mutation.mutate({ connectionId: connection.id, setting, enabled });
+    },
+    [mutation]
+  );
+
+  return { toggleSetting, isPending: mutation.isPending };
+}
+

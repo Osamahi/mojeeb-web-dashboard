@@ -1,7 +1,7 @@
 /**
  * Mojeeb Minimal Switch Component
  * Clean, accessible toggle switch following Mojeeb brand guidelines
- * Features: On/off states, focus states with brand mojeeb, keyboard accessible
+ * Features: On/off states, focus states with brand mojeeb, keyboard accessible, RTL support
  */
 
 import { type InputHTMLAttributes, forwardRef } from 'react';
@@ -26,14 +26,16 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
         className={cn(
-          // Base container - pill shape
-          'relative inline-flex items-center rounded-full',
-          isSmall ? 'h-4 w-7' : 'h-6 w-11',
+          // Base container - pill shape with flex for RTL support
+          'inline-flex items-center rounded-full',
+          isSmall ? 'h-4 w-7 p-[2px]' : 'h-6 w-11 p-[3px]',
           'transition-colors duration-200 ease-in-out',
           // Focus state - brand mojeeb ring
           'focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:ring-offset-2',
           // Background colors
           checked ? 'bg-brand-mojeeb' : 'bg-neutral-300',
+          // Justify content for ball position — works in both LTR and RTL
+          checked ? 'justify-end' : 'justify-start',
           // Disabled state
           disabled && 'opacity-50 cursor-not-allowed',
           !disabled && 'cursor-pointer',
@@ -55,12 +57,9 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(
         {/* Sliding circle indicator */}
         <span
           className={cn(
-            'inline-block transform rounded-full bg-white shadow-sm',
-            'transition-transform duration-200 ease-in-out',
-            isSmall ? 'h-2.5 w-2.5' : 'h-4 w-4',
-            isSmall
-              ? (checked ? 'translate-x-3.5' : 'translate-x-[3px]')
-              : (checked ? 'translate-x-6' : 'translate-x-1')
+            'rounded-full bg-white shadow-sm',
+            'transition-all duration-200 ease-in-out',
+            isSmall ? 'h-2.5 w-2.5' : 'h-4 w-4'
           )}
         />
       </button>

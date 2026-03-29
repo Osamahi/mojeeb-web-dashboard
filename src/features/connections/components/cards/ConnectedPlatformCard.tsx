@@ -4,7 +4,7 @@
  * Used in the "Connected Platforms" section
  */
 
-import { MoreVertical, HelpCircle, BotMessageSquare, BotOff, Unplug } from 'lucide-react';
+import { MoreVertical, HelpCircle, MessageSquare, MessageCircle, Unplug, RotateCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/Button';
+import { Switch } from '@/components/ui/Switch';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 
 /**
@@ -55,7 +56,9 @@ export interface ConnectedPlatformCardProps {
   connection: PlatformConnection;
   onManage?: (connection: PlatformConnection) => void;
   onDisconnect?: (connection: PlatformConnection) => void;
+  onReconnect?: (connection: PlatformConnection) => void;
   onToggleAIResponse?: (connection: PlatformConnection, enabled: boolean) => void;
+  onToggleSetting?: (connection: PlatformConnection, setting: 'respond_to_messages' | 'respond_to_comments', enabled: boolean) => void;
   className?: string;
 }
 
@@ -64,6 +67,8 @@ export function ConnectedPlatformCard({
   onManage,
   onDisconnect,
   onToggleAIResponse,
+  onReconnect,
+  onToggleSetting,
   className,
 }: ConnectedPlatformCardProps) {
   const { t } = useTranslation();
@@ -99,17 +104,17 @@ export function ConnectedPlatformCard({
       onClick={handleCardClick}
       className={cn(
         'group relative flex items-center gap-2.5 sm:gap-3 rounded-lg border border-neutral-200 bg-white p-2.5 sm:p-3 transition-all cursor-pointer hover:border-neutral-300 hover:shadow-sm',
-        !connection.isActive && 'opacity-60',
         className
       )}
     >
       {/* Profile Picture or Platform Icon with Online Indicator */}
-      <div className="flex-shrink-0 relative">
+      <div className={cn("flex-shrink-0 relative", !connection.isActive && 'opacity-50')}>
         {connection.platformPictureUrl ? (
           <img
             src={connection.platformPictureUrl}
             alt={displayName}
             className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"
+
             onError={(e) => {
               // Fallback to platform icon if image fails to load
               e.currentTarget.style.display = 'none';
@@ -128,7 +133,7 @@ export function ConnectedPlatformCard({
         {/* Online/Connected Indicator - Colored dot at bottom right */}
         {connection.isActive && (
           <div className={cn(
-            "absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white",
+            "absolute bottom-0 ltr:right-0 rtl:left-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white",
             connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED'
               ? "bg-yellow-500"
               : "bg-green-500"
@@ -137,7 +142,7 @@ export function ConnectedPlatformCard({
       </div>
 
       {/* Account Info - Main Content */}
-      <div className="flex-1 min-w-0">
+      <div className={cn("flex-1 min-w-0", !connection.isActive && 'opacity-50')}>
         {/* Account Name & Warning */}
         <div className="flex items-center gap-1.5 mb-0.5">
           <h3 className="text-sm font-semibold text-neutral-900 truncate">
@@ -163,53 +168,50 @@ export function ConnectedPlatformCard({
             </>
           )}
 
-          <span>•</span>
-          {/* Mobile: Brief format */}
-          <span className="whitespace-nowrap sm:hidden">
-            {daysSinceConnection === 0
-              ? t('connections.today')
-              : daysSinceConnection === 1
-              ? t('connections.day_ago')
-              : t('connections.days_ago', { days: daysSinceConnection })}
-          </span>
-          {/* Desktop: Full format */}
-          <span className="whitespace-nowrap hidden sm:inline">
-            {daysSinceConnection === 0
-              ? t('connections.connected_today')
-              : daysSinceConnection === 1
-              ? t('connections.connected_day_ago')
-              : t('connections.connected_days_ago', { days: daysSinceConnection })}
-          </span>
-
-          <span>•</span>
           {connection.isActive ? (
-            connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED' ? (
-              <Tooltip delayDuration={200}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={handleOpenSupport}
-                    className="whitespace-nowrap text-yellow-600 font-medium inline-flex items-center gap-1 cursor-pointer hover:text-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1 rounded px-1 -mx-1"
-                    aria-label={t('connections.details.contact_support')}
-                  >
-                    {t('connections.details.pending_verification')}
-                    <HelpCircle className="w-3.5 h-3.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top" align="center">
-                  {t('connections.details.verification_help_tooltip')}
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <span className="whitespace-nowrap text-green-600 font-medium">{t('connections.status_connected')}</span>
-            )
+            <>
+              {connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED' && (
+                <>
+                  <span>•</span>
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleOpenSupport}
+                        className="whitespace-nowrap text-yellow-600 font-medium inline-flex items-center gap-1 cursor-pointer hover:text-yellow-700 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1 rounded px-1 -mx-1"
+                        aria-label={t('connections.details.contact_support')}
+                      >
+                        {t('connections.details.pending_verification')}
+                        <HelpCircle className="w-3.5 h-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="center">
+                      {t('connections.details.verification_help_tooltip')}
+                    </TooltipContent>
+                  </Tooltip>
+                </>
+              )}
+            </>
           ) : (
-            <span className="whitespace-nowrap text-red-500 font-medium">{t('connections.status_disconnected')}</span>
-          )}
-
-          {connection.isActive && !connection.respondToMessages && (
             <>
               <span>•</span>
-              <span className="whitespace-nowrap text-orange-500 font-medium">{t('connections.ai_off_label')}</span>
+              <span className="whitespace-nowrap text-red-500 font-medium">{t('connections.status_disconnected')}</span>
+            </>
+          )}
+
+          {connection.isActive && (
+            <>
+              <span>•</span>
+              <span className={`whitespace-nowrap font-medium ${connection.respondToMessages ? 'text-green-600' : 'text-neutral-400'}`}>
+                {connection.respondToMessages ? t('connections.messages_on', 'Messages On') : t('connections.messages_off', 'Messages Off')}
+              </span>
+              {connection.platform !== 'whatsapp' && (
+                <>
+                  <span>•</span>
+                  <span className={`whitespace-nowrap font-medium ${connection.respondToComments ? 'text-green-600' : 'text-neutral-400'}`}>
+                    {connection.respondToComments ? t('connections.comments_on', 'Comments On') : t('connections.comments_off', 'Comments Off')}
+                  </span>
+                </>
+              )}
             </>
           )}
         </div>
@@ -227,32 +229,52 @@ export function ConnectedPlatformCard({
               <MoreVertical className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {onToggleAIResponse && connection.isActive && (
-              <DropdownMenuItem
-                onClick={() => onToggleAIResponse(connection, !connection.respondToMessages)}
-                className="whitespace-nowrap"
-              >
-                {connection.respondToMessages ? (
-                  <>
-                    <BotOff className="h-4 w-4 me-2" />
-                    {t('connections.deactivate_ai_response')}
-                  </>
-                ) : (
-                  <>
-                    <BotMessageSquare className="h-4 w-4 me-2" />
-                    {t('connections.activate_ai_response')}
-                  </>
+          <DropdownMenuContent align="end" className="min-w-[200px]">
+            {onToggleSetting && connection.isActive && (
+              <>
+                <div
+                  className="flex items-center justify-between px-2 py-1.5"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-neutral-500" />
+                    <span className="text-sm">{t('connections.details.messages', 'Messages')}</span>
+                  </div>
+                  <Switch
+                    size="sm"
+                    checked={connection.respondToMessages}
+                    onChange={(checked) => onToggleSetting(connection, 'respond_to_messages', checked)}
+                  />
+                </div>
+                {connection.platform !== 'whatsapp' && (
+                  <div
+                    className="flex items-center justify-between px-2 py-1.5"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    <div className="flex items-center gap-2">
+                      <MessageCircle className="h-4 w-4 text-neutral-500" />
+                      <span className="text-sm">{t('connections.details.comments', 'Comments')}</span>
+                    </div>
+                    <Switch
+                      size="sm"
+                      checked={connection.respondToComments}
+                      onChange={(checked) => onToggleSetting(connection, 'respond_to_comments', checked)}
+                    />
+                  </div>
                 )}
-              </DropdownMenuItem>
+                <div className="my-1 border-t border-neutral-200" />
+              </>
             )}
-            {onDisconnect && (
-              <DropdownMenuItem
-                onClick={handleDisconnect}
-                className=""
-              >
+            {connection.isActive && onDisconnect && (
+              <DropdownMenuItem onClick={handleDisconnect}>
                 <Unplug className="h-4 w-4 me-2" />
                 {t('connections.disconnect')}
+              </DropdownMenuItem>
+            )}
+            {!connection.isActive && onReconnect && (
+              <DropdownMenuItem onClick={() => onReconnect(connection)}>
+                <RotateCw className="h-4 w-4 me-2" />
+                {t('connections.reconnect', 'Reconnect')}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

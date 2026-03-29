@@ -57,9 +57,11 @@ export function ConnectionDetailsModal({
       return { previous };
     },
     onSuccess: (_data, settings) => {
-      const label = settings.respond_to_messages !== undefined ? 'Messages' : 'Comments';
-      const enabled = settings.respond_to_messages ?? settings.respond_to_comments;
-      toast.success(`${label} ${enabled ? 'enabled' : 'disabled'}`);
+      if (settings.respond_to_messages !== undefined) {
+        toast.success(settings.respond_to_messages ? t('connections.messages_on') : t('connections.messages_off'));
+      } else {
+        toast.success(settings.respond_to_comments ? t('connections.comments_on') : t('connections.comments_off'));
+      }
       queryClient.invalidateQueries({ queryKey: ['admin-connections'] });
     },
     onError: (_err, _settings, context) => {

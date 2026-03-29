@@ -468,7 +468,10 @@
       "test_token": "Test Token",
       "pending_verification": "Pending Verification",
       "verification_help_tooltip": "Contact support",
-      "contact_support": "Contact Support"
+      "contact_support": "Contact Support",
+      "ai_response_settings": "AI Response Settings",
+      "messages": "Messages",
+      "comments": "Comments"
     },
     "add_title": "Add Connection",
     "connect_platform": "Connect {{platform}}",
@@ -582,7 +585,12 @@
     "disconnect_success_toast": "Platform disconnected successfully",
     "disconnect_error_toast": "Failed to disconnect platform",
     "status_disconnected": "Disconnected",
-    "ai_off_label": "AI Off"
+    "ai_off_label": "AI Off",
+    "messages_on": "Messages On",
+    "messages_off": "Messages Off",
+    "comments_on": "Comments On",
+    "comments_off": "Comments Off",
+    "reconnect": "Reconnect"
   },
   "lead_summary": {
     "title": "Summary",
