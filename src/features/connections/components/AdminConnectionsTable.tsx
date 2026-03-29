@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Eye, ChevronLeft, ChevronRight, MessageSquare, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import type { AdminConnectionListItem } from '../services/adminConnectionService';
@@ -29,6 +29,37 @@ const PLATFORM_COLORS: Record<string, { bg: string; text: string; label: string 
   linkedin: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'LinkedIn' },
 };
 
+function SkeletonRow() {
+  return (
+    <tr className="animate-pulse">
+      <td className="px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-neutral-200 rounded-full shrink-0" />
+          <div className="space-y-2">
+            <div className="h-4 bg-neutral-200 rounded w-32" />
+            <div className="h-3 bg-neutral-200 rounded w-20" />
+          </div>
+        </div>
+      </td>
+      <td className="px-5 py-4">
+        <div className="space-y-2">
+          <div className="h-4 bg-neutral-200 rounded w-24" />
+          <div className="h-3 bg-neutral-200 rounded w-16" />
+        </div>
+      </td>
+      <td className="px-5 py-4">
+        <div className="space-y-1.5">
+          <div className="h-3 bg-neutral-200 rounded w-16" />
+          <div className="h-3 bg-neutral-200 rounded w-16" />
+        </div>
+      </td>
+      <td className="px-5 py-4">
+        <div className="h-3 bg-neutral-200 rounded w-20" />
+      </td>
+    </tr>
+  );
+}
+
 export function AdminConnectionsTable({
   connections,
   isLoading,
@@ -39,15 +70,6 @@ export function AdminConnectionsTable({
 }: AdminConnectionsTableProps) {
   const { t } = useTranslation();
 
-  if (isLoading) {
-    return (
-      <div className="p-8 text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary-200 border-t-primary-600"></div>
-        <p className="mt-4 text-sm text-neutral-600">{t('common.loading')}</p>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="p-8 text-center">
@@ -57,7 +79,7 @@ export function AdminConnectionsTable({
     );
   }
 
-  if (!connections || connections.length === 0) {
+  if (!isLoading && (!connections || connections.length === 0)) {
     return (
       <div className="p-8 text-center">
         <p className="text-sm text-neutral-600">{t('connections.no_connections_found')}</p>
@@ -67,176 +89,156 @@ export function AdminConnectionsTable({
 
   return (
     <div>
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-neutral-50 border-b border-neutral-200">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                {t('connections.table.platform')}
+              <th className="px-5 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                {t('connections.table.connection', 'Connection')}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                {t('connections.table.account')}
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
+              <th className="px-5 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                 {t('connections.table.agent')}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                {t('connections.table.status')}
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
+              <th className="px-5 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                 {t('connections.table.ai_responds_to', 'AI Responds To')}
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                {t('connections.table.metadata')}
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700 uppercase tracking-wider">
+              <th className="px-5 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                 {t('connections.table.created')}
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-neutral-700 uppercase tracking-wider">
-                {t('common.actions')}
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-neutral-200">
-            {connections.map((connection) => {
-              const platformConfig = PLATFORM_COLORS[connection.platform] || {
-                bg: 'bg-neutral-100',
-                text: 'text-neutral-700',
-                label: connection.platform,
-              };
+          <tbody className="divide-y divide-neutral-100">
+            {isLoading ? (
+              <>
+                <SkeletonRow />
+                <SkeletonRow />
+                <SkeletonRow />
+                <SkeletonRow />
+                <SkeletonRow />
+              </>
+            ) : (
+              connections.map((connection) => {
+                const platformConfig = PLATFORM_COLORS[connection.platform] || {
+                  bg: 'bg-neutral-100',
+                  text: 'text-neutral-700',
+                  label: connection.platform,
+                };
 
-              return (
-                <tr
-                  key={connection.id}
-                  onClick={() => onViewDetails(connection)}
-                  className="hover:bg-neutral-50 transition-colors cursor-pointer"
-                >
-                  {/* Platform */}
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${platformConfig.bg} ${platformConfig.text}`}
-                    >
-                      {platformConfig.label}
-                    </span>
-                  </td>
+                return (
+                  <tr
+                    key={connection.id}
+                    onClick={() => onViewDetails(connection)}
+                    className="hover:bg-neutral-50 transition-colors cursor-pointer"
+                  >
+                    {/* Connection - merged: avatar + status dot + platform badge + name + handle + followers + verification */}
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        {/* Avatar with status dot */}
+                        <div className="relative shrink-0">
+                          {connection.platformPictureUrl ? (
+                            <img
+                              src={connection.platformPictureUrl}
+                              alt={connection.platformAccountName || ''}
+                              className={`w-10 h-10 rounded-full ${!connection.isActive ? 'opacity-50' : ''}`}
+                            />
+                          ) : (
+                            <div className={`w-10 h-10 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-500 text-sm font-medium ${!connection.isActive ? 'opacity-50' : ''}`}>
+                              {(connection.platformAccountName || '?')[0].toUpperCase()}
+                            </div>
+                          )}
+                          <span
+                            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                              connection.isActive ? 'bg-green-500' : 'bg-neutral-300'
+                            }`}
+                          />
+                        </div>
 
-                  {/* Account */}
-                  <td className="px-4 py-4">
-                    <div className="flex items-center">
-                      {connection.platformPictureUrl && (
-                        <img
-                          src={connection.platformPictureUrl}
-                          alt={connection.platformAccountName || ''}
-                          className="w-8 h-8 rounded-full mr-3"
-                        />
-                      )}
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <div className="text-sm font-medium text-neutral-900">
+                        {/* Info */}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${platformConfig.bg} ${platformConfig.text}`}>
+                              {platformConfig.label}
+                            </span>
+                            {connection.platform === 'whatsapp' &&
+                             connection.codeVerificationStatus !== 'VERIFIED' && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-yellow-100 text-yellow-800">
+                                {t('connections.details.pending_verification')}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-sm font-medium text-neutral-900 mt-0.5 truncate">
                             {connection.platform === 'whatsapp' && connection.platformAccountName ? (
                               <PhoneNumber value={connection.platformAccountName} className="inline" />
                             ) : (
                               connection.platformAccountName || t('common.unknown')
                             )}
                           </div>
-                          {connection.platform === 'whatsapp' &&
-                           connection.codeVerificationStatus !== 'VERIFIED' && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-300">
-                              {t('connections.details.pending_verification')}
-                            </span>
-                          )}
-                        </div>
-                        {connection.platformAccountHandle && (
-                          <div className="text-xs text-neutral-500">
-                            @{connection.platformAccountHandle}
+                          <div className="flex items-center gap-1.5 text-xs text-neutral-400 mt-0.5">
+                            {connection.platformAccountHandle && (
+                              <span className="truncate">@{connection.platformAccountHandle}</span>
+                            )}
+                            {connection.platformAccountHandle && connection.followerCount !== null && (
+                              <span>·</span>
+                            )}
+                            {connection.followerCount !== null && (
+                              <span>{connection.followerCount.toLocaleString()} {t('connections.table.followers')}</span>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Agent */}
-                  <td className="px-4 py-4">
-                    <div className="text-sm text-neutral-900">
-                      {connection.agentName || t('common.unknown')}
-                    </div>
-                  </td>
-
-                  {/* Status */}
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        connection.isActive
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {connection.isActive ? t('common.active') : t('common.inactive')}
-                    </span>
-                  </td>
-
-                  {/* AI Responds To */}
-                  <td className="px-4 py-4">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`inline-block w-2 h-2 rounded-full ${connection.respondToMessages ? 'bg-green-500' : 'bg-neutral-300'}`} />
-                        <span className={`text-xs ${connection.respondToMessages ? 'text-neutral-700' : 'text-neutral-400'}`}>
-                          {t('connections.table.messages', 'Messages')}
-                        </span>
+                    {/* Agent + Organization */}
+                    <td className="px-5 py-4">
+                      <div className="text-sm text-neutral-900">
+                        {connection.agentName || t('common.unknown')}
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`inline-block w-2 h-2 rounded-full ${connection.respondToComments ? 'bg-green-500' : 'bg-neutral-300'}`} />
-                        <span className={`text-xs ${connection.respondToComments ? 'text-neutral-700' : 'text-neutral-400'}`}>
-                          {t('connections.table.comments', 'Comments')}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Metadata */}
-                  <td className="px-4 py-4">
-                    <div className="text-sm text-neutral-600 space-y-1">
-                      {connection.followerCount !== null && (
-                        <div>{connection.followerCount.toLocaleString()} {t('connections.table.followers')}</div>
+                      {connection.organizationName && (
+                        <div className="text-xs text-neutral-400 mt-0.5">
+                          {connection.organizationName}
+                        </div>
                       )}
-                      {connection.businessCategory && (
-                        <div className="text-xs text-neutral-500">{connection.businessCategory}</div>
-                      )}
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Created Date */}
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="text-sm text-neutral-600">
-                      {format(new Date(connection.createdAt), 'MMM d, yyyy')}
-                    </div>
-                  </td>
+                    {/* AI Responds To */}
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`inline-block w-2 h-2 rounded-full ${connection.respondToMessages ? 'bg-green-500' : 'bg-neutral-300'}`} />
+                          <span className={`text-xs ${connection.respondToMessages ? 'text-neutral-700' : 'text-neutral-400'}`}>
+                            {t('connections.table.messages', 'Messages')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`inline-block w-2 h-2 rounded-full ${connection.respondToComments ? 'bg-green-500' : 'bg-neutral-300'}`} />
+                          <span className={`text-xs ${connection.respondToComments ? 'text-neutral-700' : 'text-neutral-400'}`}>
+                            {t('connections.table.comments', 'Comments')}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
 
-                  {/* Actions */}
-                  <td className="px-4 py-4 whitespace-nowrap text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onViewDetails(connection);
-                      }}
-                      className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 font-medium"
-                    >
-                      <Eye className="w-4 h-4" />
-                      {t('common.view')}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
+                    {/* Created */}
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <div className="text-sm text-neutral-900">
+                        {format(new Date(connection.createdAt), 'MMM d, yyyy')}
+                      </div>
+                      <div className="text-xs text-neutral-400 mt-0.5">
+                        {format(new Date(connection.createdAt), 'h:mm a')}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>
 
       {/* Pagination */}
-      {pagination && (
-        <div className="px-4 py-3 border-t border-neutral-200 flex items-center justify-between">
-          <div className="text-sm text-neutral-600">
+      {pagination && !isLoading && (
+        <div className="px-5 py-3 border-t border-neutral-200 flex items-center justify-between">
+          <div className="text-sm text-neutral-500">
             {t('common.showing_x_of_y', {
               start: (pagination.page - 1) * pagination.pageSize + 1,
               end: Math.min(pagination.page * pagination.pageSize, pagination.totalCount),
@@ -254,7 +256,7 @@ export function AdminConnectionsTable({
               {t('common.previous')}
             </button>
 
-            <span className="text-sm text-neutral-600">
+            <span className="text-sm text-neutral-500">
               {t('common.page_x_of_y', {
                 current: pagination.page,
                 total: pagination.totalPages,
