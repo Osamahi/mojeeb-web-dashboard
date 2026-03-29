@@ -18,6 +18,7 @@ import {
   CreditCard,
   Package,
   BookOpen,
+  Cable,
   Network,
   Puzzle,
   Layers,
@@ -62,13 +63,6 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.connect',
     href: '/connections',
     icon: Plug,
-  },
-  {
-    name: 'Integrations',
-    translationKey: 'navigation.integrations',
-    href: '/integrations',
-    icon: Network,
-    requireSuperAdmin: true,
   },
   {
     name: 'Clients',
@@ -123,6 +117,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.addons',
     href: '/addons',
     icon: Puzzle,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Integrations',
+    translationKey: 'navigation.integrations',
+    href: '/integrations',
+    icon: Cable,
     requireSuperAdmin: true,
   },
   {
