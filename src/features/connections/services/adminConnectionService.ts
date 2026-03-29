@@ -7,16 +7,6 @@ import type { PlatformType } from '../types/connection.types';
  */
 
 // Admin-specific connection types
-export interface AdminConnectionFilters {
-  platform?: PlatformType;
-  agentId?: string;
-  organizationId?: string;
-  search?: string;
-  isActive?: boolean;
-  page?: number;
-  pageSize?: number;
-}
-
 export interface AdminConnectionCursorFilters {
   platform?: PlatformType;
   agentId?: string;
@@ -54,18 +44,6 @@ export interface AdminConnectionDetail extends AdminConnectionListItem {
   updatedAt: string;
 }
 
-export interface AdminConnectionsResponse {
-  connections: AdminConnectionListItem[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    totalCount: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-  };
-}
-
 // API response types (snake_case from backend)
 interface ApiAdminConnectionListItem {
   id: string;
@@ -101,18 +79,6 @@ interface ApiCursorPaginatedConnectionsResponse {
   items: ApiAdminConnectionListItem[];
   next_cursor: string | null;
   has_more: boolean;
-}
-
-interface ApiAdminConnectionsResponse {
-  connections: ApiAdminConnectionListItem[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    totalCount: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-  };
 }
 
 class AdminConnectionService {
@@ -179,7 +145,7 @@ class AdminConnectionService {
     if (filters?.search) params.append('search', filters.search);
 
     const { data: response } = await api.get<{ data: ApiCursorPaginatedConnectionsResponse }>(
-      `/api/admin/connections/cursor?${params.toString()}`
+      `/api/admin/connections?${params.toString()}`
     );
 
     return {
@@ -187,39 +153,6 @@ class AdminConnectionService {
       nextCursor: response.data.next_cursor,
       hasMore: response.data.has_more,
     };
-  }
-
-  /**
-   * Get all platform connections with optional filters (legacy offset pagination)
-   */
-  async getAllConnections(
-    filters: AdminConnectionFilters = {}
-  ): Promise<AdminConnectionsResponse> {
-    try {
-      const params = new URLSearchParams();
-
-      if (filters.platform) params.append('platform', filters.platform);
-      if (filters.agentId) params.append('agentId', filters.agentId);
-      if (filters.organizationId) params.append('organizationId', filters.organizationId);
-      if (filters.search) params.append('search', filters.search);
-      if (filters.isActive !== undefined) params.append('isActive', String(filters.isActive));
-      if (filters.page) params.append('page', String(filters.page));
-      if (filters.pageSize) params.append('pageSize', String(filters.pageSize));
-
-      const { data: response } = await api.get<{ data: ApiAdminConnectionsResponse }>(
-        `/api/admin/connections?${params.toString()}`
-      );
-
-      return {
-        connections: response.data.connections.map((c) =>
-          this.transformConnectionListItem(c)
-        ),
-        pagination: response.data.pagination,
-      };
-    } catch (error) {
-      console.error('[AdminConnectionService] Failed to fetch connections:', error);
-      throw error;
-    }
   }
 
   /**
