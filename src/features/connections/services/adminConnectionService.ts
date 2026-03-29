@@ -17,6 +17,13 @@ export interface AdminConnectionFilters {
   pageSize?: number;
 }
 
+export interface AdminConnectionCursorFilters {
+  platform?: PlatformType;
+  agentId?: string;
+  isActive?: boolean;
+  search?: string;
+}
+
 export interface AdminConnectionListItem {
   id: string;
   platform: PlatformType;
@@ -90,6 +97,12 @@ interface ApiAdminConnectionDetail extends ApiAdminConnectionListItem {
   updated_at: string;
 }
 
+interface ApiCursorPaginatedConnectionsResponse {
+  items: ApiAdminConnectionListItem[];
+  next_cursor: string | null;
+  has_more: boolean;
+}
+
 interface ApiAdminConnectionsResponse {
   connections: ApiAdminConnectionListItem[];
   pagination: {
@@ -149,7 +162,35 @@ class AdminConnectionService {
   }
 
   /**
-   * Get all platform connections with optional filters
+   * Get all connections with cursor-based pagination
+   */
+  async getAllConnectionsCursor(
+    limit: number = 50,
+    cursor?: string,
+    filters?: AdminConnectionCursorFilters
+  ): Promise<{ connections: AdminConnectionListItem[]; nextCursor: string | null; hasMore: boolean }> {
+    const params = new URLSearchParams();
+    params.append('limit', limit.toString());
+
+    if (cursor) params.append('cursor', cursor);
+    if (filters?.platform) params.append('platform', filters.platform);
+    if (filters?.agentId) params.append('agentId', filters.agentId);
+    if (filters?.isActive !== undefined) params.append('isActive', String(filters.isActive));
+    if (filters?.search) params.append('search', filters.search);
+
+    const { data: response } = await api.get<{ data: ApiCursorPaginatedConnectionsResponse }>(
+      `/api/admin/connections/cursor?${params.toString()}`
+    );
+
+    return {
+      connections: response.data.items.map((c) => this.transformConnectionListItem(c)),
+      nextCursor: response.data.next_cursor,
+      hasMore: response.data.has_more,
+    };
+  }
+
+  /**
+   * Get all platform connections with optional filters (legacy offset pagination)
    */
   async getAllConnections(
     filters: AdminConnectionFilters = {}

@@ -1,13 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Filter, X, TestTube2 } from 'lucide-react';
+import { Search, Filter, X, TestTube2 } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { AdminConnectionsTable } from '../components/AdminConnectionsTable';
 import { ConnectionDetailsModal } from '../components/ConnectionDetailsModal';
-import { adminConnectionService, type AdminConnectionFilters, type AdminConnectionListItem } from '../services/adminConnectionService';
+import { useInfiniteAdminConnections } from '../hooks/useAdminConnections';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import type { AdminConnectionListItem, AdminConnectionCursorFilters } from '../services/adminConnectionService';
 import type { PlatformType } from '../types/connection.types';
 
 const PLATFORM_OPTIONS: { value: PlatformType; label: string }[] = [
@@ -30,39 +30,37 @@ export default function AdminConnectionsPage() {
   const navigate = useNavigate();
   useDocumentTitle('pages.title_admin_connections');
 
-  const [filters, setFilters] = useState<AdminConnectionFilters>({
-    page: 1,
-    pageSize: 50,
-  });
-  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<Omit<AdminConnectionCursorFilters, 'search'>>({});
   const [showFilters, setShowFilters] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState<AdminConnectionListItem | null>(null);
 
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setFilters((prev) => ({ ...prev, search: searchInput || undefined, page: 1 }));
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  // Combine search with filters
+  const combinedFilters = useMemo<AdminConnectionCursorFilters>(
+    () => ({
+      ...filters,
+      search: search.trim() || undefined,
+    }),
+    [filters, search]
+  );
 
-  // Fetch connections
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['admin-connections', filters],
-    queryFn: () => adminConnectionService.getAllConnections(filters),
-  });
+  // Infinite scroll query
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+    error,
+  } = useInfiniteAdminConnections(combinedFilters);
 
   const handlePlatformChange = useCallback((platform: PlatformType | '') => {
-    setFilters((prev) => ({ ...prev, platform: platform || undefined, page: 1 }));
+    setFilters((prev) => ({ ...prev, platform: platform || undefined }));
   }, []);
 
   const handleStatusChange = useCallback((status: string) => {
     const isActive = status === 'active' ? true : status === 'inactive' ? false : undefined;
-    setFilters((prev) => ({ ...prev, isActive, page: 1 }));
-  }, []);
-
-  const handlePageChange = useCallback((newPage: number) => {
-    setFilters((prev) => ({ ...prev, page: newPage }));
+    setFilters((prev) => ({ ...prev, isActive }));
   }, []);
 
   const handleViewDetails = useCallback((connection: AdminConnectionListItem) => {
@@ -80,7 +78,6 @@ export default function AdminConnectionsPage() {
   const activeFilterCount = [
     filters.platform,
     filters.isActive !== undefined,
-    filters.search,
   ].filter(Boolean).length;
 
   return (
@@ -99,6 +96,18 @@ export default function AdminConnectionsPage() {
         }}
       />
 
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+        <input
+          type="text"
+          placeholder={t('connections.filters.search_placeholder', 'Search by account, agent, or organization...')}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb bg-white text-sm"
+        />
+      </div>
+
       {/* Filters */}
       {showFilters && (
         <div className="bg-white rounded-lg border border-neutral-200 p-4 space-y-4">
@@ -115,7 +124,7 @@ export default function AdminConnectionsPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Platform Filter */}
             <div>
               <label className="block text-sm font-medium text-neutral-700 mb-1">
@@ -124,7 +133,7 @@ export default function AdminConnectionsPage() {
               <select
                 value={filters.platform || ''}
                 onChange={(e) => handlePlatformChange(e.target.value as PlatformType | '')}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
               >
                 <option value="">{t('connections.filters.all_platforms')}</option>
                 {PLATFORM_OPTIONS.map((option) => (
@@ -149,7 +158,7 @@ export default function AdminConnectionsPage() {
                     : 'inactive'
                 }
                 onChange={(e) => handleStatusChange(e.target.value)}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:border-brand-mojeeb"
               >
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -158,29 +167,12 @@ export default function AdminConnectionsPage() {
                 ))}
               </select>
             </div>
-
-            {/* Search */}
-            <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                {t('connections.filters.search')}
-              </label>
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder={t('connections.filters.search_placeholder')}
-                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
           </div>
 
           {/* Clear Filters */}
           {activeFilterCount > 0 && (
             <button
-              onClick={() => {
-                setFilters({ page: 1, pageSize: 50 });
-                setSearchInput('');
-              }}
+              onClick={() => setFilters({})}
               className="text-sm text-primary-600 hover:text-primary-700 font-medium"
             >
               {t('common.clear_filters')}
@@ -194,10 +186,11 @@ export default function AdminConnectionsPage() {
         <AdminConnectionsTable
           connections={data?.connections || []}
           isLoading={isLoading}
-          error={error}
+          error={error as Error | null}
           onViewDetails={handleViewDetails}
-          pagination={data?.pagination}
-          onPageChange={handlePageChange}
+          hasMore={hasNextPage || false}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={fetchNextPage}
         />
       </div>
 

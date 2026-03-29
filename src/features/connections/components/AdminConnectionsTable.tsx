@@ -1,5 +1,5 @@
+import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import type { AdminConnectionListItem } from '../services/adminConnectionService';
@@ -9,15 +9,9 @@ interface AdminConnectionsTableProps {
   isLoading: boolean;
   error: Error | null;
   onViewDetails: (connection: AdminConnectionListItem) => void;
-  pagination?: {
-    page: number;
-    pageSize: number;
-    totalCount: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-  };
-  onPageChange?: (page: number) => void;
+  hasMore: boolean;
+  isFetchingNextPage: boolean;
+  onLoadMore: () => void;
 }
 
 const PLATFORM_COLORS: Record<string, { bg: string; text: string; label: string }> = {
@@ -65,10 +59,35 @@ export function AdminConnectionsTable({
   isLoading,
   error,
   onViewDetails,
-  pagination,
-  onPageChange,
+  hasMore,
+  isFetchingNextPage,
+  onLoadMore,
 }: AdminConnectionsTableProps) {
   const { t } = useTranslation();
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetchingNextPage) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, isFetchingNextPage, onLoadMore]);
 
   if (error) {
     return (
@@ -130,10 +149,9 @@ export function AdminConnectionsTable({
                     onClick={() => onViewDetails(connection)}
                     className="hover:bg-neutral-50 transition-colors cursor-pointer"
                   >
-                    {/* Connection - merged: avatar + status dot + platform badge + name + handle + followers + verification */}
+                    {/* Connection */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        {/* Avatar with status dot */}
                         <div className="relative shrink-0">
                           {connection.platformPictureUrl ? (
                             <img
@@ -153,7 +171,6 @@ export function AdminConnectionsTable({
                           />
                         </div>
 
-                        {/* Info */}
                         <div className="min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${platformConfig.bg} ${platformConfig.text}`}>
@@ -235,43 +252,12 @@ export function AdminConnectionsTable({
         </table>
       </div>
 
-      {/* Pagination */}
-      {pagination && !isLoading && (
-        <div className="px-5 py-3 border-t border-neutral-200 flex items-center justify-between">
-          <div className="text-sm text-neutral-500">
-            {t('common.showing_x_of_y', {
-              start: (pagination.page - 1) * pagination.pageSize + 1,
-              end: Math.min(pagination.page * pagination.pageSize, pagination.totalCount),
-              total: pagination.totalCount,
-            })}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onPageChange?.(pagination.page - 1)}
-              disabled={!pagination.hasPrevious}
-              className="inline-flex items-center px-3 py-1.5 border border-neutral-300 rounded-md text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              {t('common.previous')}
-            </button>
-
-            <span className="text-sm text-neutral-500">
-              {t('common.page_x_of_y', {
-                current: pagination.page,
-                total: pagination.totalPages,
-              })}
-            </span>
-
-            <button
-              onClick={() => onPageChange?.(pagination.page + 1)}
-              disabled={!pagination.hasNext}
-              className="inline-flex items-center px-3 py-1.5 border border-neutral-300 rounded-md text-sm font-medium text-neutral-700 bg-white hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {t('common.next')}
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </button>
-          </div>
+      {/* Infinite scroll trigger */}
+      {hasMore && (
+        <div ref={observerTarget} className="py-4 text-center border-t border-neutral-100">
+          {isFetchingNextPage && (
+            <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-neutral-200 border-t-neutral-600" />
+          )}
         </div>
       )}
     </div>
