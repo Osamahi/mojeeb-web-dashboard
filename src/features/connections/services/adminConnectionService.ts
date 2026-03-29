@@ -214,6 +214,25 @@ class AdminConnectionService {
       throw error;
     }
   }
+  /**
+   * Update connection AI response settings (respond_to_messages, respond_to_comments)
+   */
+  async updateConnectionSettings(
+    connectionId: string,
+    settings: { respond_to_messages?: boolean; respond_to_comments?: boolean }
+  ): Promise<{ respond_to_messages: boolean; respond_to_comments: boolean }> {
+    try {
+      const { data: response } = await api.patch<{
+        respond_to_messages: boolean;
+        respond_to_comments: boolean;
+      }>(`/api/social/connections/${connectionId}/settings`, settings);
+
+      return response;
+    } catch (error) {
+      console.error(`[AdminConnectionService] Failed to update settings for ${connectionId}:`, error);
+      throw error;
+    }
+  }
 }
 
 export const adminConnectionService = new AdminConnectionService();

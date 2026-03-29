@@ -1,12 +1,14 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import { TestTube2, HelpCircle, MessageSquare, MessageCircle } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
+import { Switch } from '@/components/ui/Switch';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-import { adminConnectionService } from '../services/adminConnectionService';
+import { adminConnectionService, type AdminConnectionDetail } from '../services/adminConnectionService';
 
 interface ConnectionDetailsModalProps {
   connectionId: string;
@@ -31,10 +33,41 @@ export function ConnectionDetailsModal({
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const queryClient = useQueryClient();
+
   const { data: connection, isLoading } = useQuery({
     queryKey: ['admin-connection-details', connectionId],
     queryFn: () => adminConnectionService.getConnectionDetails(connectionId),
     enabled: isOpen,
+  });
+
+  const settingsMutation = useMutation({
+    mutationFn: (settings: { respond_to_messages?: boolean; respond_to_comments?: boolean }) =>
+      adminConnectionService.updateConnectionSettings(connectionId, settings),
+    onMutate: async (settings) => {
+      await queryClient.cancelQueries({ queryKey: ['admin-connection-details', connectionId] });
+      const previous = queryClient.getQueryData<AdminConnectionDetail>(['admin-connection-details', connectionId]);
+      if (previous) {
+        queryClient.setQueryData<AdminConnectionDetail>(['admin-connection-details', connectionId], {
+          ...previous,
+          ...(settings.respond_to_messages !== undefined && { respondToMessages: settings.respond_to_messages }),
+          ...(settings.respond_to_comments !== undefined && { respondToComments: settings.respond_to_comments }),
+        });
+      }
+      return { previous };
+    },
+    onSuccess: (_data, settings) => {
+      const label = settings.respond_to_messages !== undefined ? 'Messages' : 'Comments';
+      const enabled = settings.respond_to_messages ?? settings.respond_to_comments;
+      toast.success(`${label} ${enabled ? 'enabled' : 'disabled'}`);
+      queryClient.invalidateQueries({ queryKey: ['admin-connections'] });
+    },
+    onError: (_err, _settings, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['admin-connection-details', connectionId], context.previous);
+      }
+      toast.error(t('common.error_occurred', 'Failed to update setting'));
+    },
   });
 
   const platformConfig = connection
@@ -245,27 +278,27 @@ export function ConnectionDetailsModal({
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className={`w-4 h-4 ${connection.respondToMessages ? 'text-green-600' : 'text-neutral-400'}`} />
+                    <MessageSquare className={`w-4 h-4 ${connection.respondToMessages ? 'text-brand-mojeeb' : 'text-neutral-400'}`} />
                     <span className="text-sm text-neutral-700">{t('connections.details.messages', 'Messages')}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${connection.respondToMessages ? 'bg-green-500' : 'bg-neutral-300'}`} />
-                    <span className={`text-xs font-medium ${connection.respondToMessages ? 'text-green-700' : 'text-neutral-400'}`}>
-                      {connection.respondToMessages ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
+                  <Switch
+                    size="sm"
+                    checked={connection.respondToMessages}
+                    onChange={(checked) => settingsMutation.mutate({ respond_to_messages: checked })}
+                    disabled={settingsMutation.isPending}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <MessageCircle className={`w-4 h-4 ${connection.respondToComments ? 'text-green-600' : 'text-neutral-400'}`} />
+                    <MessageCircle className={`w-4 h-4 ${connection.respondToComments ? 'text-brand-mojeeb' : 'text-neutral-400'}`} />
                     <span className="text-sm text-neutral-700">{t('connections.details.comments', 'Comments')}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`inline-block w-2.5 h-2.5 rounded-full ${connection.respondToComments ? 'bg-green-500' : 'bg-neutral-300'}`} />
-                    <span className={`text-xs font-medium ${connection.respondToComments ? 'text-green-700' : 'text-neutral-400'}`}>
-                      {connection.respondToComments ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
+                  <Switch
+                    size="sm"
+                    checked={connection.respondToComments}
+                    onChange={(checked) => settingsMutation.mutate({ respond_to_comments: checked })}
+                    disabled={settingsMutation.isPending}
+                  />
                 </div>
               </div>
             </div>

@@ -8,13 +8,16 @@ import { type InputHTMLAttributes, forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface SwitchProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'type'> {
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'type' | 'size'> {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  size?: 'sm' | 'md';
 }
 
 export const Switch = forwardRef<HTMLInputElement, SwitchProps>(
-  ({ className, checked, onChange, disabled, id, ...props }, ref) => {
+  ({ className, checked, onChange, disabled, id, size = 'md', ...props }, ref) => {
+    const isSmall = size === 'sm';
+
     return (
       <button
         type="button"
@@ -24,7 +27,8 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(
         onClick={() => !disabled && onChange(!checked)}
         className={cn(
           // Base container - pill shape
-          'relative inline-flex h-6 w-11 items-center rounded-full',
+          'relative inline-flex items-center rounded-full',
+          isSmall ? 'h-4 w-7' : 'h-6 w-11',
           'transition-colors duration-200 ease-in-out',
           // Focus state - brand mojeeb ring
           'focus:outline-none focus:ring-2 focus:ring-brand-mojeeb/20 focus:ring-offset-2',
@@ -51,9 +55,12 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(
         {/* Sliding circle indicator */}
         <span
           className={cn(
-            'inline-block h-4 w-4 transform rounded-full bg-white shadow-sm',
+            'inline-block transform rounded-full bg-white shadow-sm',
             'transition-transform duration-200 ease-in-out',
-            checked ? 'translate-x-6' : 'translate-x-1'
+            isSmall ? 'h-2.5 w-2.5' : 'h-4 w-4',
+            isSmall
+              ? (checked ? 'translate-x-3.5' : 'translate-x-[3px]')
+              : (checked ? 'translate-x-6' : 'translate-x-1')
           )}
         />
       </button>
