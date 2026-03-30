@@ -4,7 +4,8 @@
  * Used in the "Connected Platforms" section
  */
 
-import { MoreVertical, HelpCircle, MessageSquare, MessageCircle, Unplug, RotateCw } from 'lucide-react';
+import { MoreVertical, HelpCircle, MessageSquare, MessageCircle, Unplug, RotateCw, LayoutTemplate } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -72,6 +73,7 @@ export function ConnectedPlatformCard({
   className,
 }: ConnectedPlatformCardProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const platform = getPlatformById(connection.platform);
   const displayName = connection.platformAccountName || connection.platformAccountHandle || platform?.name || t('connections.status_connected');
 
@@ -261,6 +263,12 @@ export function ConnectedPlatformCard({
                       onChange={(checked) => onToggleSetting(connection, 'respond_to_comments', checked)}
                     />
                   </div>
+                )}
+                {connection.platform === 'whatsapp' && (
+                  <DropdownMenuItem onClick={() => navigate('/whatsapp-management')}>
+                    <LayoutTemplate className="h-4 w-4 me-2" />
+                    {t('connections.manage_templates', 'Manage Templates')}
+                  </DropdownMenuItem>
                 )}
                 <div className="my-1 border-t border-neutral-200" />
               </>

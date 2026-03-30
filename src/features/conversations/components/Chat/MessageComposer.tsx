@@ -7,7 +7,7 @@
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music, Image, FileText, Upload, Video } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music, Image, FileText, Upload, Video, LayoutTemplate } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -75,6 +75,8 @@ interface MessageComposerProps {
   placeholder?: string;
   conversationId: string;
   agentId?: string;
+  isWhatsApp?: boolean;
+  onTemplateClick?: () => void;
 }
 
 /**
@@ -134,6 +136,8 @@ export default memo(function MessageComposer({
   placeholder = 'Type your message...',
   conversationId,
   agentId,
+  isWhatsApp,
+  onTemplateClick,
 }: MessageComposerProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
@@ -1512,6 +1516,24 @@ export default memo(function MessageComposer({
               </div>
             )}
           </div>
+
+          {/* WhatsApp Template Button */}
+          {isWhatsApp && onTemplateClick && (
+            <button
+              onClick={onTemplateClick}
+              className={cn(
+                'p-2 rounded-lg',
+                'text-neutral-500',
+                'hover:bg-neutral-100',
+                'hover:text-neutral-700',
+                'transition-all duration-150'
+              )}
+              aria-label={t('whatsapp.template_button_aria', 'Send template message')}
+              title={t('whatsapp.template_button_title', 'Template')}
+            >
+              <LayoutTemplate className="w-5 h-5" />
+            </button>
+          )}
 
           {/* Emoji Picker */}
           <div className="relative">

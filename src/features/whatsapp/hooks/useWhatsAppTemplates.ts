@@ -5,7 +5,7 @@
 
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { whatsappService } from '../services/whatsappService';
-import type { SendTemplateRequest } from '../types/whatsapp.types';
+import type { SendTemplateRequest, SendTemplateInConversationRequest } from '../types/whatsapp.types';
 
 export const WHATSAPP_QUERY_KEYS = {
   templates: (connectionId: string) => ['whatsapp', 'templates', connectionId] as const,
@@ -42,5 +42,16 @@ export function useSendTemplate() {
       connectionId: string;
       request: SendTemplateRequest;
     }) => whatsappService.sendTemplate(connectionId, request),
+  });
+}
+
+/**
+ * Hook to send a template message from within a conversation.
+ * Backend resolves connection and recipient from the conversation record.
+ */
+export function useSendTemplateInConversation() {
+  return useMutation({
+    mutationFn: (request: SendTemplateInConversationRequest) =>
+      whatsappService.sendTemplateInConversation(request),
   });
 }

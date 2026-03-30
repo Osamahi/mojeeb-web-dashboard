@@ -9,6 +9,8 @@ import type {
   MessageTemplate,
   SendTemplateRequest,
   SendTemplateResponse,
+  SendTemplateInConversationRequest,
+  SendTemplateInConversationResponse,
   CreateTemplateButtonInput,
   CreateTemplateHeaderInput,
 } from '../types/whatsapp.types';
@@ -80,6 +82,21 @@ export const whatsappService = {
           connectionId,
         },
       }
+    );
+    return response.data;
+  },
+
+  /**
+   * Send a WhatsApp template message from within a conversation.
+   * Backend resolves connection and recipient from the conversation record.
+   * Route: POST /api/whatsapp/templates/send-in-conversation
+   */
+  async sendTemplateInConversation(
+    request: SendTemplateInConversationRequest
+  ): Promise<SendTemplateInConversationResponse> {
+    const response = await api.post<SendTemplateInConversationResponse>(
+      `${WHATSAPP_TEMPLATES_BASE}/send-in-conversation`,
+      request
     );
     return response.data;
   },

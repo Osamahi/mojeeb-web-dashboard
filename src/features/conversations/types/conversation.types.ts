@@ -72,6 +72,8 @@ export enum MessageType {
   Audio = 1,
   Image = 2,
   Document = 3,
+  Video = 4,
+  Template = 5,
 }
 
 export enum SenderRole {

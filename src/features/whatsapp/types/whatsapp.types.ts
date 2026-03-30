@@ -91,5 +91,22 @@ export interface CreateTemplateHeaderInput {
   media_url?: string;
 }
 
+export interface SendTemplateInConversationRequest {
+  conversation_id: string;
+  template_name: string;
+  language_code?: string;
+  parameters?: Record<string, string>;
+  template_body?: string;
+}
+
+export interface SendTemplateInConversationResponse {
+  success: boolean;
+  message_id?: string;
+  template_name?: string;
+  chat_id?: string;
+  rendered_message?: string;
+  error?: string;
+}
+
 export type TemplateStatus = MessageTemplate['status'];
 export type TemplateCategory = MessageTemplate['category'];

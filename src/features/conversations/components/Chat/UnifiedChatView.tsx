@@ -41,6 +41,10 @@ export interface UnifiedChatViewProps {
   placeholder?: string;
   conversationId: string;
   agentId?: string;
+  isWhatsApp?: boolean;
+  onTemplateClick?: () => void;
+  hideComposer?: boolean;
+  composerFooter?: React.ReactNode;
 
   // Styling
   className?: string;
@@ -118,6 +122,10 @@ export default function UnifiedChatView({
   placeholder = 'Type your message...',
   conversationId,
   agentId,
+  isWhatsApp,
+  onTemplateClick,
+  hideComposer,
+  composerFooter,
   className,
 }: UnifiedChatViewProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -312,24 +320,29 @@ export default function UnifiedChatView({
         aria-hidden="true"
       />
 
-      {/* Message Composer */}
-      <div
-        className="flex-shrink-0 px-3 sm:px-4"
-        style={{
-          paddingTop: '12px',
-          paddingBottom: 'max(12px, env(safe-area-inset-bottom))'
-        }}
-      >
-        <MessageComposer
-          onSendMessage={onSendMessage}
-          isSending={false} // NEVER block input - optimistic updates handle this
-          isAIMode={isAIMode}
-          onModeToggle={enableAIToggle ? onModeToggle : undefined}
-          placeholder={placeholder}
-          conversationId={conversationId}
-          agentId={agentId}
-        />
-      </div>
+      {/* Message Composer — hidden when WhatsApp 24h window expired */}
+      {!hideComposer && (
+        <div
+          className="flex-shrink-0 px-3 sm:px-4"
+          style={{
+            paddingTop: '12px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom))'
+          }}
+        >
+          <MessageComposer
+            onSendMessage={onSendMessage}
+            isSending={false}
+            isAIMode={isAIMode}
+            onModeToggle={enableAIToggle ? onModeToggle : undefined}
+            placeholder={placeholder}
+            isWhatsApp={isWhatsApp}
+            onTemplateClick={onTemplateClick}
+            conversationId={conversationId}
+            agentId={agentId}
+          />
+          {composerFooter}
+        </div>
+      )}
 
       {/* Optional footer slot */}
       {footer}

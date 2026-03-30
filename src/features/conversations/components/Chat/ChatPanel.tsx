@@ -4,7 +4,7 @@
  * Now with optimistic updates, typing indicators, and non-blocking input
  */
 
-import { useMemo, useEffect, useCallback } from 'react';
+import { useMemo, useEffect, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, User, MoreVertical, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -32,6 +32,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getWhatsAppWindowStatus, WhatsAppExpiredBanner, WhatsAppActiveBanner } from './WhatsAppSessionBanner';
+import TemplatePicker from './TemplatePicker';
 
 interface ChatPanelProps {
   conversation: Conversation;
@@ -48,6 +50,18 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   const deleteMutation = useDeleteConversation();
   const user = useAuthStore((state) => state.user);
   const canDelete = user?.role === Role.SuperAdmin || user?.role === Role.Admin;
+
+  // WhatsApp template state
+  const isWhatsApp = conversation.source === 'whatsapp';
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+
+  const handleTemplateClick = useCallback(() => {
+    setShowTemplatePicker((prev) => !prev);
+  }, []);
+
+  const handleTemplateClose = useCallback(() => {
+    setShowTemplatePicker(false);
+  }, []);
 
   // Fetch initial messages using Zustand store
   const fetchMessages = useChatStore((state) => state.fetchMessages);
@@ -237,33 +251,64 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   return (
     <>
       {/* Container for sticky header + scrollable content */}
-      <div className="h-full flex flex-col relative">
+      <div className="h-full flex flex-col relative bg-white">
         {/* STICKY HEADER - Stays at top while scrolling */}
         {customHeader}
 
-        {/* SCROLLABLE CONTENT - UnifiedChatView without header */}
-        <UnifiedChatView
-          messages={chatEngine.messages}
-          isLoading={isStoreLoading}
-          isAITyping={chatEngine.isAITyping}
-          onSendMessage={chatEngine.sendMessage}
-          onRetryMessage={chatEngine.retryMessage}
-          enablePagination={true}
-          onLoadMore={handleLoadMore}
-          hasMore={hasMore}
-          enableAIToggle={true}
-          isAIMode={conversation.is_ai}
-          onModeToggle={handleModeToggle}
-          placeholder={
-            conversation.is_ai
-              ? t('conversations.ai_mode_placeholder')
-              : t('conversations.human_mode_placeholder')
-          }
-          conversationId={conversation.id}
-          agentId={conversation.agent_id
-          }
-          className="bg-white flex-1 min-h-0"
-        />
+        {/* SCROLLABLE CONTENT */}
+        {(() => {
+          const waWindow = isWhatsApp ? getWhatsAppWindowStatus(chatEngine.messages) : null;
+          const windowExpired = waWindow?.expired ?? false;
+
+          return (
+            <>
+              <UnifiedChatView
+                messages={chatEngine.messages}
+                isLoading={isStoreLoading}
+                isAITyping={chatEngine.isAITyping}
+                onSendMessage={chatEngine.sendMessage}
+                onRetryMessage={chatEngine.retryMessage}
+                enablePagination={true}
+                onLoadMore={handleLoadMore}
+                hasMore={hasMore}
+                enableAIToggle={true}
+                isAIMode={conversation.is_ai}
+                onModeToggle={handleModeToggle}
+                placeholder={
+                  conversation.is_ai
+                    ? t('conversations.ai_mode_placeholder')
+                    : t('conversations.human_mode_placeholder')
+                }
+                conversationId={conversation.id}
+                agentId={conversation.agent_id}
+                isWhatsApp={isWhatsApp}
+                onTemplateClick={handleTemplateClick}
+                hideComposer={isWhatsApp && windowExpired}
+                composerFooter={
+                  isWhatsApp && !windowExpired && waWindow && waWindow.remaining < 4 * 60 * 60 * 1000
+                    ? <WhatsAppActiveBanner remainingMs={waWindow.remaining} />
+                    : undefined
+                }
+                className="bg-white flex-1 min-h-0"
+              />
+
+              {/* Expired window: replaces composer */}
+              {isWhatsApp && windowExpired && (
+                <WhatsAppExpiredBanner onSendTemplate={handleTemplateClick} />
+              )}
+
+              {/* Template Picker */}
+              {isWhatsApp && conversation.platform_connection_id && (
+                <TemplatePicker
+                  isOpen={showTemplatePicker}
+                  onClose={handleTemplateClose}
+                  conversationId={conversation.id}
+                  connectionId={conversation.platform_connection_id}
+                />
+              )}
+            </>
+          );
+        })()}
       </div>
       {ConfirmDialogComponent}
     </>

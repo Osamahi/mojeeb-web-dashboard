@@ -252,6 +252,17 @@ const ChatMessageBubble = memo(function ChatMessageBubble({ message, onRetry }: 
             )}
             style={bubbleStyle}
           >
+          {/* Template badge */}
+          {message.message_type === 5 && (
+            <div className="mb-1.5">
+              <span className={cn(
+                'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium',
+                isUser ? 'bg-neutral-200/50 text-neutral-600' : 'bg-white/15 text-white/80'
+              )}>
+                {t('whatsapp.template_badge', 'Template')}
+              </span>
+            </div>
+          )}
           {isDeleted ? (
             <div className="italic opacity-60 text-sm">
               {t('conversations.message_deleted')}
