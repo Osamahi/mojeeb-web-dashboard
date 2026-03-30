@@ -1,15 +1,15 @@
 /**
  * Centralized Toast Messages for Chat Components
  * Single source of truth for all user-facing toast notifications
+ * Pass translated strings from callers for i18n support.
  */
 
 import { toast } from 'sonner';
 
 export const chatToasts = {
-  // Mode switching
-  modeSwitch: (isAI: boolean) =>
-    toast.success(`Switched to ${isAI ? 'AI' : 'Human'} mode`),
-  modeSwitchError: () => toast.error('Failed to switch mode'),
+  // Mode switching — accepts pre-translated message
+  modeSwitch: (message: string) => toast.success(message),
+  modeSwitchError: (message: string) => toast.error(message),
 
   // Message sending
   sendError: () => toast.error('Failed to send message. Please try again.'),

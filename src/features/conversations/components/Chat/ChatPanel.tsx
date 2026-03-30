@@ -6,7 +6,7 @@
 
 import { useMemo, useEffect, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowRight, User, MoreVertical, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BotOff, MoreVertical, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '../../types';
 import { SenderRole, MessageType } from '../../types/conversation.types';
@@ -122,14 +122,14 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
       if (globalSelectedAgent?.id) {
         queryClient.invalidateQueries({ queryKey: queryKeys.conversations(globalSelectedAgent.id) });
       }
-      chatToasts.modeSwitch(newIsAI);
+      chatToasts.modeSwitch(newIsAI ? t('message_composer.mode_switched_to_ai') : t('message_composer.mode_switched_to_human'));
     },
     onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousConversation) {
         selectConversation(context.previousConversation);
       }
-      chatToasts.modeSwitchError();
+      chatToasts.modeSwitchError(t('message_composer.mode_switch_error'));
       logger.error('Failed to toggle AI/Human mode', error, {
         conversationId: conversation.id,
         currentMode: conversation.is_ai,
@@ -199,9 +199,9 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
             <h3 className="font-semibold text-neutral-950 truncate">
               {conversation.customer_name}
             </h3>
-            {/* Human mode indicator */}
+            {/* AI disabled indicator */}
             {!conversation.is_ai && (
-              <User className="w-3.5 h-3.5 text-brand-mojeeb flex-shrink-0" />
+              <BotOff className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" />
             )}
           </div>
 
@@ -274,11 +274,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
                 enableAIToggle={true}
                 isAIMode={conversation.is_ai}
                 onModeToggle={handleModeToggle}
-                placeholder={
-                  conversation.is_ai
-                    ? t('conversations.ai_mode_placeholder')
-                    : t('conversations.human_mode_placeholder')
-                }
+                placeholder={t('conversations.message_placeholder', 'Type a message...')}
                 conversationId={conversation.id}
                 agentId={conversation.agent_id}
                 isWhatsApp={isWhatsApp}

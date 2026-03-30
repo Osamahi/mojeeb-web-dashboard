@@ -5,7 +5,7 @@
 
 import { memo, useState, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { User, Bot, Pin } from 'lucide-react';
+import { BotOff, Bot, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Conversation } from '../../types';
 import { formatConversationTime } from '../../utils/timeFormatters';
@@ -161,9 +161,9 @@ const ConversationListItem = memo(function ConversationListItem({
               {conversation.customer_name}
             </span>
 
-            {/* Human mode indicator */}
+            {/* AI disabled indicator */}
             {showHumanMode && (
-              <User className="w-3.5 h-3.5 text-brand-mojeeb flex-shrink-0" />
+              <BotOff className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" />
             )}
 
             {/* Unhappy sentiment indicator */}

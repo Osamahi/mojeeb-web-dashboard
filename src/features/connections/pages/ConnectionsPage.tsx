@@ -163,7 +163,7 @@ export default function ConnectionsPage() {
             transition={{ delay: 0.1 }}
           >
             <ConnectedPlatformsSection
-              connections={connections}
+              connections={connections?.filter(c => c.isActive) || []}
               isLoading={false}
               onManage={handleManageConnection}
               onDisconnect={handleDisconnect}

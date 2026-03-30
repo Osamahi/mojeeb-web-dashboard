@@ -64,7 +64,7 @@ export default function WhatsAppManagementPage() {
   const { data: connections, isLoading: connectionsLoading } = useConnections();
 
   const whatsappConnections = useMemo(() => {
-    return connections?.filter(conn => conn.platform === 'whatsapp') || [];
+    return connections?.filter(conn => conn.platform === 'whatsapp' && conn.isActive) || [];
   }, [connections]);
 
   // Get templates for selected phone number

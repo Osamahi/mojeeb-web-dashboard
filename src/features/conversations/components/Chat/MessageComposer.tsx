@@ -7,7 +7,7 @@
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, User, X, AlertCircle, Mic, Music, Image, FileText, Upload, Video, LayoutTemplate } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, BotOff, X, AlertCircle, Mic, Music, Image, FileText, Upload, Video, LayoutTemplate } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -126,6 +126,47 @@ interface UploadedVideo {
   progress: number;
   error?: string;
   isUploading: boolean;
+}
+
+function AiToggle({ isAIMode, onToggle }: { isAIMode: boolean; onToggle: () => void }) {
+  const { t } = useTranslation();
+  const [showLabel, setShowLabel] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  const handleClick = useCallback(() => {
+    onToggle();
+    setShowLabel(true);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowLabel(false), 3000);
+  }, [onToggle]);
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <button
+        onClick={handleClick}
+        className={cn(
+          'p-2 rounded-lg transition-all duration-150',
+          'hover:bg-neutral-100 hover:text-neutral-700',
+          isAIMode ? 'text-neutral-500' : 'text-neutral-300'
+        )}
+        aria-label={isAIMode ? t('message_composer.ai_enabled') : t('message_composer.ai_disabled')}
+        title={isAIMode ? t('message_composer.ai_enabled') : t('message_composer.ai_disabled')}
+      >
+        {isAIMode ? <Bot className="w-5 h-5" /> : <BotOff className="w-5 h-5" />}
+      </button>
+      <span
+        className={cn(
+          'text-xs font-medium whitespace-nowrap overflow-hidden transition-all duration-300',
+          showLabel ? 'max-w-[250px] opacity-100' : 'max-w-0 opacity-0',
+          isAIMode ? 'text-neutral-500' : 'text-neutral-300'
+        )}
+      >
+        {isAIMode ? t('message_composer.ai_enabled') : t('message_composer.ai_disabled')}
+      </span>
+    </div>
+  );
 }
 
 export default memo(function MessageComposer({
@@ -1572,45 +1613,9 @@ export default memo(function MessageComposer({
             )}
           </div>
 
-          {/* AI/Human Mode Toggle Switch */}
+          {/* AI Agent Toggle */}
           {onModeToggle && (
-            <div className="flex items-center gap-2">
-              {/* Label */}
-              <div className="flex items-center gap-1.5">
-                {isAIMode ? (
-                  <>
-                    <Bot className="w-4 h-4 text-neutral-700" />
-                    <span className="text-xs font-medium text-neutral-700">AI</span>
-                  </>
-                ) : (
-                  <>
-                    <User className="w-4 h-4 text-brand-mojeeb" />
-                    <span className="text-xs font-medium text-brand-mojeeb">Human</span>
-                  </>
-                )}
-              </div>
-
-              {/* Toggle Switch */}
-              <button
-                onClick={onModeToggle}
-                className={cn(
-                  'relative inline-flex h-6 w-11 items-center rounded-full',
-                  'transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2',
-                  isAIMode ? 'bg-neutral-300' : 'bg-brand-mojeeb'
-                )}
-                role="switch"
-                aria-checked={!isAIMode}
-                aria-label={t('message_composer.toggle_mode_aria', { mode: isAIMode ? 'AI' : 'Human' })}
-                title={t('message_composer.switch_mode_title', { mode: isAIMode ? 'Human' : 'AI' })}
-              >
-                <span
-                  className={cn(
-                    'inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200',
-                    isAIMode ? 'translate-x-1' : 'translate-x-6'
-                  )}
-                />
-              </button>
-            </div>
+            <AiToggle isAIMode={isAIMode} onToggle={onModeToggle} />
           )}
         </div>
 
