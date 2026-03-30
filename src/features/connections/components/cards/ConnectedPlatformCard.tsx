@@ -133,7 +133,7 @@ export function ConnectedPlatformCard({
         {/* Online/Connected Indicator - Colored dot at bottom right */}
         {connection.isActive && (
           <div className={cn(
-            "absolute bottom-0 ltr:right-0 rtl:left-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white",
+            "absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white",
             connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED'
               ? "bg-yellow-500"
               : "bg-green-500"
