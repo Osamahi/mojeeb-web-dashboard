@@ -1,12 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
-import { markConversationAsResolved } from '../services/conversationApi';
+import { markConversationAsResolved, type CursorPaginatedConversationsResponse } from '../services/conversationApi';
 import { queryKeys } from '@/lib/queryKeys';
+import { updateConversationInCache } from '../utils/optimisticUpdates';
 
-/**
- * React Query mutation hook for marking a conversation as resolved.
- * Invalidates conversation queries on success so all filtered views refetch.
- */
 export function useMarkConversationAsResolved() {
   const queryClient = useQueryClient();
   const { agentId } = useAgentContext();
@@ -14,14 +11,31 @@ export function useMarkConversationAsResolved() {
   return useMutation({
     mutationFn: markConversationAsResolved,
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onMutate: async (conversationId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.conversations(agentId) });
+
+      const previousData = queryClient.getQueriesData<InfiniteData<CursorPaginatedConversationsResponse>>({
         queryKey: queryKeys.conversations(agentId),
+      });
+
+      updateConversationInCache(queryClient, agentId, conversationId, {
+        urgent: false,
+        requires_human_attention: false,
+        am_not_sure_how_to_answer: false,
+        sentiment: '3',
+      });
+
+      return { previousData };
+    },
+
+    onError: (_error, _conversationId, context) => {
+      context?.previousData.forEach(([key, data]) => {
+        if (data) queryClient.setQueryData(key, data);
       });
     },
 
-    onError: (error) => {
-      console.error('Failed to mark conversation as resolved:', error);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations(agentId) });
     },
   });
 }

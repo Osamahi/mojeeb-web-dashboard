@@ -1,12 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
-import { toggleAIMode } from '../services/conversationApi';
+import { toggleAIMode, type CursorPaginatedConversationsResponse } from '../services/conversationApi';
 import { queryKeys } from '@/lib/queryKeys';
+import { updateConversationInCache } from '../utils/optimisticUpdates';
 
-/**
- * React Query mutation hook for toggling AI mode on a conversation.
- * Invalidates conversation queries on success so all filtered views refetch.
- */
 export function useToggleAIMode() {
   const queryClient = useQueryClient();
   const { agentId } = useAgentContext();
@@ -15,14 +12,28 @@ export function useToggleAIMode() {
     mutationFn: ({ conversationId, isAI }: { conversationId: string; isAI: boolean }) =>
       toggleAIMode(conversationId, isAI),
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onMutate: async ({ conversationId, isAI }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.conversations(agentId) });
+
+      const previousData = queryClient.getQueriesData<InfiniteData<CursorPaginatedConversationsResponse>>({
         queryKey: queryKeys.conversations(agentId),
+      });
+
+      updateConversationInCache(queryClient, agentId, conversationId, {
+        is_ai: isAI,
+      });
+
+      return { previousData };
+    },
+
+    onError: (_error, _variables, context) => {
+      context?.previousData.forEach(([key, data]) => {
+        if (data) queryClient.setQueryData(key, data);
       });
     },
 
-    onError: (error) => {
-      console.error('Failed to toggle AI mode:', error);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations(agentId) });
     },
   });
 }

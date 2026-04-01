@@ -4,7 +4,7 @@
  */
 
 import { memo, useState, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BotOff, Bot, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Conversation } from '../../types';
@@ -161,27 +161,63 @@ const ConversationListItem = memo(function ConversationListItem({
               {conversation.customer_name}
             </span>
 
-            {/* AI disabled indicator */}
-            {showHumanMode && (
-              <BotOff className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" />
-            )}
+            <AnimatePresence mode="popLayout">
+              {/* AI disabled indicator */}
+              {showHumanMode && (
+                <motion.span
+                  key="human-mode"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex-shrink-0"
+                >
+                  <BotOff className="w-3.5 h-3.5 text-neutral-400" />
+                </motion.span>
+              )}
 
-            {/* Unhappy sentiment indicator */}
-            {showUnhappySentiment && (
-              <span className="text-xs flex-shrink-0">😟</span>
-            )}
+              {/* Unhappy sentiment indicator */}
+              {showUnhappySentiment && (
+                <motion.span
+                  key="sentiment"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-xs flex-shrink-0"
+                >
+                  😟
+                </motion.span>
+              )}
 
-            {/* Urgent indicator */}
-            {showUrgent && (
-              <Badge variant="danger" className="text-xs">
-                {t('conversation_list_item.urgent')}
-              </Badge>
-            )}
+              {/* Urgent indicator */}
+              {showUrgent && (
+                <motion.span
+                  key="urgent"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Badge variant="danger" className="text-xs">
+                    {t('conversation_list_item.urgent')}
+                  </Badge>
+                </motion.span>
+              )}
 
-            {/* Needs attention indicator */}
-            {showNeedsAttention && (
-              <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0" title={t('conversation_list_item.needs_attention')} />
-            )}
+              {/* Needs attention indicator */}
+              {showNeedsAttention && (
+                <motion.div
+                  key="attention"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0"
+                  title={t('conversation_list_item.needs_attention')}
+                />
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Topic */}
@@ -195,16 +231,36 @@ const ConversationListItem = memo(function ConversationListItem({
         {/* Timestamp and indicators */}
         <div className="flex-shrink-0 flex flex-col items-end gap-1">
           <div className="flex items-center gap-1">
-            {conversation.is_pinned && (
-              <Pin className="w-3 h-3 text-neutral-400 flex-shrink-0" />
-            )}
+            <AnimatePresence mode="popLayout">
+              {conversation.is_pinned && (
+                <motion.span
+                  key="pin"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex-shrink-0"
+                >
+                  <Pin className="w-3 h-3 text-neutral-400" />
+                </motion.span>
+              )}
+            </AnimatePresence>
             <span className="text-xs text-neutral-500">
               {formattedTime}
             </span>
           </div>
-          {!conversation.is_read && (
-            <div className="w-2 h-2 rounded-full bg-brand-mojeeb" />
-          )}
+          <AnimatePresence>
+            {!conversation.is_read && (
+              <motion.div
+                key="unread"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{ duration: 0.2 }}
+                className="w-2 h-2 rounded-full bg-brand-mojeeb"
+              />
+            )}
+          </AnimatePresence>
         </div>
       </div>
 

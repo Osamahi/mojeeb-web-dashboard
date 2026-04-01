@@ -1,12 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
-import { markConversationAsUrgent } from '../services/conversationApi';
+import { markConversationAsUrgent, type CursorPaginatedConversationsResponse } from '../services/conversationApi';
 import { queryKeys } from '@/lib/queryKeys';
+import { updateConversationInCache } from '../utils/optimisticUpdates';
 
-/**
- * React Query mutation hook for marking a conversation as urgent.
- * Invalidates conversation queries on success so all filtered views refetch.
- */
 export function useMarkConversationAsUrgent() {
   const queryClient = useQueryClient();
   const { agentId } = useAgentContext();
@@ -14,14 +11,30 @@ export function useMarkConversationAsUrgent() {
   return useMutation({
     mutationFn: markConversationAsUrgent,
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onMutate: async (conversationId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.conversations(agentId) });
+
+      const previousData = queryClient.getQueriesData<InfiniteData<CursorPaginatedConversationsResponse>>({
         queryKey: queryKeys.conversations(agentId),
+      });
+
+      updateConversationInCache(queryClient, agentId, conversationId, {
+        urgent: true,
+        requires_human_attention: false,
+        am_not_sure_how_to_answer: false,
+      });
+
+      return { previousData };
+    },
+
+    onError: (_error, _conversationId, context) => {
+      context?.previousData.forEach(([key, data]) => {
+        if (data) queryClient.setQueryData(key, data);
       });
     },
 
-    onError: (error) => {
-      console.error('Failed to mark conversation as urgent:', error);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations(agentId) });
     },
   });
 }

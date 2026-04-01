@@ -1,12 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
-import { pinConversation } from '../services/conversationApi';
+import { pinConversation, type CursorPaginatedConversationsResponse } from '../services/conversationApi';
 import { queryKeys } from '@/lib/queryKeys';
+import { updateConversationInCache } from '../utils/optimisticUpdates';
 
-/**
- * React Query mutation hook for pinning a conversation.
- * Invalidates conversation queries on success so the list refetches with correct sort order.
- */
 export function usePinConversation() {
   const queryClient = useQueryClient();
   const { agentId } = useAgentContext();
@@ -14,14 +11,29 @@ export function usePinConversation() {
   return useMutation({
     mutationFn: pinConversation,
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onMutate: async (conversationId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.conversations(agentId) });
+
+      const previousData = queryClient.getQueriesData<InfiniteData<CursorPaginatedConversationsResponse>>({
         queryKey: queryKeys.conversations(agentId),
+      });
+
+      updateConversationInCache(queryClient, agentId, conversationId, {
+        is_pinned: true,
+        pinned_at: new Date().toISOString(),
+      });
+
+      return { previousData };
+    },
+
+    onError: (_error, _conversationId, context) => {
+      context?.previousData.forEach(([key, data]) => {
+        if (data) queryClient.setQueryData(key, data);
       });
     },
 
-    onError: (error) => {
-      console.error('Failed to pin conversation:', error);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.conversations(agentId) });
     },
   });
 }
