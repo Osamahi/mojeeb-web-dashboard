@@ -1973,7 +1973,15 @@
     "pin": "تثبيت",
     "pin_tooltip": "تثبيت المحادثة في الأعلى",
     "unpin": "إلغاء التثبيت",
-    "unpin_tooltip": "إلغاء تثبيت المحادثة"
+    "unpin_tooltip": "إلغاء تثبيت المحادثة",
+    "mark_as_urgent": "علّم كعاجل",
+    "mark_as_urgent_tooltip": "علّم المحادثة كعاجلة",
+    "mark_as_resolved": "تمت المعالجة",
+    "mark_as_resolved_tooltip": "إزالة جميع علامات الانتباه",
+    "enable_ai": "تفعيل الذكاء الاصطناعي",
+    "enable_ai_tooltip": "تفعيل الرد التلقائي بالذكاء الاصطناعي",
+    "disable_ai": "إيقاف الذكاء الاصطناعي",
+    "disable_ai_tooltip": "إيقاف الرد التلقائي بالذكاء الاصطناعي"
   },
   "data_table": {
     "no_items_found": "مفيش {{itemName}} اتلقت",

@@ -1,11 +1,14 @@
 import { useEffect, useRef } from 'react';
-import { Pin, PinOff, Mail, MailOpen, Trash2 } from 'lucide-react';
+import { Pin, PinOff, Mail, MailOpen, Trash2, AlertTriangle, CheckCircle, Bot, BotOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ConversationResponse } from '../../services/conversationApi';
 import { useMarkConversationAsRead } from '../../hooks/useMarkConversationAsRead';
 import { useMarkConversationAsUnread } from '../../hooks/useMarkConversationAsUnread';
 import { usePinConversation } from '../../hooks/usePinConversation';
 import { useUnpinConversation } from '../../hooks/useUnpinConversation';
+import { useMarkConversationAsUrgent } from '../../hooks/useMarkConversationAsUrgent';
+import { useMarkConversationAsResolved } from '../../hooks/useMarkConversationAsResolved';
+import { useToggleAIMode } from '../../hooks/useToggleAIMode';
 
 interface ConversationContextMenuProps {
   conversation: ConversationResponse;
@@ -40,10 +43,16 @@ export function ConversationContextMenu({
   const { mutate: markAsUnread, isPending: isPendingUnread } = useMarkConversationAsUnread();
   const { mutate: pin, isPending: isPendingPin } = usePinConversation();
   const { mutate: unpin, isPending: isPendingUnpin } = useUnpinConversation();
+  const { mutate: markAsUrgent, isPending: isPendingUrgent } = useMarkConversationAsUrgent();
+  const { mutate: markAsResolved, isPending: isPendingResolved } = useMarkConversationAsResolved();
+  const { mutate: toggleAI, isPending: isPendingAI } = useToggleAIMode();
 
-  const isPending = isPendingRead || isPendingUnread || isPendingPin || isPendingUnpin;
+  const isPending = isPendingRead || isPendingUnread || isPendingPin || isPendingUnpin || isPendingUrgent || isPendingResolved || isPendingAI;
   const isUnread = !conversation.is_read;
   const isPinned = conversation.is_pinned;
+  const isAIEnabled = conversation.is_ai;
+  const hasUnhappySentiment = conversation.sentiment !== undefined && conversation.sentiment !== null && (conversation.sentiment === 1 || conversation.sentiment === 2);
+  const hasAttentionFlags = conversation.urgent || conversation.requires_human_attention || conversation.am_not_sure_how_to_answer || hasUnhappySentiment;
 
   // Handle click outside
   useEffect(() => {
@@ -101,6 +110,22 @@ export function ConversationContextMenu({
       menu.style.top = `${adjustedY}px`;
     }
   }, [position]);
+
+  const handleToggleAIMode = () => {
+    if (isPending) return;
+    onClose();
+    toggleAI({ conversationId: conversation.id, isAI: !isAIEnabled });
+  };
+
+  const handleToggleUrgentStatus = () => {
+    if (isPending) return;
+    onClose();
+    if (hasAttentionFlags) {
+      markAsResolved(conversation.id);
+    } else {
+      markAsUrgent(conversation.id);
+    }
+  };
 
   const handleToggleReadStatus = () => {
     if (isPending) return;
@@ -180,6 +205,45 @@ export function ConversationContextMenu({
             {isUnread
               ? <><MailOpen className="w-4 h-4" />{t('conversation_context_menu.mark_as_read')}</>
               : <><Mail className="w-4 h-4" />{t('conversation_context_menu.mark_as_unread')}</>}
+          </button>
+          <button
+            onClick={handleToggleAIMode}
+            disabled={isPending}
+            className={`w-full px-4 py-2 text-start text-sm transition-colors flex items-center gap-2 ${
+              isPending
+                ? 'cursor-not-allowed text-neutral-400'
+                : 'text-neutral-700 hover:bg-neutral-50'
+            }`}
+            title={
+              isAIEnabled
+                ? t('conversation_context_menu.disable_ai_tooltip')
+                : t('conversation_context_menu.enable_ai_tooltip')
+            }
+            role="menuitem"
+          >
+            {isAIEnabled
+              ? <><BotOff className="w-4 h-4" />{t('conversation_context_menu.disable_ai')}</>
+              : <><Bot className="w-4 h-4" />{t('conversation_context_menu.enable_ai')}</>}
+          </button>
+
+          <button
+            onClick={handleToggleUrgentStatus}
+            disabled={isPending}
+            className={`w-full px-4 py-2 text-start text-sm transition-colors flex items-center gap-2 ${
+              isPending
+                ? 'cursor-not-allowed text-neutral-400'
+                : 'text-neutral-700 hover:bg-neutral-50'
+            }`}
+            title={
+              hasAttentionFlags
+                ? t('conversation_context_menu.mark_as_resolved_tooltip')
+                : t('conversation_context_menu.mark_as_urgent_tooltip')
+            }
+            role="menuitem"
+          >
+            {hasAttentionFlags
+              ? <><CheckCircle className="w-4 h-4" />{t('conversation_context_menu.mark_as_resolved')}</>
+              : <><AlertTriangle className="w-4 h-4" />{t('conversation_context_menu.mark_as_urgent')}</>}
           </button>
 
           {/* Delete option - passed from parent (SuperAdmin & Admin only) */}

@@ -223,3 +223,25 @@ export async function unpinConversation(
 ): Promise<void> {
   await api.post(`/api/v2/conversations/${conversationId}/unpin`);
 }
+
+/**
+ * Mark a conversation as urgent (manual override)
+ *
+ * @param conversationId - The conversation ID to mark as urgent
+ */
+export async function markConversationAsUrgent(
+  conversationId: string
+): Promise<void> {
+  await api.post(`/api/v2/conversations/${conversationId}/mark-urgent`);
+}
+
+/**
+ * Mark a conversation as resolved (clears all attention flags)
+ *
+ * @param conversationId - The conversation ID to mark as resolved
+ */
+export async function markConversationAsResolved(
+  conversationId: string
+): Promise<void> {
+  await api.post(`/api/v2/conversations/${conversationId}/mark-resolved`);
+}

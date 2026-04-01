@@ -1974,7 +1974,15 @@
     "pin": "Pin",
     "pin_tooltip": "Pin conversation to top",
     "unpin": "Unpin",
-    "unpin_tooltip": "Unpin conversation"
+    "unpin_tooltip": "Unpin conversation",
+    "mark_as_urgent": "Mark as Urgent",
+    "mark_as_urgent_tooltip": "Mark conversation as urgent",
+    "mark_as_resolved": "Mark as Resolved",
+    "mark_as_resolved_tooltip": "Clear all attention flags",
+    "enable_ai": "Enable AI",
+    "enable_ai_tooltip": "Enable AI responses for this conversation",
+    "disable_ai": "Disable AI",
+    "disable_ai_tooltip": "Disable AI responses for this conversation"
   },
   "data_table": {
     "no_items_found": "No {{itemName}} found",
