@@ -1184,6 +1184,8 @@
       "remaining": "Remaining",
       "limit": "Limit",
       "approaching_limit": "You are approaching your usage limit. Consider upgrading your plan.",
+      "conversations": "Conversations",
+      "show_count": "Show Count",
       "billing_period": "Billing Period",
       "resets_on": "Usage resets on"
     }

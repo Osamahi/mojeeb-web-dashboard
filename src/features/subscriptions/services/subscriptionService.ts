@@ -355,6 +355,17 @@ class SubscriptionService {
   }
 
   /**
+   * Get conversation count for the current billing period (lazy-loaded on demand).
+   * GET /api/admin/subscriptions/{id}/conversation-count
+   */
+  async getConversationCount(subscriptionId: string): Promise<number> {
+    const response = await api.get<ApiResponse<{ conversations_count: number }>>(
+      `/api/admin/subscriptions/${subscriptionId}/conversation-count`
+    );
+    return response.data.data.conversations_count;
+  }
+
+  /**
    * Update subscription status (active, paused, canceled).
    * PATCH /api/admin/subscriptions/{id}/status
    */

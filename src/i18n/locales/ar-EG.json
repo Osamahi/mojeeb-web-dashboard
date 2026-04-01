@@ -1181,6 +1181,8 @@
       "remaining": "المتبقي",
       "limit": "الحد",
       "approaching_limit": "أنت تقترب من حد الاستخدام. فكر في ترقية خطتك.",
+      "conversations": "المحادثات",
+      "show_count": "عرض العدد",
       "billing_period": "فترة الفوترة",
       "resets_on": "يتم إعادة تعيين الاستخدام في"
     }

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BarChart3, MessageSquare, Users, TrendingUp, AlertCircle } from 'lucide-react';
+import { BarChart3, MessageSquare, MessagesSquare, Users, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { subscriptionService } from '../services/subscriptionService';
 import type { SubscriptionDetails } from '../types/subscription.types';
@@ -13,14 +14,23 @@ interface ViewUsageModalProps {
 
 export function ViewUsageModal({ isOpen, onClose, subscription }: ViewUsageModalProps) {
   const { t } = useTranslation();
+  const [showConversations, setShowConversations] = useState(false);
 
   const { data: usage, isLoading, error } = useQuery({
     queryKey: ['subscription-usage', subscription.id],
     queryFn: () => subscriptionService.getSubscriptionUsage(subscription.id),
     enabled: isOpen,
-    staleTime: 0, // Data is immediately stale
-    gcTime: 0, // Don't cache (formerly cacheTime)
-    refetchOnMount: 'always', // Always refetch when modal opens
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+  });
+
+  const { data: conversationCount, isLoading: isLoadingConversations } = useQuery({
+    queryKey: ['subscription-conversation-count', subscription.id],
+    queryFn: () => subscriptionService.getConversationCount(subscription.id),
+    enabled: showConversations,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const formatNumber = (num: number) => {
@@ -247,6 +257,39 @@ export function ViewUsageModal({ isOpen, onClose, subscription }: ViewUsageModal
                   <p className="text-2xl font-semibold text-gray-900">{usage.agentsLimit}</p>
                   <p className="text-xs text-gray-500">{t('subscriptions.usage_modal.limit')}</p>
                 </div>
+              </div>
+            </div>
+
+            {/* Conversations Count - Lazy loaded on click */}
+            <div className="rounded-lg border border-gray-200 bg-white p-6">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-teal-50 p-2.5">
+                  <MessagesSquare className="h-5 w-5 text-teal-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-gray-900">
+                    {t('subscriptions.usage_modal.conversations')}
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    {t('subscriptions.usage_modal.current_billing_period')}
+                  </p>
+                </div>
+                {!showConversations && (
+                  <button
+                    onClick={() => setShowConversations(true)}
+                    className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-700 hover:bg-teal-100 transition-colors"
+                  >
+                    {t('subscriptions.usage_modal.show_count')}
+                  </button>
+                )}
+                {showConversations && isLoadingConversations && (
+                  <Loader2 className="h-5 w-5 text-teal-500 animate-spin" />
+                )}
+                {showConversations && conversationCount !== undefined && (
+                  <p className="text-2xl font-semibold text-gray-900">
+                    {formatNumber(conversationCount)}
+                  </p>
+                )}
               </div>
             </div>
 
