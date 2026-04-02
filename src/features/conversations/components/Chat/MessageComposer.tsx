@@ -1532,7 +1532,7 @@ export default memo(function MessageComposer({
 
             {/* Attachment Dropdown Menu */}
             {showAttachMenu && (
-              <div className="absolute bottom-full left-0 mb-2 z-50 bg-white rounded-xl shadow-lg border border-neutral-200 overflow-hidden min-w-[180px]">
+              <div className="absolute bottom-full ltr:left-0 rtl:right-0 mb-2 z-50 bg-white rounded-xl shadow-lg border border-neutral-200 overflow-hidden min-w-[180px]">
                 <button
                   onClick={handlePhotoOption}
                   className="flex items-center gap-3 w-full px-4 py-3 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors"
@@ -1598,7 +1598,7 @@ export default memo(function MessageComposer({
             {showEmojiPicker && (
               <div
                 ref={emojiPickerRef}
-                className="absolute bottom-full left-0 mb-2 z-50"
+                className="absolute bottom-full ltr:left-0 rtl:right-0 mb-2 z-50"
                 style={{
                   filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.15))',
                 }}
