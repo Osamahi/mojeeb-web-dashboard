@@ -1,0 +1,27 @@
+# Mojeeb Dashboard — Authenticated SPA
+# Most routes are behind authentication and should not be indexed.
+
+User-agent: *
+Disallow: /
+
+# Allow public pages
+Allow: /login
+Allow: /signup
+Allow: /forgot-password
+Allow: /accept-invitation
+
+# Block AI training crawlers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
