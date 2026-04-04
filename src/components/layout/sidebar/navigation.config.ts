@@ -29,6 +29,7 @@ import {
   Settings,
   AlertTriangle,
   Activity,
+  Megaphone,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import type { NavigationItem } from './types';
@@ -206,6 +207,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.whatsapp',
     href: '/whatsapp-management',
     icon: WhatsAppIcon,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Broadcasts',
+    translationKey: 'navigation.broadcasts',
+    href: '/broadcasts',
+    icon: Megaphone,
     requireSuperAdmin: true,
   },
   {
