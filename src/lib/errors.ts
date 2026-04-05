@@ -38,9 +38,10 @@ export class ApiError extends AppError {
   }
 
   static fromAxiosError(error: AxiosError): ApiError {
-    // Backend sends friendly messages in response.data.message or response.data.detail
+    // Backend sends friendly messages in response.data.message, response.data.detail, or response.data.error
     const message = error.response?.data?.message ||
                    error.response?.data?.detail ||
+                   error.response?.data?.error ||
                    'An unexpected error occurred';
     const statusCode = error.response?.status || 500;
     const code = error.code;
@@ -133,10 +134,11 @@ export function getErrorMessage(error: unknown): string {
   }
 
   if (isAxiosError(error)) {
-    // Backend sends friendly messages in response.data.message or response.data.detail
+    // Backend sends friendly messages in response.data.message, response.data.detail, or response.data.error
     // Prefer these over axios's generic error.message ("Request failed with status code 429")
     return error.response?.data?.message ||
            error.response?.data?.detail ||
+           error.response?.data?.error ||
            'An unexpected error occurred. Please try again.';
   }
 
