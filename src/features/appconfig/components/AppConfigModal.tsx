@@ -5,6 +5,15 @@ import { toast } from 'sonner';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { appConfigService } from '../services/appConfigService';
 import type { AppConfigItem, CreateAppConfigDto, UpdateAppConfigDto } from '../types/appconfig.types';
+import { AI_MODEL_OPTIONS } from '@/features/agents/types/agent.types';
+
+/**
+ * Config keys that use a dropdown select instead of free-text textarea.
+ * Maps key name → array of { value, label } options.
+ */
+const DROPDOWN_CONFIGS: Record<string, readonly { value: string; label: string }[]> = {
+  default_ai_model: AI_MODEL_OPTIONS.filter(o => o.value !== ''), // Exclude "Default" option — this IS the default
+};
 
 interface AppConfigModalProps {
   isOpen: boolean;
@@ -131,19 +140,32 @@ export default function AppConfigModal({ isOpen, onClose, config }: AppConfigMod
           {errors.key && <p className="mt-1 text-xs text-red-600">{errors.key}</p>}
         </div>
 
-        {/* Value Field */}
+        {/* Value Field — dropdown for known keys, textarea for everything else */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1.5">
             {t('app_config.field_value')} <span className="text-red-500">*</span>
           </label>
-          <textarea
-            rows={4}
-            value={value}
-            onChange={(e) => handleChange('value', e.target.value)}
-            placeholder={t('app_config.field_value_placeholder')}
-            disabled={isPending}
-            className="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm placeholder-neutral-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-neutral-100"
-          />
+          {DROPDOWN_CONFIGS[key] ? (
+            <select
+              value={value}
+              onChange={(e) => handleChange('value', e.target.value)}
+              disabled={isPending}
+              className="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-neutral-100"
+            >
+              {DROPDOWN_CONFIGS[key].map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          ) : (
+            <textarea
+              rows={4}
+              value={value}
+              onChange={(e) => handleChange('value', e.target.value)}
+              placeholder={t('app_config.field_value_placeholder')}
+              disabled={isPending}
+              className="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm placeholder-neutral-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500 disabled:bg-neutral-100"
+            />
+          )}
           {errors.value && <p className="mt-1 text-xs text-red-600">{errors.value}</p>}
         </div>
 
