@@ -31,6 +31,7 @@ export type Agent = {
   canManageAccess?: boolean;
   followUpEnabled: boolean;
   followUpPlatforms: string[];
+  aiModel: string | null;
 };
 
 export type CreateAgentRequest = {
@@ -57,6 +58,7 @@ export type UpdateAgentRequest = {
   status?: AgentStatus;
   followUpEnabled?: boolean;
   followUpPlatforms?: string[];
+  aiModel?: string | null;
 };
 
 export type KnowledgeBase = {
@@ -87,6 +89,12 @@ export type UpdateKnowledgeBaseRequest = {
   tags?: string[];
   status?: string;
 };
+
+export const AI_MODEL_OPTIONS = [
+  { value: '', label: 'Default' },
+  { value: 'gemini-3-flash', label: 'Gemini 3 Flash' },
+  { value: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite' },
+] as const;
 
 export type AgentFilters = {
   status?: AgentStatus;

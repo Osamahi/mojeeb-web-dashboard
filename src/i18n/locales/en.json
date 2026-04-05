@@ -72,7 +72,9 @@
     "owner_title": "Owner",
     "open_studio_title": "Open Studio",
     "delete_agent_title": "Delete agent",
-    "reassign_tooltip": "Click to reassign to different organization"
+    "reassign_tooltip": "Click to reassign to different organization",
+    "model_updated": "AI model updated successfully",
+    "model_update_failed": "Failed to update AI model"
   },
   "agents_filter": {
     "title": "Filter Agents",

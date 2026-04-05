@@ -48,6 +48,7 @@ interface ApiAgentResponse {
   can_manage_access?: boolean;
   follow_up_enabled?: boolean;
   follow_up_platforms?: string[];
+  ai_model?: string;
 }
 
 interface ApiResponse<T> {
@@ -126,6 +127,7 @@ class AgentService {
       canManageAccess: apiAgent.can_manage_access,
       followUpEnabled: apiAgent.follow_up_enabled ?? false,
       followUpPlatforms: apiAgent.follow_up_platforms ?? [],
+      aiModel: apiAgent.ai_model ?? null,
     };
   }
 
@@ -214,6 +216,7 @@ class AgentService {
       status: request.status,
       follow_up_enabled: request.followUpEnabled,
       follow_up_platforms: request.followUpPlatforms,
+      ai_model: request.aiModel,
     };
 
     const { data } = await api.put<ApiResponse<ApiAgentResponse>>(`/api/agents/${id}`, snakeCaseRequest);

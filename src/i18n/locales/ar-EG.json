@@ -67,6 +67,8 @@
     "open_studio_title": "افتح الاستوديو",
     "delete_agent_title": "امسح الوكيل",
     "reassign_tooltip": "اضغط عشان تعيد التخصيص لمنظمة تانية",
+    "model_updated": "تم تحديث نموذج الذكاء الاصطناعي بنجاح",
+    "model_update_failed": "فشل تحديث نموذج الذكاء الاصطناعي",
     "organization": "المنظمة",
     "created": "تاريخ الإنشاء",
     "updated": "تاريخ التحديث"

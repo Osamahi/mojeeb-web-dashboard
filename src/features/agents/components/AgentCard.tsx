@@ -6,13 +6,14 @@
 
 import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, Crown, Wrench, Building2, Pencil } from 'lucide-react';
+import { Trash2, Crown, Wrench, Building2, Pencil, ChevronDown } from 'lucide-react';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import type { Agent } from '../types/agent.types';
+import { AI_MODEL_OPTIONS } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { queryKeys } from '@/lib/queryKeys';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -20,6 +21,7 @@ import AgentFormModal from './AgentFormModal';
 import ReassignOrganizationModal from './ReassignOrganizationModal';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 interface AgentCardProps {
   agent: Agent;
@@ -37,6 +39,17 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   // Check if user is SuperAdmin
   const user = useAuthStore((state) => state.user);
   const isSuperAdmin = user?.role === Role.SuperAdmin;
+
+  const modelMutation = useMutation({
+    mutationFn: (aiModel: string) => agentService.updateAgent(agent.id, { aiModel }),
+    onSuccess: () => {
+      toast.success(t('agents.model_updated'));
+      queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
+    },
+    onError: () => {
+      toast.error(t('agents.model_update_failed'));
+    },
+  });
 
   const deleteMutation = useMutation({
     mutationFn: () => agentService.deleteAgent(agent.id),
@@ -174,6 +187,38 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
                 <span className="whitespace-nowrap">{t('common.created_label')}: {formatDate(agent.createdAt)}</span>
                 <span className="hidden sm:inline">•</span>
                 <span className="whitespace-nowrap">{t('common.updated_label')}: {formatDate(agent.updatedAt)}</span>
+                {/* AI Model - SuperAdmin only */}
+                {isSuperAdmin && (
+                  <>
+                    <span>•</span>
+                    <span onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger>
+                          <span className={`inline-flex items-center gap-0.5 text-xs underline underline-offset-2 cursor-pointer transition-colors ${
+                            agent.aiModel
+                              ? 'text-brand-mojeeb hover:text-brand-mojeeb/80'
+                              : 'text-neutral-500 hover:text-neutral-700'
+                          }`}>
+                            {AI_MODEL_OPTIONS.find(o => o.value === (agent.aiModel ?? ''))?.label ?? 'Default'}
+                            <ChevronDown className="w-3 h-3" />
+                          </span>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="min-w-[160px]">
+                          {AI_MODEL_OPTIONS.map((opt) => (
+                            <DropdownMenuItem
+                              key={opt.value}
+                              disabled={modelMutation.isPending}
+                              onClick={() => modelMutation.mutate(opt.value)}
+                              className={opt.value === (agent.aiModel ?? '') ? 'bg-neutral-100 font-medium' : ''}
+                            >
+                              {opt.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* Organization Display - SuperAdmin only */}
@@ -188,6 +233,7 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
                   <Pencil className="w-3 h-3 text-neutral-400 group-hover:text-neutral-600 transition-colors" />
                 </button>
               )}
+
             </div>
           </div>
       </div>

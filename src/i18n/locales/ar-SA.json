@@ -69,7 +69,9 @@
     "owner_title": "المالك",
     "open_studio_title": "فتح الاستوديو",
     "delete_agent_title": "حذف الوكيل",
-    "reassign_tooltip": "انقر لإعادة التعيين لمنظمة مختلفة"
+    "reassign_tooltip": "انقر لإعادة التعيين لمنظمة مختلفة",
+    "model_updated": "تم تحديث نموذج الذكاء الاصطناعي بنجاح",
+    "model_update_failed": "فشل تحديث نموذج الذكاء الاصطناعي"
   },
   "agents_filter": {
     "title": "تصفية الوكلاء",
