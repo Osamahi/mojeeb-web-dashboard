@@ -12,6 +12,7 @@ import { ChevronRight, Edit2, Trash2, Check, X, FileText } from 'lucide-react';
 import type { KnowledgeBase } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { useConfirm } from '@/hooks/useConfirm';
+import { isAxiosError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { Button } from '@/components/ui/Button';
@@ -74,7 +75,11 @@ export default function KnowledgeBaseItem({
     },
     onError: (error) => {
       logger.error('Error saving KB', error);
-      toast.error(t('studio.save_failed'));
+      if (isAxiosError(error) && error.response?.status === 403) {
+        toast.error(t('studio.save_permission_denied'));
+      } else {
+        toast.error(t('studio.save_failed'));
+      }
     },
   });
 
@@ -89,7 +94,11 @@ export default function KnowledgeBaseItem({
     },
     onError: (error) => {
       logger.error('Error deleting KB', error);
-      toast.error(t('studio.delete_failed'));
+      if (isAxiosError(error) && error.response?.status === 403) {
+        toast.error(t('studio.delete_permission_denied'));
+      } else {
+        toast.error(t('studio.delete_failed'));
+      }
     },
   });
 
