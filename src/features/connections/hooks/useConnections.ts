@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { queryKeys } from '@/lib/queryKeys';
-import { isAxiosError } from '@/lib/errors';
+import { isAxiosError, isToastHandled } from '@/lib/errors';
 import { connectionService } from '../services/connectionService';
 import { CACHE_TIMES } from '../constants';
 import type { PlatformConnection } from '../types';
@@ -129,7 +129,7 @@ export function useDisconnectPlatform() {
       if (context?.previousConnections) {
         queryClient.setQueryData(queryKeys.connections(agentId), context.previousConnections);
       }
-      toast.error(t('connections.disconnect_error_toast'));
+      if (!isToastHandled(_error)) toast.error(t('connections.disconnect_error_toast'));
     },
     onSuccess: () => {
       toast.success(t('connections.disconnect_success_toast'));
@@ -177,7 +177,7 @@ export function useToggleAIResponse() {
       if (context?.previousConnections) {
         queryClient.setQueryData(queryKeys.connections(agentId), context.previousConnections);
       }
-      toast.error(t('connections.ai_toggle_error_toast'));
+      if (!isToastHandled(_error)) toast.error(t('connections.ai_toggle_error_toast'));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.connections(agentId) });
@@ -239,7 +239,7 @@ export function useToggleConnectionSetting() {
       if (context?.previousConnections) {
         queryClient.setQueryData(queryKeys.connections(agentId), context.previousConnections);
       }
-      toast.error(t('connections.ai_toggle_error_toast'));
+      if (!isToastHandled(_error)) toast.error(t('connections.ai_toggle_error_toast'));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.connections(agentId) });

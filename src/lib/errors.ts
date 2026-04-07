@@ -47,7 +47,10 @@ export class ApiError extends AppError {
     const code = error.code;
     const details = error.response?.data;
 
-    return new ApiError(message, statusCode, code, details);
+    const apiError = new ApiError(message, statusCode, code, details);
+    // Propagate toast-handled flag from Axios interceptor (e.g., 403 permission denied)
+    if ((error as any)._toastHandled) (apiError as any)._toastHandled = true;
+    return apiError;
   }
 }
 
@@ -115,6 +118,20 @@ export function isApiError(error: unknown): error is ApiError {
  */
 export function isAxiosError(error: unknown): error is AxiosError {
   return (error as AxiosError).isAxiosError === true;
+}
+
+/**
+ * Check if the error toast was already shown by the Axios interceptor (e.g., 403 permission denied).
+ * Use in onError handlers to avoid duplicate toasts:
+ *
+ * ```ts
+ * onError: (error) => {
+ *   if (!isToastHandled(error)) toast.error(t('my_error'));
+ * }
+ * ```
+ */
+export function isToastHandled(error: unknown): boolean {
+  return (error as any)?._toastHandled === true;
 }
 
 /**

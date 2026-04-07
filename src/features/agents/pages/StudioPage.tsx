@@ -222,6 +222,7 @@ export default function StudioPage() {
                     <KnowledgeBaseItem
                       key={kb.id}
                       knowledgeBase={kb}
+                      agentId={agentId!}
                       onUpdate={() => refetchKBs()}
                     />
                   ))}

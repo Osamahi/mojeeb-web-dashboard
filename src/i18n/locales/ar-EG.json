@@ -2139,6 +2139,7 @@
     "send_recording_aria": "ابعت التسجيل"
   },
   "errors": {
+    "permission_denied": "مش مسموحلك تعمل العملية دي. تواصل مع المسؤول.",
     "something_went_wrong": "حصل حاجة غلط",
     "error_details": "تفاصيل الغلط:",
     "reload_page": "حمّل الصفحة تاني",

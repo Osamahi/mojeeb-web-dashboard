@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { billingService } from '../services/billingService';
 import type { ChangePlanRequest, ChangePlanResult } from '../types/billing.types';
 import { queryKeys } from '@/lib/queryKeys';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage, isToastHandled } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 
 /**
@@ -70,7 +70,7 @@ export const useChangePlanMutation = (options?: UseChangePlanMutationOptions) =>
     onError: (error, variables, context) => {
       const errorMessage = getErrorMessage(error);
       logger.error('[useChangePlanMutation]', 'Failed to change plan', error);
-      toast.error(`Failed to change plan: ${errorMessage}`);
+      if (!isToastHandled(error)) toast.error(`Failed to change plan: ${errorMessage}`);
 
       // Call user's onError handler
       options?.onError?.(error, variables, context);

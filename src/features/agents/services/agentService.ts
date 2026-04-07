@@ -280,24 +280,24 @@ class AgentService {
   /**
    * Create knowledge base
    */
-  async createKnowledgeBase(request: CreateKnowledgeBaseRequest): Promise<KnowledgeBase> {
-    const { data } = await api.post<ApiResponse<KnowledgeBase>>('/api/knowledgebases', request);
+  async createKnowledgeBase(agentId: string, request: CreateKnowledgeBaseRequest): Promise<KnowledgeBase> {
+    const { data } = await api.post<ApiResponse<KnowledgeBase>>(`/api/knowledgebases?agentId=${agentId}`, request);
     return data.data;
   }
 
   /**
    * Update knowledge base
    */
-  async updateKnowledgeBase(id: string, request: UpdateKnowledgeBaseRequest): Promise<KnowledgeBase> {
-    const { data } = await api.put<KnowledgeBase>(`/api/knowledgebases/${id}`, request);
+  async updateKnowledgeBase(id: string, agentId: string, request: UpdateKnowledgeBaseRequest): Promise<KnowledgeBase> {
+    const { data } = await api.put<KnowledgeBase>(`/api/knowledgebases/${id}?agentId=${agentId}`, request);
     return data;
   }
 
   /**
    * Delete knowledge base
    */
-  async deleteKnowledgeBase(id: string): Promise<void> {
-    await api.delete(`/api/knowledgebases/${id}`);
+  async deleteKnowledgeBase(id: string, agentId: string): Promise<void> {
+    await api.delete(`/api/knowledgebases/${id}?agentId=${agentId}`);
   }
 
   /**

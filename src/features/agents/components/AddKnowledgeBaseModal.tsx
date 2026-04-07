@@ -16,7 +16,7 @@ import { BaseModal } from '@/components/ui/BaseModal';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
-import { isAxiosError } from '@/lib/errors';
+import { isToastHandled } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 
 type Tab = 'manual' | 'document';
@@ -80,7 +80,7 @@ export default function AddKnowledgeBaseModal({
       }
 
       // Create KB
-      const kb = await agentService.createKnowledgeBase({
+      const kb = await agentService.createKnowledgeBase(agentId, {
         name: name.trim(),
         content: content.trim(),
       });
@@ -98,10 +98,7 @@ export default function AddKnowledgeBaseModal({
     },
     onError: (error: Error) => {
       logger.error('Error creating KB', error);
-      if (error.message === 'Validation failed') return;
-      if (isAxiosError(error) && error.response?.status === 403) {
-        toast.error(t('studio.create_permission_denied'));
-      } else {
+      if (error.message !== 'Validation failed' && !isToastHandled(error)) {
         toast.error(t('knowledge_base.error_create'));
       }
     },

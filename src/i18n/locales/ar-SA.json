@@ -2136,6 +2136,7 @@
     "send_recording_title": "إرسال التسجيل"
   },
   "errors": {
+    "permission_denied": "ليس لديك صلاحية لتنفيذ هذا الإجراء. تواصل مع المسؤول.",
     "something_went_wrong": "حدث خطأ ما",
     "error_details": "تفاصيل الخطأ:",
     "reload_page": "إعادة تحميل الصفحة",

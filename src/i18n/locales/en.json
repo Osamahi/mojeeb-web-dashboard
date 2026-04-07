@@ -2140,6 +2140,7 @@
     "send_recording_title": "Send recording"
   },
   "errors": {
+    "permission_denied": "You don't have permission to perform this action. Contact your admin.",
     "something_went_wrong": "Something went wrong",
     "error_details": "Error Details:",
     "reload_page": "Reload Page",

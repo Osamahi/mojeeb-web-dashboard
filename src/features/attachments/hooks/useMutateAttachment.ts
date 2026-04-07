@@ -8,6 +8,7 @@ import { attachmentService } from '../services/attachmentService';
 import type { CreateAttachmentRequest, UpdateAttachmentRequest } from '../types/attachment.types';
 import { toast } from 'sonner';
 import { isAxiosError } from 'axios';
+import { isToastHandled } from '@/lib/errors';
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (isAxiosError(error)) {
@@ -30,7 +31,7 @@ export function useCreateAttachment() {
       toast.success('Attachment created successfully');
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to create attachment'));
+      if (!isToastHandled(error)) toast.error(getErrorMessage(error, 'Failed to create attachment'));
     },
   });
 }
@@ -58,7 +59,7 @@ export function useUpdateAttachment() {
       toast.success('Attachment updated successfully');
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to update attachment'));
+      if (!isToastHandled(error)) toast.error(getErrorMessage(error, 'Failed to update attachment'));
     },
   });
 }
@@ -78,7 +79,7 @@ export function useDeleteAttachment() {
       toast.success('Attachment deleted successfully');
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to delete attachment'));
+      if (!isToastHandled(error)) toast.error(getErrorMessage(error, 'Failed to delete attachment'));
     },
   });
 }
@@ -105,7 +106,7 @@ export function useToggleAttachment() {
       queryClient.invalidateQueries({ queryKey: ['attachments'] });
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to toggle attachment'));
+      if (!isToastHandled(error)) toast.error(getErrorMessage(error, 'Failed to toggle attachment'));
     },
   });
 }
@@ -135,7 +136,7 @@ export function useUploadAttachmentFile() {
       toast.success('File uploaded successfully');
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to upload file'));
+      if (!isToastHandled(error)) toast.error(getErrorMessage(error, 'Failed to upload file'));
     },
   });
 }
@@ -165,7 +166,7 @@ export function useUploadAlbumFiles() {
       toast.success('Album uploaded successfully');
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, 'Failed to upload album'));
+      if (!isToastHandled(error)) toast.error(getErrorMessage(error, 'Failed to upload album'));
     },
   });
 }

@@ -3,7 +3,7 @@ import type { UseMutationOptions } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { billingService } from '../services/billingService';
 import type { CreateCheckoutRequest, CheckoutSession } from '../types/billing.types';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage, isToastHandled } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { analytics } from '@/lib/analytics';
 import { usePlanStore } from '@/features/subscriptions/stores/planStore';
@@ -90,7 +90,7 @@ export const useCreateCheckoutMutation = (options?: UseCreateCheckoutMutationOpt
     onError: (error, variables, context) => {
       const errorMessage = getErrorMessage(error);
       logger.error('[useCreateCheckoutMutation]', 'Failed to create checkout session', error);
-      toast.error(`Failed to create checkout: ${errorMessage}`);
+      if (!isToastHandled(error)) toast.error(`Failed to create checkout: ${errorMessage}`);
 
       // Call user's onError handler
       restOptions.onError?.(error, variables, context);

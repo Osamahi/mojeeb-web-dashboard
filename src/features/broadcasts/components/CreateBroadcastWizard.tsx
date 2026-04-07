@@ -11,6 +11,7 @@ import { ReviewStep } from './ReviewStep';
 import type { MessageTemplate } from '@/features/whatsapp/types/whatsapp.types';
 import type { CsvValidationResult } from '../types/broadcast.types';
 import { toast } from 'sonner';
+import { isToastHandled } from '@/lib/errors';
 
 type WizardStep = 'upload' | 'template' | 'review';
 
@@ -104,7 +105,7 @@ export function CreateBroadcastWizard({ isOpen, onClose }: CreateBroadcastWizard
           navigate(`/broadcasts/${campaign.id}`);
         },
         onError: (error: Error) => {
-          toast.error(error.message || t('broadcasts.send_error'));
+          if (!isToastHandled(error)) toast.error(error.message || t('broadcasts.send_error'));
         },
       }
     );

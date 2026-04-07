@@ -7,6 +7,7 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { isToastHandled } from '@/lib/errors';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { leadService } from '../services/leadService';
 import { queryKeys } from '@/lib/queryKeys';
@@ -102,6 +103,7 @@ export function useCreateLead() {
       toast.success(t('leads.lead_created'));
     },
     onError: (error: any) => {
+      if (isToastHandled(error)) return;
       const message = error?.response?.data?.message || t('leads.lead_create_failed');
       toast.error(message);
     },
@@ -140,6 +142,7 @@ export function useUpdateLead() {
         console.error('[useUpdateLead] Error:', error?.response?.data);
       }
 
+      if (isToastHandled(error)) return;
       const message = error?.response?.data?.message || t('leads.lead_update_failed');
       toast.error(message);
     },
@@ -167,6 +170,7 @@ export function useDeleteLead() {
       toast.success(t('leads.lead_deleted'));
     },
     onError: (error: any) => {
+      if (isToastHandled(error)) return;
       const message = error?.response?.data?.message || t('leads.lead_delete_failed');
       toast.error(message);
     },
@@ -249,6 +253,7 @@ export function useCreateLeadNote() {
         queryClient.setQueryData(['leads', leadId, 'notes'], context.previousNotes);
       }
 
+      if (isToastHandled(error)) return;
       const message = error?.response?.data?.message || t('leads.note_add_failed');
       toast.error(message);
     },
@@ -296,6 +301,7 @@ export function useUpdateLeadNote() {
       toast.success(t('leads.note_updated'));
     },
     onError: (error: any) => {
+      if (isToastHandled(error)) return;
       const message = error?.response?.data?.message || t('leads.note_update_failed');
       toast.error(message);
     },
@@ -325,6 +331,7 @@ export function useDeleteLeadNote() {
       toast.success(t('leads.note_deleted'));
     },
     onError: (error: any) => {
+      if (isToastHandled(error)) return;
       const message = error?.response?.data?.message || t('leads.note_delete_failed');
       toast.error(message);
     },

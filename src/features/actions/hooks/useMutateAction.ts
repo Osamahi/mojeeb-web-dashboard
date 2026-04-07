@@ -7,6 +7,7 @@ import { actionService } from '../services/actionService';
 import type { CreateActionRequest, UpdateActionRequest } from '../types';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { toast } from 'sonner';
+import { isToastHandled } from '@/lib/errors';
 
 /**
  * Create action mutation
@@ -23,7 +24,7 @@ export function useCreateAction() {
       toast.success('Action created successfully');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create action');
+      if (!isToastHandled(error)) toast.error(error.response?.data?.message || 'Failed to create action');
     },
   });
 }
@@ -45,7 +46,7 @@ export function useUpdateAction() {
       toast.success('Action updated successfully');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update action');
+      if (!isToastHandled(error)) toast.error(error.response?.data?.message || 'Failed to update action');
     },
   });
 }
@@ -65,7 +66,7 @@ export function useDeleteAction() {
       toast.success('Action deleted successfully');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to delete action');
+      if (!isToastHandled(error)) toast.error(error.response?.data?.message || 'Failed to delete action');
     },
   });
 }

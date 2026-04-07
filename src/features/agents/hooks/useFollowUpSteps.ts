@@ -3,6 +3,7 @@ import { queryKeys } from '@/lib/queryKeys';
 import { agentService } from '../services/agentService';
 import type { CreateFollowUpStepRequest, UpdateFollowUpStepRequest } from '../types/followUp.types';
 import { toast } from 'sonner';
+import { isToastHandled } from '@/lib/errors';
 
 export function useFollowUpSteps(agentId: string | undefined) {
   return useQuery({
@@ -23,8 +24,8 @@ export function useCreateFollowUpStep(agentId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.followUpSteps(agentId) });
     },
-    onError: () => {
-      toast.error('Failed to create follow-up step');
+    onError: (error: unknown) => {
+      if (!isToastHandled(error)) toast.error('Failed to create follow-up step');
     },
   });
 }
@@ -40,8 +41,8 @@ export function useUpdateFollowUpStep(agentId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.followUpSteps(agentId) });
     },
-    onError: () => {
-      toast.error('Failed to update follow-up step');
+    onError: (error: unknown) => {
+      if (!isToastHandled(error)) toast.error('Failed to update follow-up step');
     },
   });
 }
@@ -57,8 +58,8 @@ export function useDeleteFollowUpStep(agentId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.followUpSteps(agentId) });
     },
-    onError: () => {
-      toast.error('Failed to delete follow-up step');
+    onError: (error: unknown) => {
+      if (!isToastHandled(error)) toast.error('Failed to delete follow-up step');
     },
   });
 }

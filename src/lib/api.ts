@@ -9,8 +9,10 @@ import {
 } from './tokenManager';
 import { env } from '@/config/env';
 import { shouldRetry, calculateExponentialDelay, sleep } from './retryConfig';
+import { toast } from 'sonner';
 import { logger } from './logger';
 import { isTokenExpired } from '@/features/auth/utils/tokenUtils';
+import i18n from '@/i18n/config';
 
 // Re-export token management functions for backward compatibility
 export { setTokens, getAccessToken, getRefreshToken, clearTokens };
@@ -277,6 +279,14 @@ api.interceptors.response.use(
       status,
       retryCount: originalRequest._retryCount,
     };
+
+    // 403 Forbidden — centralized permission denied toast (covers all endpoints)
+    // Mark as handled so component onError handlers can skip their own toast
+    if (status === 403) {
+      const apiMessage = error.response?.data?.message;
+      toast.error(apiMessage || i18n.t('errors.permission_denied'));
+      (error as any)._toastHandled = true;
+    }
 
     // 4xx errors are client-side (expected in many flows like 404 no-subscription)
     // Only log 5xx and network errors as ERROR

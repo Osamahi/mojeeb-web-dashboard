@@ -12,7 +12,7 @@ import { ChevronRight, Edit2, Trash2, Check, X, FileText } from 'lucide-react';
 import type { KnowledgeBase } from '../types/agent.types';
 import { agentService } from '../services/agentService';
 import { useConfirm } from '@/hooks/useConfirm';
-import { isAxiosError } from '@/lib/errors';
+import { isToastHandled } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { Button } from '@/components/ui/Button';
@@ -21,11 +21,13 @@ import { plainTextToHtml } from '@/lib/textUtils';
 
 interface KnowledgeBaseItemProps {
   knowledgeBase: KnowledgeBase;
+  agentId: string;
   onUpdate: () => void;
 }
 
 export default function KnowledgeBaseItem({
   knowledgeBase,
+  agentId,
   onUpdate,
 }: KnowledgeBaseItemProps) {
   const { t } = useTranslation();
@@ -56,7 +58,7 @@ export default function KnowledgeBaseItem({
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async () => {
-      return agentService.updateKnowledgeBase(knowledgeBase.id, {
+      return agentService.updateKnowledgeBase(knowledgeBase.id, agentId, {
         name: editName,
         content: editContent,
       });
@@ -75,18 +77,14 @@ export default function KnowledgeBaseItem({
     },
     onError: (error) => {
       logger.error('Error saving KB', error);
-      if (isAxiosError(error) && error.response?.status === 403) {
-        toast.error(t('studio.save_permission_denied'));
-      } else {
-        toast.error(t('studio.save_failed'));
-      }
+      if (!isToastHandled(error)) toast.error(t('studio.save_failed'));
     },
   });
 
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      await agentService.deleteKnowledgeBase(knowledgeBase.id);
+      await agentService.deleteKnowledgeBase(knowledgeBase.id, agentId);
     },
     onSuccess: () => {
       toast.success(t('studio.delete_success'));
@@ -94,11 +92,7 @@ export default function KnowledgeBaseItem({
     },
     onError: (error) => {
       logger.error('Error deleting KB', error);
-      if (isAxiosError(error) && error.response?.status === 403) {
-        toast.error(t('studio.delete_permission_denied'));
-      } else {
-        toast.error(t('studio.delete_failed'));
-      }
+      if (!isToastHandled(error)) toast.error(t('studio.delete_failed'));
     },
   });
 

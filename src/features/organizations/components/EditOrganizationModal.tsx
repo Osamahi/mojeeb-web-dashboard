@@ -9,6 +9,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { X, User as UserIcon, Bot, Search, Check, UserPlus, Trash2, Mail, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { isToastHandled } from '@/lib/errors';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -148,7 +149,7 @@ export default function EditOrganizationModal({
       onClose();
     },
     onError: (error: Error) => {
-      toast.error(error.message || t('organizations.update_failed'));
+      if (!isToastHandled(error)) toast.error(error.message || t('organizations.update_failed'));
     },
   });
 

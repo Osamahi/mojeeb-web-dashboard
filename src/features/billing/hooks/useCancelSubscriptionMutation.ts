@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { billingService } from '../services/billingService';
 import type { CancelSubscriptionRequest, CancelSubscriptionResult } from '../types/billing.types';
 import { queryKeys } from '@/lib/queryKeys';
-import { getErrorMessage } from '@/lib/errors';
+import { getErrorMessage, isToastHandled } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 
 /**
@@ -71,7 +71,7 @@ export const useCancelSubscriptionMutation = (
     onError: (error, variables, context) => {
       const errorMessage = getErrorMessage(error);
       logger.error('[useCancelSubscriptionMutation]', 'Failed to cancel subscription', error);
-      toast.error(`Failed to cancel subscription: ${errorMessage}`);
+      if (!isToastHandled(error)) toast.error(`Failed to cancel subscription: ${errorMessage}`);
 
       // Call user's onError handler
       options?.onError?.(error, variables, context);

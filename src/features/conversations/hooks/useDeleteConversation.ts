@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
+import { isToastHandled } from '@/lib/errors';
 import { chatApiService } from '../services/chatApiService';
 import { useConversationStore } from '../stores/conversationStore';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -78,6 +79,7 @@ export function useDeleteConversation() {
     },
 
     onError: (error: unknown) => {
+      if (isToastHandled(error)) return;
       if (error instanceof AxiosError) {
         const status = error.response?.status;
         const message = error.response?.data?.message;

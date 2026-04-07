@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { isToastHandled } from '@/lib/errors';
 import { commentService } from '../services/commentService';
 import type { SocialComment } from '../types/comment.types';
 
@@ -54,7 +55,7 @@ export function useRetryComment() {
           queryClient.setQueryData(queryKey, data);
         }
       }
-      toast.error(t('comments_page.retry_failed'));
+      if (!isToastHandled(_error)) toast.error(t('comments_page.retry_failed'));
     },
   });
 }

@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { isToastHandled } from '@/lib/errors';
 import {
   getCustomFieldSchemas,
   getTableCustomFieldSchemas,
@@ -74,6 +75,7 @@ export const useCreateCustomFieldSchema = () => {
       toast.success(t('leads.custom_field_created'));
     },
     onError: (error: any) => {
+      if (isToastHandled(error)) return;
       const errorMessage = error?.response?.data?.error || t('leads.custom_field_create_failed');
       toast.error(errorMessage);
     },
@@ -97,6 +99,7 @@ export const useUpdateCustomFieldSchema = () => {
       toast.success(t('leads.custom_field_updated'));
     },
     onError: (error: any) => {
+      if (isToastHandled(error)) return;
       const errorMessage = error?.response?.data?.error || t('leads.custom_field_update_failed');
       toast.error(errorMessage);
     },
@@ -119,6 +122,7 @@ export const useDeleteCustomFieldSchema = () => {
       toast.success(t('leads.custom_field_deleted'));
     },
     onError: (error: any) => {
+      if (isToastHandled(error)) return;
       const errorMessage = error?.response?.data?.error || t('leads.custom_field_delete_failed');
       toast.error(errorMessage);
     },
@@ -177,7 +181,7 @@ export const useReorderCustomFieldSchemas = () => {
           context.previousSchemas
         );
       }
-      toast.error(t('leads.custom_field_reorder_failed'));
+      if (!isToastHandled(_error)) toast.error(t('leads.custom_field_reorder_failed'));
     },
     onSuccess: () => {
       toast.success(t('leads.custom_field_reordered'));
