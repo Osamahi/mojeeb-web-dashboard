@@ -326,8 +326,7 @@ export default memo(function MessageComposer({
     // Sanitize and validate message
     const sanitizedMessage = sanitizeMessage(message);
 
-    // Check if already sending
-    if (isSending || isLocalSending) return;
+    // Rapid messages allowed — stale response detection handles duplicate AI responses server-side
 
     // Check if any images are still uploading
     const hasUploadingImages = uploadedImages.some(img => img.isUploading);
@@ -1468,7 +1467,7 @@ export default memo(function MessageComposer({
             ? t('message_composer.uploading_images_placeholder', { count: uploadedImages.filter(img => img.isUploading).length })
             : placeholder
         }
-        disabled={isSending || isLocalSending}
+        disabled={false}
         maxLength={MAX_MESSAGE_LENGTH}
         rows={1}
         inputMode="text"
