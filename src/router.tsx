@@ -310,20 +310,16 @@ export const router = createBrowserRouter([
         element: <WhatsAppManagementPage />,
       },
       {
+        // Plan-gated inside the page itself via useHasBroadcastsAccess.
+        // Free/Starter users see an upgrade prompt; Professional + SuperAdmin
+        // get the full experience. Sidebar visibility is handled separately
+        // in navigation.config.ts via the `requiredPlans` field.
         path: 'broadcasts',
-        element: (
-          <SuperAdminRoute>
-            <BroadcastsPage />
-          </SuperAdminRoute>
-        ),
+        element: <BroadcastsPage />,
       },
       {
         path: 'broadcasts/:campaignId',
-        element: (
-          <SuperAdminRoute>
-            <BroadcastDetailPage />
-          </SuperAdminRoute>
-        ),
+        element: <BroadcastDetailPage />,
       },
       {
         path: 'users',

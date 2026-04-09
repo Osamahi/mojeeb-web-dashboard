@@ -13,6 +13,12 @@ export interface NavigationItem {
   href?: string; // Optional: if not provided, item is non-navigable (display only)
   icon: NavigationIcon;
   requireSuperAdmin?: boolean;
+  /**
+   * Restrict sidebar visibility to users on one of these plan codes.
+   * SuperAdmin bypasses this check. If the user has no subscription or their
+   * plan is not in the list, the item is hidden.
+   */
+  requiredPlans?: string[];
   requiresAgent?: boolean; // New: item requires an agent to be selected
   onClick?: () => void; // Optional: custom click handler for non-navigable items
 }

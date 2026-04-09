@@ -32,6 +32,7 @@ import {
   Megaphone,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
+import { PlanCode } from '@/features/subscriptions/types/subscription.types';
 import type { NavigationItem } from './types';
 
 /**
@@ -214,7 +215,10 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.broadcasts',
     href: '/broadcasts',
     icon: Megaphone,
-    requireSuperAdmin: true,
+    // Visible to Starter + Professional. Starter users see the page but get
+    // an in-page upgrade prompt (actual access gated inside the pages).
+    // SuperAdmin bypasses this via NavigationList filtering.
+    requiredPlans: [PlanCode.Starter, PlanCode.Professional],
   },
   {
     name: 'Support',

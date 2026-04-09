@@ -2675,7 +2675,11 @@
   },
   "broadcasts": {
     "title": "البث",
+    "page_title": "بث واتساب",
     "subtitle": "أرسل رسائل قوالب واتساب لعدة مستلمين",
+    "upgrade_title": "قم بالترقية لتفعيل البث",
+    "upgrade_description": "ميزة البث متاحة في خطة Professional. قم بالترقية لإرسال حملات قوالب واتساب إلى جهات الاتصال.",
+    "upgrade_cta": "عرض الخطط",
     "new_broadcast": "بث جديد",
     "create_broadcast": "إنشاء بث",
     "no_broadcasts_title": "لا يوجد بث بعد",

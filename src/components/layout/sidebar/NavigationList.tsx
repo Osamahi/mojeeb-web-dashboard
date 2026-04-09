@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Role } from '@/features/auth/types/auth.types';
 import type { User } from '@/features/auth/types/auth.types';
 import type { Agent } from '@/features/agents/types/agent.types';
+import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 import { NavigationItemComponent } from './NavigationItemComponent';
 import type { NavigationItem } from './types';
 
@@ -26,6 +27,8 @@ export const NavigationList = memo(({
   currentAgent,
 }: NavigationListProps) => {
   const { t } = useTranslation();
+  const planCode = useSubscriptionStore((s) => s.subscription?.planCode);
+  const isSuperAdmin = user?.role === Role.SuperAdmin;
 
   return (
     <nav
@@ -35,8 +38,15 @@ export const NavigationList = memo(({
       {items
         .filter((item) => {
           // Hide SuperAdmin-only items if user is not SuperAdmin
-          if (item.requireSuperAdmin && user?.role !== Role.SuperAdmin) {
+          if (item.requireSuperAdmin && !isSuperAdmin) {
             return false;
+          }
+          // Plan-gated items: SuperAdmin always bypasses. Otherwise the
+          // user must have a subscription whose planCode is in the allowlist.
+          if (item.requiredPlans && !isSuperAdmin) {
+            if (!planCode || !item.requiredPlans.includes(planCode)) {
+              return false;
+            }
           }
           return true;
         })
@@ -56,7 +66,10 @@ export const NavigationList = memo(({
     </nav>
   );
 }, (prevProps, nextProps) => {
-  // Custom equality check to prevent re-renders from Zustand reference changes
+  // Custom equality check to prevent re-renders from Zustand reference changes.
+  // NOTE: planCode is read from the subscription store inside the component
+  // via useSubscriptionStore, which already subscribes to changes — no need
+  // to include it in the prop comparison.
   return (
     prevProps.isCollapsed === nextProps.isCollapsed &&
     prevProps.items === nextProps.items &&

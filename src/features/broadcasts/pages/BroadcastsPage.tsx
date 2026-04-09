@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Megaphone, Send, CheckCircle2, XCircle, Loader2, Clock } from 'lucide-react';
+import { Megaphone, CheckCircle2, XCircle, Loader2, Clock } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -9,7 +9,9 @@ import { useDateLocale } from '@/lib/dateConfig';
 import { useTranslation } from 'react-i18next';
 import { useBroadcastCampaigns } from '../hooks/useBroadcasts';
 import { useBroadcastListRealtime } from '../hooks/useBroadcastRealtime';
+import { useHasBroadcastsAccess } from '../hooks/useHasBroadcastsAccess';
 import { CreateBroadcastWizard } from '../components/CreateBroadcastWizard';
+import { BroadcastsUpgradePrompt } from '../components/BroadcastsUpgradePrompt';
 import type { BroadcastCampaign, BroadcastStatus } from '../types/broadcast.types';
 
 const STATUS_STYLES: Record<BroadcastStatus, { className: string; icon: React.ReactNode }> = {
@@ -21,6 +23,18 @@ const STATUS_STYLES: Record<BroadcastStatus, { className: string; icon: React.Re
 };
 
 export function BroadcastsPage() {
+  // Plan gate: Free/Starter users see the upgrade prompt instead of the
+  // real page. SuperAdmin and Professional users fall through to the
+  // full page. We guard at the top so no data fetching or realtime
+  // subscriptions happen for ineligible users.
+  const hasAccess = useHasBroadcastsAccess();
+  if (!hasAccess) {
+    return <BroadcastsUpgradePrompt />;
+  }
+  return <BroadcastsPageContent />;
+}
+
+function BroadcastsPageContent() {
   const { t } = useTranslation();
   useDocumentTitle(t('broadcasts.title'));
   const { agentId } = useAgentContext();
@@ -65,7 +79,7 @@ export function BroadcastsPage() {
   return (
     <div className="p-6 space-y-6">
       <BaseHeader
-        title={t('broadcasts.title')}
+        title={t('broadcasts.page_title')}
         subtitle={t('broadcasts.subtitle')}
         primaryAction={{
           label: t('broadcasts.new_broadcast'),

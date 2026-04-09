@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useBroadcastDetail, useBroadcastRecipients, useRetryFailed } from '../hooks/useBroadcasts';
 import { useBroadcastDetailRealtime } from '../hooks/useBroadcastRealtime';
+import { useHasBroadcastsAccess } from '../hooks/useHasBroadcastsAccess';
+import { BroadcastsUpgradePrompt } from '../components/BroadcastsUpgradePrompt';
 import type { RecipientStatus } from '../types/broadcast.types';
 import { toast } from 'sonner';
 
@@ -33,6 +35,17 @@ const STATUS_BADGE_STYLES: Record<RecipientStatus | 'pending', string> = {
 };
 
 export function BroadcastDetailPage() {
+  // Plan gate: see BroadcastsPage.tsx for the access model. Ineligible
+  // users (Free/Starter) see the upgrade prompt in place of the detail
+  // view — no data fetching or realtime subscription is initiated.
+  const hasAccess = useHasBroadcastsAccess();
+  if (!hasAccess) {
+    return <BroadcastsUpgradePrompt />;
+  }
+  return <BroadcastDetailPageContent />;
+}
+
+function BroadcastDetailPageContent() {
   const { campaignId } = useParams<{ campaignId: string }>();
   const navigate = useNavigate();
   const { agentId } = useAgentContext();

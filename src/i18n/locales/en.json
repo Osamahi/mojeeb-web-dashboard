@@ -2802,7 +2802,11 @@
   },
   "broadcasts": {
     "title": "Broadcasts",
+    "page_title": "WhatsApp Broadcasts",
     "subtitle": "Send WhatsApp template messages to multiple recipients",
+    "upgrade_title": "Upgrade to unlock Broadcasts",
+    "upgrade_description": "Broadcasts are available on the Professional plan. Upgrade to send WhatsApp template campaigns to your contacts.",
+    "upgrade_cta": "View plans",
     "new_broadcast": "New Broadcast",
     "create_broadcast": "Create Broadcast",
     "no_broadcasts_title": "No broadcasts yet",

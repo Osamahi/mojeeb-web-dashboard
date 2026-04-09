@@ -2678,7 +2678,11 @@
   },
   "broadcasts": {
     "title": "البث",
+    "page_title": "بث واتساب",
     "subtitle": "ابعت رسائل قوالب واتساب لمستلمين كتير",
+    "upgrade_title": "رقّي خطتك عشان تفعّل البث",
+    "upgrade_description": "البث متاح في خطة Professional. رقّي خطتك عشان تبعت حملات قوالب واتساب لجهات الاتصال.",
+    "upgrade_cta": "شوف الخطط",
     "new_broadcast": "بث جديد",
     "create_broadcast": "إنشاء بث",
     "no_broadcasts_title": "مفيش بث لسه",
