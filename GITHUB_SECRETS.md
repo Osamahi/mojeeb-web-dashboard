@@ -76,7 +76,7 @@ Value: 1.0.0
 
 ```
 Name: VITE_GOOGLE_CLIENT_ID
-Value: 470233234969-lqtd8f7di6qa9hn4lufj7ifkjip27628.apps.googleusercontent.com
+Value: 470233234969-i1aran5kpjefckaelsk80k6or4bquvga.apps.googleusercontent.com
 ```
 
 ```
