@@ -75,13 +75,10 @@ export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationO
         options?.onProgress?.('creating-knowledge');
 
         try {
-          knowledgeBase = await agentService.createKnowledgeBase({
+          knowledgeBase = await agentService.createKnowledgeBase(agent.id, {
             name: `${params.name} Knowledge Base`,
             content: params.knowledgeContent,
           });
-
-          // Link KB to agent
-          await agentService.linkKnowledgeBase(agent.id, knowledgeBase.id);
 
           logger.info('✅ Knowledge base created and linked', { knowledgeBaseId: knowledgeBase.id });
 

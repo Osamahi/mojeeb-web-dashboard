@@ -26,16 +26,18 @@ import { getAccessToken, getRefreshToken } from '@/lib/tokenManager';
 import { authService } from './authService';
 import { isTokenExpired, getTokenRemainingTime } from '../utils/tokenUtils';
 
-// Refresh tokens at 12 minutes (before 15-minute expiry)
-const REFRESH_INTERVAL_MS = 12 * 60 * 1000; // 12 minutes
+// Refresh tokens at 100 minutes (before 120-minute expiry)
+const REFRESH_INTERVAL_MS = 100 * 60 * 1000; // 100 minutes
 // Minimum time between refreshes (prevent over-refreshing)
-const MIN_REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
+const MIN_REFRESH_INTERVAL_MS = 90 * 60 * 1000; // 90 minutes
 
 class TokenRefreshService {
   private intervalId: NodeJS.Timeout | null = null;
   private isRunning = false;
   private lastRefreshTimestamp: number = 0;
   private visibilityChangeHandler: (() => void) | null = null;
+  private consecutiveFailures: number = 0;
+  private static readonly MAX_CONSECUTIVE_FAILURES = 3;
 
   /**
    * Start the proactive token refresh service
@@ -55,6 +57,7 @@ class TokenRefreshService {
 
     this.isRunning = true;
     this.lastRefreshTimestamp = Date.now(); // Initialize with current time
+    this.consecutiveFailures = 0;
 
     // 1. Set up visibilitychange listener (primary mechanism - immune to throttling)
     this.visibilityChangeHandler = this.handleVisibilityChange.bind(this);
@@ -209,18 +212,24 @@ class TokenRefreshService {
 
       // Update last refresh timestamp
       this.lastRefreshTimestamp = Date.now();
+      this.consecutiveFailures = 0; // Reset failure counter on success
 
       logger.info('[TokenRefreshService] Tokens refreshed successfully', {
         nextScheduledRefresh: `${REFRESH_INTERVAL_MS / 60000} minutes`,
       });
     } catch (error) {
-      logger.error('[TokenRefreshService] Token refresh failed', error instanceof Error ? error : new Error(String(error)));
+      this.consecutiveFailures++;
+      logger.error('[TokenRefreshService] Token refresh failed', error instanceof Error ? error : new Error(String(error)), {
+        consecutiveFailures: this.consecutiveFailures,
+        maxFailures: TokenRefreshService.MAX_CONSECUTIVE_FAILURES,
+      });
 
-      // Stop the service on error and let API interceptor handle re-authentication
-      this.stop();
-
+      // Only stop after multiple consecutive failures (transient network errors shouldn't kill the service)
+      if (this.consecutiveFailures >= TokenRefreshService.MAX_CONSECUTIVE_FAILURES) {
+        logger.warn('[TokenRefreshService] Max consecutive failures reached, stopping service');
+        this.stop();
+      }
       // Don't automatically logout here - let the API interceptor handle it
-      // This prevents duplicate logout calls
     }
   }
 }

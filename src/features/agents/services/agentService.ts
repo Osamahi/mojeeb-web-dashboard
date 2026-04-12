@@ -281,7 +281,10 @@ class AgentService {
    * Create knowledge base
    */
   async createKnowledgeBase(agentId: string, request: CreateKnowledgeBaseRequest): Promise<KnowledgeBase> {
-    const { data } = await api.post<ApiResponse<KnowledgeBase>>(`/api/knowledgebases?agentId=${agentId}`, request);
+    const { data } = await api.post<ApiResponse<KnowledgeBase>>(`/api/knowledgebases?agentId=${agentId}`, {
+      ...request,
+      agent_id: agentId,
+    });
     return data.data;
   }
 

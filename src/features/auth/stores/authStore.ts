@@ -172,43 +172,50 @@ export const useAuthStore = create<AuthState>()(
           if (state?.refreshToken && state?.user) {
             // Validate the token asynchronously - don't block rehydration
             (async () => {
-              try {
-                const { validateRefreshToken } = await import('@/lib/tokenManager');
-                const validation = await validateRefreshToken(state.refreshToken!);
+              const MAX_RETRIES = 2;
+              const RETRY_DELAY_MS = 2000;
 
-                if (validation.isValid && validation.tokens) {
-                  // Update tokens in store with fresh tokens from validation
-                  useAuthStore.getState().setTokens(validation.tokens.accessToken, validation.tokens.refreshToken);
+              for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                  const { validateRefreshToken } = await import('@/lib/tokenManager');
+                  const validation = await validateRefreshToken(state.refreshToken!);
 
-                  // Ensure isAuthenticated is true
-                  if (!useAuthStore.getState().isAuthenticated) {
-                    useAuthStore.setState({ isAuthenticated: true });
+                  if (validation.isValid && validation.tokens) {
+                    // Update tokens in store with fresh tokens from validation
+                    useAuthStore.getState().setTokens(validation.tokens.accessToken, validation.tokens.refreshToken);
+
+                    // Ensure isAuthenticated is true
+                    if (!useAuthStore.getState().isAuthenticated) {
+                      useAuthStore.setState({ isAuthenticated: true });
+                    }
+
+                    // Start proactive token refresh service
+                    const { tokenRefreshService } = await import('./../../auth/services/tokenRefreshService');
+                    tokenRefreshService.start();
+                    return; // Success — exit the retry loop
+                  } else {
+                    // Token is genuinely invalid (not a network error) — no point retrying
+                    break;
+                  }
+                } catch (error) {
+                  if (import.meta.env.DEV) {
+                    console.error(`Token validation error (attempt ${attempt + 1}/${MAX_RETRIES + 1}):`, error);
                   }
 
-                  // Start proactive token refresh service
-                  const { tokenRefreshService } = await import('./../../auth/services/tokenRefreshService');
-                  tokenRefreshService.start();
-                } else {
-                  // Clear all auth state - token is invalid
-                  useAuthStore.getState().logout();
-
-                  // Redirect to login page if not already there
-                  if (window.location.pathname !== '/login') {
-                    window.location.href = '/login';
+                  // If we have retries left, wait and try again (could be a network blip)
+                  if (attempt < MAX_RETRIES) {
+                    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+                    continue;
                   }
+                  // Fall through to logout after all retries exhausted
                 }
-              } catch (error) {
-                if (import.meta.env.DEV) {
-                  console.error('Token validation error:', error);
-                }
+              }
 
-                // Clear all auth state on validation error
-                useAuthStore.getState().logout();
+              // All retries failed or token is genuinely invalid — logout
+              useAuthStore.getState().logout();
 
-                // Redirect to login page if not already there
-                if (window.location.pathname !== '/login') {
-                  window.location.href = '/login';
-                }
+              if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
               }
             })();
 
