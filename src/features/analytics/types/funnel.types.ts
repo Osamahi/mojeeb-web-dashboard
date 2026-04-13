@@ -13,6 +13,25 @@ export interface FunnelStepUser {
   eventCreatedAt: string;
 }
 
+export interface FunnelRecentEvent {
+  id: string;
+  eventName: string;
+  userId: string | null;
+  userName: string | null;
+  userEmail: string | null;
+  agentName: string | null;
+  sessionId: string;
+  referrer: string | null;
+  properties: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface CursorPaginatedFunnelEvents {
+  events: FunnelRecentEvent[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 export type DateRangePreset = 'today' | '7d' | '30d' | '90d';
 
 /**

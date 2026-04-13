@@ -6,7 +6,9 @@ import { useFunnelSummary } from '../hooks/useFunnelSummary';
 import { FunnelDateFilter } from '../components/FunnelDateFilter';
 import { FunnelSummaryCards } from '../components/FunnelSummaryCards';
 import { FunnelChart } from '../components/FunnelChart';
+import { FunnelEventsTable } from '../components/FunnelEventsTable';
 import { StepUsersModal } from '../components/StepUsersModal';
+import { useRecentEvents } from '../hooks/useRecentEvents';
 import type { DateRangePreset } from '../types/funnel.types';
 
 function getDateRange(preset: DateRangePreset) {
@@ -27,6 +29,13 @@ export default function FunnelDashboardPage() {
 
   const { startDate, endDate } = useMemo(() => getDateRange(preset), [preset]);
   const { data: steps = [], isLoading } = useFunnelSummary(startDate, endDate);
+  const {
+    data: eventsData,
+    isLoading: isLoadingEvents,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useRecentEvents(startDate, endDate);
 
   const skippedCount = useMemo(
     () => steps.find((s) => s.eventName === 'onboarding_skipped')?.uniqueUsers ?? 0,
@@ -74,6 +83,14 @@ export default function FunnelDashboardPage() {
           <FunnelChart steps={steps} skippedCount={skippedCount} onBarClick={handleBarClick} />
         </>
       )}
+
+      <FunnelEventsTable
+        events={eventsData?.events ?? []}
+        isLoading={isLoadingEvents}
+        hasMore={!!hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        fetchNextPage={fetchNextPage}
+      />
 
       <StepUsersModal
         isOpen={!!selectedStep}

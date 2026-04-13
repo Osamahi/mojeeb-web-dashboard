@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import type { FunnelStep, FunnelStepUser } from '../types/funnel.types';
+import type { FunnelStep, FunnelStepUser, CursorPaginatedFunnelEvents } from '../types/funnel.types';
 
 interface RawFunnelStep {
   event_name: string;
@@ -48,5 +48,38 @@ export const funnelService = {
       agentName: u.agent_name,
       eventCreatedAt: u.event_created_at,
     }));
+  },
+
+  getRecentEvents: async (
+    startDate: string,
+    endDate: string,
+    limit = 50,
+    cursor?: string
+  ): Promise<CursorPaginatedFunnelEvents> => {
+    const params: Record<string, string> = {
+      start_date: startDate,
+      end_date: endDate,
+      limit: limit.toString(),
+    };
+    if (cursor) params.cursor = cursor;
+
+    const { data } = await api.get('/api/admin/funnel/recent-events', { params });
+
+    return {
+      events: (data.items as any[]).map((e) => ({
+        id: e.id,
+        eventName: e.event_name,
+        userId: e.user_id,
+        userName: e.user_name,
+        userEmail: e.user_email,
+        agentName: e.agent_name,
+        sessionId: e.session_id,
+        referrer: e.referrer,
+        properties: e.properties,
+        createdAt: e.created_at,
+      })),
+      nextCursor: data.next_cursor ?? null,
+      hasMore: data.has_more ?? false,
+    };
   },
 };

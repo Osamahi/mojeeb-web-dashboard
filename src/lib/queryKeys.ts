@@ -164,6 +164,12 @@ export const queryKeys = {
   funnelSummary: (startDate: string, endDate: string) =>
     ['funnel-summary', startDate, endDate] as const,
 
+  funnelStepUsers: (eventName: string | null, startDate: string, endDate: string) =>
+    ['funnel-step-users', eventName, startDate, endDate] as const,
+
+  funnelRecentEvents: (startDate: string, endDate: string) =>
+    ['funnel-recent-events', startDate, endDate] as const,
+
   /**
    * Query key for fetching insights by agent
    * @param {string | undefined} agentId - The agent ID

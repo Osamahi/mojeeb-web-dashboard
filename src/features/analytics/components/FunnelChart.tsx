@@ -55,12 +55,7 @@ export function FunnelChart({ steps, skippedCount, onBarClick }: FunnelChartProp
 
   return (
     <div className="bg-white border border-neutral-200 rounded-xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-neutral-500">Conversion Funnel</h3>
-        {onBarClick && (
-          <span className="text-xs text-neutral-400">Click a bar to see users</span>
-        )}
-      </div>
+      <h3 className="text-sm font-medium text-neutral-500 mb-4">Conversion Funnel</h3>
       <div className="overflow-x-auto">
         <div style={{ minWidth: FUNNEL_STAGES.length * 80 }}>
           <ResponsiveContainer width="100%" height={320}>
