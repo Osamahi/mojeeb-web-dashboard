@@ -38,7 +38,7 @@ export const DashboardLayout = () => {
     const key = 'mojeeb_funnel_dashboard_visited';
     if (sessionStorage.getItem(key)) return;
     sessionStorage.setItem(key, '1');
-    track('first_dashboard_visit', { userId: user.id });
+    track('first_dashboard_visit', {});
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Determine if header should be hidden

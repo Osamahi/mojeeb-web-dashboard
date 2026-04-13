@@ -30,6 +30,7 @@ import {
   AlertTriangle,
   Activity,
   Megaphone,
+  BarChart3,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { PlanCode } from '@/features/subscriptions/types/subscription.types';
@@ -194,6 +195,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.followup_steps',
     href: '/followup-steps',
     icon: ListOrdered,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Funnel Analytics',
+    translationKey: 'navigation.funnel_analytics',
+    href: '/funnel-analytics',
+    icon: BarChart3,
     requireSuperAdmin: true,
   },
   {

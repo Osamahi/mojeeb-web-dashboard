@@ -271,6 +271,10 @@ class AuthService {
     name: string,
     avatarUrl: string
   ): Promise<AuthResponse> {
+    const funnelSessionId = (() => {
+      try { return localStorage.getItem('mojeeb_funnel_session') ?? undefined; } catch { return undefined; }
+    })();
+
     const { data } = await api.post<ApiAuthResponse>('/api/auth/oauth', {
       provider: 'google',
       access_token: accessToken,
@@ -278,6 +282,8 @@ class AuthService {
       email: email,
       name: name,
       avatar_url: avatarUrl,
+    }, {
+      headers: funnelSessionId ? { 'X-Funnel-Session': funnelSessionId } : undefined,
     });
 
     // Backend returns snake_case, convert to camelCase
@@ -299,9 +305,15 @@ class AuthService {
    * Note: Post-auth flow (agents, invitations, navigation) handled by usePostAuthNavigation hook
    */
   async loginWithGoogleCode(authorizationCode: string): Promise<AuthResponse> {
+    const funnelSessionId = (() => {
+      try { return localStorage.getItem('mojeeb_funnel_session') ?? undefined; } catch { return undefined; }
+    })();
+
     const { data } = await api.post<ApiAuthResponse>('/api/auth/google/code', {
       code: authorizationCode,
       redirect_uri: env.VITE_GOOGLE_REDIRECT_URI || `${window.location.origin}/auth/google/callback`,
+    }, {
+      headers: funnelSessionId ? { 'X-Funnel-Session': funnelSessionId } : undefined,
     });
 
     // Backend returns snake_case, convert to camelCase

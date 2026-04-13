@@ -105,14 +105,13 @@ export interface IntegrationConnectedEvent {
 
 /**
  * Funnel events (signup → activation → conversion)
+ * Note: userId and agentId are resolved server-side — never sent from frontend.
  */
 export interface SignupPageViewEvent {
   referrer?: string;
 }
 
-export interface OnboardingStartedEvent {
-  userId?: string;
-}
+export interface OnboardingStartedEvent {}
 
 export interface OnboardingStep1CompletedEvent {
   agentName: string;
@@ -130,29 +129,17 @@ export interface OnboardingSkippedEvent {
   skippedAtStep: number;
 }
 
-export interface FirstDashboardVisitEvent {
-  userId: string;
-}
+export interface FirstDashboardVisitEvent {}
 
-export interface KnowledgeBaseAddedEvent {
-  agentId: string;
-  userId: string;
-}
+export interface KnowledgeBaseAddedEvent {}
 
-export interface FirstTestChatEvent {
-  agentId: string;
-  userId: string;
-}
+export interface FirstTestChatEvent {}
 
 export interface ChannelConnectedEvent {
   platform: string;
-  agentId: string;
-  userId: string;
 }
 
-export interface SubscriptionPageVisitedEvent {
-  userId: string;
-}
+export interface SubscriptionPageVisitedEvent {}
 
 /**
  * Page view events

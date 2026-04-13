@@ -752,6 +752,7 @@
     "title_users": "Users",
     "title_followup_jobs": "Follow-Up Jobs",
     "title_followup_steps": "Follow-Up Steps",
+    "title_funnel_analytics": "Funnel Analytics",
     "title_app_config": "App Config",
     "title_action_executions": "Action Executions",
     "title_comments": "Comments"
@@ -1005,6 +1006,7 @@
     "failed_messages": "Failed Messages",
     "followup_jobs": "Follow-Up Jobs",
     "followup_steps": "Follow-Up Steps",
+    "funnel_analytics": "Funnel Analytics",
     "app_config": "App Config",
     "whatsapp": "WhatsApp",
     "broadcasts": "Broadcasts",

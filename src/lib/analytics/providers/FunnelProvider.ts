@@ -47,7 +47,6 @@ interface BufferedEvent {
   properties: Record<string, unknown>;
   client_timestamp: string;
   referrer?: string;
-  signup_method?: string;
 }
 
 export class FunnelProvider implements AnalyticsProvider {
@@ -114,7 +113,8 @@ export class FunnelProvider implements AnalyticsProvider {
   }
 
   reset(): void {
-    // Generate new session for next user on logout
+    // Generate new session for next user on logout.
+    // This ensures each user gets their own session_id for anonymous→user linking.
     try {
       this.sessionId = crypto.randomUUID();
       localStorage.setItem(SESSION_KEY, this.sessionId);

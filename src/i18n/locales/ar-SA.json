@@ -750,6 +750,7 @@
     "title_users": "المستخدمون",
     "title_followup_jobs": "مهام المتابعة",
     "title_followup_steps": "خطوات المتابعة",
+    "title_funnel_analytics": "تحليل القمع",
     "title_app_config": "إعدادات التطبيق",
     "title_action_executions": "سجل تنفيذ الإجراءات",
     "title_comments": "التعليقات"
@@ -1003,6 +1004,7 @@
     "failed_messages": "الرسائل الفاشلة",
     "followup_jobs": "مهام المتابعة",
     "followup_steps": "خطوات المتابعة",
+    "funnel_analytics": "تحليل القمع",
     "app_config": "إعدادات التطبيق",
     "whatsapp": "واتساب",
     "broadcasts": "البث",

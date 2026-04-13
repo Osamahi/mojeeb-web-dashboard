@@ -26,6 +26,7 @@ const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthC
 const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 const ActionsPage = lazy(() => import('./features/actions/pages/ActionsPage').then(m => ({ default: m.ActionsPage })));
 const ActionExecutionsPage = lazy(() => import('./features/actions/pages/ActionExecutionsPage').then(m => ({ default: m.ActionExecutionsPage })));
+const FunnelDashboardPage = lazy(() => import('./features/analytics/pages/FunnelDashboardPage'));
 const AttachmentsPage = lazy(() => import('./features/attachments/pages/AttachmentsPage').then(m => ({ default: m.AttachmentsPage })));
 const IntegrationsPage = lazy(() => import('./features/integrations/pages/IntegrationsPage'));
 const WhatsAppManagementPage = lazy(() => import('./features/whatsapp/pages/WhatsAppManagementPage'));
@@ -278,6 +279,14 @@ export const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <ActionsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'funnel-analytics',
+        element: (
+          <SuperAdminRoute>
+            <FunnelDashboardPage />
           </SuperAdminRoute>
         ),
       },

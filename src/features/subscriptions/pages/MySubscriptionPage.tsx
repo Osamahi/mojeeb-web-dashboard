@@ -64,7 +64,7 @@ export default function MySubscriptionPage() {
 
   // Track subscription page visit (funnel conversion step)
   useEffect(() => {
-    track('subscription_page_visited', { userId: '' });
+    track('subscription_page_visited', {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Read subscription and usage from global store (loaded once on app init)

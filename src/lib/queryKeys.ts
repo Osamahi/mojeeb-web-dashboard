@@ -161,6 +161,9 @@ export const queryKeys = {
    */
   analytics: (agentId: string | undefined) => ['analytics', agentId] as const,
 
+  funnelSummary: (startDate: string, endDate: string) =>
+    ['funnel-summary', startDate, endDate] as const,
+
   /**
    * Query key for fetching insights by agent
    * @param {string | undefined} agentId - The agent ID

@@ -9,7 +9,7 @@ import type { CreateAttachmentRequest, UpdateAttachmentRequest } from '../types/
 import { toast } from 'sonner';
 import { isAxiosError } from 'axios';
 import { isToastHandled } from '@/lib/errors';
-import { analytics } from '@/lib/analytics/core/AnalyticsService';
+import { analytics } from '@/lib/analytics';
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (isAxiosError(error)) {
@@ -136,11 +136,8 @@ export function useUploadAttachmentFile() {
       queryClient.invalidateQueries({ queryKey: ['attachments'] });
       toast.success('File uploaded successfully');
 
-      // Track KB upload for funnel (first-only dedup handled by FunnelProvider)
-      analytics.track('knowledge_base_added', {
-        agentId: variables.agentId,
-        userId: '',
-      });
+      // Track KB upload for funnel
+      analytics.track('knowledge_base_added', {});
     },
     onError: (error: unknown) => {
       if (!isToastHandled(error)) toast.error(getErrorMessage(error, 'Failed to upload file'));
