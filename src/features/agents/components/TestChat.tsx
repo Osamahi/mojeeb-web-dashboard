@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { logger } from '@/lib/logger';
 import { getErrorMessage } from '@/lib/errors';
+import { analytics } from '@/lib/analytics/core/AnalyticsService';
 import { useChatEngine } from '@/features/conversations/hooks/useChatEngine';
 import { useLocalChatStorage } from '@/features/conversations/hooks/useChatStorage';
 import UnifiedChatView from '@/features/conversations/components/Chat/UnifiedChatView';
@@ -69,6 +70,12 @@ export default function TestChat({ agentId }: TestChatProps) {
         message: params.message,
         agentId: params.agentId!,
         attachments: params.attachments,
+      });
+
+      // Track first test chat for funnel (first-only dedup handled by FunnelProvider)
+      analytics.track('first_test_chat', {
+        agentId: params.agentId ?? '',
+        userId: '',
       });
 
       // Transform to ChatMessage format

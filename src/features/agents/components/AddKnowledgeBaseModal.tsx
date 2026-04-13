@@ -12,6 +12,7 @@ import { FileText, Upload } from 'lucide-react';
 import { agentService } from '../services/agentService';
 import { useUploadDocumentAsync } from '../hooks/useDocumentJobs';
 import { validateDocumentFile } from '../utils/fileValidation';
+import { analytics } from '@/lib/analytics/core/AnalyticsService';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -92,6 +93,12 @@ export default function AddKnowledgeBaseModal({
     },
     onSuccess: () => {
       toast.success(t('knowledge_base.success_created'));
+
+      analytics.track('knowledge_base_added', {
+        agentId: agentId,
+        userId: '',
+      });
+
       handleReset();
       onClose();
       onSuccess();

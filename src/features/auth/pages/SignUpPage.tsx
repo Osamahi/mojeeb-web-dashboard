@@ -18,6 +18,7 @@ import { useOnboardingStore } from '@/features/onboarding/stores/onboardingStore
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLanguageFromUrl } from '@/hooks/useLanguageFromUrl';
 import { useAuthFormSubmit } from '../hooks/useAuthFormSubmit';
+import { useAnalytics } from '@/lib/analytics';
 import { createSignUpSchema, type SignUpFormData } from '../schemas/validation.schemas';
 
 export const SignUpPage = () => {
@@ -32,6 +33,12 @@ export const SignUpPage = () => {
   const isSubmittingRef = useRef(false);
 
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { track } = useAnalytics();
+
+  // Track signup page view (funnel step 1)
+  useEffect(() => {
+    track('signup_page_view', { referrer: document.referrer || undefined });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Memoize schema to prevent recreation on every render (performance optimization)
   const signUpSchema = useMemo(() => createSignUpSchema(t), [t]);

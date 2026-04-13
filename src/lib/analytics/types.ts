@@ -104,6 +104,57 @@ export interface IntegrationConnectedEvent {
 }
 
 /**
+ * Funnel events (signup → activation → conversion)
+ */
+export interface SignupPageViewEvent {
+  referrer?: string;
+}
+
+export interface OnboardingStartedEvent {
+  userId?: string;
+}
+
+export interface OnboardingStep1CompletedEvent {
+  agentName: string;
+}
+
+export interface OnboardingStep2CompletedEvent {
+  purposeCount: number;
+}
+
+export interface OnboardingStep3CompletedEvent {
+  hasKnowledge: boolean;
+}
+
+export interface OnboardingSkippedEvent {
+  skippedAtStep: number;
+}
+
+export interface FirstDashboardVisitEvent {
+  userId: string;
+}
+
+export interface KnowledgeBaseAddedEvent {
+  agentId: string;
+  userId: string;
+}
+
+export interface FirstTestChatEvent {
+  agentId: string;
+  userId: string;
+}
+
+export interface ChannelConnectedEvent {
+  platform: string;
+  agentId: string;
+  userId: string;
+}
+
+export interface SubscriptionPageVisitedEvent {
+  userId: string;
+}
+
+/**
  * Page view events
  */
 export interface PageViewEvent {
@@ -139,6 +190,19 @@ export interface AnalyticsEventMap {
 
   // Integration events
   integration_connected: IntegrationConnectedEvent;
+
+  // Funnel events
+  signup_page_view: SignupPageViewEvent;
+  onboarding_started: OnboardingStartedEvent;
+  onboarding_step1_completed: OnboardingStep1CompletedEvent;
+  onboarding_step2_completed: OnboardingStep2CompletedEvent;
+  onboarding_step3_completed: OnboardingStep3CompletedEvent;
+  onboarding_skipped: OnboardingSkippedEvent;
+  first_dashboard_visit: FirstDashboardVisitEvent;
+  knowledge_base_added: KnowledgeBaseAddedEvent;
+  first_test_chat: FirstTestChatEvent;
+  channel_connected: ChannelConnectedEvent;
+  subscription_page_visited: SubscriptionPageVisitedEvent;
 
   // Page events
   page_view: PageViewEvent;

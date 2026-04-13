@@ -349,7 +349,14 @@ class AuthService {
    * Note: Post-auth flow (agents, invitations, navigation) handled by usePostAuthNavigation hook
    */
   async register(registerData: RegisterData): Promise<AuthResponse> {
-    const { data } = await api.post<ApiAuthResponse>('/api/auth/register', registerData);
+    // Include funnel session ID for anonymous event linking
+    const funnelSessionId = (() => {
+      try { return localStorage.getItem('mojeeb_funnel_session') ?? undefined; } catch { return undefined; }
+    })();
+
+    const { data } = await api.post<ApiAuthResponse>('/api/auth/register', registerData, {
+      headers: funnelSessionId ? { 'X-Funnel-Session': funnelSessionId } : undefined,
+    });
 
     // Backend returns snake_case, convert to camelCase
     const authResponse: AuthResponse = {

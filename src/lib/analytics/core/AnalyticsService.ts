@@ -10,6 +10,7 @@ import type {
 } from '../types';
 import { GTMProvider } from '../providers/GTMProvider';
 import { MetaPixelProvider } from '../providers/MetaPixelProvider';
+import { FunnelProvider } from '../providers/FunnelProvider';
 import { ConsoleProvider } from '../providers/ConsoleProvider';
 import { analyticsConfig } from '../config';
 
@@ -30,10 +31,11 @@ class AnalyticsService {
     }
 
     // Register all providers
-    console.log('[Analytics] 📦 Registering providers: GTM, Meta Pixel, Console');
+    console.log('[Analytics] 📦 Registering providers: GTM, Meta Pixel, Funnel, Console');
     this.providers = [
       new GTMProvider(),
       new MetaPixelProvider(),
+      new FunnelProvider(),
       new ConsoleProvider(),
     ];
 

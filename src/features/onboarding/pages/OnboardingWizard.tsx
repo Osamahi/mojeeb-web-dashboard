@@ -23,6 +23,7 @@ import { VALIDATION_RULES } from '../constants/validationRules';
 import { PhoneIcon, ArrowRightIcon, CheckCircleIcon } from '@/shared/components/icons';
 import { PrimaryButton } from '../components/shared/PrimaryButton';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useAnalytics } from '@/lib/analytics';
 
 export const OnboardingWizard = () => {
   const { t } = useTranslation();
@@ -30,11 +31,17 @@ export const OnboardingWizard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { currentStep, nextStep, data, completeOnboarding, resetOnboardingState } = useOnboardingStore();
+  const { track } = useAnalytics();
   const [isSuccessReady, setIsSuccessReady] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [demoCallRequested, setDemoCallRequested] = useState(false);
+
+  // Track onboarding started (funnel step 3)
+  useEffect(() => {
+    track('onboarding_started', {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle browser back button and exit intent
   useEffect(() => {
@@ -71,6 +78,15 @@ export const OnboardingWizard = () => {
   }, [currentStep]); // Removed previousStep - not used in effect
 
   const handleStepComplete = () => {
+    // Track funnel step completion before advancing
+    if (currentStep === OnboardingStep.Name) {
+      track('onboarding_step1_completed', { agentName: data.agentName });
+    } else if (currentStep === OnboardingStep.Purpose) {
+      track('onboarding_step2_completed', { purposeCount: data.selectedPurposes.length });
+    } else if (currentStep === OnboardingStep.Knowledge) {
+      track('onboarding_step3_completed', { hasKnowledge: !!data.knowledgeContent });
+    }
+
     // All steps just advance to next - agent creation happens in Success step
     nextStep();
   };
@@ -106,6 +122,7 @@ export const OnboardingWizard = () => {
   };
 
   const handleSkipConfirm = () => {
+    track('onboarding_skipped', { skippedAtStep: currentStep });
     setShowSkipModal(false);
     navigate('/studio');
   };

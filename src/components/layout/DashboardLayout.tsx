@@ -15,6 +15,7 @@ import { useConversationStore } from '@/features/conversations/stores/conversati
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { sessionHelper } from '@/lib/sessionHelper';
 import { queryKeys } from '@/lib/queryKeys';
+import { useAnalytics } from '@/lib/analytics';
 
 export const DashboardLayout = () => {
   const location = useLocation();
@@ -29,6 +30,16 @@ export const DashboardLayout = () => {
   // Check for pending invitations when dashboard loads
   // This ensures invitations are displayed even when user navigates directly
   useCheckPendingInvitations();
+
+  // Track first dashboard visit (funnel activation signal)
+  const { track } = useAnalytics();
+  useEffect(() => {
+    if (!user?.id) return;
+    const key = 'mojeeb_funnel_dashboard_visited';
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    track('first_dashboard_visit', { userId: user.id });
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Determine if header should be hidden
   // Hide on mobile when on conversations page AND a conversation is selected

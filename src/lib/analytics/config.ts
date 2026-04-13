@@ -12,6 +12,7 @@ export const analyticsConfig: AnalyticsConfig = {
   // Enable/disable providers globally (can be overridden by env vars)
   enabledProviders: [
     'gtm',
+    'funnel', // Self-hosted funnel analytics — always enabled
     // Meta Pixel only works on production domains (Facebook blocks localhost)
     ...(import.meta.env.DEV ? [] : ['metaPixel']),
     // 'googleAnalytics', // Uncomment when ready
@@ -24,8 +25,7 @@ export const analyticsConfig: AnalyticsConfig = {
   }),
 
   // Debug mode - logs all events to console
-  // TODO: Revert to import.meta.env.DEV after production testing
-  debug: true, // Temporarily enabled for production debugging
+  debug: import.meta.env.DEV,
 
   // Google Tag Manager
   gtm: {

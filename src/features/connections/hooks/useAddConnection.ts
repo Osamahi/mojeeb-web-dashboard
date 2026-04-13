@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { queryKeys } from '@/lib/queryKeys';
 import { getErrorMessage } from '@/lib/errors';
 import { logger } from '@/lib/logger';
+import { analytics } from '@/lib/analytics/core/AnalyticsService';
 import { connectionService } from '../services/connectionService';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import type {
@@ -99,6 +100,13 @@ export function useConnectPage() {
         platform: data.platform,
       });
       toast.success(`${data.platform} connected successfully!`);
+
+      // Track channel connection for funnel (first-only dedup handled by FunnelProvider)
+      analytics.track('channel_connected', {
+        platform: data.platform,
+        agentId: agentId ?? '',
+        userId: '',
+      });
 
       // Invalidate connections cache to trigger refetch
       queryClient.invalidateQueries({

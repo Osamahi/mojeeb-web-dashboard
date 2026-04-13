@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, CreditCard, Loader2, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -22,6 +22,7 @@ import {
 import { differenceInDays } from 'date-fns';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useAnalytics } from '@/lib/analytics';
 
 /** Minimal card brand icon using inline SVG */
 function CardBrandIcon({ brand }: { brand: string }) {
@@ -59,6 +60,13 @@ export default function MySubscriptionPage() {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_my_subscription');
   const { format } = useDateLocale();
+  const { track } = useAnalytics();
+
+  // Track subscription page visit (funnel conversion step)
+  useEffect(() => {
+    track('subscription_page_visited', { userId: '' });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Read subscription and usage from global store (loaded once on app init)
   const subscription = useSubscriptionStore(state => state.subscription);
   const usage = useSubscriptionStore(state => state.usage);
