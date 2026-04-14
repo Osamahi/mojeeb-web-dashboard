@@ -1962,7 +1962,8 @@
     "step_subscribe_action": "اشترك",
     "complete_title": "الإيجنت بتاعك جاهز!",
     "complete_description": "وصّله بواتساب أو أي منصة تانية عشان تبدأ تستقبل رسايل.",
-    "progress": "{{current}} من {{total}}"
+    "progress": "{{current}} من {{total}}",
+    "test_again": "جرّب تاني"
   },
   "test_gate": {
     "title": "الإيجنت محتاج معرفة",

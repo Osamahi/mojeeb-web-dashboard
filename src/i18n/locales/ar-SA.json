@@ -1959,7 +1959,8 @@
     "step_subscribe_action": "اشترك",
     "complete_title": "الوكيل جاهز!",
     "complete_description": "قم بتوصيله بواتساب أو أي منصة أخرى لبدء استقبال الرسائل.",
-    "progress": "{{current}} من {{total}}"
+    "progress": "{{current}} من {{total}}",
+    "test_again": "اختبر مرة أخرى"
   },
   "test_gate": {
     "title": "الوكيل يحتاج إلى معرفة",

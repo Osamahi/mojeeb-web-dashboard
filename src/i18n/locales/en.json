@@ -1963,7 +1963,8 @@
     "step_subscribe_action": "Subscribe",
     "complete_title": "Your agent is ready!",
     "complete_description": "Connect it to WhatsApp or other platforms to start receiving messages.",
-    "progress": "{{current}} of {{total}}"
+    "progress": "{{current}} of {{total}}",
+    "test_again": "Test again"
   },
   "test_gate": {
     "title": "Your agent needs knowledge",

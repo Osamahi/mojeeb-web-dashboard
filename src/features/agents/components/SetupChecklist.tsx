@@ -12,8 +12,9 @@
 import { Fragment, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Check, ArrowRight } from 'lucide-react';
+import { Check, ArrowRight, MessagesSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useIsDesktop } from '@/hooks/useMediaQuery';
 
 interface SetupChecklistProps {
   isLoading?: boolean;
@@ -42,6 +43,7 @@ function SetupChecklistInner({
   onSubscribe,
 }: SetupChecklistProps) {
   const { t } = useTranslation();
+  const isDesktop = useIsDesktop();
 
   // ─── Skeleton while queries are in flight ───────────────────
   if (isLoading) {
@@ -82,6 +84,7 @@ function SetupChecklistInner({
   const statuses: Status[] = [step1, step2, step3, step4];
 
   const allDone = hasKnowledge && hasTested && hasConnections;
+  const showTestAgain = hasTested && !isDesktop;
 
   // Determine active action + hint
   let activeAction: { label: string; fn: () => void } | null = null;
@@ -172,40 +175,74 @@ function SetupChecklistInner({
               <p className="text-xs text-[#808178] mt-4 text-center">
                 {t('setup_checklist.hint_subscribe')}
               </p>
-              <button
-                onClick={onSubscribe}
-                className={cn(
-                  'w-full mt-3 py-2.5 rounded-lg',
-                  'bg-[#272726] text-[#FCFEFC] text-sm font-medium',
-                  'hover:bg-[#0A0A17] active:scale-[0.98]',
-                  'transition-all duration-150',
-                  'flex items-center justify-center gap-2',
+              <div className="flex gap-2 mt-3">
+                {showTestAgain && (
+                  <button
+                    onClick={onTestAgent}
+                    className={cn(
+                      'py-2.5 px-3 rounded-lg',
+                      'border border-[#D8D8D0] text-[#808178] text-sm font-medium',
+                      'hover:border-[#272726] hover:text-[#272726] active:scale-[0.98]',
+                      'transition-all duration-150',
+                      'flex items-center justify-center gap-1.5',
+                    )}
+                  >
+                    <MessagesSquare className="w-3.5 h-3.5" />
+                    {t('setup_checklist.test_again')}
+                  </button>
                 )}
-              >
-                {t('setup_checklist.step_subscribe_action')}
-                <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
-              </button>
-            </>
-          ) : (
-            <>
-              {activeHint && (
-                <p className="text-xs text-[#808178] mt-4 text-center">{activeHint}</p>
-              )}
-              {activeAction && (
                 <button
-                  onClick={activeAction.fn}
+                  onClick={onSubscribe}
                   className={cn(
-                    'w-full mt-3 py-2.5 rounded-lg',
+                    'flex-1 py-2.5 rounded-lg',
                     'bg-[#272726] text-[#FCFEFC] text-sm font-medium',
                     'hover:bg-[#0A0A17] active:scale-[0.98]',
                     'transition-all duration-150',
                     'flex items-center justify-center gap-2',
                   )}
                 >
-                  {activeAction.label}
+                  {t('setup_checklist.step_subscribe_action')}
                   <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                 </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {activeHint && (
+                <p className="text-xs text-[#808178] mt-4 text-center">{activeHint}</p>
               )}
+              <div className="flex gap-2 mt-3">
+                {showTestAgain && activeAction && (
+                  <button
+                    onClick={onTestAgent}
+                    className={cn(
+                      'py-2.5 px-3 rounded-lg',
+                      'border border-[#D8D8D0] text-[#808178] text-sm font-medium',
+                      'hover:border-[#272726] hover:text-[#272726] active:scale-[0.98]',
+                      'transition-all duration-150',
+                      'flex items-center justify-center gap-1.5',
+                    )}
+                  >
+                    <MessagesSquare className="w-3.5 h-3.5" />
+                    {t('setup_checklist.test_again')}
+                  </button>
+                )}
+                {activeAction && (
+                  <button
+                    onClick={activeAction.fn}
+                    className={cn(
+                      'flex-1 py-2.5 rounded-lg',
+                      'bg-[#272726] text-[#FCFEFC] text-sm font-medium',
+                      'hover:bg-[#0A0A17] active:scale-[0.98]',
+                      'transition-all duration-150',
+                      'flex items-center justify-center gap-2',
+                    )}
+                  >
+                    {activeAction.label}
+                    <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+                  </button>
+                )}
+              </div>
             </>
           )}
         </motion.div>
