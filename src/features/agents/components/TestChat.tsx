@@ -49,6 +49,7 @@ export default function TestChat({ agentId }: TestChatProps) {
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dots, setDots] = useState('');
+  const [isExitingEmpty, setIsExitingEmpty] = useState(false);
 
   // Animate dots while initializing
   useEffect(() => {
@@ -102,6 +103,16 @@ export default function TestChat({ agentId }: TestChatProps) {
       };
     },
   });
+
+  // Detect first message → trigger exit animation, then hide after animation completes
+  const [hideEmptyState, setHideEmptyState] = useState(false);
+  useEffect(() => {
+    if (chatEngine.messages.length > 0 && !isExitingEmpty) {
+      setIsExitingEmpty(true);
+      // Wait for exit animation to finish before unmounting
+      setTimeout(() => setHideEmptyState(true), 400);
+    }
+  }, [chatEngine.messages.length]);
 
   // Rotate tips while initializing
   useEffect(() => {
@@ -166,7 +177,7 @@ export default function TestChat({ agentId }: TestChatProps) {
   return (
     <div className="h-full transition-opacity duration-700" style={{ opacity: isInitializing ? 0.3 : 1 }}>
     <UnifiedChatView
-      messages={chatEngine.messages}
+      messages={hideEmptyState ? chatEngine.messages : []}
       isLoading={chatEngine.isLoading}
       isAITyping={chatEngine.isAITyping}
       onSendMessage={chatEngine.sendMessage}
@@ -208,7 +219,7 @@ export default function TestChat({ agentId }: TestChatProps) {
               </button>
             </>
           ) : (
-            // "Preparing..." crossfades into "Try me" + ring glows in
+            // "Preparing..." crossfades into "Try me" + ring glows in, reverses on exit
             <div
               className="relative flex items-center justify-center select-none"
               style={{ width: 120, height: 120 }}
@@ -218,30 +229,32 @@ export default function TestChat({ agentId }: TestChatProps) {
                 className="absolute inset-0 flex items-center justify-center text-base font-normal whitespace-nowrap"
                 style={{
                   color: '#808178',
-                  opacity: isInitializing ? 1 : 0,
+                  opacity: isInitializing && !isExitingEmpty ? 1 : 0,
                   transition: 'opacity 0.8s ease',
                 }}
               >
                 {t('test_chat.preparing')}<span className="inline-block w-4 text-start">{dots}</span>
               </span>
-              {/* "Try me" — fades in */}
+              {/* "Try me" — fades in, fades out on exit */}
               <span
                 className="absolute inset-0 flex items-center justify-center text-lg font-medium whitespace-nowrap"
                 style={{
                   color: '#808178',
-                  opacity: isInitializing ? 0 : 1,
-                  transition: 'opacity 0.8s ease 0.4s',
+                  opacity: !isInitializing && !isExitingEmpty ? 1 : 0,
+                  transition: isExitingEmpty ? 'opacity 0.3s ease' : 'opacity 0.8s ease 0.4s',
                 }}
               >
                 {t('test_chat.try_me')}
               </span>
-              {/* Ring — wrapper scales up + fades in, inner rotates */}
+              {/* Ring — scales up on enter, scales down + fades on exit */}
               <div
                 className="absolute inset-0"
                 style={{
-                  opacity: isInitializing ? 0 : 1,
-                  transform: isInitializing ? 'scale(0.6)' : 'scale(1)',
-                  transition: 'opacity 1.4s cubic-bezier(0.16,1,0.3,1) 0.3s, transform 1.4s cubic-bezier(0.16,1,0.3,1) 0.3s',
+                  opacity: !isInitializing && !isExitingEmpty ? 1 : 0,
+                  transform: isInitializing || isExitingEmpty ? 'scale(0.6)' : 'scale(1)',
+                  transition: isExitingEmpty
+                    ? 'opacity 0.4s ease, transform 0.4s ease'
+                    : 'opacity 1.4s cubic-bezier(0.16,1,0.3,1) 0.3s, transform 1.4s cubic-bezier(0.16,1,0.3,1) 0.3s',
                 }}
               >
                 <div
