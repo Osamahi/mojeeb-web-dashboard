@@ -147,16 +147,44 @@ export default function StudioPage() {
     } else if (!isDesktop) {
       setIsChatPanelOpen(true);
     } else {
-      // Desktop: focus the test chat input
+      // Desktop: animate the "Try me" bubble + focus input
+      const bubble = document.getElementById('testme-bubble');
       const allTextareas = document.querySelectorAll('textarea');
       let textarea: HTMLTextAreaElement | null = null;
       allTextareas.forEach(t => {
         if (t.placeholder?.includes('test')) textarea = t;
       });
       if (!textarea) textarea = allTextareas[allTextareas.length - 1];
+
+      if (bubble) {
+        // Inject keyframes if not present
+        if (!document.getElementById('testme-burst-style')) {
+          const style = document.createElement('style');
+          style.id = 'testme-burst-style';
+          style.textContent = `
+            @keyframes testme-burst {
+              0% { transform: scale(1); }
+              20% { transform: scale(1.5); }
+              50% { transform: scale(1.35); }
+              100% { transform: scale(1); }
+            }
+          `;
+          document.head.appendChild(style);
+        }
+
+        // Animate ring wrapper — scale burst
+        const ringWrapper = bubble.children[2] as HTMLElement | null;
+        if (ringWrapper) {
+          ringWrapper.style.animation = 'testme-burst 2.5s cubic-bezier(0.22,1,0.36,1)';
+          ringWrapper.addEventListener('animationend', () => {
+            ringWrapper.style.animation = '';
+          }, { once: true });
+        }
+
+      }
+
       if (textarea) {
-        textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        setTimeout(() => (textarea as HTMLTextAreaElement).focus(), 300);
+        setTimeout(() => (textarea as HTMLTextAreaElement).focus(), 600);
       }
     }
   }, [hasKnowledge, isDesktop]);

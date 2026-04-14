@@ -223,6 +223,7 @@ export default function TestChat({ agentId }: TestChatProps) {
           ) : (
             // "Preparing..." crossfades into "Try me" + ring glows in, reverses on exit
             <div
+              id="testme-bubble"
               className="relative flex items-center justify-center select-none"
               style={{ width: 120, height: 120 }}
             >
