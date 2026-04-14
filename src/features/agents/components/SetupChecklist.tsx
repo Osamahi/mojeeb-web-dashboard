@@ -4,15 +4,19 @@
  * 4 steps: Create → Knowledge → Test → Connect
  * When all done, shows Subscribe CTA.
  * All steps are dynamic (server data).
+ *
+ * Loading UX: skeleton shell, then smooth sequential reveal
+ * once all data arrives. Direction-aware (RTL reverses sequence).
  */
 
-import { memo } from 'react';
+import { Fragment, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Check, ArrowRight, Rocket } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SetupChecklistProps {
+  isLoading?: boolean;
   hasKnowledge: boolean;
   hasTested: boolean;
   hasConnections: boolean;
@@ -24,7 +28,11 @@ interface SetupChecklistProps {
 
 type Status = 'done' | 'active' | 'locked';
 
+/** Base stagger delay between each visual element (seconds) */
+const STAGGER = 0.12;
+
 function SetupChecklistInner({
+  isLoading,
   hasKnowledge,
   hasTested,
   hasConnections,
@@ -35,10 +43,43 @@ function SetupChecklistInner({
 }: SetupChecklistProps) {
   const { t } = useTranslation();
 
+  // ─── Skeleton while queries are in flight ───────────────────
+  if (isLoading) {
+    return (
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          background: '#FCFEFC',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.04)',
+          border: '1px solid rgba(0,0,0,0.06)',
+        }}
+      >
+        <div className="h-[2px] bg-[#D8D8D0]/50" />
+        <div className="px-6 pt-5 pb-4 animate-pulse">
+          <div className="flex items-start">
+            {[0, 1, 2, 3].map((i) => (
+              <Fragment key={i}>
+                {i > 0 && <div className="h-px flex-1 mt-3 bg-[#D8D8D0]/40" />}
+                <div className="flex flex-col items-center flex-1 min-w-0">
+                  <div className="w-6 h-6 rounded-full bg-[#D8D8D0]/40" />
+                  <div className="w-12 h-2.5 rounded bg-[#D8D8D0]/40 mt-2" />
+                </div>
+              </Fragment>
+            ))}
+          </div>
+          <div className="w-48 h-3 rounded bg-[#D8D8D0]/40 mt-4 mx-auto" />
+          <div className="w-full h-10 rounded-lg bg-[#D8D8D0]/30 mt-3" />
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Resolve step statuses ──────────────────────────────────
   const step1: Status = 'done';
   const step2: Status = hasKnowledge ? 'done' : 'active';
   const step3: Status = hasTested ? 'done' : hasKnowledge ? 'active' : 'locked';
   const step4: Status = hasConnections ? 'done' : hasTested ? 'active' : 'locked';
+  const statuses: Status[] = [step1, step2, step3, step4];
 
   const allDone = hasKnowledge && hasTested && hasConnections;
 
@@ -57,10 +98,27 @@ function SetupChecklistInner({
     activeHint = t('setup_checklist.hint_connect');
   }
 
+  const labels = [
+    t('setup_checklist.step_create'),
+    t('setup_checklist.step_knowledge'),
+    t('setup_checklist.step_test'),
+    t('setup_checklist.step_connect'),
+  ];
+
+  // Build sequential visual indices: step0, line0, step1, line1, step2, line2, step3
+  // DOM order is always Create→Connect. In RTL, the browser's flex-direction
+  // already renders them right-to-left, so DOM-order stagger = visual RTL.
+  // We keep the same DOM-order stagger in both directions.
+  const totalVisualSlots = 7; // 4 steps + 3 lines
+
+  // The CTA area appears after the last stepper element
+  const ctaDelay = (totalVisualSlots + 1) * STAGGER;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
       className="rounded-xl overflow-hidden"
       style={{
         background: '#FCFEFC',
@@ -68,49 +126,54 @@ function SetupChecklistInner({
         border: '1px solid rgba(0,0,0,0.06)',
       }}
     >
-      {/* Top accent line */}
-      <div className="h-[2px]" style={{ background: 'linear-gradient(90deg, #7DFF51, #00DBB7)' }} />
+      {/* Top accent line — sweeps in the reading direction */}
+      <motion.div
+        className="h-[2px] origin-left rtl:origin-right"
+        style={{ background: 'linear-gradient(90deg, #7DFF51, #00DBB7)' }}
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      />
 
       <div className="px-6 pt-5 pb-4">
-        {/* Stepper */}
+        {/* Stepper row */}
         <div className="flex items-start">
-          <Step status={step1} label={t('setup_checklist.step_create')} />
-          <Line filled={step1 === 'done'} />
-          <Step status={step2} label={t('setup_checklist.step_knowledge')} />
-          <Line filled={step2 === 'done'} />
-          <Step status={step3} label={t('setup_checklist.step_test')} />
-          <Line filled={step3 === 'done'} />
-          <Step status={step4} label={t('setup_checklist.step_connect')} />
+          {statuses.map((status, i) => {
+            // visual slot: step i occupies slot i*2, line before it occupies slot i*2-1
+            const stepSlot = i * 2;
+            const lineSlot = i * 2 - 1;
+
+            return (
+              <Fragment key={i}>
+                {i > 0 && (
+                  <AnimatedLine
+                    filled={statuses[i - 1] === 'done'}
+                    delay={lineSlot * STAGGER}
+                  />
+                )}
+                <AnimatedStep
+                  status={status}
+                  label={labels[i]}
+                  delay={stepSlot * STAGGER}
+                />
+              </Fragment>
+            );
+          })}
         </div>
 
-        {/* Hint + CTA */}
-        {allDone ? (
-          <>
-            <p className="text-xs text-[#808178] mt-4 text-center">
-              {t('setup_checklist.hint_subscribe')}
-            </p>
-            <button
-              onClick={onSubscribe}
-              className={cn(
-                'w-full mt-3 py-2.5 rounded-lg',
-                'bg-[#272726] text-[#FCFEFC] text-sm font-medium',
-                'hover:bg-[#0A0A17] active:scale-[0.98]',
-                'transition-all duration-150',
-                'flex items-center justify-center gap-2',
-              )}
-            >
-              {t('setup_checklist.step_subscribe_action')}
-              <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
-            </button>
-          </>
-        ) : (
-          <>
-            {activeHint && (
-              <p className="text-xs text-[#808178] mt-4 text-center">{activeHint}</p>
-            )}
-            {activeAction && (
+        {/* Hint + CTA — fades in after stepper completes */}
+        <motion.div
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: ctaDelay, duration: 0.3, ease: 'easeOut' }}
+        >
+          {allDone ? (
+            <>
+              <p className="text-xs text-[#808178] mt-4 text-center">
+                {t('setup_checklist.hint_subscribe')}
+              </p>
               <button
-                onClick={activeAction.fn}
+                onClick={onSubscribe}
                 className={cn(
                   'w-full mt-3 py-2.5 rounded-lg',
                   'bg-[#272726] text-[#FCFEFC] text-sm font-medium',
@@ -119,12 +182,33 @@ function SetupChecklistInner({
                   'flex items-center justify-center gap-2',
                 )}
               >
-                {activeAction.label}
+                {t('setup_checklist.step_subscribe_action')}
                 <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
               </button>
-            )}
-          </>
-        )}
+            </>
+          ) : (
+            <>
+              {activeHint && (
+                <p className="text-xs text-[#808178] mt-4 text-center">{activeHint}</p>
+              )}
+              {activeAction && (
+                <button
+                  onClick={activeAction.fn}
+                  className={cn(
+                    'w-full mt-3 py-2.5 rounded-lg',
+                    'bg-[#272726] text-[#FCFEFC] text-sm font-medium',
+                    'hover:bg-[#0A0A17] active:scale-[0.98]',
+                    'transition-all duration-150',
+                    'flex items-center justify-center gap-2',
+                  )}
+                >
+                  {activeAction.label}
+                  <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+                </button>
+              )}
+            </>
+          )}
+        </motion.div>
       </div>
     </motion.div>
   );
@@ -132,17 +216,35 @@ function SetupChecklistInner({
 
 export const SetupChecklist = memo(SetupChecklistInner);
 
-// ─── Step ────────────────────────────────────────────────────
+// ─── Animated Step ──────────────────────────────────────────────
 
-function Step({ status, label }: { status: Status; label: string }) {
+function AnimatedStep({
+  status,
+  label,
+  delay,
+}: {
+  status: Status;
+  label: string;
+  delay: number;
+}) {
   return (
-    <div className="flex flex-col items-center flex-1 min-w-0">
+    <motion.div
+      className="flex flex-col items-center flex-1 min-w-0"
+      initial={{ opacity: 0, scale: 0.6 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+    >
       {status === 'done' ? (
         <motion.div
+          className="w-6 h-6 rounded-full bg-brand-mojeeb flex items-center justify-center"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-          className="w-6 h-6 rounded-full bg-brand-mojeeb flex items-center justify-center"
+          transition={{
+            delay: delay + 0.05,
+            type: 'spring',
+            stiffness: 400,
+            damping: 15,
+          }}
         >
           <Check className="w-3 h-3 text-white" strokeWidth={3} />
         </motion.div>
@@ -151,25 +253,42 @@ function Step({ status, label }: { status: Status; label: string }) {
       ) : (
         <div className="w-6 h-6 rounded-full bg-[#D8D8D0]/50" />
       )}
-      <span className={cn(
-        'text-[11px] mt-1.5 text-center whitespace-nowrap',
-        status === 'done' && 'text-[#808178]',
-        status === 'active' && 'text-[#272726] font-medium',
-        status === 'locked' && 'text-[#D8D8D0]',
-      )}>
+      <span
+        className={cn(
+          'text-[11px] mt-1.5 text-center whitespace-nowrap',
+          status === 'done' && 'text-[#808178]',
+          status === 'active' && 'text-[#272726] font-medium',
+          status === 'locked' && 'text-[#D8D8D0]',
+        )}
+      >
         {label}
       </span>
-    </div>
+    </motion.div>
   );
 }
 
-// ─── Connector ───────────────────────────────────────────────
+// ─── Animated Connector ─────────────────────────────────────────
 
-function Line({ filled }: { filled: boolean }) {
+function AnimatedLine({
+  filled,
+  delay,
+}: {
+  filled: boolean;
+  delay: number;
+}) {
   return (
-    <div className={cn(
-      'h-px flex-1 mt-3',
-      filled ? 'bg-brand-mojeeb' : 'bg-[#D8D8D0]',
-    )} />
+    <div className="flex-1 mt-3 h-px relative">
+      {/* Background track */}
+      <div className="absolute inset-0 bg-[#D8D8D0]" />
+      {/* Filled overlay — grows from inline-start (respects RTL via logical property) */}
+      {filled && (
+        <motion.div
+          className="absolute inset-0 bg-brand-mojeeb origin-left rtl:origin-right"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ delay, duration: 0.3, ease: 'easeOut' }}
+        />
+      )}
+    </div>
   );
 }

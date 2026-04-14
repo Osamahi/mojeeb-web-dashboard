@@ -107,7 +107,7 @@ export default function StudioPage() {
   } = useAgentAttachments(agentId);
 
   // Check if agent has any conversations (lightweight: limit=1)
-  const { data: hasConversations } = useQuery({
+  const { data: hasConversations, isLoading: isLoadingConversations } = useQuery({
     queryKey: ['hasConversations', agentId],
     queryFn: async () => {
       const res = await getConversations({ agent_id: agentId!, limit: 1 });
@@ -118,7 +118,7 @@ export default function StudioPage() {
   });
 
   // Check if agent has any connections
-  const { data: connections } = useQuery({
+  const { data: connections, isLoading: isLoadingConnections } = useQuery({
     queryKey: ['hasConnections', agentId],
     queryFn: () => connectionService.getConnections(agentId!),
     enabled: !!agentId,
@@ -135,6 +135,7 @@ export default function StudioPage() {
   const subscription = useSubscriptionStore((s) => s.subscription);
   const isOnFreePlan = !subscription || subscription.planCode === PlanCode.Free;
 
+  const isChecklistLoading = isLoadingKBs || isLoadingConversations || isLoadingConnections;
   const hasKnowledge = !!(knowledgeBases && knowledgeBases.length > 0);
   const hasTested = !!hasConversations;
   const hasConnections = !!(connections && connections.length > 0);
@@ -243,6 +244,7 @@ export default function StudioPage() {
           {showChecklist && (
             <div className="px-4 pt-4 sm:px-6 sm:pt-6">
               <SetupChecklist
+                isLoading={isChecklistLoading}
                 hasKnowledge={hasKnowledge}
                 hasTested={hasTested}
                 hasConnections={hasConnections}
@@ -316,8 +318,15 @@ export default function StudioPage() {
 
               {/* Knowledge Base Cards */}
               {isLoadingKBs ? (
-                <div className="flex items-center justify-center py-12">
-                  <Spinner size="md" />
+                <div className="space-y-3">
+                  {[0, 1].map((i) => (
+                    <div key={i} className="bg-white rounded-lg border border-neutral-200 animate-pulse">
+                      <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
+                        <div className="w-5 h-5 rounded bg-neutral-200 flex-shrink-0" />
+                        <div className="flex-1 h-4 rounded bg-neutral-200" style={{ maxWidth: i === 0 ? '60%' : '45%' }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : knowledgeBases && knowledgeBases.length > 0 ? (
                 <>
