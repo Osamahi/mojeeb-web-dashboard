@@ -146,8 +146,19 @@ export default function StudioPage() {
       setIsTestGateOpen(true);
     } else if (!isDesktop) {
       setIsChatPanelOpen(true);
+    } else {
+      // Desktop: focus the test chat input
+      const allTextareas = document.querySelectorAll('textarea');
+      let textarea: HTMLTextAreaElement | null = null;
+      allTextareas.forEach(t => {
+        if (t.placeholder?.includes('test')) textarea = t;
+      });
+      if (!textarea) textarea = allTextareas[allTextareas.length - 1];
+      if (textarea) {
+        textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => (textarea as HTMLTextAreaElement).focus(), 300);
+      }
     }
-    // Desktop: test chat is always visible in right column
   }, [hasKnowledge, isDesktop]);
 
   const handleTestAnyway = useCallback(() => {

@@ -1357,6 +1357,8 @@
     "new_conversation": "New conversation",
     "empty_title": "Start Testing",
     "empty_description": "Send a message below to test your agent's responses based on the current prompt and knowledge bases.",
+    "try_me": "Try me",
+    "preparing": "Preparing",
     "placeholder": "Type a message to test your agent...",
     "new_conversation_aria": "Start a new conversation",
     "send_failed": "Failed to send message",

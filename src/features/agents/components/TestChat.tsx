@@ -48,6 +48,16 @@ export default function TestChat({ agentId }: TestChatProps) {
   const [conversation, setConversation] = useState<StudioConversation | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dots, setDots] = useState('');
+
+  // Animate dots while initializing
+  useEffect(() => {
+    if (!isInitializing) return;
+    const interval = setInterval(() => {
+      setDots(prev => prev.length >= 3 ? '' : prev + '.');
+    }, 500);
+    return () => clearInterval(interval);
+  }, [isInitializing]);
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
   // Use local storage (ephemeral - resets on unmount)
@@ -152,70 +162,9 @@ export default function TestChat({ agentId }: TestChatProps) {
     }
   };
 
-  // Enhanced loading state
-  if (isInitializing) {
-    return (
-      <div
-        className="h-full flex flex-col items-center justify-center bg-white p-8 animate-fade-in"
-        role="status"
-        aria-live="polite"
-      >
-        {/* Enhanced spinner with dual rings */}
-        <div className="relative mb-6 animate-scale-in">
-          {/* Outer pulsing ring */}
-          <div className="absolute inset-0 w-20 h-20 rounded-full border-4 border-brand-mojeeb/20 animate-pulse-ring" />
-
-          {/* Inner rotating ring */}
-          <div className="relative w-20 h-20 rounded-full border-4 border-transparent border-t-brand-mojeeb animate-rotate-slow" />
-
-          {/* Center dot */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-brand-green" />
-        </div>
-
-        {/* Main heading */}
-        <h3 className="text-lg font-semibold text-neutral-900 mb-2 animate-slide-up">
-          {t('test_chat.initializing')}
-        </h3>
-
-        {/* Rotating tips */}
-        <div className="h-6 overflow-hidden">
-          <p
-            key={currentTipIndex}
-            className="text-sm text-neutral-500 text-center max-w-md px-4 animate-fade-in"
-          >
-            {LOADING_TIPS[currentTipIndex]}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div
-        className="h-full flex flex-col items-center justify-center bg-white p-6"
-        role="alert"
-        aria-live="assertive"
-      >
-        <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
-          <AlertCircle className="w-8 h-8 text-red-500" aria-hidden="true" />
-        </div>
-        <p className="text-neutral-950 font-medium mb-1">{t('test_chat.failed_title')}</p>
-        <p className="text-sm text-neutral-600 max-w-sm text-center mb-4">{error}</p>
-        <button
-          onClick={handleNewConversation}
-          className="px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-neutral-800 transition-colors"
-          aria-label={t('test_chat.try_again')}
-        >
-          {t('test_chat.try_again')}
-        </button>
-      </div>
-    );
-  }
-
-  // Main chat view
+  // Main chat view — always rendered so input box is visible during loading
   return (
+    <div className="h-full transition-opacity duration-700" style={{ opacity: isInitializing ? 0.3 : 1 }}>
     <UnifiedChatView
       messages={chatEngine.messages}
       isLoading={chatEngine.isLoading}
@@ -243,29 +192,116 @@ export default function TestChat({ agentId }: TestChatProps) {
       }
       emptyStateCustom={
         <div className="flex flex-col items-center justify-center h-full text-center px-4">
-          <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
-            <svg
-              className="w-8 h-8 text-neutral-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {error ? (
+            // Error state inline
+            <>
+              <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                <AlertCircle className="w-8 h-8 text-red-500" />
+              </div>
+              <p className="text-neutral-950 font-medium mb-1">{t('test_chat.failed_title')}</p>
+              <p className="text-sm text-neutral-600 max-w-sm text-center mb-4">{error}</p>
+              <button
+                onClick={handleNewConversation}
+                className="px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-neutral-800 transition-colors"
+              >
+                {t('test_chat.try_again')}
+              </button>
+            </>
+          ) : (
+            // "Preparing..." crossfades into "Try me" + ring glows in
+            <div
+              className="relative flex items-center justify-center select-none"
+              style={{ width: 120, height: 120 }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-          </div>
-          <p className="text-neutral-950 font-medium mb-1">{t('test_chat.empty_title')}</p>
-          <p className="text-sm text-neutral-600 max-w-full sm:max-w-sm">
-            {t('test_chat.empty_description')}
-          </p>
+              {/* "Preparing..." — fades out */}
+              <span
+                className="absolute inset-0 flex items-center justify-center text-base font-normal whitespace-nowrap"
+                style={{
+                  color: '#808178',
+                  opacity: isInitializing ? 1 : 0,
+                  transition: 'opacity 0.8s ease',
+                }}
+              >
+                {t('test_chat.preparing')}<span className="inline-block w-4 text-start">{dots}</span>
+              </span>
+              {/* "Try me" — fades in */}
+              <span
+                className="absolute inset-0 flex items-center justify-center text-lg font-medium whitespace-nowrap"
+                style={{
+                  color: '#808178',
+                  opacity: isInitializing ? 0 : 1,
+                  transition: 'opacity 0.8s ease 0.4s',
+                }}
+              >
+                {t('test_chat.try_me')}
+              </span>
+              {/* Ring — wrapper scales up + fades in, inner rotates */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  opacity: isInitializing ? 0 : 1,
+                  transform: isInitializing ? 'scale(0.6)' : 'scale(1)',
+                  transition: 'opacity 1.4s cubic-bezier(0.16,1,0.3,1) 0.3s, transform 1.4s cubic-bezier(0.16,1,0.3,1) 0.3s',
+                }}
+              >
+                <div
+                  className="w-full h-full rounded-full"
+                  style={{ animation: isInitializing ? 'none' : 'testme-ring 8s linear infinite' }}
+                />
+                {/* Glass reflection overlay */}
+                <div
+                  className="absolute inset-0 rounded-full overflow-hidden pointer-events-none"
+                >
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 40%, transparent 60%)',
+                    }}
+                  />
+                  {/* Bottom subtle reflection */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: 'radial-gradient(ellipse 80% 30% at 50% 95%, rgba(255,255,255,0.12) 0%, transparent 70%)',
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <style>{`
+            @keyframes testme-ring {
+              0% {
+                transform: rotate(90deg);
+                box-shadow:
+                  0 3px 8px 0 rgba(125,255,81,0.2) inset,
+                  0 8px 12px 0 rgba(0,219,183,0.15) inset,
+                  0 24px 24px 0 rgba(0,219,183,0.08) inset,
+                  0 0 2px 0.5px rgba(48,232,136,0.1);
+              }
+              50% {
+                transform: rotate(270deg);
+                box-shadow:
+                  0 3px 8px 0 rgba(0,219,183,0.2) inset,
+                  0 8px 6px 0 rgba(48,232,136,0.15) inset,
+                  0 18px 24px 0 rgba(125,255,81,0.08) inset,
+                  0 0 2px 0.5px rgba(48,232,136,0.1);
+              }
+              100% {
+                transform: rotate(450deg);
+                box-shadow:
+                  0 3px 8px 0 rgba(48,232,136,0.2) inset,
+                  0 8px 12px 0 rgba(0,219,183,0.15) inset,
+                  0 24px 24px 0 rgba(0,219,183,0.08) inset,
+                  0 0 2px 0.5px rgba(48,232,136,0.1);
+              }
+            }
+          `}</style>
         </div>
       }
       placeholder={t('test_chat.placeholder')}
       enableAIToggle={false} // AI-only mode in test
     />
+    </div>
   );
 }
