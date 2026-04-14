@@ -156,6 +156,8 @@ export default function TestChat({ agentId }: TestChatProps) {
     storage.clearMessages();
     setConversation(null);
     setIsInitializing(true);
+    setIsExitingEmpty(false);
+    setHideEmptyState(false);
 
     try {
       const widget = await testChatService.getAgentWidget(agentId);
