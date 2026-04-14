@@ -605,6 +605,7 @@
   "knowledge_base": {
     "add_title": "Add Knowledge",
     "add_subtitle": "Create knowledge via manual entry or document upload",
+    "add_subtitle_simplified": "Type or paste your business info",
     "tab_manual": "Manual Entry",
     "tab_document": "Upload Document",
     "title_label": "Title",
@@ -744,7 +745,7 @@
     "title_organizations": "Organizations",
     "title_settings": "Settings",
     "title_signup": "Sign Up",
-    "title_studio": "Agent Studio",
+    "title_studio": "Agent Setup",
     "title_subscription_cancel": "Subscription Cancelled",
     "title_subscription_success": "Subscription Successful",
     "title_subscriptions": "Subscriptions",
@@ -851,7 +852,7 @@
     "reset_link_failed": "Failed to send reset link"
   },
   "studio": {
-    "page_title": "Agent Knowledge",
+    "page_title": "Agent Setup",
     "page_subtitle": "Add knowledge & instructions here",
     "add_knowledge": "Add Knowledge",
     "add_knowledge_label": "Add knowledge base",
@@ -1939,6 +1940,34 @@
     "panel_label": "Test Chat Panel",
     "title": "Test Chat",
     "close": "Close test chat panel"
+  },
+  "setup_checklist": {
+    "title": "Set up your agent",
+    "step_create": "Create",
+    "step_create_done": "Done",
+    "step_knowledge": "Knowledge",
+    "step_knowledge_description": "Help your agent answer questions",
+    "step_knowledge_action": "Add Now",
+    "step_test": "Test",
+    "step_test_description": "See how your agent responds",
+    "step_test_locked": "Add knowledge first",
+    "step_test_action": "Test Now",
+    "hint_knowledge": "Give your agent some info so it can respond to your clients",
+    "hint_test": "See how your agent handles a real conversation",
+    "step_connect": "Connect",
+    "step_connect_action": "Connect Now",
+    "hint_connect": "Now it's time to connect your platform",
+    "hint_subscribe": "You're all set! Subscribe to keep your agent running",
+    "step_subscribe_action": "Subscribe",
+    "complete_title": "Your agent is ready!",
+    "complete_description": "Connect it to WhatsApp or other platforms to start receiving messages.",
+    "progress": "{{current}} of {{total}}"
+  },
+  "test_gate": {
+    "title": "Your agent needs knowledge",
+    "description": "Without knowledge, your agent can only give generic answers. Add your business info to see real results.",
+    "add_first": "Add Knowledge First",
+    "test_anyway": "Test Anyway"
   },
   "sidebar_error_boundary": {
     "navigation_unavailable": "Navigation unavailable"

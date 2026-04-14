@@ -7,14 +7,16 @@
  * Right: Embedded test chat (desktop) or slide-out panel (mobile)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus, MessageSquare, Plug, Bell, MoreVertical, Paperclip, BookOpen } from 'lucide-react';
+import { Plus, MessageSquare, Bell, MoreVertical, Paperclip, BookOpen } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
+import { getConversations } from '@/features/conversations/services/conversationApi';
+import { connectionService } from '@/features/connections/services/connectionService';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import { useDocumentJobs } from '../hooks/useDocumentJobs';
@@ -30,11 +32,16 @@ import DocumentUploadProgressCard from '../components/DocumentUploadProgressCard
 import FollowUpSettingsModal from '../components/FollowUpSettingsModal';
 import TestChat from '../components/TestChat';
 import TestChatPanel from '../components/TestChatPanel';
+import { SetupChecklist } from '../components/SetupChecklist';
+import TestGateBottomSheet from '../components/TestGateBottomSheet';
 import { useAgentAttachments } from '@/features/attachments/hooks/useAgentAttachments';
 import AttachmentItem from '@/features/attachments/components/AttachmentItem';
 import { CreateAttachmentModal } from '@/features/attachments/components/CreateAttachmentModal';
 import { logger } from '@/lib/logger';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useUIStore } from '@/stores/uiStore';
+import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
+import { PlanCode } from '@/features/subscriptions/types/subscription.types';
 
 /**
  * Merge optimistic job IDs with backend jobs, removing duplicates
@@ -52,12 +59,14 @@ export default function StudioPage() {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_studio');
   const navigate = useNavigate();
+  const setShowUpgradeWizard = useUIStore((s) => s.setShowUpgradeWizard);
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const isDesktop = useIsDesktop();
   const [isAddKBModalOpen, setIsAddKBModalOpen] = useState(false);
   const [isAddAttachmentModalOpen, setIsAddAttachmentModalOpen] = useState(false);
   const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
+  const [isTestGateOpen, setIsTestGateOpen] = useState(false);
   const [activeUploadJobs, setActiveUploadJobs] = useState<string[]>([]);
 
   // Fetch agent data
@@ -97,12 +106,53 @@ export default function StudioPage() {
     refetch: refetchAttachments,
   } = useAgentAttachments(agentId);
 
+  // Check if agent has any conversations (lightweight: limit=1)
+  const { data: hasConversations } = useQuery({
+    queryKey: ['hasConversations', agentId],
+    queryFn: async () => {
+      const res = await getConversations({ agent_id: agentId!, limit: 1 });
+      return res.items.length > 0;
+    },
+    enabled: !!agentId,
+    staleTime: 30_000,
+  });
+
+  // Check if agent has any connections
+  const { data: connections } = useQuery({
+    queryKey: ['hasConnections', agentId],
+    queryFn: () => connectionService.getConnections(agentId!),
+    enabled: !!agentId,
+    staleTime: 30_000,
+  });
+
   // Log errors
   useEffect(() => {
     if (error) {
       logger.error('Error loading agent', error);
     }
   }, [error]);
+
+  const subscription = useSubscriptionStore((s) => s.subscription);
+  const isOnFreePlan = !subscription || subscription.planCode === PlanCode.Free;
+
+  const hasKnowledge = !!(knowledgeBases && knowledgeBases.length > 0);
+  const hasTested = !!hasConversations;
+  const hasConnections = !!(connections && connections.length > 0);
+  const showChecklist = isOnFreePlan;
+
+  // Handle test agent action — gate on mobile if no knowledge
+  const handleTestAgent = useCallback(() => {
+    if (!hasKnowledge && !isDesktop) {
+      setIsTestGateOpen(true);
+    } else if (!isDesktop) {
+      setIsChatPanelOpen(true);
+    }
+    // Desktop: test chat is always visible in right column
+  }, [hasKnowledge, isDesktop]);
+
+  const handleTestAnyway = useCallback(() => {
+    setIsChatPanelOpen(true);
+  }, []);
 
   // Show empty state if no agent is selected
   if (!globalSelectedAgent) {
@@ -150,53 +200,67 @@ export default function StudioPage() {
       )}>
         {/* Left Column - Knowledge Sections (Full width on mobile, 2/3 on desktop) */}
         <div className="flex flex-col overflow-hidden lg:border-r border-neutral-200">
-          {/* Header Section - Responsive padding and typography */}
-          <div className="px-4 pt-4 sm:px-6 sm:pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-semibold text-neutral-950">
-                  {t('studio.page_title')}
-                </h1>
-                <p className="text-sm text-neutral-600 mt-1">
-                  {t('studio.page_subtitle')}
-                </p>
-              </div>
+          {/* Setup Checklist — pinned at top, above header, for maximum visibility */}
+          {showChecklist && (
+            <div className="px-4 pt-4 sm:px-6 sm:pt-6">
+              <SetupChecklist
+                hasKnowledge={hasKnowledge}
+                hasTested={hasTested}
+                hasConnections={hasConnections}
+                onAddKnowledge={() => setIsAddKBModalOpen(true)}
+                onTestAgent={handleTestAgent}
+                onConnect={() => navigate('/connections')}
+                onSubscribe={() => setShowUpgradeWizard(true)}
+              />
+            </div>
+          )}
 
-              {/* Right side: More menu (all screens) + Add button (mobile only) */}
-              <div className="flex items-center gap-2">
-                {/* More Options Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger>
-                    <button
-                      className="w-10 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center justify-center"
-                      title={t('common.more')}
-                    >
-                      <MoreVertical className="w-5 h-5 text-neutral-700" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => setIsAddKBModalOpen(true)}>
-                      <Plus className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
-                      <span>{t('studio.add_knowledge')}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setIsAddAttachmentModalOpen(true)}>
-                      <Paperclip className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
-                      <span>{t('studio.add_attachment', 'Add Attachment')}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setIsFollowUpModalOpen(true)}>
-                      <Bell className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
-                      <span>{t('studio.automated_follow_ups')}</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+          {/* Header Section + More menu — hidden during setup, shown after */}
+          {!showChecklist && (
+            <div className="px-4 pt-4 sm:px-6 sm:pt-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-semibold text-neutral-950">
+                    {t('studio.page_title')}
+                  </h1>
+                  <p className="text-sm text-neutral-600 mt-1">
+                    {t('studio.page_subtitle')}
+                  </p>
+                </div>
 
+                <div className="flex items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger>
+                      <button
+                        className="w-10 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center justify-center"
+                        title={t('common.more')}
+                      >
+                        <MoreVertical className="w-5 h-5 text-neutral-700" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={() => setIsAddKBModalOpen(true)}>
+                        <Plus className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+                        <span>{t('studio.add_knowledge')}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setIsAddAttachmentModalOpen(true)}>
+                        <Paperclip className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+                        <span>{t('studio.add_attachment', 'Add Attachment')}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setIsFollowUpModalOpen(true)}>
+                        <Bell className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+                        <span>{t('studio.automated_follow_ups')}</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto">
-            <div className="px-4 py-4 sm:px-6 sm:py-6 pb-20 lg:pb-6 space-y-3 sm:space-y-4">
+            <div className="px-4 py-4 sm:px-6 sm:py-6 pb-6 space-y-3 sm:space-y-4">
               {/* Main Instruction Card */}
               <MainInstructionCard />
 
@@ -230,7 +294,7 @@ export default function StudioPage() {
               ) : (
                 <button
                   onClick={() => setIsAddKBModalOpen(true)}
-                  className="w-full rounded-lg border border-dashed border-neutral-300 hover:border-neutral-400 bg-white hover:bg-neutral-50/50 transition-all duration-200 cursor-pointer group/empty animate-[pulse_1.5s_ease-in-out_infinite] hover:animate-none"
+                  className="w-full rounded-lg border border-dashed border-neutral-300 hover:border-neutral-400 bg-white hover:bg-neutral-50/50 transition-all duration-200 cursor-pointer group/empty"
                 >
                   <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
                     <Plus className="w-5 h-5 text-neutral-300 group-hover/empty:text-brand-mojeeb transition-colors flex-shrink-0" />
@@ -315,47 +379,22 @@ export default function StudioPage() {
         </div>
       </div>
 
-      {/* Floating Action Buttons - Mobile & Tablet (Centered at Bottom) */}
-      {!isDesktop && (
-        <div className={cn('fixed bottom-6 left-1/2 -translate-x-1/2 z-30', 'lg:hidden')}>
-          <div className={cn('flex items-center', 'bg-black rounded-full shadow-lg p-1')}>
-            {/* Test Agent Button */}
-            <button
-              onClick={() => setIsChatPanelOpen(true)}
-              className={cn(
-                'px-4 py-3',
-                'ltr:rounded-l-full rtl:rounded-r-full',
-                'bg-black text-white',
-                'flex items-center justify-center',
-                'hover:bg-neutral-700 active:scale-95',
-                'transition-all duration-200'
-              )}
-              aria-label={t('studio.test_chat_label')}
-            >
-              <MessageSquare className="w-4 h-4 me-3" />
-              <span className="text-sm font-medium whitespace-nowrap">{t('studio.test')}</span>
-            </button>
-
-            {/* Divider */}
-            <div className="w-px h-8 bg-neutral-700" />
-
-            {/* Connect Agent Button */}
-            <button
-              onClick={() => navigate('/connections')}
-              className={cn(
-                'px-4 py-3',
-                'ltr:rounded-r-full rtl:rounded-l-full',
-                'bg-black text-white',
-                'flex items-center justify-center',
-                'hover:bg-neutral-700 active:scale-95',
-                'transition-all duration-200'
-              )}
-              aria-label="Connect Agent"
-            >
-              <Plug className="w-4 h-4 me-3" />
-              <span className="text-sm font-medium whitespace-nowrap">{t('studio.connect_agent')}</span>
-            </button>
-          </div>
+      {/* Floating Test Button - Mobile only, shown after checklist is dismissed */}
+      {!isDesktop && !showChecklist && (
+        <div className={cn('fixed bottom-6 right-4 z-30', 'lg:hidden')}>
+          <button
+            onClick={() => setIsChatPanelOpen(true)}
+            className={cn(
+              'w-14 h-14 rounded-full',
+              'bg-brand-mojeeb text-white shadow-lg',
+              'flex items-center justify-center',
+              'hover:bg-brand-mojeeb-hover active:scale-95',
+              'transition-all duration-200'
+            )}
+            aria-label={t('studio.test_chat_label')}
+          >
+            <MessageSquare className="w-5 h-5" />
+          </button>
         </div>
       )}
 
@@ -371,6 +410,7 @@ export default function StudioPage() {
         isOpen={isAddKBModalOpen}
         onClose={() => setIsAddKBModalOpen(false)}
         agentId={agent.id}
+        simplified={!isDesktop && !hasKnowledge}
         onSuccess={() => {
           refetchKBs();
           setIsAddKBModalOpen(false);
@@ -396,6 +436,14 @@ export default function StudioPage() {
         isOpen={isFollowUpModalOpen}
         onClose={() => setIsFollowUpModalOpen(false)}
         agent={agent}
+      />
+
+      {/* Test Gate Bottom Sheet - Mobile only, when testing without knowledge */}
+      <TestGateBottomSheet
+        isOpen={isTestGateOpen}
+        onClose={() => setIsTestGateOpen(false)}
+        onAddKnowledge={() => setIsAddKBModalOpen(true)}
+        onTestAnyway={handleTestAnyway}
       />
     </>
   );

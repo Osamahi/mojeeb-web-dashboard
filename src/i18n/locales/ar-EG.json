@@ -602,6 +602,7 @@
   "knowledge_base": {
     "add_title": "إضافة معرفة",
     "add_subtitle": "إنشاء معرفة عن طريق الإدخال اليدوي أو رفع مستند",
+    "add_subtitle_simplified": "اكتب أو الصق معلومات شغلك",
     "tab_manual": "إدخال يدوي",
     "tab_document": "رفع مستند",
     "title_label": "العنوان",
@@ -742,7 +743,7 @@
     "title_organizations": "المنظمات",
     "title_settings": "الإعدادات",
     "title_signup": "إنشاء حساب",
-    "title_studio": "استوديو الوكيل",
+    "title_studio": "إعداد الإيجنت",
     "title_subscription_cancel": "تم إلغاء الاشتراك",
     "title_subscription_success": "نجح الاشتراك",
     "title_subscriptions": "الاشتراكات",
@@ -849,7 +850,7 @@
     "reset_link_failed": "فشل إرسال رابط إعادة التعيين"
   },
   "studio": {
-    "page_title": "معرفة الوكيل",
+    "page_title": "إعداد الإيجنت",
     "page_subtitle": "أضف المعرفة والتعليمات هنا",
     "add_knowledge": "إضافة معرفة",
     "add_knowledge_label": "إضافة قاعدة معرفية",
@@ -1938,6 +1939,34 @@
     "panel_label": "بانل الشات التجريبي",
     "title": "شات تجريبي",
     "close": "قفّل الشات التجريبي"
+  },
+  "setup_checklist": {
+    "title": "جهّز الإيجنت بتاعك",
+    "step_create": "إنشاء",
+    "step_create_done": "تم",
+    "step_knowledge": "معرفة",
+    "step_knowledge_description": "ساعد الإيجنت يجاوب على الأسئلة",
+    "step_knowledge_action": "أضف دلوقتي",
+    "step_test": "تجربة",
+    "step_test_description": "شوف الإيجنت بيرد إزاي",
+    "step_test_locked": "أضف معرفة الأول",
+    "step_test_action": "جرّب دلوقتي",
+    "hint_knowledge": "أضف معلومات عشان الإيجنت يقدر يرد على عملائك",
+    "hint_test": "شوف الإيجنت بيتعامل إزاي مع محادثة حقيقية",
+    "step_connect": "ربط",
+    "step_connect_action": "اربط دلوقتي",
+    "hint_connect": "وصّل الإيجنت بواتساب أو إنستجرام أو أي منصة تانية",
+    "hint_subscribe": "كل حاجة تمام! اشترك عشان الإيجنت يفضل شغال",
+    "step_subscribe_action": "اشترك",
+    "complete_title": "الإيجنت بتاعك جاهز!",
+    "complete_description": "وصّله بواتساب أو أي منصة تانية عشان تبدأ تستقبل رسايل.",
+    "progress": "{{current}} من {{total}}"
+  },
+  "test_gate": {
+    "title": "الإيجنت محتاج معرفة",
+    "description": "من غير معرفة، الإيجنت هيرد ردود عامة بس. أضف معلومات شغلك عشان تشوف نتايج حقيقية.",
+    "add_first": "أضف معرفة الأول",
+    "test_anyway": "جرّب على أي حال"
   },
   "sidebar_error_boundary": {
     "navigation_unavailable": "التنقل مش شغال"

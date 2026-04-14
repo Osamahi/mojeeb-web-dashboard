@@ -602,6 +602,7 @@
   "knowledge_base": {
     "add_title": "إضافة معرفة",
     "add_subtitle": "إنشاء معرفة عبر الإدخال اليدوي أو رفع مستند",
+    "add_subtitle_simplified": "اكتب أو الصق معلومات عملك",
     "tab_manual": "إدخال يدوي",
     "tab_document": "رفع مستند",
     "title_label": "العنوان",
@@ -742,7 +743,7 @@
     "title_organizations": "المنظمات",
     "title_settings": "الإعدادات",
     "title_signup": "إنشاء حساب",
-    "title_studio": "استوديو الوكيل",
+    "title_studio": "إعداد الوكيل",
     "title_subscription_cancel": "تم إلغاء الاشتراك",
     "title_subscription_success": "نجح الاشتراك",
     "title_subscriptions": "الاشتراكات",
@@ -849,7 +850,7 @@
     "reset_link_failed": "فشل إرسال رابط إعادة التعيين"
   },
   "studio": {
-    "page_title": "معرفة الوكيل",
+    "page_title": "إعداد الوكيل",
     "page_subtitle": "أضف المعرفة والتعليمات هنا",
     "add_knowledge": "إضافة معرفة",
     "add_knowledge_label": "إضافة قاعدة معرفية",
@@ -1935,6 +1936,34 @@
     "panel_label": "لوحة الدردشة التجريبية",
     "title": "الدردشة التجريبية",
     "close": "إغلاق لوحة الدردشة التجريبية"
+  },
+  "setup_checklist": {
+    "title": "إعداد الوكيل الخاص بك",
+    "step_create": "إنشاء",
+    "step_create_done": "تم",
+    "step_knowledge": "معرفة",
+    "step_knowledge_description": "ساعد الوكيل في الإجابة على الأسئلة",
+    "step_knowledge_action": "أضف الآن",
+    "step_test": "اختبار",
+    "step_test_description": "شاهد كيف يستجيب الوكيل",
+    "step_test_locked": "أضف المعرفة أولاً",
+    "step_test_action": "اختبر الآن",
+    "hint_knowledge": "أضف معلومات ليتمكن الوكيل من الرد على عملائك",
+    "hint_test": "شاهد كيف يتعامل الوكيل مع محادثة حقيقية",
+    "step_connect": "ربط",
+    "step_connect_action": "اربط الآن",
+    "hint_connect": "اربط الوكيل بواتساب أو إنستغرام أو أي منصة أخرى",
+    "hint_subscribe": "كل شيء جاهز! اشترك لإبقاء الوكيل يعمل",
+    "step_subscribe_action": "اشترك",
+    "complete_title": "الوكيل جاهز!",
+    "complete_description": "قم بتوصيله بواتساب أو أي منصة أخرى لبدء استقبال الرسائل.",
+    "progress": "{{current}} من {{total}}"
+  },
+  "test_gate": {
+    "title": "الوكيل يحتاج إلى معرفة",
+    "description": "بدون معرفة، لن يتمكن الوكيل إلا من تقديم إجابات عامة. أضف معلومات عملك لرؤية نتائج حقيقية.",
+    "add_first": "أضف المعرفة أولاً",
+    "test_anyway": "اختبر على أي حال"
   },
   "sidebar_error_boundary": {
     "navigation_unavailable": "التنقل غير متاح"

@@ -28,6 +28,8 @@ interface AddKnowledgeBaseModalProps {
   agentId: string;
   onSuccess: () => void;
   onUploadStart?: (jobId: string) => void;
+  /** When true, hides tabs and shows text-only form (mobile first-time flow) */
+  simplified?: boolean;
 }
 
 /**
@@ -46,6 +48,7 @@ export default function AddKnowledgeBaseModal({
   agentId,
   onSuccess,
   onUploadStart,
+  simplified = false,
 }: AddKnowledgeBaseModalProps) {
   const { t } = useTranslation();
 
@@ -172,37 +175,39 @@ export default function AddKnowledgeBaseModal({
       isOpen={isOpen}
       onClose={handleClose}
       title={t('knowledge_base.add_title')}
-      subtitle={t('knowledge_base.add_subtitle')}
+      subtitle={simplified ? t('knowledge_base.add_subtitle_simplified', 'Type or paste your business info') : t('knowledge_base.add_subtitle')}
       maxWidth="lg"
       isLoading={isLoading}
       closable={!isLoading}
     >
-      {/* Tabs */}
-      <div className="flex gap-2 mb-4 border-b border-neutral-200">
-        <button
-          type="button"
-          onClick={() => setActiveTab('manual')}
-          className={getTabClassName(activeTab === 'manual')}
-        >
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            {t('knowledge_base.tab_manual')}
-          </div>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('document')}
-          className={getTabClassName(activeTab === 'document')}
-        >
-          <div className="flex items-center gap-2">
-            <Upload className="w-4 h-4" />
-            {t('knowledge_base.tab_document')}
-          </div>
-        </button>
-      </div>
+      {/* Tabs — hidden in simplified mode */}
+      {!simplified && (
+        <div className="flex gap-2 mb-4 border-b border-neutral-200">
+          <button
+            type="button"
+            onClick={() => setActiveTab('manual')}
+            className={getTabClassName(activeTab === 'manual')}
+          >
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              {t('knowledge_base.tab_manual')}
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('document')}
+            className={getTabClassName(activeTab === 'document')}
+          >
+            <div className="flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              {t('knowledge_base.tab_document')}
+            </div>
+          </button>
+        </div>
+      )}
 
-      {/* Manual Entry Tab */}
-      {activeTab === 'manual' && (
+      {/* Manual Entry — always shown in simplified mode, or when manual tab active */}
+      {(simplified || activeTab === 'manual') && (
         <form onSubmit={handleManualSubmit} className="space-y-4">
           <Input
             label={t('knowledge_base.title_label')}
@@ -227,7 +232,7 @@ export default function AddKnowledgeBaseModal({
             }}
             error={errors.content}
             autoResize
-            minHeight={150}
+            minHeight={simplified ? 100 : 150}
             maxHeight={400}
             disabled={createMutation.isPending}
             required
@@ -253,8 +258,8 @@ export default function AddKnowledgeBaseModal({
         </form>
       )}
 
-      {/* Document Upload Tab */}
-      {activeTab === 'document' && (
+      {/* Document Upload Tab — hidden in simplified mode */}
+      {!simplified && activeTab === 'document' && (
         <div className="space-y-4">
           {/* File Input */}
           <div>
