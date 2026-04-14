@@ -100,7 +100,7 @@ function SetupChecklistInner({
               )}
             >
               {t('setup_checklist.step_subscribe_action')}
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </button>
           </>
         ) : (
@@ -120,7 +120,7 @@ function SetupChecklistInner({
                 )}
               >
                 {activeAction.label}
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
               </button>
             )}
           </>
