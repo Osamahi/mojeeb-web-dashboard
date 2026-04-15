@@ -242,22 +242,6 @@ export default function StudioPage() {
       )}>
         {/* Left Column - Knowledge Sections (Full width on mobile, 2/3 on desktop) */}
         <div className="flex flex-col overflow-hidden lg:border-r border-neutral-200">
-          {/* Setup Checklist — pinned at top, above header, for maximum visibility */}
-          {showChecklist && (
-            <div className="px-4 pt-4 sm:px-6 sm:pt-6">
-              <SetupChecklist
-                isLoading={isChecklistLoading}
-                hasKnowledge={hasKnowledge}
-                hasTested={hasTested}
-                hasConnections={hasConnections}
-                onAddKnowledge={() => setIsAddKBModalOpen(true)}
-                onTestAgent={handleTestAgent}
-                onConnect={() => navigate('/connections')}
-                onSubscribe={() => setShowUpgradeWizard(true)}
-              />
-            </div>
-          )}
-
           {/* Header Section + More menu */}
           <div className="px-4 pt-4 sm:px-6 sm:pt-6">
             <div className="flex items-start justify-between">
@@ -298,6 +282,22 @@ export default function StudioPage() {
               </div>
             </div>
           </div>
+
+          {/* Setup Checklist — below header */}
+          {showChecklist && (
+            <div className="px-4 pt-3 sm:px-6 sm:pt-4">
+              <SetupChecklist
+                isLoading={isChecklistLoading}
+                hasKnowledge={hasKnowledge}
+                hasTested={hasTested}
+                hasConnections={hasConnections}
+                onAddKnowledge={() => setIsAddKBModalOpen(true)}
+                onTestAgent={handleTestAgent}
+                onConnect={() => navigate('/connections')}
+                onSubscribe={() => setShowUpgradeWizard(true)}
+              />
+            </div>
+          )}
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto">
