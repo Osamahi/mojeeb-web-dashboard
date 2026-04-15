@@ -57,7 +57,7 @@ function SetupChecklistInner({
         }}
       >
         <div className="h-[2px] bg-[#D8D8D0]/50" />
-        <div className="px-6 pt-6 pb-5 animate-pulse">
+        <div className="px-6 py-7 animate-pulse">
           <div className="flex items-start">
             {[0, 1, 2, 3].map((i) => (
               <Fragment key={i}>
@@ -138,7 +138,7 @@ function SetupChecklistInner({
         transition={{ duration: 0.5, ease: 'easeOut' }}
       />
 
-      <div className="px-6 pt-6 pb-5">
+      <div className="px-6 py-7">
         {/* Stepper row */}
         <div className="flex items-start">
           {statuses.map((status, i) => {
@@ -172,10 +172,7 @@ function SetupChecklistInner({
         >
           {allDone ? (
             <>
-              <p className="text-xs text-[#808178] mt-4 text-center">
-                {t('setup_checklist.hint_subscribe')}
-              </p>
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-2 mt-4">
                 {showTestAgain && (
                   <button
                     onClick={onTestAgent}
@@ -205,13 +202,13 @@ function SetupChecklistInner({
                   <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                 </button>
               </div>
+              <p className="text-xs text-[#808178] mt-3 text-center">
+                {t('setup_checklist.hint_subscribe')}
+              </p>
             </>
           ) : (
             <>
-              {activeHint && (
-                <p className="text-xs text-[#808178] mt-4 text-center">{activeHint}</p>
-              )}
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-2 mt-4">
                 {showTestAgain && activeAction && (
                   <button
                     onClick={onTestAgent}
@@ -243,6 +240,9 @@ function SetupChecklistInner({
                   </button>
                 )}
               </div>
+              {activeHint && (
+                <p className="text-xs text-[#808178] mt-3 text-center">{activeHint}</p>
+              )}
             </>
           )}
         </motion.div>

@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -249,9 +250,11 @@ export default function StudioPage() {
                 <h1 className="text-xl sm:text-2xl font-semibold text-neutral-950">
                   {t('studio.page_title')}
                 </h1>
-                <p className="text-sm text-neutral-600 mt-1">
-                  {t('studio.page_subtitle')}
-                </p>
+                {!showChecklist && (
+                  <p className="text-sm text-neutral-600 mt-1">
+                    {t('studio.page_subtitle')}
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -301,11 +304,16 @@ export default function StudioPage() {
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto">
-            <div className="px-4 pt-4 pb-6 sm:px-6 sm:pt-6">
+            <div className="px-4 pt-6 pb-10 sm:px-6 sm:pt-8">
 
               {/* ── Instructions Section ── */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+              >
               <div className="flex items-center gap-2 mb-2">
-                <h2 className="text-sm font-medium text-neutral-500">
+                <h2 className="text-base font-semibold text-neutral-700">
                   {t('studio.instructions_section_title', 'Instructions')}
                 </h2>
                 <button onClick={() => setSectionInfo('instructions')} className="hidden sm:inline-flex text-neutral-300 hover:text-neutral-500 transition-colors">
@@ -315,10 +323,16 @@ export default function StudioPage() {
 
               {/* Main Instruction Card */}
               <MainInstructionCard />
+              </motion.div>
 
               {/* ── Knowledge Section ── */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.08, ease: [0.25, 0.1, 0.25, 1] }}
+              >
               <div className="flex items-center gap-2 mt-8 mb-2">
-                <h2 className="text-sm font-medium text-neutral-500">
+                <h2 className="text-base font-semibold text-neutral-700">
                   {t('studio.knowledge_section_title', 'Knowledge')}
                 </h2>
                 <button onClick={() => setSectionInfo('knowledge')} className="hidden sm:inline-flex text-neutral-300 hover:text-neutral-500 transition-colors">
@@ -331,10 +345,10 @@ export default function StudioPage() {
               {isLoadingKBs ? (
                 <div className="space-y-2">
                   {[0, 1].map((i) => (
-                    <div key={i} className="bg-white rounded-lg border border-neutral-200 animate-pulse">
-                      <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
-                        <div className="w-5 h-5 rounded bg-neutral-200 flex-shrink-0" />
-                        <div className="flex-1 h-4 rounded bg-neutral-200" style={{ maxWidth: i === 0 ? '60%' : '45%' }} />
+                    <div key={i} className="bg-white rounded-xl border border-neutral-100 overflow-hidden">
+                      <div className="flex items-center gap-3 p-4">
+                        <div className="w-5 h-5 rounded bg-neutral-100 flex-shrink-0 shimmer-element" />
+                        <div className="flex-1 h-4 rounded bg-neutral-100 shimmer-element" style={{ maxWidth: i === 0 ? '60%' : '45%' }} />
                       </div>
                     </div>
                   ))}
@@ -395,12 +409,17 @@ export default function StudioPage() {
                 />
               ))}
               </div>
+              </motion.div>
 
               {/* ── Attachments Section (hidden when no knowledge bases yet) ── */}
               {(knowledgeBases && knowledgeBases.length > 0) || (attachments && attachments.length > 0) ? (
-                <>
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.16, ease: [0.25, 0.1, 0.25, 1] }}
+                >
                   <div className="flex items-center gap-2 mt-8 mb-2">
-                    <h2 className="text-sm font-medium text-neutral-500">
+                    <h2 className="text-base font-semibold text-neutral-700">
                       {t('studio.attachments_section_title', 'Attachments')}
                     </h2>
                     <button onClick={() => setSectionInfo('attachments')} className="hidden sm:inline-flex text-neutral-300 hover:text-neutral-500 transition-colors">
@@ -449,7 +468,7 @@ export default function StudioPage() {
                     </div>
                   )}
                   </div>
-                </>
+                </motion.div>
               ) : null}
 
             </div>

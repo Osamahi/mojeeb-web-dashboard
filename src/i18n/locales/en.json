@@ -1956,7 +1956,7 @@
     "step_create_done": "Done",
     "step_knowledge": "Knowledge",
     "step_knowledge_description": "Help your agent answer questions",
-    "step_knowledge_action": "Add Now",
+    "step_knowledge_action": "Add Knowledge",
     "step_test": "Test",
     "step_test_description": "See how your agent responds",
     "step_test_locked": "Add knowledge first",
