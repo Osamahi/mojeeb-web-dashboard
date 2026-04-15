@@ -14,9 +14,10 @@ interface TestChatPanelProps {
   agentId: string;
   isOpen: boolean;
   onClose: () => void;
+  onFirstMessageSent?: () => void;
 }
 
-export default function TestChatPanel({ agentId, isOpen, onClose }: TestChatPanelProps) {
+export default function TestChatPanel({ agentId, isOpen, onClose, onFirstMessageSent }: TestChatPanelProps) {
   const { t } = useTranslation();
 
   // Close panel on Escape key
@@ -88,7 +89,7 @@ export default function TestChatPanel({ agentId, isOpen, onClose }: TestChatPane
 
         {/* Chat Content - Full height minus header */}
         <div className="h-[calc(100%-57px)] pb-4">
-          <TestChat agentId={agentId} />
+          <TestChat agentId={agentId} onFirstMessageSent={onFirstMessageSent} />
         </div>
       </div>
     </>

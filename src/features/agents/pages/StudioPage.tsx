@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Plus, MessageSquare, Bell, MoreVertical, Paperclip, BookOpen, ScrollText, Info } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -61,6 +61,7 @@ export default function StudioPage() {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_studio');
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const setShowUpgradeWizard = useUIStore((s) => s.setShowUpgradeWizard);
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
   const isDesktop = useIsDesktop();
@@ -477,7 +478,10 @@ export default function StudioPage() {
 
         {/* Right Column - Test Chat (Desktop only - Hidden on mobile) */}
         <div className="hidden lg:flex flex-col bg-white overflow-hidden">
-          <TestChat agentId={agentId} />
+          <TestChat
+            agentId={agentId}
+            onFirstMessageSent={() => queryClient.invalidateQueries({ queryKey: ['hasConversations', agentId] })}
+          />
         </div>
       </div>
 
@@ -505,6 +509,7 @@ export default function StudioPage() {
         agentId={agentId}
         isOpen={isChatPanelOpen}
         onClose={() => setIsChatPanelOpen(false)}
+        onFirstMessageSent={() => queryClient.invalidateQueries({ queryKey: ['hasConversations', agentId] })}
       />
 
       {/* Add Knowledge Base Modal */}

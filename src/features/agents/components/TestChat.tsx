@@ -9,7 +9,7 @@
  * - TestChat: Pure configuration (~20 lines of actual logic)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -27,9 +27,10 @@ import {
 
 interface TestChatProps {
   agentId: string;
+  onFirstMessageSent?: () => void;
 }
 
-export default function TestChat({ agentId }: TestChatProps) {
+export default function TestChat({ agentId, onFirstMessageSent }: TestChatProps) {
   const { t } = useTranslation();
 
   // Get authenticated user for customer name
@@ -43,6 +44,9 @@ export default function TestChat({ agentId }: TestChatProps) {
     t('test_chat.tip_3'),
     t('test_chat.tip_4'),
   ];
+
+  // Track first message notification (fire once per mount)
+  const hasNotifiedFirstMessage = useRef(false);
 
   // State
   const [conversation, setConversation] = useState<StudioConversation | null>(null);
@@ -85,6 +89,12 @@ export default function TestChat({ agentId }: TestChatProps) {
 
       // Track first test chat for funnel
       analytics.track('first_test_chat', {});
+
+      // Notify parent once after first message sent
+      if (!hasNotifiedFirstMessage.current) {
+        hasNotifiedFirstMessage.current = true;
+        onFirstMessageSent?.();
+      }
 
       // Transform to ChatMessage format
       return {
