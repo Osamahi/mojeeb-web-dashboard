@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus, MessageSquare, Bell, MoreVertical, Paperclip, BookOpen } from 'lucide-react';
+import { Plus, MessageSquare, Bell, MoreVertical, Paperclip, BookOpen, ScrollText, Info } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
@@ -33,6 +33,7 @@ import FollowUpSettingsModal from '../components/FollowUpSettingsModal';
 import TestChat from '../components/TestChat';
 import TestChatPanel from '../components/TestChatPanel';
 import { SetupChecklist } from '../components/SetupChecklist';
+import { SectionInfoModal } from '../components/SectionInfoModal';
 import TestGateBottomSheet from '../components/TestGateBottomSheet';
 import { useAgentAttachments } from '@/features/attachments/hooks/useAgentAttachments';
 import AttachmentItem from '@/features/attachments/components/AttachmentItem';
@@ -68,6 +69,7 @@ export default function StudioPage() {
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
   const [isTestGateOpen, setIsTestGateOpen] = useState(false);
   const [activeUploadJobs, setActiveUploadJobs] = useState<string[]>([]);
+  const [sectionInfo, setSectionInfo] = useState<'instructions' | 'knowledge' | 'attachments' | null>(null);
 
   // Fetch agent data
   const {
@@ -256,52 +258,61 @@ export default function StudioPage() {
             </div>
           )}
 
-          {/* Header Section + More menu — hidden during setup, shown after */}
-          {!showChecklist && (
-            <div className="px-4 pt-4 sm:px-6 sm:pt-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-semibold text-neutral-950">
-                    {t('studio.page_title')}
-                  </h1>
-                  <p className="text-sm text-neutral-600 mt-1">
-                    {t('studio.page_subtitle')}
-                  </p>
-                </div>
+          {/* Header Section + More menu */}
+          <div className="px-4 pt-4 sm:px-6 sm:pt-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-semibold text-neutral-950">
+                  {t('studio.page_title')}
+                </h1>
+                <p className="text-sm text-neutral-600 mt-1">
+                  {t('studio.page_subtitle')}
+                </p>
+              </div>
 
-                <div className="flex items-center gap-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger>
-                      <button
-                        className="w-10 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center justify-center"
-                        title={t('common.more')}
-                      >
-                        <MoreVertical className="w-5 h-5 text-neutral-700" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuItem onClick={() => setIsAddKBModalOpen(true)}>
-                        <Plus className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
-                        <span>{t('studio.add_knowledge')}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setIsAddAttachmentModalOpen(true)}>
-                        <Paperclip className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
-                        <span>{t('studio.add_attachment', 'Add Attachment')}</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setIsFollowUpModalOpen(true)}>
-                        <Bell className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
-                        <span>{t('studio.automated_follow_ups')}</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <button
+                      className="w-10 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center justify-center"
+                      title={t('common.more')}
+                    >
+                      <MoreVertical className="w-5 h-5 text-neutral-700" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => setIsAddKBModalOpen(true)}>
+                      <Plus className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+                      <span>{t('studio.add_knowledge')}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsAddAttachmentModalOpen(true)}>
+                      <Paperclip className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+                      <span>{t('studio.add_attachment', 'Add Attachment')}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsFollowUpModalOpen(true)}>
+                      <Bell className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+                      <span>{t('studio.automated_follow_ups')}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto">
             <div className="px-4 py-4 sm:px-6 sm:py-6 pb-6 space-y-3 sm:space-y-4">
+              {/* ── Instructions Section ── */}
+              <div className="flex items-center gap-2">
+                <ScrollText className="w-4 h-4 text-neutral-400" />
+                <h2 className="text-sm font-medium text-neutral-500">
+                  {t('studio.instructions_section_title', 'Instructions')}
+                </h2>
+                <button onClick={() => setSectionInfo('instructions')} className="text-neutral-300 hover:text-neutral-500 transition-colors">
+                  <Info className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
               {/* Main Instruction Card */}
               <MainInstructionCard />
 
@@ -311,9 +322,9 @@ export default function StudioPage() {
                 <h2 className="text-sm font-medium text-neutral-500">
                   {t('studio.knowledge_section_title', 'Knowledge')}
                 </h2>
-                {knowledgeBases && knowledgeBases.length > 0 && (
-                  <span className="text-xs text-neutral-400">({knowledgeBases.length})</span>
-                )}
+                <button onClick={() => setSectionInfo('knowledge')} className="text-neutral-300 hover:text-neutral-500 transition-colors">
+                  <Info className="w-3.5 h-3.5" />
+                </button>
               </div>
 
               {/* Knowledge Base Cards */}
@@ -338,24 +349,35 @@ export default function StudioPage() {
                       onUpdate={() => refetchKBs()}
                     />
                   ))}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setIsAddKBModalOpen(true)}
+                    className="w-full"
+                  >
+                    <Plus className="w-3.5 h-3.5 me-1.5" />
+                    {t('studio.add_knowledge')}
+                  </Button>
                 </>
               ) : (
-                <button
-                  onClick={() => setIsAddKBModalOpen(true)}
-                  className="w-full rounded-lg border border-dashed border-neutral-300 hover:border-neutral-400 bg-white hover:bg-neutral-50/50 transition-all duration-200 cursor-pointer group/empty"
-                >
-                  <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
-                    <Plus className="w-5 h-5 text-neutral-300 group-hover/empty:text-brand-mojeeb transition-colors flex-shrink-0" />
-                    <div className="text-start min-w-0">
-                      <span className="text-base font-semibold text-neutral-400 group-hover/empty:text-neutral-600 transition-colors block">
-                        {t('studio.add_knowledge')}
-                      </span>
-                      <span className="text-xs text-neutral-400 block mt-0.5">
-                        {t('studio.empty_knowledge_subtitle', 'Your agent uses this to answer questions')}
-                      </span>
-                    </div>
-                  </div>
-                </button>
+                <div className="rounded-lg bg-neutral-50/80 border border-neutral-200 py-8 flex flex-col items-center text-center">
+                  <BookOpen className="w-7 h-7 text-neutral-300 mb-3" />
+                  <p className="text-sm font-medium text-neutral-900">
+                    {t('studio.empty_knowledge_title', 'Add your first knowledge source')}
+                  </p>
+                  <p className="text-xs text-neutral-500 mt-1">
+                    {t('studio.empty_knowledge_subtitle', 'Your agent uses this to answer questions')}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setIsAddKBModalOpen(true)}
+                    className="mt-4"
+                  >
+                    <Plus className="w-3.5 h-3.5 me-1.5" />
+                    {t('studio.add_knowledge')}
+                  </Button>
+                </div>
               )}
 
               {/* Active Document Processing Jobs (persists across reloads + optimistic) */}
@@ -383,36 +405,49 @@ export default function StudioPage() {
                     <h2 className="text-sm font-medium text-neutral-500">
                       {t('studio.attachments_section_title', 'Attachments')}
                     </h2>
-                    {attachments && attachments.length > 0 && (
-                      <span className="text-xs text-neutral-400">({attachments.length})</span>
-                    )}
+                    <button onClick={() => setSectionInfo('attachments')} className="text-neutral-300 hover:text-neutral-500 transition-colors">
+                      <Info className="w-3.5 h-3.5" />
+                    </button>
                   </div>
 
                   {attachments && attachments.length > 0 ? (
-                    attachments.map((attachment) => (
-                      <AttachmentItem
-                        key={attachment.id}
-                        attachment={attachment}
-                        onUpdate={() => refetchAttachments()}
-                      />
-                    ))
+                    <>
+                      {attachments.map((attachment) => (
+                        <AttachmentItem
+                          key={attachment.id}
+                          attachment={attachment}
+                          onUpdate={() => refetchAttachments()}
+                        />
+                      ))}
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setIsAddAttachmentModalOpen(true)}
+                        className="w-full"
+                      >
+                        <Plus className="w-3.5 h-3.5 me-1.5" />
+                        {t('studio.add_attachment', 'Add Attachment')}
+                      </Button>
+                    </>
                   ) : (
-                    <button
-                      onClick={() => setIsAddAttachmentModalOpen(true)}
-                      className="w-full rounded-lg border border-dashed border-neutral-300 hover:border-neutral-400 bg-white hover:bg-neutral-50/50 transition-all duration-200 cursor-pointer group/empty"
-                    >
-                      <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
-                        <Plus className="w-5 h-5 text-neutral-300 group-hover/empty:text-brand-mojeeb transition-colors flex-shrink-0" />
-                        <div className="text-start min-w-0">
-                          <span className="text-base font-semibold text-neutral-400 group-hover/empty:text-neutral-600 transition-colors block">
-                            {t('studio.add_attachment', 'Add Attachment')}
-                          </span>
-                          <span className="text-xs text-neutral-400 block mt-0.5">
-                            {t('studio.empty_attachments_subtitle', 'Sent automatically based on your instructions')}
-                          </span>
-                        </div>
-                      </div>
-                    </button>
+                    <div className="rounded-lg bg-neutral-50/80 border border-neutral-200 py-8 flex flex-col items-center text-center">
+                      <Paperclip className="w-7 h-7 text-neutral-300 mb-3" />
+                      <p className="text-sm font-medium text-neutral-900">
+                        {t('studio.empty_attachments_title', 'Add your first attachment')}
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-1">
+                        {t('studio.empty_attachments_subtitle', 'Sent automatically based on your instructions')}
+                      </p>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setIsAddAttachmentModalOpen(true)}
+                        className="mt-4"
+                      >
+                        <Plus className="w-3.5 h-3.5 me-1.5" />
+                        {t('studio.add_attachment', 'Add Attachment')}
+                      </Button>
+                    </div>
                   )}
                 </>
               ) : null}
@@ -492,6 +527,26 @@ export default function StudioPage() {
         onClose={() => setIsTestGateOpen(false)}
         onAddKnowledge={() => setIsAddKBModalOpen(true)}
         onTestAnyway={handleTestAnyway}
+      />
+
+      {/* Section Info Modal */}
+      <SectionInfoModal
+        isOpen={sectionInfo === 'instructions'}
+        onClose={() => setSectionInfo(null)}
+        title={t('studio.instructions_section_title', 'Instructions')}
+        description={t('studio.instructions_info')}
+      />
+      <SectionInfoModal
+        isOpen={sectionInfo === 'knowledge'}
+        onClose={() => setSectionInfo(null)}
+        title={t('studio.knowledge_section_title', 'Knowledge')}
+        description={t('studio.knowledge_info')}
+      />
+      <SectionInfoModal
+        isOpen={sectionInfo === 'attachments'}
+        onClose={() => setSectionInfo(null)}
+        title={t('studio.attachments_section_title', 'Attachments')}
+        description={t('studio.attachments_info')}
       />
     </>
   );
