@@ -5,12 +5,14 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { MessageSquare, Users, ShoppingCart, CreditCard } from 'lucide-react';
+import { MessageSquare, Users, ShoppingCart, CreditCard, Lock, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { useCurrency } from '@/lib/currency';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
+import { PlanCode } from '@/features/subscriptions/types/subscription.types';
 import { useAvailableAddons, useCreateAddonCheckout } from '../hooks/useAddonPurchase';
 import type { AddonPlan, AddonType } from '../types/addon.types';
 
@@ -21,9 +23,20 @@ interface AddonMarketplaceModalProps {
 
 export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModalProps) {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const { data: addons, isLoading: loadingAddons } = useAvailableAddons();
     const checkoutMutation = useCreateAddonCheckout();
     const usage = useSubscriptionStore((state) => state.usage);
+    const subscription = useSubscriptionStore((state) => state.subscription);
+
+    // Block free-plan users from purchasing add-ons.
+    // Treat missing subscription as "free" too — add-ons require a real paid plan.
+    const isFreeUser = !subscription || subscription.planCode === PlanCode.Free;
+
+    const handleUpgradeClick = useCallback(() => {
+        onClose();
+        navigate('/my-subscription');
+    }, [navigate, onClose]);
 
     // Auto-detect currency using centralized service
     const { currency, symbol: currencySymbol } = useCurrency();
@@ -151,6 +164,34 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
             isLoading={checkoutMutation.isPending}
             closable={!checkoutMutation.isPending}
         >
+            {isFreeUser ? (
+                <div className="py-4">
+                    <div className="flex flex-col items-center text-center px-4 py-8">
+                        <div className="mb-4 inline-flex rounded-full bg-amber-100 p-4">
+                            <Lock className="h-8 w-8 text-amber-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+                            {t('addons.free_plan_blocked_title')}
+                        </h3>
+                        <p className="text-sm text-neutral-600 max-w-md mb-6">
+                            {t('addons.free_plan_blocked_message')}
+                        </p>
+                        <div className="flex gap-3">
+                            <Button type="button" variant="secondary" onClick={onClose}>
+                                {t('addons.cancel')}
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleUpgradeClick}
+                                className="bg-primary-600 text-white hover:bg-primary-700"
+                            >
+                                {t('addons.upgrade_plan_cta')}
+                                <ArrowRight className="h-4 w-4 ms-2" />
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            ) : (
             <div className="space-y-6">
                 {/* Current Usage */}
                 {usage && (
@@ -312,6 +353,7 @@ export function AddonMarketplaceModal({ isOpen, onClose }: AddonMarketplaceModal
                     </Button>
                 </div>
             </div>
+            )}
         </BaseModal>
     );
 }

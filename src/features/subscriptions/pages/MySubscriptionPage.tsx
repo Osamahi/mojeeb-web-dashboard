@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
-import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, CreditCard, Loader2, Pencil } from 'lucide-react';
+import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, CreditCard, Loader2, Pencil, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { PlanCode } from '../types/subscription.types';
 import { BaseHeader } from '@/components/ui/BaseHeader';
+import { BaseModal } from '@/components/ui/BaseModal';
+import { Button } from '@/components/ui/Button';
 import { PlanChangeWizard } from '../components/PlanChangeWizard';
 import { CancelSubscriptionModal } from '@/features/billing/components/CancelSubscriptionModal';
 import { useCreateBillingPortalMutation } from '@/features/billing/hooks/useCreateBillingPortalMutation';
@@ -74,6 +76,7 @@ export default function MySubscriptionPage() {
   const [showWizard, setShowWizard] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedAddon, setSelectedAddon] = useState<AddonPlan | null>(null);
+  const [showUpgradeRequiredModal, setShowUpgradeRequiredModal] = useState(false);
 
   // Add-ons data
   const { data: addons } = useAvailableAddons();
@@ -104,8 +107,14 @@ export default function MySubscriptionPage() {
   }, [billingPortalMutation]);
 
   const handleAddonClick = useCallback((addon: AddonPlan) => {
+    // Free-plan users can't purchase add-ons — prompt them to subscribe first.
+    // Treat missing subscription as "free" (no real paid plan).
+    if (!subscription || subscription.planCode === PlanCode.Free) {
+      setShowUpgradeRequiredModal(true);
+      return;
+    }
     setSelectedAddon(addon);
-  }, []);
+  }, [subscription]);
 
   const handleCheckout = useCallback(async (quantity: number) => {
     if (!selectedAddon) return;
@@ -536,6 +545,43 @@ export default function MySubscriptionPage() {
         addon={selectedAddon}
         onCheckout={handleCheckout}
       />
+
+      {/* Upgrade Required Modal — shown when free-plan user tries to buy an add-on */}
+      <BaseModal
+        isOpen={showUpgradeRequiredModal}
+        onClose={() => setShowUpgradeRequiredModal(false)}
+        title={t('addons.upgrade_required_title')}
+        maxWidth="md"
+      >
+        <div className="flex flex-col items-center text-center py-2">
+          <div className="mb-4 inline-flex rounded-full bg-amber-100 p-4">
+            <Lock className="h-8 w-8 text-amber-600" />
+          </div>
+          <p className="text-sm text-gray-600 mb-6">
+            {t('addons.upgrade_required_message')}
+          </p>
+          <div className="flex flex-col gap-2 w-full">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => {
+                setShowUpgradeRequiredModal(false);
+                setShowWizard(true);
+              }}
+            >
+              <Rocket className="h-4 w-4 me-2" />
+              {t('addons.upgrade_plan_cta')}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowUpgradeRequiredModal(false)}
+            >
+              {t('addons.cancel')}
+            </Button>
+          </div>
+        </div>
+      </BaseModal>
     </div>
   );
 }
