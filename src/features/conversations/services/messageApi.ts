@@ -7,51 +7,52 @@ import { logger } from '@/lib/logger';
  */
 export interface GetMessagesParams {
   conversationId: string;
-  offset?: number;
+  /** Base64-encoded cursor from the previous page. Omit for the first page. */
+  cursor?: string | null;
+  /** Page size (default 50, max 100) */
   limit?: number;
 }
 
 /**
- * Paginated response from backend
+ * Cursor-paginated response from GET /api/v2/messages.
+ * Matches the shared cursor-pagination convention used by all other modules
+ * (conversations, leads, actions, etc.).
  */
-interface PaginatedMessagesResponse {
+export interface CursorPaginatedMessagesResponse {
   items: ChatMessage[];
-  total: number;
-  offset: number;
-  limit: number;
-  hasMore: boolean;
+  next_cursor: string | null;
+  has_more: boolean;
 }
 
 /**
- * Fetches messages for a conversation with offset-based pagination
- * Calls GET /api/v2/messages endpoint (CQRS Query pattern)
+ * Fetches a page of messages for a conversation using cursor-based pagination.
+ * Calls GET /api/v2/messages (CQRS Query pattern).
  *
- * @param params - Query parameters including conversationId, offset, and limit
- * @returns Array of ChatMessage objects
+ * The returned items are in ASCENDING chronological order (oldest first).
+ * For "load more" on scroll-to-top, pass the `next_cursor` from the previous
+ * response — the next page will contain messages strictly older than the cursor,
+ * still in ascending order, ready to be prepended to the existing list.
  */
 export async function getMessages(
   params: GetMessagesParams
-): Promise<ChatMessage[]> {
+): Promise<CursorPaginatedMessagesResponse> {
   try {
     const queryParams = new URLSearchParams();
     queryParams.append('conversationId', params.conversationId);
 
-    if (params.offset !== undefined) {
-      queryParams.append('offset', params.offset.toString());
+    if (params.cursor) {
+      queryParams.append('cursor', params.cursor);
     }
     if (params.limit !== undefined) {
       queryParams.append('limit', params.limit.toString());
     }
 
     const url = `/api/v2/messages?${queryParams.toString()}`;
-    const response = await api.get<PaginatedMessagesResponse>(url);
+    const response = await api.get<CursorPaginatedMessagesResponse>(url);
 
     // Transform media_attachments → attachments (backend sends snake_case: media_attachments)
     const transformedItems = response.data.items.map((msg: any) => {
-      // If backend sent media_attachments, map it to attachments
       if (msg.media_attachments && !msg.attachments) {
-        // Backend sends: [{type: "image", url: "..."}, {type: "audio", url: "..."}]
-        // Frontend expects: {images: [{url: "..."}], audio: [{url: "..."}], files: [{url: "..."}]}
         let attachments = msg.media_attachments;
 
         // If media_attachments is an array, transform to grouped object structure
@@ -65,16 +66,17 @@ export async function getMessages(
 
         return {
           ...msg,
-          attachments: attachments,
+          attachments,
         };
       }
       return msg;
     });
 
-    // Replace original items with transformed items
-    response.data.items = transformedItems as any;
-
-    return response.data.items;
+    return {
+      items: transformedItems as ChatMessage[],
+      next_cursor: response.data.next_cursor ?? null,
+      has_more: response.data.has_more ?? false,
+    };
   } catch (error) {
     logger.error('[messageApi]', 'getMessages() failed', {
       conversationId: params.conversationId,

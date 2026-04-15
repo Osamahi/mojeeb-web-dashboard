@@ -1,7 +1,7 @@
 /**
  * Chat Store - Zustand
- * Manages chat message history and pagination
- * Real-time subscriptions handled by useChatEngine hook
+ * Manages chat message history and cursor-based pagination.
+ * Real-time subscriptions handled by useChatEngine hook.
  */
 
 import { create } from 'zustand';
@@ -18,6 +18,8 @@ interface ChatStore {
   currentConversationId: string | null;
   isLoading: boolean;
   hasMore: boolean;
+  /** Base64 cursor pointing at the OLDEST message currently in `messages`. Used by loadMore. */
+  nextCursor: string | null;
   error: string | null;
 
   // Actions
@@ -39,11 +41,14 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   currentConversationId: null,
   isLoading: false,
   hasMore: true,
+  nextCursor: null,
   error: null,
 
-  // Fetch Messages (for pagination/history only - real-time handled by useChatEngine)
+  // Fetch messages — first page on conversation open, or older page on loadMore.
+  // `refresh = true` resets the page and fetches the newest messages.
+  // `refresh = false` uses the stored nextCursor to fetch the next older page.
   fetchMessages: async (conversationId: string, refresh = false) => {
-    const { messages, isLoading, hasMore, currentConversationId } = get();
+    const { isLoading, hasMore, currentConversationId, nextCursor } = get();
 
     // Don't fetch if already loading or no more data (unless refreshing)
     if (isLoading || (!refresh && !hasMore && currentConversationId === conversationId)) {
@@ -56,6 +61,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set({
         messages: [],
         hasMore: true,
+        nextCursor: null,
         currentConversationId: conversationId,
         isLoading: true,
         error: null,
@@ -65,21 +71,34 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
 
     try {
-      const offset = refresh ? 0 : messages.length;
-      const data = await getMessages({ conversationId, offset, limit: CHAT_PAGINATION.PAGE_SIZE });
+      // For a refresh (or first load), no cursor → backend returns newest page.
+      // For loadMore, use the stored cursor → backend returns the next older page.
+      const cursor = refresh ? null : nextCursor;
 
-      // If refreshing, replace all. Otherwise, prepend older messages
-      const newMessages = refresh ? data : [...data, ...messages];
+      const response = await getMessages({
+        conversationId,
+        cursor,
+        limit: CHAT_PAGINATION.PAGE_SIZE,
+      });
+
+      // Response items are already in ascending chronological order.
+      // On refresh, replace. On loadMore, prepend older messages.
+      const { messages: currentMessages } = get();
+      const newMessages = refresh
+        ? response.items
+        : [...response.items, ...currentMessages];
 
       set({
         messages: newMessages,
-        hasMore: data.length === CHAT_PAGINATION.PAGE_SIZE,
+        hasMore: response.has_more,
+        nextCursor: response.next_cursor,
         isLoading: false,
         currentConversationId: conversationId,
       });
     } catch (error: CatchError) {
       logger.error('[chatStore]', 'fetchMessages() error', {
         conversationId,
+        refresh,
         error: error instanceof Error ? error.message : String(error),
       });
 
@@ -87,17 +106,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       handleMessageFetchError(error, {
         component: 'chatStore',
         conversationId,
-        offset: refresh ? 0 : messages.length,
       });
 
       set({
         error: 'Failed to load messages',
-        isLoading: false
+        isLoading: false,
       });
     }
   },
 
-  // Load More (older messages)
+  // Load More (older messages) — uses the stored nextCursor
   loadMore: async (conversationId: string) => {
     await get().fetchMessages(conversationId, false);
   },
@@ -115,6 +133,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       currentConversationId: null,
       isLoading: false,
       hasMore: true,
+      nextCursor: null,
       error: null,
     });
   },
