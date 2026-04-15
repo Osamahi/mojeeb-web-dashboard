@@ -1,6 +1,8 @@
 /**
  * Onboarding Wizard - Main Page
- * 4-step wizard to guide new users through creating their first agent
+ * 3-step wizard to guide new users through creating their first agent
+ * Steps: Name → Purpose → Success (agent created)
+ * Knowledge base is handled by the Setup Checklist in Studio
  */
 
 import { useEffect, useState } from 'react';
@@ -12,7 +14,6 @@ import { OnboardingStep } from '../types/onboarding.types';
 import { OnboardingProgress } from '../components/OnboardingProgress';
 import { StepName } from '../components/StepName';
 import { StepPurpose } from '../components/StepPurpose';
-import { StepKnowledge } from '../components/StepKnowledge';
 import { StepSuccess } from '../components/StepSuccess';
 import { ExitIntentModal } from '../components/ExitIntentModal';
 import { SimpleConfirmModal } from '../components/SimpleConfirmModal';
@@ -75,7 +76,7 @@ export const OnboardingWizard = () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [currentStep]); // Removed previousStep - not used in effect
+  }, [currentStep]);
 
   const handleStepComplete = () => {
     // Track funnel step completion before advancing
@@ -83,11 +84,9 @@ export const OnboardingWizard = () => {
       track('onboarding_step1_completed', { agentName: data.agentName });
     } else if (currentStep === OnboardingStep.Purpose) {
       track('onboarding_step2_completed', { purposeCount: data.selectedPurposes.length });
-    } else if (currentStep === OnboardingStep.Knowledge) {
-      track('onboarding_step3_completed', { hasKnowledge: !!data.knowledgeContent });
     }
 
-    // All steps just advance to next - agent creation happens in Success step
+    // Advance to next step — agent creation happens in Success step
     nextStep();
   };
 
@@ -98,7 +97,7 @@ export const OnboardingWizard = () => {
     // This ensures DashboardLayout gets fresh agents list including newly created agent
     queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
 
-    // Navigate to Studio page where user can test their new agent
+    // Navigate to Studio page where Setup Checklist guides next steps
     navigate('/studio');
 
     // Reset store state after navigation completes
@@ -139,20 +138,12 @@ export const OnboardingWizard = () => {
       case OnboardingStep.Purpose:
         return <StepPurpose />;
 
-      case OnboardingStep.Knowledge:
-        return (
-          <StepKnowledge
-            onNext={handleStepComplete}
-          />
-        );
-
       case OnboardingStep.Success:
         return (
           <StepSuccess
             onReadyChange={setIsSuccessReady}
             agentName={data.agentName}
             selectedPurposes={data.selectedPurposes}
-            knowledgeContent={data.knowledgeContent}
           />
         );
 
@@ -161,15 +152,13 @@ export const OnboardingWizard = () => {
     }
   };
 
-  // Check if current step can proceed (will be determined by each step component)
+  // Check if current step can proceed
   const canProceed = (() => {
     switch (currentStep) {
       case OnboardingStep.Name:
         return data.agentName.trim().length >= VALIDATION_RULES.AGENT_NAME_MIN_LENGTH;
       case OnboardingStep.Purpose:
         return data.selectedPurposes.length > 0;
-      case OnboardingStep.Knowledge:
-        return true; // Knowledge is optional
       default:
         return false;
     }
@@ -199,9 +188,9 @@ export const OnboardingWizard = () => {
         }
       />
 
-      {/* Progress Bar - Below header */}
+      {/* Progress Bar - Below header, hidden on Success step */}
       {currentStep < OnboardingStep.Success && (
-        <OnboardingProgress currentStep={currentStep} totalSteps={4} />
+        <OnboardingProgress currentStep={currentStep} totalSteps={3} />
       )}
 
       {/* Main Content - Mobile-first left-aligned */}

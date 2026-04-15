@@ -6,8 +6,7 @@
 export enum OnboardingStep {
   Name = 0,
   Purpose = 1,
-  Knowledge = 2,
-  Success = 3,
+  Success = 2,
 }
 
 export interface AgentPurpose {
@@ -22,7 +21,6 @@ export interface AgentPurpose {
 export interface OnboardingData {
   agentName: string;
   selectedPurposes: AgentPurpose[];
-  knowledgeContent: string;
   createdAgentId: string | null;
 }
 

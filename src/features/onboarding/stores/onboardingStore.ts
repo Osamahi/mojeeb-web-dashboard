@@ -20,7 +20,6 @@ interface OnboardingState {
   setAgentName: (name: string) => void;
   setSelectedPurposes: (purposes: AgentPurpose[]) => void;
   togglePurpose: (purpose: AgentPurpose) => void;
-  setKnowledgeContent: (content: string) => void;
   setCreatedAgentId: (id: string) => void;
   completeOnboarding: () => void;
   resetOnboardingState: () => void;
@@ -30,7 +29,6 @@ interface OnboardingState {
 const initialData: OnboardingData = {
   agentName: '',
   selectedPurposes: [],
-  knowledgeContent: '',
   createdAgentId: null,
 };
 
@@ -74,11 +72,6 @@ export const useOnboardingStore = create<OnboardingState>()(
             data: { ...state.data, selectedPurposes: newPurposes },
           };
         }),
-
-      setKnowledgeContent: (content) =>
-        set((state) => ({
-          data: { ...state.data, knowledgeContent: content },
-        })),
 
       setCreatedAgentId: (id) =>
         set((state) => ({

@@ -1,7 +1,7 @@
 /**
  * Onboarding Agent Creation Mutation
- * React Query mutation for creating agent and knowledge base during onboarding
- * Prevents double creation issues with StrictMode
+ * React Query mutation for creating agent during onboarding
+ * Knowledge base is handled separately via the Setup Checklist in Studio
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,31 +11,20 @@ import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { queryKeys } from '@/lib/queryKeys';
 import { logger } from '@/lib/logger';
 import type { AgentPurpose } from '../types/onboarding.types';
-import type { Agent, KnowledgeBase } from '@/features/agents/types/agent.types';
+import type { Agent } from '@/features/agents/types/agent.types';
 
 interface CreateOnboardingAgentParams {
   name: string;
   selectedPurposes: AgentPurpose[];
-  knowledgeContent: string;
 }
 
 interface CreateOnboardingAgentResult {
   agent: Agent;
-  knowledgeBase: KnowledgeBase | null;
 }
-
-type OnboardingProgressPhase =
-  | 'creating-agent'
-  | 'agent-created'
-  | 'creating-knowledge'
-  | 'knowledge-created'
-  | 'knowledge-skipped'
-  | 'knowledge-failed';
 
 interface UseOnboardingAgentMutationOptions {
   onSuccess?: (data: CreateOnboardingAgentResult) => void;
   onError?: (error: Error) => void;
-  onProgress?: (phase: OnboardingProgressPhase) => void;
 }
 
 export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationOptions) => {
@@ -47,7 +36,7 @@ export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationO
     mutationFn: async (params: CreateOnboardingAgentParams) => {
       logger.info('🚀 Creating agent', { agentName: params.name });
 
-      // Step 1: Create agent
+      // Create agent with combined persona prompt
       const personaPrompt = params.selectedPurposes
         .map((purpose) => purpose.prompt)
         .join('\n\n');
@@ -59,46 +48,11 @@ export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationO
 
       logger.info('✅ Agent created', { agentId: agent.id });
 
-      // ✅ Report progress: Agent created
-      options?.onProgress?.('agent-created');
-
-      // Step 2: Add to store and select globally
+      // Add to store and select globally
       addAgent(agent);
       setGlobalSelectedAgent(agent);
 
-      // Step 3: Create knowledge base if content exists
-      let knowledgeBase: KnowledgeBase | null = null;
-      if (params.knowledgeContent.trim()) {
-        logger.info('📚 Creating knowledge base', { agentId: agent.id });
-
-        // ✅ Report progress: Starting KB creation
-        options?.onProgress?.('creating-knowledge');
-
-        try {
-          knowledgeBase = await agentService.createKnowledgeBase(agent.id, {
-            name: `${params.name} Knowledge Base`,
-            content: params.knowledgeContent,
-          });
-
-          logger.info('✅ Knowledge base created and linked', { knowledgeBaseId: knowledgeBase.id });
-
-          // ✅ Report progress: KB created successfully
-          options?.onProgress?.('knowledge-created');
-        } catch (kbError) {
-          logger.error('❌ Knowledge base creation failed', kbError instanceof Error ? kbError : new Error(String(kbError)));
-
-          // ✅ Report progress: KB creation failed
-          options?.onProgress?.('knowledge-failed');
-
-          // Don't fail the whole mutation - agent was created successfully
-          toast.warning('Agent created, but knowledge base failed. You can add it later.');
-        }
-      } else {
-        // ✅ Report progress: KB skipped (no content)
-        options?.onProgress?.('knowledge-skipped');
-      }
-
-      return { agent, knowledgeBase };
+      return { agent };
     },
     onSuccess: (data) => {
       // Invalidate queries so dashboard has fresh data
