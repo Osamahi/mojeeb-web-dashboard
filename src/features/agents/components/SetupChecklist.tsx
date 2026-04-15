@@ -57,7 +57,7 @@ function SetupChecklistInner({
         }}
       >
         <div className="h-[2px] bg-[#D8D8D0]/50" />
-        <div className="px-6 pt-5 pb-4 animate-pulse">
+        <div className="px-6 pt-6 pb-5 animate-pulse">
           <div className="flex items-start">
             {[0, 1, 2, 3].map((i) => (
               <Fragment key={i}>
@@ -138,7 +138,7 @@ function SetupChecklistInner({
         transition={{ duration: 0.5, ease: 'easeOut' }}
       />
 
-      <div className="px-6 pt-5 pb-4">
+      <div className="px-6 pt-6 pb-5">
         {/* Stepper row */}
         <div className="flex items-start">
           {statuses.map((status, i) => {

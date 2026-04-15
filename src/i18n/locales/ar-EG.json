@@ -870,7 +870,7 @@
     "main_instructions_title": "التعليمات الرئيسية",
     "main_instructions_edit_label": "تعديل التعليمات الرئيسية",
     "main_instructions_delete_disabled": "لا يمكن حذف التعليمات الرئيسية",
-    "agent_name_label": "اسم الوكيل",
+    "agent_name_label": "الاسم",
     "instructions_label": "التعليمات",
     "untitled_agent": "وكيل بدون عنوان",
     "save_success": "تم حفظ قاعدة المعرفة بنجاح",

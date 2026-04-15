@@ -872,7 +872,7 @@
     "main_instructions_title": "Main Instructions",
     "main_instructions_edit_label": "Edit main instructions",
     "main_instructions_delete_disabled": "Main Instructions cannot be deleted",
-    "agent_name_label": "Agent Name",
+    "agent_name_label": "Name",
     "instructions_label": "Instructions",
     "untitled_agent": "Untitled Agent",
     "save_success": "Knowledge base saved successfully",

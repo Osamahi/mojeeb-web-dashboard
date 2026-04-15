@@ -242,7 +242,7 @@ export default function StudioPage() {
       )}>
         {/* Left Column - Knowledge Sections (Full width on mobile, 2/3 on desktop) */}
         <div className="flex flex-col overflow-hidden lg:border-r border-neutral-200">
-          {/* Header Section + More menu */}
+          {/* Header Section + More menu (hidden during setup) */}
           <div className="px-4 pt-4 sm:px-6 sm:pt-6">
             <div className="flex items-start justify-between">
               <div>
@@ -283,9 +283,9 @@ export default function StudioPage() {
             </div>
           </div>
 
-          {/* Setup Checklist — below header */}
+          {/* Setup Checklist — below header with breathing room */}
           {showChecklist && (
-            <div className="px-4 pt-3 sm:px-6 sm:pt-4">
+            <div className="px-4 pt-4 sm:px-6 sm:pt-5">
               <SetupChecklist
                 isLoading={isChecklistLoading}
                 hasKnowledge={hasKnowledge}
@@ -301,14 +301,14 @@ export default function StudioPage() {
 
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto">
-            <div className="px-4 py-4 sm:px-6 sm:py-6 pb-6 space-y-3 sm:space-y-4">
+            <div className="px-4 pt-4 pb-6 sm:px-6 sm:pt-6">
+
               {/* ── Instructions Section ── */}
-              <div className="flex items-center gap-2">
-                <ScrollText className="w-4 h-4 text-neutral-400" />
+              <div className="flex items-center gap-2 mb-2">
                 <h2 className="text-sm font-medium text-neutral-500">
                   {t('studio.instructions_section_title', 'Instructions')}
                 </h2>
-                <button onClick={() => setSectionInfo('instructions')} className="text-neutral-300 hover:text-neutral-500 transition-colors">
+                <button onClick={() => setSectionInfo('instructions')} className="hidden sm:inline-flex text-neutral-300 hover:text-neutral-500 transition-colors">
                   <Info className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -317,19 +317,19 @@ export default function StudioPage() {
               <MainInstructionCard />
 
               {/* ── Knowledge Section ── */}
-              <div className="flex items-center gap-2 pt-4 mt-2">
-                <BookOpen className="w-4 h-4 text-neutral-400" />
+              <div className="flex items-center gap-2 mt-8 mb-2">
                 <h2 className="text-sm font-medium text-neutral-500">
                   {t('studio.knowledge_section_title', 'Knowledge')}
                 </h2>
-                <button onClick={() => setSectionInfo('knowledge')} className="text-neutral-300 hover:text-neutral-500 transition-colors">
+                <button onClick={() => setSectionInfo('knowledge')} className="hidden sm:inline-flex text-neutral-300 hover:text-neutral-500 transition-colors">
                   <Info className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               {/* Knowledge Base Cards */}
+              <div className="space-y-2">
               {isLoadingKBs ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {[0, 1].map((i) => (
                     <div key={i} className="bg-white rounded-lg border border-neutral-200 animate-pulse">
                       <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4">
@@ -365,7 +365,7 @@ export default function StudioPage() {
                   <p className="text-sm font-medium text-neutral-900">
                     {t('studio.empty_knowledge_title', 'Add your first knowledge source')}
                   </p>
-                  <p className="text-xs text-neutral-500 mt-1">
+                  <p className="text-xs text-neutral-500 mt-1 px-4">
                     {t('studio.empty_knowledge_subtitle', 'Your agent uses this to answer questions')}
                   </p>
                   <Button
@@ -387,29 +387,28 @@ export default function StudioPage() {
                   jobId={jobId}
                   onComplete={() => {
                     refetchKBs();
-                    // Remove from optimistic state when complete
                     setActiveUploadJobs(prev => prev.filter(id => id !== jobId));
                   }}
                   onError={() => {
-                    // Remove from optimistic state on error too
                     setActiveUploadJobs(prev => prev.filter(id => id !== jobId));
                   }}
                 />
               ))}
+              </div>
 
               {/* ── Attachments Section (hidden when no knowledge bases yet) ── */}
               {(knowledgeBases && knowledgeBases.length > 0) || (attachments && attachments.length > 0) ? (
                 <>
-                  <div className="flex items-center gap-2 pt-4 mt-2">
-                    <Paperclip className="w-4 h-4 text-neutral-400" />
+                  <div className="flex items-center gap-2 mt-8 mb-2">
                     <h2 className="text-sm font-medium text-neutral-500">
                       {t('studio.attachments_section_title', 'Attachments')}
                     </h2>
-                    <button onClick={() => setSectionInfo('attachments')} className="text-neutral-300 hover:text-neutral-500 transition-colors">
+                    <button onClick={() => setSectionInfo('attachments')} className="hidden sm:inline-flex text-neutral-300 hover:text-neutral-500 transition-colors">
                       <Info className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
+                  <div className="space-y-2">
                   {attachments && attachments.length > 0 ? (
                     <>
                       {attachments.map((attachment) => (
@@ -435,7 +434,7 @@ export default function StudioPage() {
                       <p className="text-sm font-medium text-neutral-900">
                         {t('studio.empty_attachments_title', 'Add your first attachment')}
                       </p>
-                      <p className="text-xs text-neutral-500 mt-1">
+                      <p className="text-xs text-neutral-500 mt-1 px-4">
                         {t('studio.empty_attachments_subtitle', 'Sent automatically based on your instructions')}
                       </p>
                       <Button
@@ -449,6 +448,7 @@ export default function StudioPage() {
                       </Button>
                     </div>
                   )}
+                  </div>
                 </>
               ) : null}
 
