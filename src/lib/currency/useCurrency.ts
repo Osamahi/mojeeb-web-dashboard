@@ -44,10 +44,21 @@ export function useCurrency(): UseCurrencyReturn {
   // Get subscription from Zustand store
   const subscription = useSubscriptionStore((state) => state.subscription);
 
-  // Detect currency with memoization (only recalculate if subscription currency changes)
+  // Detect currency with memoization. Depend on currency, amount, AND planCode so that
+  // a free→paid upgrade (amount flips from 0, planCode flips from 'free_production')
+  // correctly re-runs the detection chain mid-session.
   const currency = useMemo(
-    () => CurrencyService.detectCurrency({ subscription }),
-    [subscription?.currency]
+    () =>
+      CurrencyService.detectCurrency({
+        subscription: subscription
+          ? {
+              currency: subscription.currency,
+              amount: subscription.amount,
+              planCode: subscription.planCode,
+            }
+          : null,
+      }),
+    [subscription?.currency, subscription?.amount, subscription?.planCode]
   );
 
   // Get currency symbol (memoized)

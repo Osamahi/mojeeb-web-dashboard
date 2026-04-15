@@ -12,5 +12,11 @@ export interface CurrencyInfo {
 }
 
 export interface CurrencyDetectionSource {
-  subscription?: { currency: string } | null;
+  subscription?: {
+    currency: string;
+    /** Subscription amount — 0 means free plan (placeholder currency, don't trust it) */
+    amount?: number;
+    /** Plan code — `"free_production"` means free plan (placeholder currency, don't trust it) */
+    planCode?: string;
+  } | null;
 }

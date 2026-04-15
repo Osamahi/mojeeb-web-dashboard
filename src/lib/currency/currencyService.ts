@@ -8,15 +8,22 @@ import type { SupportedCurrency, CurrencyDetectionSource } from './types';
 export class CurrencyService {
   /**
    * Detects user's currency using fallback chain:
-   * 1. Subscription currency (most accurate)
+   * 1. Subscription currency (most accurate) — SKIPPED for free plans, since
+   *    every free-plan org is seeded with a hard-coded USD placeholder at signup
+   *    (OrganizationService.cs) that has no relation to the user's actual locale.
    * 2. Saved user preference in localStorage
    * 3. Browser timezone detection
    * 4. Default to USD
    */
   static detectCurrency(source?: CurrencyDetectionSource): SupportedCurrency {
-    // 1. Try subscription currency (primary source)
-    if (source?.subscription?.currency) {
-      const currency = source.subscription.currency.toUpperCase();
+    // 1. Try subscription currency (primary source) — but only for paid plans.
+    //    A free subscription's currency is a signup-time placeholder, not a user choice.
+    const sub = source?.subscription;
+    const isFreeSubscription =
+      sub != null && (sub.amount === 0 || sub.planCode === 'free_production');
+
+    if (sub?.currency && !isFreeSubscription) {
+      const currency = sub.currency.toUpperCase();
       if (this.isSupportedCurrency(currency)) {
         return currency as SupportedCurrency;
       }
