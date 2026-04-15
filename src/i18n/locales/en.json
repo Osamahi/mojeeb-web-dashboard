@@ -867,7 +867,7 @@
     "back_to_agents": "Back to Agents",
     "no_knowledge_message": "Add knowledge below to help your agent provide better answers.",
     "empty_knowledge_title": "Add your first knowledge source",
-    "empty_knowledge_subtitle": "Your agent uses this to answer questions",
+    "empty_knowledge_subtitle": "Add info about your business — prices, opening hours, FAQs — so Mojeeb can answer accurately",
     "empty_attachments_title": "Add your first attachment",
     "main_instructions_title": "Main Instructions",
     "main_instructions_edit_label": "Edit main instructions",
@@ -897,7 +897,7 @@
     "knowledge_info": "Knowledge bases are the information your agent uses to answer questions. Add your FAQs, product details, policies, or any content your agent needs to give accurate responses.",
     "attachments_info": "Attachments are files your agent can send during conversations — like menus, catalogs, or brochures. The agent decides when to share them based on your instructions.",
     "no_attachments_message": "Add attachments to let your agent send photos, videos, and documents.",
-    "empty_attachments_subtitle": "Sent automatically based on your instructions"
+    "empty_attachments_subtitle": "Files Mojeeb can send in chats — menus, catalogs, brochures, etc."
   },
   "follow_up": {
     "title": "Follow-Up Settings",
