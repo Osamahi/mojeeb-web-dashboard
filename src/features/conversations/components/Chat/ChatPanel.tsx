@@ -206,11 +206,14 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
           </div>
 
           {/* Source and topic - subtle secondary text */}
+          {/* Each dynamic fragment is wrapped in a <span> so React owns the DOM node.
+              Bare strings here previously caused `insertBefore` NotFoundError on mobile
+              browsers that auto-translate pages (common on Arabic RTL). */}
           {(conversation.topic || conversation.source !== 'web') && (
-            <p className="text-xs text-neutral-600 truncate">
-              {conversation.source !== 'web' && conversation.source}
-              {conversation.source !== 'web' && conversation.topic && ' • '}
-              {conversation.topic}
+            <p className="text-xs text-neutral-600 truncate" translate="no">
+              {conversation.source !== 'web' && <span>{conversation.source}</span>}
+              {conversation.source !== 'web' && conversation.topic && <span> • </span>}
+              {conversation.topic && <span>{conversation.topic}</span>}
             </p>
           )}
         </div>
