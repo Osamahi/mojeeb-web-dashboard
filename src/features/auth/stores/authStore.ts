@@ -175,12 +175,45 @@ export const useAuthStore = create<AuthState>()(
               const MAX_RETRIES = 2;
               const RETRY_DELAY_MS = 2000;
 
+              // SCENARIO C diagnostics: capture every attempt so we can tell
+              // whether the token was genuinely invalid (returned isValid=false
+              // immediately) vs. network blips (threw, retried, then gave up).
+              const rehydrationStart = Date.now();
+              const attemptOutcomes: Array<{
+                attempt: number;
+                durationMs: number;
+                outcome: 'success' | 'invalid' | 'threw';
+                errorName?: string;
+                errorMessage?: string;
+              }> = [];
+              let breakReason: 'success' | 'validation-returned-invalid' | 'all-retries-exhausted' | 'unknown' = 'unknown';
+
+              // NOTE: Refresh tokens in this app are OPAQUE base64url random
+              // strings issued by the backend (see AuthController.cs::GenerateRefreshToken),
+              // not JWTs. There's no client-visible expiry to decode — server
+              // tracks it in the `refresh_tokens` DB table. We just report
+              // structural info so a failed validation log can distinguish
+              // "missing" from "corrupted shape" from "normal-looking opaque".
+              const persistedRefreshShape = {
+                length: state.refreshToken?.length ?? 0,
+                looksOpaque: !!state.refreshToken && !state.refreshToken.includes('.'),
+                firstChars: state.refreshToken ? state.refreshToken.slice(0, 4) : null,
+              };
+
               for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                const attemptStart = Date.now();
                 try {
                   const { validateRefreshToken } = await import('@/lib/tokenManager');
                   const validation = await validateRefreshToken(state.refreshToken!);
 
                   if (validation.isValid && validation.tokens) {
+                    attemptOutcomes.push({
+                      attempt: attempt + 1,
+                      durationMs: Date.now() - attemptStart,
+                      outcome: 'success',
+                    });
+                    breakReason = 'success';
+
                     // Update tokens in store with fresh tokens from validation
                     useAuthStore.getState().setTokens(validation.tokens.accessToken, validation.tokens.refreshToken);
 
@@ -195,9 +228,23 @@ export const useAuthStore = create<AuthState>()(
                     return; // Success — exit the retry loop
                   } else {
                     // Token is genuinely invalid (not a network error) — no point retrying
+                    attemptOutcomes.push({
+                      attempt: attempt + 1,
+                      durationMs: Date.now() - attemptStart,
+                      outcome: 'invalid',
+                    });
+                    breakReason = 'validation-returned-invalid';
                     break;
                   }
                 } catch (error) {
+                  attemptOutcomes.push({
+                    attempt: attempt + 1,
+                    durationMs: Date.now() - attemptStart,
+                    outcome: 'threw',
+                    errorName: error instanceof Error ? error.name : typeof error,
+                    errorMessage: error instanceof Error ? error.message : String(error),
+                  });
+
                   if (import.meta.env.DEV) {
                     console.error(`Token validation error (attempt ${attempt + 1}/${MAX_RETRIES + 1}):`, error);
                   }
@@ -208,15 +255,59 @@ export const useAuthStore = create<AuthState>()(
                     continue;
                   }
                   // Fall through to logout after all retries exhausted
+                  breakReason = 'all-retries-exhausted';
                 }
               }
 
-              // All retries failed or token is genuinely invalid — logout
-              useAuthStore.getState().logout();
+              // --- SCENARIO C: we get here only when the loop gave up ---
+              // Log everything that might help diagnose. NOTE: we intentionally
+              // use logger.error (always prints in production too) because this
+              // path ends a user's session silently — we NEED visibility.
+              const { logger: authLogger } = await import('@/lib/logger');
+              authLogger.error(
+                '[AuthStore.rehydrate]',
+                '[SCENARIO_C] Refresh-token validation failed during rehydration — clearing session (NO forced redirect)',
+                {
+                  scenario: 'C_rehydration_validation_failed',
+                  breakReason,
+                  ts: new Date().toISOString(),
+                  totalDurationMs: Date.now() - rehydrationStart,
+                  attempts: attemptOutcomes,
+                  maxRetries: MAX_RETRIES,
+                  retryDelayMs: RETRY_DELAY_MS,
+                  persistedUser: {
+                    userId: state.user?.id ?? null,
+                    userEmail: state.user?.email ?? null,
+                    hadAccessToken: !!state.accessToken,
+                    hadRefreshToken: !!state.refreshToken,
+                  },
+                  persistedRefreshToken: persistedRefreshShape,
+                  page: {
+                    pathname: window.location.pathname,
+                    search: window.location.search,
+                    visibilityState: document.visibilityState,
+                    hasFocus: document.hasFocus(),
+                  },
+                  browser: {
+                    online: navigator.onLine,
+                    userAgent: navigator.userAgent,
+                    language: navigator.language,
+                  },
+                }
+              );
 
-              if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-              }
+              // All retries failed or token is genuinely invalid — clear the session
+              // in-memory but do NOT force a location change. The router's
+              // ProtectedRoute guard will redirect to /login on the next render
+              // now that isAuthenticated is false and refreshToken is cleared.
+              // This avoids blowing away the user's current page for a transient
+              // validation failure (network blip, backend restart, etc.).
+              const { performLogout } = await import('./../../auth/services/logoutService');
+              await performLogout({
+                callBackend: false, // token is already invalid, don't bother
+                redirect: false,
+                reason: 'token-invalid',
+              });
             })();
 
             // Temporarily set authenticated to true to prevent flash of login page

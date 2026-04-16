@@ -22,11 +22,22 @@ interface JWTPayload {
  */
 export function decodeJWT(token: string): JWTPayload | null {
   try {
+    // Fast-path: empty / falsy / non-string inputs are legitimately "no token",
+    // not "bad token". Return null silently so the warning below is meaningful
+    // when it DOES fire.
+    if (!token || typeof token !== 'string' || token.length === 0) {
+      return null;
+    }
+
     // JWT format: header.payload.signature
     const parts = token.split('.');
 
     if (parts.length !== 3) {
-      console.warn('[TokenUtils] Invalid JWT format - expected 3 parts');
+      // This is a genuine bug signal: someone passed a non-JWT (probably an
+      // opaque refresh token — backend issues those — or ciphertext from
+      // SecureLS) where a JWT was expected. Report enough detail to locate
+      // the caller without leaking the token value.
+      console.warn(`[TokenUtils] Invalid JWT format - expected 3 parts, got ${parts.length} (length=${token.length})`);
       return null;
     }
 
