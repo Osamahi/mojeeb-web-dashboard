@@ -19,7 +19,7 @@ import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useConversationStore } from '@/features/conversations/stores/conversationStore';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 import { usePlanStore } from '@/features/subscriptions/stores/planStore';
-import { clearTokens } from '@/lib/tokenManager';
+import { clearTokens } from '@/lib/tokenStore';
 import { clearSentryUser } from '@/lib/sentry';
 import { clearClarityUser } from '@/lib/clarity';
 import { sessionHelper } from '@/lib/sessionHelper';
@@ -117,8 +117,8 @@ async function executeLogout(options: Required<LogoutOptions>): Promise<void> {
   logger.info('[LogoutService]', `🚪 Starting logout (reason: ${options.reason})...`);
 
   try {
-    // Step 1: Stop token refresh service (to prevent new token requests)
-    await stopTokenRefreshService();
+    // Step 1: (no-op) Proactive token refresh service was removed in the
+    // auth refactor. Refreshes are now interceptor-driven only.
 
     // Step 2: Cancel all in-flight API requests
     // Note: This requires implementing AbortController in api.ts
@@ -263,19 +263,6 @@ async function executeLogout(options: Required<LogoutOptions>): Promise<void> {
     }
 
     // Don't throw - logout is fire-and-forget to ensure redirect always happens
-  }
-}
-
-/**
- * Stop token refresh service
- */
-async function stopTokenRefreshService(): Promise<void> {
-  try {
-    const { tokenRefreshService } = await import('./tokenRefreshService');
-    tokenRefreshService.stop();
-    logger.debug('[LogoutService]', '  ✓ Token refresh service stopped');
-  } catch (error) {
-    logger.warn('[LogoutService]', 'Failed to stop token refresh service', error);
   }
 }
 

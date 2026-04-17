@@ -10,7 +10,6 @@ import App from './App.tsx'
 import { env } from './config/env'
 import { initializeSentry } from './lib/sentry'
 import { initializeClarity } from './lib/clarity'
-import { startStorageMonitoring } from './lib/storageMonitor'
 import { initializeLogoutListener } from './features/auth/services/logoutService'
 import { analytics } from './lib/analytics'
 import { initializeVerificationHelpers } from './lib/analytics/utils/verifyAnalytics'
@@ -23,9 +22,6 @@ initializeVerificationHelpers(); // Add browser console helpers for debugging
 
 // Initialize multi-tab logout propagation
 initializeLogoutListener(); // Listen for logout events from other tabs
-
-// DIAGNOSTIC: Monitor localStorage changes (DEV only - storageMonitor guards itself)
-startStorageMonitoring();
 
 const googleClientId = env.VITE_GOOGLE_CLIENT_ID || ''
 

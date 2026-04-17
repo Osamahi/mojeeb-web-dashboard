@@ -16,7 +16,7 @@ import { useAuthStore } from '../stores/authStore';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { logger } from '@/lib/logger';
-import { setTokens } from '@/lib/tokenManager';
+import { setTokens } from '@/lib/tokenStore';
 import { updateSupabaseAuth } from '@/lib/supabase';
 
 // API Response Types (snake_case from backend)
@@ -494,10 +494,16 @@ class AuthService {
       // 1. Refresh tokens from backend
       const tokens = await this.refreshToken(refreshToken);
 
-      // 2. Store tokens in secure storage (dual storage: SecureLS + localStorage)
+      // 2. Store tokens (access in memory, refresh in localStorage)
       setTokens(tokens.accessToken, tokens.refreshToken);
 
-      // 3. Update Supabase auth session for real-time channels
+      // 3. Mirror into the auth store so route guards see the fresh values
+      useAuthStore.setState({
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      });
+
+      // 4. Update Supabase auth session for real-time channels
       await updateSupabaseAuth(tokens.accessToken, tokens.refreshToken);
 
       logger.info('Session refresh complete', {
