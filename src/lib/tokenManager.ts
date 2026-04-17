@@ -15,33 +15,26 @@ const REFRESH_TOKEN_KEY = 'refreshToken';
 
 
 /**
- * Generate a secure encryption key based on environment or browser fingerprint
- * This provides basic obfuscation - for production, use environment variable
+ * Stable fallback key used when VITE_TOKEN_ENCRYPTION_KEY is not set.
+ *
+ * SecureLS is client-side obfuscation (localStorage AES), not real security —
+ * anyone with XSS or device access can read the key regardless of how it's
+ * derived. The previous implementation derived this from navigator.userAgent
+ * and window.screen.*, which are UNSTABLE (change on browser updates, window
+ * resizes, monitor connects, device rotation). When the key changed between
+ * sessions, SecureLS decrypted stored tokens with a different key than was
+ * used to encrypt them, producing "Malformed UTF-8 data" and locking users out.
+ *
+ * Prefer setting VITE_TOKEN_ENCRYPTION_KEY in production; this constant is
+ * the stable dev/safety-net fallback.
  */
+const FALLBACK_ENCRYPTION_KEY = 'mojeeb-dashboard-v1-token-obfuscation-key';
+
 const getEncryptionKey = (): string => {
-  // Use environment variable if provided (recommended for production)
   if (env.VITE_TOKEN_ENCRYPTION_KEY) {
     return env.VITE_TOKEN_ENCRYPTION_KEY;
   }
-
-  // Fallback: Generate key from browser fingerprint + app identifier
-  // NOTE: This is obfuscation, not true security. Set VITE_TOKEN_ENCRYPTION_KEY for production.
-  const userAgent = navigator.userAgent;
-  const screen = `${window.screen.width}x${window.screen.height}`;
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const appSecret = 'mojeeb-v1'; // App-specific identifier
-
-  const fingerprint = `${userAgent}-${screen}-${timezone}-${appSecret}`;
-
-  // Simple hash function to generate consistent key from fingerprint
-  let hash = 0;
-  for (let i = 0; i < fingerprint.length; i++) {
-    const char = fingerprint.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-
-  return `mojeeb-${Math.abs(hash).toString(36)}-v1`;
+  return FALLBACK_ENCRYPTION_KEY;
 };
 
 // Initialize SecureLS with AES encryption
