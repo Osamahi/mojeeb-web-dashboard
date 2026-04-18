@@ -1939,7 +1939,15 @@
       "locked_to": "مقيد بمستخدم",
       "locked_to_placeholder": "اقصر الاستخدام على مستخدم واحد",
       "locked_to_current": "المستخدم المقيد",
-      "active": "نشط (يمكن للعملاء استخدامه)"
+      "active": "نشط (يمكن للعملاء استخدامه)",
+      "stripe_livemode": "بيئة Stripe",
+      "stripe_livemode_hint": "مثبّتة طوال عمر الكوبون. لا يسمح Stripe بنقل الكوبون بين وضعَي الاختبار والإنتاج."
+    },
+    "stripe_mode": {
+      "test": "🧪 اختبار",
+      "production": "💳 إنتاج",
+      "test_short": "اختبار",
+      "live_short": "إنتاج"
     },
     "error": {
       "invalid_amount": "يجب أن تكون المبالغ أرقاماً موجبة.",

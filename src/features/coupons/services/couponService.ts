@@ -59,6 +59,7 @@ class CouponService {
       lockedToUserEmail: api.locked_to_user_email,
       active: api.active,
       timesRedeemed: api.times_redeemed,
+      stripeLivemode: api.stripe_livemode,
       createdByUserId: api.created_by_user_id,
       createdAt: api.created_at,
       updatedAt: api.updated_at,
@@ -159,6 +160,7 @@ class CouponService {
       expires_at: request.expiresAt ?? null,
       affiliate_user_id: request.affiliateUserId ?? null,
       locked_to_user_id: request.lockedToUserId ?? null,
+      stripe_livemode: request.stripeLivemode,
     };
     const response = await api.post<ApiResponse<ApiCoupon>>('/api/admin/coupons', body);
     return this.toCoupon(response.data.data);

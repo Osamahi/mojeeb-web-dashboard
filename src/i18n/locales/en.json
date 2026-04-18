@@ -1964,7 +1964,15 @@
       "locked_to": "Locked to user",
       "locked_to_placeholder": "Restrict redemption to one user",
       "locked_to_current": "Locked user",
-      "active": "Active (customers can redeem)"
+      "active": "Active (customers can redeem)",
+      "stripe_livemode": "Stripe environment",
+      "stripe_livemode_hint": "Pinned for the coupon's lifetime. Stripe does not allow moving a coupon between Test and Live."
+    },
+    "stripe_mode": {
+      "test": "🧪 Test",
+      "production": "💳 Live",
+      "test_short": "Test",
+      "live_short": "Live"
     },
     "error": {
       "invalid_amount": "Amounts must be positive numbers.",

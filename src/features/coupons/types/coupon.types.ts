@@ -61,6 +61,8 @@ export interface Coupon {
   lockedToUserEmail: string | null;
   active: boolean;
   timesRedeemed: number;
+  /** Stripe environment this coupon lives in. true = live (sk_live_*), false = test (sk_test_*), null = legacy row. */
+  stripeLivemode: boolean | null;
   createdByUserId: string;
   createdAt: string;
   updatedAt: string;
@@ -91,6 +93,7 @@ export interface ApiCoupon {
   locked_to_user_email: string | null;
   active: boolean;
   times_redeemed: number;
+  stripe_livemode: boolean | null;
   created_by_user_id: string;
   created_at: string;
   updated_at: string;
@@ -165,6 +168,8 @@ export interface CreateCouponRequest {
   expiresAt?: string | null;
   affiliateUserId?: string | null;
   lockedToUserId?: string | null;
+  /** true = create in Stripe Live, false = create in Stripe Test. Required by the admin UI. */
+  stripeLivemode: boolean;
 }
 
 export interface UpdateCouponRequest {

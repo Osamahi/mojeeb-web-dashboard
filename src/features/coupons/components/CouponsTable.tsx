@@ -52,7 +52,26 @@ export const CouponsTable = memo(
           <tbody className="divide-y divide-neutral-100 text-neutral-800">
             {coupons.map((coupon) => (
               <tr key={coupon.id} className="hover:bg-neutral-50">
-                <td className="px-4 py-3 font-mono text-xs">{coupon.code}</td>
+                <td className="px-4 py-3 font-mono text-xs">
+                  <div className="flex items-center gap-2">
+                    <span>{coupon.code}</span>
+                    {coupon.stripeLivemode === true ? (
+                      <span
+                        className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700"
+                        title={t('coupons.stripe_mode.production', '💳 Live') as string}
+                      >
+                        {t('coupons.stripe_mode.live_short', 'Live')}
+                      </span>
+                    ) : (
+                      <span
+                        className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700"
+                        title={t('coupons.stripe_mode.test', '🧪 Test') as string}
+                      >
+                        {t('coupons.stripe_mode.test_short', 'Test')}
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-4 py-3">{coupon.name}</td>
                 <td className="px-4 py-3">{formatDiscount(coupon)}</td>
                 <td className="px-4 py-3">{formatDuration(coupon, t)}</td>

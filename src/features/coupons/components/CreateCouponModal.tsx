@@ -32,12 +32,22 @@ export function CreateCouponModal({ isOpen, onClose }: CreateCouponModalProps) {
     discountType: 'percent',
     percentOff: 10,
     duration: 'once',
+    // Default to Production — new coupons are assumed to be real revenue-affecting
+    // discounts; an admin can flip to Test for sandbox experiments.
+    stripeLivemode: true,
   });
   const [amounts, setAmounts] = useState<Record<string, string>>({ USD: '', EGP: '', SAR: '' });
   const [error, setError] = useState<string | null>(null);
 
   const reset = () => {
-    setForm({ code: '', name: '', discountType: 'percent', percentOff: 10, duration: 'once' });
+    setForm({
+      code: '',
+      name: '',
+      discountType: 'percent',
+      percentOff: 10,
+      duration: 'once',
+      stripeLivemode: true,
+    });
     setAmounts({ USD: '', EGP: '', SAR: '' });
     setError(null);
   };
@@ -102,6 +112,51 @@ export function CreateCouponModal({ isOpen, onClose }: CreateCouponModalProps) {
       closable={!mutation.isPending}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Stripe environment — pinned for the coupon's lifetime. Stripe does not allow
+            migration between Test and Live, so this must be set correctly at create time. */}
+        <Field label={t('coupons.field.stripe_livemode', 'Stripe environment') + ' *'}>
+          <div
+            className="inline-flex rounded-md border border-neutral-300 p-0.5"
+            role="radiogroup"
+            aria-label={t('coupons.field.stripe_livemode', 'Stripe environment') as string}
+          >
+            <button
+              type="button"
+              role="radio"
+              aria-checked={!form.stripeLivemode}
+              onClick={() => setForm({ ...form, stripeLivemode: false })}
+              className={
+                'rounded px-4 py-1.5 text-sm font-medium transition ' +
+                (!form.stripeLivemode
+                  ? 'bg-neutral-900 text-white'
+                  : 'text-neutral-600 hover:bg-neutral-100')
+              }
+            >
+              {t('coupons.stripe_mode.test', '🧪 Test')}
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={form.stripeLivemode}
+              onClick={() => setForm({ ...form, stripeLivemode: true })}
+              className={
+                'rounded px-4 py-1.5 text-sm font-medium transition ' +
+                (form.stripeLivemode
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-neutral-600 hover:bg-neutral-100')
+              }
+            >
+              {t('coupons.stripe_mode.production', '💳 Live')}
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-neutral-500">
+            {t(
+              'coupons.field.stripe_livemode_hint',
+              'Pinned for the coupon\u2019s lifetime. Stripe does not allow moving a coupon between Test and Live.',
+            )}
+          </p>
+        </Field>
+
         {/* Code + name */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label={t('coupons.field.code', 'Code') + ' *'}>
