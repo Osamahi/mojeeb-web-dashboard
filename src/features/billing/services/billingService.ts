@@ -142,11 +142,17 @@ class BillingService {
 
     try {
       // Transform camelCase to snake_case for C# backend (Newtonsoft.Json SnakeCaseNamingStrategy)
-      const backendRequest = {
+      const backendRequest: Record<string, unknown> = {
         plan_id: request.planId,
         currency: request.currency,
         billing_interval: request.billingInterval,
       };
+
+      // Optional coupon — only include when set so existing endpoints without coupon
+      // still round-trip identically.
+      if (request.couponCode && request.couponCode.trim()) {
+        backendRequest.coupon_code = request.couponCode.trim();
+      }
 
       const response = await api.post<ApiResponse<ApiCheckoutSessionResponse>>(
         `${this.baseUrl}/checkout`,

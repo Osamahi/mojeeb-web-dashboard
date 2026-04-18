@@ -31,6 +31,8 @@ import {
   Activity,
   Megaphone,
   BarChart3,
+  Ticket,
+  BadgeCheck,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { PlanCode } from '@/features/subscriptions/types/subscription.types';
@@ -106,6 +108,20 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.subscriptions',
     href: '/subscriptions',
     icon: Receipt,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Coupons',
+    translationKey: 'navigation.coupons',
+    href: '/coupons',
+    icon: Ticket,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Coupon Redemptions',
+    translationKey: 'navigation.coupon_redemptions',
+    href: '/coupon-redemptions',
+    icon: BadgeCheck,
     requireSuperAdmin: true,
   },
   {

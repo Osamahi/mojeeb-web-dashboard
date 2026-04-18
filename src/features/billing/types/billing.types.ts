@@ -38,6 +38,13 @@ export interface CreateCheckoutRequest {
   planId: string; // Mojeeb plan ID (GUID)
   currency: BillingCurrency;
   billingInterval: BillingInterval;
+  /**
+   * Optional coupon / promotion code entered by the customer. The backend validates
+   * the code (active, expiry, plan scope, currency, per-user limit) before creating
+   * the Stripe session. Invalid codes block checkout with a 400 containing
+   * `error_code` that the UI maps to a localized message.
+   */
+  couponCode?: string;
 }
 
 /**

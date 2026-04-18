@@ -41,6 +41,8 @@ const AdminPricingPage = lazy(() => import('./features/pricing/pages/AdminPricin
 const MetaTokenExaminerPage = lazy(() => import('./features/meta/pages/MetaTokenExaminerPage').then(m => ({ default: m.MetaTokenExaminerPage })));
 const AdminPlanCataloguePage = lazy(() => import('./features/catalogue/pages/AdminPlanCataloguePage').then(m => ({ default: m.AdminPlanCataloguePage })));
 const AdminAddonsPage = lazy(() => import('./features/addons/pages/AdminAddonsPage').then(m => ({ default: m.AdminAddonsPage })));
+const AdminCouponsPage = lazy(() => import('./features/coupons/pages/AdminCouponsPage'));
+const AdminCouponRedemptionsPage = lazy(() => import('./features/coupons/pages/AdminCouponRedemptionsPage'));
 const AddonPlansPage = lazy(() => import('./features/addons/pages/AddonPlansPage').then(m => ({ default: m.AddonPlansPage })));
 const MySubscriptionPage = lazy(() => import('./features/subscriptions/pages/MySubscriptionPage'));
 const SubscriptionSuccessPage = lazy(() => import('./features/billing/pages/SubscriptionSuccessPage'));
@@ -411,6 +413,22 @@ export const router = createBrowserRouter([
         element: (
           <SuperAdminRoute>
             <AdminAddonsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'coupons',
+        element: (
+          <SuperAdminRoute>
+            <AdminCouponsPage />
+          </SuperAdminRoute>
+        ),
+      },
+      {
+        path: 'coupon-redemptions',
+        element: (
+          <SuperAdminRoute>
+            <AdminCouponRedemptionsPage />
           </SuperAdminRoute>
         ),
       },

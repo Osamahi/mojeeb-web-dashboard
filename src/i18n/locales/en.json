@@ -1000,6 +1000,8 @@
     "organizations": "Organizations",
     "admin_connections": "All Connections",
     "subscriptions": "Subscriptions",
+    "coupons": "Coupons",
+    "coupon_redemptions": "Coupon Redemptions",
     "addon_plans": "Add-on Catalogue",
     "addons": "Add-ons",
     "pricing": "Pricing",

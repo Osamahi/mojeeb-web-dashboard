@@ -12,6 +12,8 @@ import { PlanFeaturesList } from './PlanFeaturesList';
 import { StripeCheckoutButton } from '@/features/billing/components/StripeCheckoutButton';
 import { BillingCurrency, BillingInterval } from '@/features/billing/types/billing.types';
 import { requiresPayment } from '../utils/planComparison';
+import { useValidateCoupon } from '@/features/coupons/hooks/useCoupons';
+import type { CouponValidationResult } from '@/features/coupons/types/coupon.types';
 
 interface PlanChangeWizardProps {
   isOpen: boolean;
@@ -34,6 +36,11 @@ export function PlanChangeWizard({
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [upgrading, setUpgrading] = useState(false);
 
+  // Coupon input state (confirm step, payment path only)
+  const [couponCode, setCouponCode] = useState('');
+  const [couponResult, setCouponResult] = useState<CouponValidationResult | null>(null);
+  const validateCoupon = useValidateCoupon();
+
   // Always use monthly for now
   const billingInterval = 'monthly';
 
@@ -41,6 +48,8 @@ export function PlanChangeWizard({
     if (isOpen) {
       setStep('select-plan');
       setSelectedPlan(null);
+      setCouponCode('');
+      setCouponResult(null);
     }
   }, [isOpen]);
 
@@ -278,6 +287,86 @@ export function PlanChangeWizard({
                   </div>
                 </div>
 
+                {/* Optional coupon input — payment path only. User types a code and presses
+                    "Apply" to validate; invalid codes do not block checkout (the backend
+                    re-validates and will 400 on submit), but showing the error inline lets
+                    the user correct typos before leaving the app. */}
+                {needsPayment && (
+                  <div className="rounded-lg border border-gray-200 bg-white p-4">
+                    <label className="mb-2 block text-sm font-medium text-gray-700">
+                      {t('plan_change_wizard.have_coupon', 'Have a coupon?')}
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => {
+                          setCouponCode(e.target.value);
+                          if (couponResult) setCouponResult(null);
+                        }}
+                        placeholder={t('plan_change_wizard.coupon_placeholder', 'Enter code') as string}
+                        className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm"
+                        disabled={validateCoupon.isPending || upgrading}
+                      />
+                      <button
+                        type="button"
+                        disabled={!couponCode.trim() || validateCoupon.isPending || upgrading}
+                        onClick={async () => {
+                          try {
+                            const result = await validateCoupon.mutateAsync({
+                              code: couponCode.trim(),
+                              planId: selectedPlan.id,
+                              currency: getPriceAndCurrency(selectedPlan).currency,
+                              billingInterval: billingInterval as 'monthly' | 'annual',
+                            });
+                            setCouponResult(result);
+                          } catch {
+                            setCouponResult({
+                              valid: false,
+                              errorCode: 'network_error',
+                              errorMessage: t(
+                                'plan_change_wizard.coupon_network_error',
+                                'Could not validate coupon. Please try again.',
+                              ) as string,
+                              couponId: null,
+                              code: null,
+                              discountType: null,
+                              percentOff: null,
+                              amountOff: null,
+                              currency: null,
+                              duration: null,
+                              durationInMonths: null,
+                            });
+                          }
+                        }}
+                        className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        {validateCoupon.isPending
+                          ? t('common.checking', 'Checking…')
+                          : t('plan_change_wizard.apply', 'Apply')}
+                      </button>
+                    </div>
+                    {couponResult && couponResult.valid && (
+                      <div className="mt-2 rounded-md bg-emerald-50 p-2 text-xs text-emerald-700">
+                        {couponResult.discountType === 'percent'
+                          ? `${couponResult.percentOff}% ${t('plan_change_wizard.coupon_off', 'off')}`
+                          : `${((couponResult.amountOff ?? 0) / 100).toFixed(2)} ${couponResult.currency ?? ''} ${t('plan_change_wizard.coupon_off', 'off')}`}
+                        {couponResult.duration === 'once' &&
+                          ` — ${t('plan_change_wizard.coupon_first_payment', 'first payment only')}`}
+                        {couponResult.duration === 'repeating' &&
+                          ` — ${couponResult.durationInMonths} ${t('plan_change_wizard.coupon_months', 'months')}`}
+                        {couponResult.duration === 'forever' &&
+                          ` — ${t('plan_change_wizard.coupon_forever', 'every billing cycle')}`}
+                      </div>
+                    )}
+                    {couponResult && !couponResult.valid && (
+                      <div className="mt-2 rounded-md bg-red-50 p-2 text-xs text-red-700">
+                        {couponResult.errorMessage ?? t('plan_change_wizard.coupon_invalid', 'Coupon is not valid.')}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="flex gap-3">
                   <button
@@ -300,6 +389,7 @@ export function PlanChangeWizard({
                         billingInterval={billingInterval as BillingInterval}
                         label={t('plan_change_wizard.pay_with_stripe') || 'Next'}
                         className="w-full bg-neutral-950 hover:bg-neutral-900 text-white"
+                        couponCode={couponResult?.valid ? couponCode.trim() : undefined}
                       />
                     </div>
                   ) : (

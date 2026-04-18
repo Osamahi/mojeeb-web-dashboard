@@ -12,6 +12,12 @@ interface StripeCheckoutButtonProps {
   size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
   className?: string;
+  /**
+   * Optional coupon code entered by the customer at checkout. Passed through to
+   * the backend, which validates it before creating the Stripe session. Invalid
+   * codes block checkout with a 400 response.
+   */
+  couponCode?: string;
 }
 
 /**
@@ -39,6 +45,7 @@ export function StripeCheckoutButton({
   size = 'md',
   disabled = false,
   className,
+  couponCode,
 }: StripeCheckoutButtonProps) {
   const { t } = useTranslation();
   const mutation = useCreateCheckoutMutation({
@@ -50,6 +57,7 @@ export function StripeCheckoutButton({
       planId,
       currency,
       billingInterval,
+      couponCode: couponCode?.trim() ? couponCode.trim() : undefined,
     });
   };
 
