@@ -1866,7 +1866,151 @@
     "upgrading": "Upgrading...",
     "downgrading": "Downgrading...",
     "confirm_change": "Confirm",
-    "changing": "Processing..."
+    "changing": "Processing...",
+    "have_coupon": "Have a coupon?",
+    "coupon_placeholder": "Enter code",
+    "apply": "Apply",
+    "coupon_off": "off",
+    "coupon_first_payment": "first payment only",
+    "coupon_months": "months",
+    "coupon_forever": "every billing cycle",
+    "coupon_invalid": "Coupon is not valid.",
+    "coupon_network_error": "Could not validate coupon. Please try again.",
+    "coupon_errors": {
+      "coupon_not_found": "Coupon code not found.",
+      "coupon_inactive": "This coupon is no longer active.",
+      "coupon_expired": "This coupon has expired.",
+      "coupon_max_redemptions_reached": "This coupon has reached its redemption limit.",
+      "coupon_locked_to_different_user": "This coupon is reserved for a different user.",
+      "coupon_plan_not_eligible": "This coupon does not apply to the selected plan.",
+      "coupon_currency_not_supported": "This coupon is not available in the selected currency.",
+      "coupon_per_user_limit_reached": "You have already used this coupon the maximum number of times.",
+      "coupon_invalid_code": "Invalid coupon code.",
+      "network_error": "Could not validate coupon. Please try again."
+    }
+  },
+  "coupons": {
+    "title": "Coupons",
+    "subtitle": "Create and manage Stripe-backed coupons. Link codes to affiliates to track redemptions.",
+    "empty": "No coupons yet — create one to get started.",
+    "filter": {
+      "search_placeholder": "Search by code or name…",
+      "active_only": "Active only"
+    },
+    "table": {
+      "code": "Code",
+      "name": "Name",
+      "discount": "Discount",
+      "duration": "Duration",
+      "redemptions": "Redemptions",
+      "affiliate": "Affiliate",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "actions": {
+      "redemptions": "View redemptions",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate"
+    },
+    "create": {
+      "title": "Create coupon",
+      "subtitle": "Create a new Stripe-backed coupon with optional affiliate credit.",
+      "button": "Create",
+      "submit": "Create coupon"
+    },
+    "edit": {
+      "title": "Edit coupon"
+    },
+    "confirm": {
+      "deactivate_title": "Deactivate coupon?",
+      "deactivate": "Deactivate coupon \"{{code}}\"? Customers will no longer be able to redeem it. The historical ledger is preserved.",
+      "reactivate_title": "Reactivate coupon?",
+      "reactivate": "Reactivate coupon \"{{code}}\"? Customers will be able to redeem it again."
+    },
+    "toast": {
+      "created": "Coupon created",
+      "create_failed": "Failed to create coupon",
+      "updated": "Coupon updated",
+      "update_failed": "Failed to update coupon",
+      "deactivated": "Coupon deactivated",
+      "deactivate_failed": "Failed to deactivate coupon"
+    },
+    "discount": {
+      "percent": "Percent off",
+      "amount": "Fixed amount"
+    },
+    "duration": {
+      "once": "First payment only",
+      "repeating": "N months",
+      "forever": "Forever",
+      "months": "months"
+    },
+    "field": {
+      "code": "Code",
+      "name": "Name",
+      "description": "Description",
+      "discount_type": "Discount type",
+      "percent_off": "Percent off",
+      "amounts": "Amounts per currency",
+      "amounts_hint": "Enter the discount in the major unit (e.g. \"5.00\" for $5). Leave blank to skip a currency.",
+      "duration": "Duration",
+      "duration_months": "Months",
+      "max_total": "Max total redemptions",
+      "max_per_user": "Max per user",
+      "expires_at": "Expires at",
+      "affiliate": "Affiliate user",
+      "affiliate_placeholder": "Who gets credit for redemptions?",
+      "affiliate_current": "Affiliate",
+      "locked_to": "Locked to user",
+      "locked_to_placeholder": "Restrict redemption to one user",
+      "locked_to_current": "Locked user",
+      "active": "Active (customers can redeem)"
+    },
+    "error": {
+      "invalid_amount": "Amounts must be positive numbers.",
+      "amount_required": "Enter at least one currency amount for fixed-amount coupons."
+    },
+    "redemptions": {
+      "title": "Redemptions",
+      "total": "total redemptions",
+      "empty": "No redemptions yet.",
+      "when": "When",
+      "user": "User",
+      "amount": "Amount",
+      "invoice": "Invoice",
+      "pending": "Pending"
+    }
+  },
+  "coupon_redemptions": {
+    "title": "Coupon Redemptions",
+    "subtitle": "Audit who redeemed which coupon — used for affiliate payouts and fraud review.",
+    "empty_filters": "Pick an affiliate or coupon above to load redemptions.",
+    "empty_results": "No redemptions match the current filters.",
+    "pending": "Pending",
+    "filter": {
+      "affiliate": "Filter by affiliate",
+      "affiliate_placeholder": "Search user by name, email, or phone…",
+      "coupon": "Or filter by coupon",
+      "any_coupon": "Any coupon",
+      "date_from": "From",
+      "date_to": "To",
+      "date_disabled_hint": "Date range only applies when filtering by affiliate."
+    },
+    "col": {
+      "when": "When",
+      "coupon": "Coupon",
+      "user": "User",
+      "amount": "Amount",
+      "paid": "Payment",
+      "invoice": "Invoice",
+      "source": "Source"
+    }
+  },
+  "user_picker": {
+    "placeholder": "Search by name, email, or phone…",
+    "min_chars": "Type at least 2 characters to search.",
+    "no_results": "No users match \"{{query}}\"",
+    "current_user": "Current user"
   },
   "user_profile": {
     "settings": "Settings",
