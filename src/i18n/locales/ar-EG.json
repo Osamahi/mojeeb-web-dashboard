@@ -1085,6 +1085,7 @@
     "table_user": "المستخدم",
     "table_email": "البريد الإلكتروني",
     "table_phone": "رقم الهاتف",
+    "table_country": "الدولة",
     "table_role": "الدور",
     "table_created": "تاريخ الإنشاء",
     "anonymous_user": "مستخدم مجهول",

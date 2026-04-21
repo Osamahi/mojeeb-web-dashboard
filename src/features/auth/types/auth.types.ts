@@ -40,6 +40,7 @@ export interface RegisterData {
   email: string;
   password: string;
   name: string;
+  country?: string; // ISO 3166-1 alpha-2, browser-detected at signup
 }
 
 // Auth response from API

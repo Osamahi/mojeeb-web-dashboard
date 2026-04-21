@@ -1087,6 +1087,7 @@
     "table_user": "User",
     "table_email": "Email",
     "table_phone": "Phone Number",
+    "table_country": "Country",
     "table_role": "Role",
     "table_created": "Created",
     "anonymous_user": "Anonymous User",

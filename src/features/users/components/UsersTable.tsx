@@ -13,6 +13,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { DataTable, type ColumnDef } from '@/components/ui/DataTable';
 import { formatPhoneNumber } from '@/features/leads/utils/formatting';
+import { formatCountry } from '@/lib/countryUtils';
 import { UsersMobileCardView } from './UsersMobileCardView';
 import type { User } from '../types';
 
@@ -112,6 +113,16 @@ export default function UsersTable({ users }: UsersTableProps) {
       render: (phone) => (
         <div className="text-sm text-neutral-900">
           {phone ? <PhoneNumber value={phone} /> : '-'}
+        </div>
+      ),
+    },
+    {
+      key: 'country',
+      label: t('users.table_country'),
+      sortable: true,
+      render: (country) => (
+        <div className="text-sm text-neutral-900 whitespace-nowrap">
+          {formatCountry(country as string | null | undefined)}
         </div>
       ),
     },

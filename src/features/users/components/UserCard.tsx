@@ -4,10 +4,11 @@
  * View-only card with phone copy functionality
  */
 
-import { Copy, Mail } from 'lucide-react';
+import { Copy, Mail, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '@/components/ui/Avatar';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
+import { formatCountry } from '@/lib/countryUtils';
 import type { User } from '../types';
 
 interface UserCardProps {
@@ -51,6 +52,14 @@ export function UserCard({ user, onCopyPhone }: UserCardProps) {
             >
               {user.email}
             </a>
+          </div>
+        )}
+
+        {/* Country */}
+        {user.country && (
+          <div className="flex items-center gap-2">
+            <Globe className="w-4 h-4 text-neutral-400 flex-shrink-0" />
+            <span className="text-sm text-neutral-600">{formatCountry(user.country)}</span>
           </div>
         )}
 

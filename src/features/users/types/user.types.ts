@@ -11,6 +11,7 @@ export interface User {
   name: string | null;
   phone?: string | null;
   avatar_url?: string | null;
+  country?: string | null;
   role: Role;
   role_value: number;
   created_at: string;

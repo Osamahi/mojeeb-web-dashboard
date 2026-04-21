@@ -20,6 +20,7 @@ import { useLanguageFromUrl } from '@/hooks/useLanguageFromUrl';
 import { useAuthFormSubmit } from '../hooks/useAuthFormSubmit';
 import { useAnalytics } from '@/lib/analytics';
 import { createSignUpSchema, type SignUpFormData } from '../schemas/validation.schemas';
+import { detectCountryFromTimezone } from '@/features/onboarding/utils/countryDetector';
 
 export const SignUpPage = () => {
   const { t } = useTranslation();
@@ -49,7 +50,10 @@ export const SignUpPage = () => {
 
   // Unified form submission logic (loading, errors, analytics, navigation)
   const { handleSubmit: onSubmit, isLoading, error, isNavigating } = useAuthFormSubmit({
-    authAction: (data: SignUpFormData) => authService.register(data),
+    authAction: (data: SignUpFormData) => authService.register({
+      ...data,
+      country: detectCountryFromTimezone(),
+    }),
     errorKey: 'auth.signup_failed',
     trackingEvent: 'signup_completed',
     trackingData: (response) => ({

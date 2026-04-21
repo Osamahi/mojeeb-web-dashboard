@@ -18,6 +18,7 @@ import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { logger } from '@/lib/logger';
 import { setTokens } from '@/lib/tokenStore';
 import { updateSupabaseAuth } from '@/lib/supabase';
+import { detectCountryFromTimezone } from '@/features/onboarding/utils/countryDetector';
 
 // API Response Types (snake_case from backend)
 interface ApiUserResponse {
@@ -282,6 +283,7 @@ class AuthService {
       email: email,
       name: name,
       avatar_url: avatarUrl,
+      country: detectCountryFromTimezone(),
     }, {
       headers: funnelSessionId ? { 'X-Funnel-Session': funnelSessionId } : undefined,
     });
@@ -312,6 +314,7 @@ class AuthService {
     const { data } = await api.post<ApiAuthResponse>('/api/auth/google/code', {
       code: authorizationCode,
       redirect_uri: env.VITE_GOOGLE_REDIRECT_URI || `${window.location.origin}/auth/google/callback`,
+      country: detectCountryFromTimezone(),
     }, {
       headers: funnelSessionId ? { 'X-Funnel-Session': funnelSessionId } : undefined,
     });
@@ -341,6 +344,7 @@ class AuthService {
       email: null,
       name: null,
       avatar_url: null,
+      country: detectCountryFromTimezone(),
     });
 
     // Backend returns snake_case, convert to camelCase

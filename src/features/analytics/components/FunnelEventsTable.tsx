@@ -1,6 +1,7 @@
 import { Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { formatCountry } from '@/lib/countryUtils';
 import { STAGE_LABELS, type FunnelRecentEvent } from '../types/funnel.types';
 
 interface FunnelEventsTableProps {
@@ -48,9 +49,8 @@ export function FunnelEventsTable({ events, isLoading, hasMore, isFetchingNextPa
                 <tr className="border-b border-neutral-200 text-left text-neutral-500">
                   <th className="pb-2 pr-4 font-medium">Event</th>
                   <th className="pb-2 pr-4 font-medium">User</th>
+                  <th className="pb-2 pr-4 font-medium">Country</th>
                   <th className="pb-2 pr-4 font-medium">Agent</th>
-                  <th className="pb-2 pr-4 font-medium">Referrer</th>
-                  <th className="pb-2 pr-4 font-medium">Session</th>
                   <th className="pb-2 font-medium">Time</th>
                 </tr>
               </thead>
@@ -68,15 +68,8 @@ export function FunnelEventsTable({ events, isLoading, hasMore, isFetchingNextPa
                         )}
                       </div>
                     </td>
+                    <td className="py-2.5 pr-4 text-neutral-600 whitespace-nowrap">{formatCountry(e.userCountry)}</td>
                     <td className="py-2.5 pr-4 text-neutral-600">{e.agentName || '-'}</td>
-                    <td className="py-2.5 pr-4 text-neutral-500 truncate max-w-[150px]">
-                      {e.referrer ? (() => {
-                        try { return new URL(e.referrer).pathname; } catch { return e.referrer; }
-                      })() : '-'}
-                    </td>
-                    <td className="py-2.5 pr-4">
-                      <span className="font-mono text-xs text-neutral-400">{e.sessionId?.slice(0, 8)}...</span>
-                    </td>
                     <td className="py-2.5 text-neutral-500 whitespace-nowrap">
                       {formatDistanceToNow(new Date(e.createdAt), { addSuffix: true })}
                     </td>

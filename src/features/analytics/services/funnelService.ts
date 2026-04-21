@@ -11,6 +11,7 @@ interface RawStepUser {
   user_id: string;
   user_name: string | null;
   user_email: string | null;
+  user_country: string | null;
   user_created_at: string;
   agent_name: string | null;
   event_created_at: string;
@@ -44,6 +45,7 @@ export const funnelService = {
       userId: u.user_id,
       userName: u.user_name,
       userEmail: u.user_email,
+      userCountry: u.user_country,
       userCreatedAt: u.user_created_at,
       agentName: u.agent_name,
       eventCreatedAt: u.event_created_at,
@@ -72,6 +74,7 @@ export const funnelService = {
         userId: e.user_id,
         userName: e.user_name,
         userEmail: e.user_email,
+        userCountry: e.user_country,
         agentName: e.agent_name,
         sessionId: e.session_id,
         referrer: e.referrer,

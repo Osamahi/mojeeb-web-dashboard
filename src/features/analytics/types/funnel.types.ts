@@ -8,6 +8,7 @@ export interface FunnelStepUser {
   userId: string;
   userName: string | null;
   userEmail: string | null;
+  userCountry: string | null;
   userCreatedAt: string;
   agentName: string | null;
   eventCreatedAt: string;
@@ -19,6 +20,7 @@ export interface FunnelRecentEvent {
   userId: string | null;
   userName: string | null;
   userEmail: string | null;
+  userCountry: string | null;
   agentName: string | null;
   sessionId: string;
   referrer: string | null;
