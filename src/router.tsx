@@ -322,15 +322,22 @@ export const router = createBrowserRouter([
       },
       {
         // Plan-gated inside the page itself via useHasBroadcastsAccess.
-        // Free/Starter users see an upgrade prompt; Professional + SuperAdmin
-        // get the full experience. Sidebar visibility is handled separately
-        // in navigation.config.ts via the `requiredPlans` field.
+        // SuperAdmin-only. Sidebar visibility is handled separately
+        // in navigation.config.ts via the `requireSuperAdmin` field.
         path: 'broadcasts',
-        element: <BroadcastsPage />,
+        element: (
+          <SuperAdminRoute>
+            <BroadcastsPage />
+          </SuperAdminRoute>
+        ),
       },
       {
         path: 'broadcasts/:campaignId',
-        element: <BroadcastDetailPage />,
+        element: (
+          <SuperAdminRoute>
+            <BroadcastDetailPage />
+          </SuperAdminRoute>
+        ),
       },
       {
         path: 'users',

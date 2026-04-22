@@ -239,10 +239,8 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.broadcasts',
     href: '/broadcasts',
     icon: Megaphone,
-    // Visible to Starter + Professional. Starter users see the page but get
-    // an in-page upgrade prompt (actual access gated inside the pages).
-    // SuperAdmin bypasses this via NavigationList filtering.
-    requiredPlans: [PlanCode.Starter, PlanCode.Professional],
+    // SuperAdmin-only.
+    requireSuperAdmin: true,
   },
   {
     name: 'Support',
