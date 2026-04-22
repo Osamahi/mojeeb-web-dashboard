@@ -14,6 +14,7 @@ export interface AgentPurpose {
   label: string;
   description: string;
   icon: string;
+  role: string; // Short role noun phrase (lowercase, no punctuation) fused into PersonaPrompt
   prompt: string;
   isPopular?: boolean;
 }

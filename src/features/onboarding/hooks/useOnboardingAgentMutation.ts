@@ -12,6 +12,7 @@ import { queryKeys } from '@/lib/queryKeys';
 import { logger } from '@/lib/logger';
 import type { AgentPurpose } from '../types/onboarding.types';
 import type { Agent } from '@/features/agents/types/agent.types';
+import { buildMultiRolePersona } from '../utils/buildMultiRolePersona';
 
 interface CreateOnboardingAgentParams {
   name: string;
@@ -36,10 +37,9 @@ export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationO
     mutationFn: async (params: CreateOnboardingAgentParams) => {
       logger.info('🚀 Creating agent', { agentName: params.name });
 
-      // Create agent with combined persona prompt
-      const personaPrompt = params.selectedPurposes
-        .map((purpose) => purpose.prompt)
-        .join('\n\n');
+      // Fuse the selected purpose roles into one concise sentence.
+      // Example: "You are a customer support, social media moderator agent."
+      const personaPrompt = buildMultiRolePersona(params.selectedPurposes);
 
       const agent = await agentService.createAgent({
         name: params.name,
