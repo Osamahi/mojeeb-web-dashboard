@@ -172,7 +172,27 @@ export function ConnectedPlatformCard({
 
           {connection.isActive ? (
             <>
-              {connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED' && (
+              {connection.platform === 'whatsapp' && connection.isCoexistence ? (
+                // Coexistence numbers never get VERIFIED status — they're verified via the
+                // WhatsApp Business App, not the Cloud API /register flow. Show a distinct badge.
+                <>
+                  <span>•</span>
+                  <Tooltip delayDuration={200}>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="whitespace-nowrap text-emerald-600 font-medium inline-flex items-center gap-1"
+                        aria-label={t('connections.details.coexistence_badge')}
+                      >
+                        {t('connections.details.coexistence_badge')}
+                        <HelpCircle className="w-3.5 h-3.5" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="center">
+                      {t('connections.details.coexistence_tooltip')}
+                    </TooltipContent>
+                  </Tooltip>
+                </>
+              ) : connection.platform === 'whatsapp' && connection.codeVerificationStatus !== 'VERIFIED' ? (
                 <>
                   <span>•</span>
                   <Tooltip delayDuration={200}>
@@ -191,7 +211,7 @@ export function ConnectedPlatformCard({
                     </TooltipContent>
                   </Tooltip>
                 </>
-              )}
+              ) : null}
             </>
           ) : (
             <>

@@ -109,6 +109,10 @@ export function OAuthAuthorizeStep({ platform, onSuccess, onBack }: OAuthAuthori
         config_id: '1601450690875651',
         response_type: 'code',
         override_default_response_type: true,
+        extras: {
+          featureType: 'whatsapp_business_app_onboarding',
+          sessionInfoVersion: '3',
+        },
       }
     );
   }, [agentId, onSuccess, t]);

@@ -468,6 +468,8 @@
       "pending_verification": "في انتظار التحقق",
       "verification_help_tooltip": "التواصل مع الدعم",
       "contact_support": "التواصل مع الدعم",
+      "coexistence_badge": "تعايش",
+      "coexistence_tooltip": "هذا الرقم مرتبط بتطبيق واتساب للأعمال. الرسائل المرسلة من التطبيق ستظهر هنا أيضًا.",
       "ai_response_settings": "إعدادات الرد الآلي",
       "messages": "الرسائل",
       "comments": "التعليقات"

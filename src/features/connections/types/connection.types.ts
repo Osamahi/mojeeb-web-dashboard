@@ -140,6 +140,13 @@ export type PlatformConnection = {
   updatedAt: string;
   platformMetadata: Record<string, unknown> | null;
   codeVerificationStatus: string | null; // WhatsApp verification status
+  /**
+   * True when the WhatsApp number is connected in Coexistence mode — in use
+   * by both the WhatsApp Business App and the Cloud API on the same number.
+   * Such numbers skip the standard /register step and never get a traditional
+   * VERIFIED code_verification_status, so don't show "Pending Verification".
+   */
+  isCoexistence?: boolean;
 };
 
 // API Response types (snake_case from backend)
@@ -158,6 +165,7 @@ export interface ApiPlatformConnectionResponse {
   updated_at: string;
   last_sync_at?: string | null;
   code_verification_status?: string | null; // WhatsApp verification status
+  is_coexistence?: boolean; // WhatsApp Coexistence (Business App + Cloud API on same number)
   respond_to_messages?: boolean;
   respond_to_comments?: boolean;
   metadata?: {

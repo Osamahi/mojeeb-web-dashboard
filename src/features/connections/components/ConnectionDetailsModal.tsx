@@ -210,8 +210,24 @@ export function ConnectionDetailsModal({
                     <div className="text-sm font-mono text-neutral-900">
                       {connection.platformAccountId}
                     </div>
-                    {connection.platform === 'whatsapp' &&
-                     connection.platformMetadata?.code_verification_status !== 'VERIFIED' && (
+                    {connection.platform === 'whatsapp' && connection.isCoexistence ? (
+                      // Coexistence: number is on both Business App + Cloud API — no /register step.
+                      <Tooltip delayDuration={200}>
+                        <TooltipTrigger asChild>
+                          <span
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-300 gap-1"
+                            aria-label={t('connections.details.coexistence_badge')}
+                          >
+                            {t('connections.details.coexistence_badge')}
+                            <HelpCircle className="w-3 h-3" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="center">
+                          {t('connections.details.coexistence_tooltip')}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : connection.platform === 'whatsapp' &&
+                     connection.platformMetadata?.code_verification_status !== 'VERIFIED' ? (
                       <Tooltip delayDuration={200}>
                         <TooltipTrigger asChild>
                           <button
@@ -227,7 +243,7 @@ export function ConnectionDetailsModal({
                           {t('connections.details.verification_help_tooltip')}
                         </TooltipContent>
                       </Tooltip>
-                    )}
+                    ) : null}
                   </div>
                 </div>
                 <div>

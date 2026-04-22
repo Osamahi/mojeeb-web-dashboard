@@ -471,6 +471,8 @@
       "pending_verification": "Pending Verification",
       "verification_help_tooltip": "Contact support",
       "contact_support": "Contact Support",
+      "coexistence_badge": "Coexistence",
+      "coexistence_tooltip": "This number is linked to the WhatsApp Business App. Messages sent from the app will also appear here.",
       "ai_response_settings": "AI Response Settings",
       "messages": "Messages",
       "comments": "Comments"

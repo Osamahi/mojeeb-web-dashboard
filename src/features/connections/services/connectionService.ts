@@ -75,6 +75,7 @@ class ConnectionService {
       updatedAt: apiConnection.updated_at,
       platformMetadata: apiConnection.metadata ?? null,
       codeVerificationStatus: apiConnection.code_verification_status ?? null,
+      isCoexistence: apiConnection.is_coexistence ?? false,
     };
   }
 
