@@ -19,6 +19,7 @@ import type {
   UpdateFollowUpStepRequest,
 } from '../types/followUp.types';
 import { organizationService } from '@/features/organizations/services/organizationService';
+import { detectCountryFromTimezone } from '@/features/onboarding/utils/countryDetector';
 
 // API Response Types (snake_case from backend)
 interface ApiAgentResponse {
@@ -183,6 +184,7 @@ class AgentService {
       model_provider: request.modelProvider,
       avatar_url: request.avatarUrl,
       organization_id: organizationId, // REQUIRED: Organization-centric architecture
+      country: request.country ?? detectCountryFromTimezone(), // Browser-detected, drives dialect clause
     };
 
     // Backend returns minimal response { id, name, status } or { Id, Name, Status }

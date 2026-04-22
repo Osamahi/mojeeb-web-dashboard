@@ -44,6 +44,7 @@ export type CreateAgentRequest = {
   modelProvider?: ModelProvider;
   avatarUrl?: string;
   organizationId?: string; // Optional - will be auto-fetched if not provided
+  country?: string; // ISO 3166-1 alpha-2; auto-detected from browser at creation time
 };
 
 export type UpdateAgentRequest = {
