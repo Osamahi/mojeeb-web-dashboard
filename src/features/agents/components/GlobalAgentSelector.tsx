@@ -4,11 +4,13 @@
  * Displays in top navigation bar and persists selection to localStorage
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ChevronDown, Check, Plus, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
 import { useAgentStore } from '../stores/agentStore';
+import { agentService } from '../services/agentService';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
 import { Spinner } from '@/components/ui/Spinner';
@@ -20,6 +22,7 @@ export default function GlobalAgentSelector() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   const user = useAuthStore((state) => state.user);
   const isSuperAdmin = user?.role === Role.SuperAdmin;
@@ -32,15 +35,26 @@ export default function GlobalAgentSelector() {
     switchAgent
   } = useAgentStore();
 
-  // Filter agents by name only (only for super admins)
-  const filteredAgents = useMemo(() => {
-    if (!isSuperAdmin || !searchQuery.trim()) return agents;
+  // Debounce the search input — 300ms matches other dashboard search fields
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-    const query = searchQuery.toLowerCase();
-    return agents.filter(agent =>
-      agent.name.toLowerCase().includes(query)
-    );
-  }, [agents, searchQuery, isSuperAdmin]);
+  // For SuperAdmins the local store is capped at 1000 by the backend, so fetch
+  // matching agents server-side. Regular users see only their org and can filter locally.
+  const { data: searchResults, isFetching: isSearching } = useQuery({
+    queryKey: ['agents', 'search', debouncedSearch],
+    queryFn: () => agentService.getAgents({ search: debouncedSearch }),
+    enabled: isModalOpen && isSuperAdmin && debouncedSearch.length > 0,
+    staleTime: 30 * 1000,
+  });
+
+  const filteredAgents = useMemo(() => {
+    if (!isSuperAdmin) return agents;
+    if (!debouncedSearch) return agents;
+    return searchResults ?? [];
+  }, [agents, searchResults, debouncedSearch, isSuperAdmin]);
 
   const handleAgentSelect = async (agentId: string) => {
     setIsModalOpen(false);
@@ -144,9 +158,13 @@ export default function GlobalAgentSelector() {
 
           {/* Agent List - Scrollable */}
           <div className="max-h-[400px] overflow-y-auto space-y-1 mb-3">
-            {filteredAgents.length === 0 && isSuperAdmin && searchQuery ? (
+            {isSuperAdmin && debouncedSearch && isSearching ? (
+              <div className="flex justify-center py-8">
+                <Spinner size="sm" />
+              </div>
+            ) : filteredAgents.length === 0 && isSuperAdmin && debouncedSearch ? (
               <div className="text-center py-8 text-neutral-500">
-                <p className="text-sm">{t('agent_selector.no_results', { query: searchQuery })}</p>
+                <p className="text-sm">{t('agent_selector.no_results', { query: debouncedSearch })}</p>
               </div>
             ) : (
               filteredAgents.map((agent) => (

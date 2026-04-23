@@ -135,10 +135,11 @@ class AgentService {
   }
 
   /**
-   * Get all agents for current user
+   * Get all agents for current user.
+   * `search` and `limit` are honored server-side for global admins only.
    */
-  async getAgents(): Promise<Agent[]> {
-    const { data } = await api.get<ApiResponse<ApiAgentResponse[]>>('/api/agents');
+  async getAgents(params?: { search?: string; limit?: number }): Promise<Agent[]> {
+    const { data } = await api.get<ApiResponse<ApiAgentResponse[]>>('/api/agents', { params });
     return data.data.map(agent => this.transformAgent(agent));
   }
 
