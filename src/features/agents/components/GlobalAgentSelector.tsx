@@ -32,7 +32,8 @@ export default function GlobalAgentSelector() {
     globalSelectedAgent,
     isAgentSwitching,
     isLoading,
-    switchAgent
+    switchAgent,
+    setAgents,
   } = useAgentStore();
 
   // Debounce the search input — 300ms matches other dashboard search fields
@@ -60,6 +61,14 @@ export default function GlobalAgentSelector() {
     setIsModalOpen(false);
     setSearchQuery(''); // Clear search on close
     if (globalSelectedAgent?.id === agentId) return;
+
+    // SuperAdmin search results may contain agents that aren't in the local
+    // store (the initial fetch is capped at 1000 rows). Merge the picked agent
+    // in first so switchAgent() can find it.
+    if (isSuperAdmin && !agents.some(a => a.id === agentId)) {
+      const picked = searchResults?.find(a => a.id === agentId);
+      if (picked) setAgents([picked, ...agents]);
+    }
 
     // No callback needed - React Query will auto-refetch queries with agentId in keys
     await switchAgent(agentId);
