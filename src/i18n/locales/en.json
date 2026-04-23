@@ -1009,6 +1009,7 @@
     "subscriptions": "Subscriptions",
     "coupons": "Coupons",
     "coupon_redemptions": "Coupon Redemptions",
+    "affiliate_redemptions": "Affiliate Redemptions",
     "addon_plans": "Add-on Catalogue",
     "addons": "Add-ons",
     "pricing": "Pricing",
@@ -2020,6 +2021,20 @@
       "paid": "Payment",
       "invoice": "Invoice",
       "source": "Source"
+    }
+  },
+  "affiliate": {
+    "redemptions": {
+      "title": "My Referrals",
+      "subtitle": "People who used your coupon codes.",
+      "summary": "Summary",
+      "total_count_one": "{{count}} redemption",
+      "total_count_other": "{{count}} redemptions",
+      "total_discount_suffix": "discount delivered",
+      "empty": "No one has used your coupons yet. Share your code to get started.",
+      "admin_impersonate_title": "Admin · view as affiliate",
+      "admin_impersonate_placeholder": "Search affiliate…",
+      "admin_impersonate_hint": "Leave empty to see your own redemptions. Regular users never see this control."
     }
   },
   "user_picker": {

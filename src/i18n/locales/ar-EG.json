@@ -1007,6 +1007,7 @@
     "subscriptions": "الاشتراكات",
     "coupons": "الكوبونات",
     "coupon_redemptions": "استخدامات الكوبونات",
+    "affiliate_redemptions": "إحالات الأفيلييت",
     "addon_plans": "كتالوج الإضافات",
     "addons": "الإضافات",
     "pricing": "الأسعار",
@@ -1870,6 +1871,23 @@
     "downgrading": "بنقلل...",
     "confirm_change": "تأكيد",
     "changing": "جاري التغيير..."
+  },
+  "affiliate": {
+    "redemptions": {
+      "title": "إحالاتي",
+      "subtitle": "الناس اللي استخدموا أكواد كوبوناتك.",
+      "summary": "الملخص",
+      "total_count_one": "استخدام واحد",
+      "total_count_two": "استخدامين",
+      "total_count_few": "{{count}} استخدامات",
+      "total_count_many": "{{count}} استخدام",
+      "total_count_other": "{{count}} استخدام",
+      "total_discount_suffix": "إجمالي الخصم اللي اتقدم",
+      "empty": "محدش استخدم كوبوناتك لسه. شارك الكود عشان تبدأ.",
+      "admin_impersonate_title": "الأدمن · اعرض كمسوّق",
+      "admin_impersonate_placeholder": "دوّر على مسوّق…",
+      "admin_impersonate_hint": "سيبه فاضي لعرض استخداماتك. اليوزرز العاديين مش بيشوفوا الخيار ده."
+    }
   },
   "user_profile": {
     "settings": "الإعدادات",

@@ -33,6 +33,7 @@ import {
   BarChart3,
   Ticket,
   BadgeCheck,
+  HandCoins,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { PlanCode } from '@/features/subscriptions/types/subscription.types';
@@ -122,6 +123,13 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.coupon_redemptions',
     href: '/coupon-redemptions',
     icon: BadgeCheck,
+    requireSuperAdmin: true,
+  },
+  {
+    name: 'Affiliate Redemptions',
+    translationKey: 'navigation.affiliate_redemptions',
+    href: '/my-redemptions',
+    icon: HandCoins,
     requireSuperAdmin: true,
   },
   {

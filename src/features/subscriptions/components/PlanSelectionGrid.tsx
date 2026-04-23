@@ -4,6 +4,17 @@ import type { SubscriptionPlan } from '../types/subscription.types';
 import { PlanCard } from './PlanCard';
 import { PlanCode } from '../types/subscription.types';
 
+// On localhost we run against Stripe test mode, so the UI must surface the
+// test-mode plans (codes without the `_production` suffix). Deployed builds
+// always show the production plans.
+const isLocalDev =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+const visiblePlanCodes: string[] = isLocalDev
+  ? ['free', 'starter', 'professional']
+  : [PlanCode.Free, PlanCode.Starter, PlanCode.Professional];
+
 interface PlanSelectionGridProps {
   /** Current subscription plan code to highlight */
   currentPlanCode?: string;
@@ -35,9 +46,8 @@ export const PlanSelectionGrid = memo(function PlanSelectionGrid({
   const loading = usePlanStore(state => state.isLoading);
   const error = usePlanStore(state => state.error);
 
-  // Filter to show only production plans (exclude legacy and test plans)
-  const productionPlanCodes = [PlanCode.Free, PlanCode.Starter, PlanCode.Professional];
-  const plans = allPlans.filter(plan => productionPlanCodes.includes(plan.code as any));
+  // Show production plans in prod; show test-mode plans on localhost (see top of file).
+  const plans = allPlans.filter(plan => visiblePlanCodes.includes(plan.code));
 
   // Show loading skeleton if still loading OR if plans not loaded yet
   const showLoading = loading || allPlans.length === 0;

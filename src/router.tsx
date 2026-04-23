@@ -43,6 +43,7 @@ const AdminPlanCataloguePage = lazy(() => import('./features/catalogue/pages/Adm
 const AdminAddonsPage = lazy(() => import('./features/addons/pages/AdminAddonsPage').then(m => ({ default: m.AdminAddonsPage })));
 const AdminCouponsPage = lazy(() => import('./features/coupons/pages/AdminCouponsPage'));
 const AdminCouponRedemptionsPage = lazy(() => import('./features/coupons/pages/AdminCouponRedemptionsPage'));
+const MyRedemptionsPage = lazy(() => import('./features/affiliate/pages/MyRedemptionsPage'));
 const AddonPlansPage = lazy(() => import('./features/addons/pages/AddonPlansPage').then(m => ({ default: m.AddonPlansPage })));
 const MySubscriptionPage = lazy(() => import('./features/subscriptions/pages/MySubscriptionPage'));
 const SubscriptionSuccessPage = lazy(() => import('./features/billing/pages/SubscriptionSuccessPage'));
@@ -438,6 +439,13 @@ export const router = createBrowserRouter([
             <AdminCouponRedemptionsPage />
           </SuperAdminRoute>
         ),
+      },
+      {
+        // Self-service affiliate page. No SuperAdmin gate — any authenticated user can
+        // visit; the server enforces that only their own redemptions are returned. An
+        // affiliate gets the URL directly; non-affiliates just see an empty state.
+        path: 'my-redemptions',
+        element: <MyRedemptionsPage />,
       },
       {
         path: 'followup-jobs',
