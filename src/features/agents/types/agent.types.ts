@@ -11,6 +11,7 @@ export type Agent = {
   personaPrompt: string | null;
   organizationId: string;
   organizationName?: string | null;
+  planCode?: string | null;
   avatarUrl: string | null;
   status: AgentStatus;
   language: string | null;

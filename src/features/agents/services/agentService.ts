@@ -29,6 +29,7 @@ interface ApiAgentResponse {
   persona_prompt?: string;
   organization_id: string;
   organization_name?: string;
+  plan_code?: string | null;
   avatar_url?: string;
   status?: string;
   language?: string;
@@ -108,6 +109,7 @@ class AgentService {
       personaPrompt: apiAgent.persona_prompt ?? null,
       organizationId: apiAgent.organization_id,
       organizationName: apiAgent.organization_name ?? null,
+      planCode: apiAgent.plan_code ?? null,
       avatarUrl: apiAgent.avatar_url ?? null,
       status: (apiAgent.status as AgentStatus) ?? 'draft',
       language: apiAgent.language ?? null,

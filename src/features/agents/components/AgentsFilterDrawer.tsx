@@ -11,11 +11,14 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import type { AgentStatus, ModelProvider, PlatformTarget } from '../types/agent.types';
 
+export type PlanFilter = 'all' | 'free' | 'starter' | 'professional';
+
 export interface AgentFilters {
   search: string;
   status: AgentStatus | 'all';
   modelProvider: ModelProvider | 'all';
   platformTarget: PlatformTarget | 'all';
+  planCode: PlanFilter;
   sortBy: 'name' | 'createdAt' | 'updatedAt';
 }
 
@@ -52,6 +55,7 @@ export default function AgentsFilterDrawer({
       status: 'all',
       modelProvider: 'all',
       platformTarget: 'all',
+      planCode: 'all',
       sortBy: 'createdAt',
     };
     setDraftFilters(defaultFilters);
@@ -192,6 +196,38 @@ export default function AgentsFilterDrawer({
                   />
                   <span className="text-sm text-neutral-950 capitalize">
                     {platform === 'all' ? t('agents_filter.platform_all') : t(`agents_filter.platform_${platform}`)}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Subscription Plan Filter */}
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              {t('agents_filter.plan_label')}
+            </label>
+            <div className="space-y-2">
+              {(['all', 'free', 'starter', 'professional'] as const).map((plan) => (
+                <label
+                  key={plan}
+                  className="flex items-center gap-3 p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50 transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name="planCode"
+                    value={plan}
+                    checked={draftFilters.planCode === plan}
+                    onChange={(e) =>
+                      setDraftFilters({
+                        ...draftFilters,
+                        planCode: e.target.value as PlanFilter,
+                      })
+                    }
+                    className="w-4 h-4 text-brand-mojeeb focus:ring-brand-mojeeb"
+                  />
+                  <span className="text-sm text-neutral-950 capitalize">
+                    {t(`agents_filter.plan_${plan}`)}
                   </span>
                 </label>
               ))}

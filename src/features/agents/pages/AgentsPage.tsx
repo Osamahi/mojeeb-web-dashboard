@@ -40,6 +40,7 @@ export default function AgentsPage() {
     status: 'all',
     modelProvider: 'all',
     platformTarget: 'all',
+    planCode: 'all',
     sortBy: 'createdAt',
   });
 
@@ -53,6 +54,7 @@ export default function AgentsPage() {
     if (filters.status !== 'all') count++;
     if (filters.modelProvider !== 'all') count++;
     if (filters.platformTarget !== 'all') count++;
+    if (filters.planCode !== 'all') count++;
     if (filters.sortBy !== 'createdAt') count++;
     return count;
   }, [filters]);
@@ -88,6 +90,15 @@ export default function AgentsPage() {
       // Platform target filter
       if (filters.platformTarget !== 'all' && agent.platformTarget !== filters.platformTarget) {
         return false;
+      }
+
+      // Subscription plan filter — matches production codes (free_production)
+      // and legacy codes (free) via prefix, consistent with backend PlanCode.IsValid.
+      if (filters.planCode !== 'all') {
+        const code = agent.planCode ?? '';
+        if (!code.startsWith(filters.planCode)) {
+          return false;
+        }
       }
 
       return true;
@@ -166,6 +177,7 @@ export default function AgentsPage() {
                       status: 'all',
                       modelProvider: 'all',
                       platformTarget: 'all',
+                      planCode: 'all',
                       sortBy: 'createdAt',
                     });
                   }}
