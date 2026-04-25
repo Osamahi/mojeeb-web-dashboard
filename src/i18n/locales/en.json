@@ -497,7 +497,6 @@
     "edit_button": "Edit",
     "connect_button_short": "Connect",
     "connect_button": "Connect",
-    "upgrade_button": "Upgrade",
     "fetching_pages": "Fetching your available pages",
     "failed_load_pages_title": "Failed to Load Pages",
     "retry_label": "Retry",
