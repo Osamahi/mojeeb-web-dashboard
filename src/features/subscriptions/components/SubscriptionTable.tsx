@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit, BarChart3, Sliders, CreditCard, Loader2, Bot, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { PlanCode } from '../types/subscription.types';
 import type { SubscriptionDetails } from '../types/subscription.types';
 import { useDateLocale } from '@/lib/dateConfig';
 
@@ -144,8 +145,18 @@ export function SubscriptionTable({
           {subscriptions.map((subscription) => (
             <tr key={subscription.id} className="hover:bg-gray-50">
               <td className="whitespace-nowrap px-6 py-4">
-                <div className="text-sm font-medium text-gray-900">
-                  {subscription.organizationName}
+                <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
+                  <span>{subscription.organizationName}</span>
+                  {subscription.planCode === PlanCode.Starter && (
+                    <span className="text-base leading-none" role="img" aria-label={subscription.planName}>
+                      💰
+                    </span>
+                  )}
+                  {subscription.planCode === PlanCode.Professional && (
+                    <span className="text-base leading-none" role="img" aria-label={subscription.planName}>
+                      💰💰
+                    </span>
+                  )}
                 </div>
                 <div className="text-sm text-gray-500">
                   {subscription.paymentMethod}
