@@ -1,17 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit, BarChart3, Sliders, CreditCard, Loader2 } from 'lucide-react';
+import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit, BarChart3, Sliders, CreditCard, Loader2, Bot, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SubscriptionDetails } from '../types/subscription.types';
 import { useDateLocale } from '@/lib/dateConfig';
 
 interface SubscriptionTableProps {
   subscriptions: SubscriptionDetails[];
-  onFlag: (id: string, flag: boolean) => void;
   onPause: (id: string, pause: boolean) => void;
   onRenew: (id: string) => void;
   onChangePlan: (subscription: SubscriptionDetails) => void;
   onEditLimits: (subscription: SubscriptionDetails) => void;
   onViewUsage: (subscription: SubscriptionDetails) => void;
+  onViewAgents: (subscription: SubscriptionDetails) => void;
+  onViewTeam: (subscription: SubscriptionDetails) => void;
   onTriggerCollection: (subscription: SubscriptionDetails) => void;
   triggeringCollectionId: string | null;
   onUpdateStatus: (id: string, status: string) => void;
@@ -19,12 +20,13 @@ interface SubscriptionTableProps {
 
 export function SubscriptionTable({
   subscriptions,
-  onFlag,
   onPause,
   onRenew,
   onChangePlan,
   onEditLimits,
   onViewUsage,
+  onViewAgents,
+  onViewTeam,
   onTriggerCollection,
   triggeringCollectionId,
   onUpdateStatus,
@@ -262,6 +264,30 @@ export function SubscriptionTable({
 
                           <button
                             onClick={() => {
+                              onViewAgents(subscription);
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Bot className="h-4 w-4" />
+                            {t('subscriptions.view_agents')}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              onViewTeam(subscription);
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Users className="h-4 w-4" />
+                            {t('subscriptions.view_team')}
+                          </button>
+
+                          <button
+                            onClick={() => {
                               onChangePlan(subscription);
                               setOpenMenuId(null);
                               setMenuPosition(null);
@@ -294,18 +320,6 @@ export function SubscriptionTable({
                           >
                             <RefreshCw className="h-4 w-4" />
                             {t('subscriptions.renew_subscription')}
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              onFlag(subscription.id, !subscription.isFlaggedNonPaying);
-                              setOpenMenuId(null);
-                              setMenuPosition(null);
-                            }}
-                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Flag className="h-4 w-4" />
-                            {subscription.isFlaggedNonPaying ? t('subscriptions.unflag') : t('subscriptions.flag_non_paying')}
                           </button>
 
                           {subscription.paymentMethod === 'stripe' && (

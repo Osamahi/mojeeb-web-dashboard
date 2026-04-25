@@ -5,7 +5,6 @@ import type {
   UsageSummary,
   SubscriptionPlan,
   CreateSubscriptionRequest,
-  FlagNonPaymentRequest,
   PauseSubscriptionRequest,
   SubscriptionFilters,
 } from '../types/subscription.types';
@@ -240,18 +239,6 @@ class SubscriptionService {
     return response.data.data.map((sub) =>
       this.transformSubscriptionResponse(sub)
     );
-  }
-
-  /**
-   * Flag or unflag a subscription for non-payment
-   * PATCH /api/admin/subscriptions/{id}/flag
-   */
-  async flagSubscription(
-    id: string,
-    flag: boolean
-  ): Promise<void> {
-    const request: FlagNonPaymentRequest = { flag };
-    await api.patch(`/api/admin/subscriptions/${id}/flag`, request);
   }
 
   /**

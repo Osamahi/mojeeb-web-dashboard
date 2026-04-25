@@ -12,7 +12,6 @@ import {
   Plug,
   Contact,
   MessagesSquare,
-  Building2,
   UserPlus,
   Receipt,
   CreditCard,
@@ -90,13 +89,15 @@ export const navigation: NavigationItem[] = [
     icon: Users,
     requireSuperAdmin: true,
   },
-  {
-    name: 'Organizations',
-    translationKey: 'navigation.organizations',
-    href: '/organizations',
-    icon: Building2,
-    requireSuperAdmin: true,
-  },
+  // Organizations: hidden from sidebar — Subscriptions admin now exposes the same agents/team
+  // management via the row-level kebab menu. Route at /organizations still works for direct URLs.
+  // {
+  //   name: 'Organizations',
+  //   translationKey: 'navigation.organizations',
+  //   href: '/organizations',
+  //   icon: Building2,
+  //   requireSuperAdmin: true,
+  // },
   {
     name: 'All Connections',
     translationKey: 'navigation.admin_connections',

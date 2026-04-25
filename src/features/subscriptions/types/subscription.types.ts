@@ -99,13 +99,6 @@ export interface CreateSubscriptionRequest {
 }
 
 /**
- * Flag/unflag request
- */
-export interface FlagNonPaymentRequest {
-  flag: boolean;
-}
-
-/**
  * Pause/resume request
  */
 export interface PauseSubscriptionRequest {

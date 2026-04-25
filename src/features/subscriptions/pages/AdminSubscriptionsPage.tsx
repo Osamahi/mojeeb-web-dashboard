@@ -1,15 +1,19 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Plus, RefreshCw, Filter, Search, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { subscriptionService } from '../services/subscriptionService';
-import type { SubscriptionDetails, SubscriptionFilters, PlanCode, SubscriptionStatus } from '../types/subscription.types';
+import { PlanCode } from '../types/subscription.types';
+import type { SubscriptionDetails, SubscriptionFilters } from '../types/subscription.types';
 import { CreateSubscriptionModal } from '../components/CreateSubscriptionModal';
 import { AdminChangePlanModal } from '../components/AdminChangePlanModal';
 import { EditLimitsModal } from '../components/EditLimitsModal';
 import { ViewUsageModal } from '../components/ViewUsageModal';
 import { SubscriptionTable } from '../components/SubscriptionTable';
+import { OrganizationAgentsModal } from '@/features/organizations/components/OrganizationAgentsModal';
+import { OrganizationMembersModal } from '@/features/organizations/components/OrganizationMembersModal';
 import { BaseHeader } from '@/components/ui/BaseHeader';
+import { Switch } from '@/components/ui/Switch';
 import { toast } from 'sonner';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
@@ -23,9 +27,12 @@ export default function AdminSubscriptionsPage() {
   const [showChangePlanModal, setShowChangePlanModal] = useState(false);
   const [showEditLimitsModal, setShowEditLimitsModal] = useState(false);
   const [showViewUsageModal, setShowViewUsageModal] = useState(false);
+  const [showAgentsModal, setShowAgentsModal] = useState(false);
+  const [showTeamModal, setShowTeamModal] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<SubscriptionDetails | null>(null);
   const [filters, setFilters] = useState<SubscriptionFilters>({});
   const [searchInput, setSearchInput] = useState(''); // Local search input for debouncing
+  const [paidOnly, setPaidOnly] = useState(false);
 
   // Fetch available plans for the filter dropdown (same pattern as AdminChangePlanModal)
   const { data: availablePlans = [] } = useQuery({
@@ -126,17 +133,6 @@ export default function AdminSubscriptionsPage() {
   }, [page, hasMore, loading, loadingMore]);
 
   // Handle subscription actions
-  const handleFlag = async (id: string, flag: boolean) => {
-    try {
-      await subscriptionService.flagSubscription(id, flag);
-      toast.success(flag ? t('subscriptions.flag_success') : t('subscriptions.unflag_success'));
-      handleRefresh();
-    } catch (error) {
-      console.error('Failed to flag subscription:', error);
-      toast.error(t('subscriptions.update_failed'));
-    }
-  };
-
   const handlePause = async (id: string, pause: boolean) => {
     try {
       await subscriptionService.pauseSubscription(id, pause);
@@ -208,6 +204,16 @@ export default function AdminSubscriptionsPage() {
     setShowViewUsageModal(true);
   };
 
+  const handleViewAgents = (subscription: SubscriptionDetails) => {
+    setSelectedSubscription(subscription);
+    setShowAgentsModal(true);
+  };
+
+  const handleViewTeam = (subscription: SubscriptionDetails) => {
+    setSelectedSubscription(subscription);
+    setShowTeamModal(true);
+  };
+
   // Refresh handler - reset infinite scroll state
   const handleRefresh = useCallback(() => {
     setPage(1);
@@ -221,6 +227,17 @@ export default function AdminSubscriptionsPage() {
   const handleCreateClick = useCallback(() => {
     setShowCreateModal(true);
   }, []);
+
+  // Client-side "paid only" filter — hides Free plan subscriptions from the loaded set.
+  // Done client-side because backend list filter only supports a single planCode, not
+  // "any non-free plan." With infinite scroll, the toggle filters whatever's loaded.
+  const visibleSubscriptions = useMemo(
+    () =>
+      paidOnly
+        ? subscriptions.filter((s) => s.planCode !== PlanCode.Free)
+        : subscriptions,
+    [subscriptions, paidOnly]
+  );
 
   return (
     <div className="space-y-6 p-6">
@@ -254,24 +271,9 @@ export default function AdminSubscriptionsPage() {
         {/* Filter Controls */}
         <div className="flex items-center gap-2">
           <select
-            value={filters.status || ''}
-            onChange={(e) =>
-              setFilters({ ...filters, status: e.target.value as SubscriptionStatus || undefined })
-            }
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
-          >
-            <option value="">{t('subscriptions.all_statuses')}</option>
-            <option value="active">{t('subscriptions.status_active')}</option>
-            <option value="paused">{t('subscriptions.status_paused')}</option>
-            <option value="canceled">{t('subscriptions.status_canceled')}</option>
-            <option value="expired">{t('subscriptions.status_expired')}</option>
-          </select>
-
-          <select
             value={filters.planCode || ''}
             onChange={(e) => {
               const newPlanCode = e.target.value || undefined;
-              console.log('🔍 Plan filter changed:', { value: e.target.value, newPlanCode });
               setFilters({ ...filters, planCode: newPlanCode as PlanCode | undefined });
             }}
             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
@@ -283,6 +285,17 @@ export default function AdminSubscriptionsPage() {
               </option>
             ))}
           </select>
+
+          {/* Paid-only toggle */}
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <Switch
+              size="sm"
+              checked={paidOnly}
+              onChange={setPaidOnly}
+              aria-label={t('subscriptions.paid_only')}
+            />
+            <span>{t('subscriptions.paid_only')}</span>
+          </label>
 
           <button
             onClick={handleRefresh}
@@ -360,24 +373,27 @@ export default function AdminSubscriptionsPage() {
               ))}
             </div>
           </div>
-        ) : subscriptions.length === 0 ? (
+        ) : visibleSubscriptions.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-12 text-center">
             <Filter className="h-12 w-12 text-gray-300" />
             <h3 className="mt-4 text-sm font-medium text-gray-900">{t('subscriptions.no_subscriptions_title')}</h3>
             <p className="mt-1 text-sm text-gray-500">
-              {t('subscriptions.no_subscriptions_description')}
+              {paidOnly && subscriptions.length > 0
+                ? t('subscriptions.no_paid_subscriptions_description')
+                : t('subscriptions.no_subscriptions_description')}
             </p>
           </div>
         ) : (
           <>
             <SubscriptionTable
-              subscriptions={subscriptions}
-              onFlag={handleFlag}
+              subscriptions={visibleSubscriptions}
               onPause={handlePause}
               onRenew={handleRenew}
               onChangePlan={handleChangePlan}
               onEditLimits={handleEditLimits}
               onViewUsage={handleViewUsage}
+              onViewAgents={handleViewAgents}
+              onViewTeam={handleViewTeam}
               onTriggerCollection={handleTriggerCollection}
               triggeringCollectionId={triggeringCollectionId}
               onUpdateStatus={handleUpdateStatus}
@@ -392,11 +408,11 @@ export default function AdminSubscriptionsPage() {
                 </div>
               ) : hasMore ? (
                 <div className="text-center text-sm text-gray-500">
-                  {t('subscriptions.scroll_to_load_simple', { count: subscriptions.length })}
+                  {t('subscriptions.scroll_to_load_simple', { count: visibleSubscriptions.length })}
                 </div>
               ) : (
                 <div className="text-center text-sm text-gray-500">
-                  {t('subscriptions.all_loaded', { count: subscriptions.length })}
+                  {t('subscriptions.all_loaded', { count: visibleSubscriptions.length })}
                 </div>
               )}
             </div>
@@ -449,6 +465,32 @@ export default function AdminSubscriptionsPage() {
             setSelectedSubscription(null);
           }}
           subscription={selectedSubscription}
+        />
+      )}
+
+      {/* Agents Modal */}
+      {selectedSubscription && (
+        <OrganizationAgentsModal
+          isOpen={showAgentsModal}
+          onClose={() => {
+            setShowAgentsModal(false);
+            setSelectedSubscription(null);
+          }}
+          organizationId={selectedSubscription.organizationId}
+          organizationName={selectedSubscription.organizationName}
+        />
+      )}
+
+      {/* Team Modal */}
+      {selectedSubscription && (
+        <OrganizationMembersModal
+          isOpen={showTeamModal}
+          onClose={() => {
+            setShowTeamModal(false);
+            setSelectedSubscription(null);
+          }}
+          organizationId={selectedSubscription.organizationId}
+          organizationName={selectedSubscription.organizationName}
         />
       )}
     </div>

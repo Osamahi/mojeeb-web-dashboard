@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { X, User as UserIcon, Bot, Search, Check, UserPlus, Trash2, Mail, Calendar } from 'lucide-react';
+import { X, User as UserIcon, Search, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { isToastHandled } from '@/lib/errors';
@@ -15,12 +15,11 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import AssignUserToOrgModal from './AssignUserToOrgModal';
+import { OrganizationAgentsList } from './OrganizationAgentsList';
+import { OrganizationMembersList } from './OrganizationMembersList';
 import { organizationService } from '../services/organizationService';
 import { userService } from '@/features/users/services/userService';
-import { agentService } from '@/features/agents/services/agentService';
-import type { Organization, UpdateOrganizationRequest, OrganizationMember } from '../types';
+import type { Organization, UpdateOrganizationRequest } from '../types';
 import type { User } from '@/features/users/types';
 
 interface EditOrganizationModalProps {
@@ -44,12 +43,6 @@ export default function EditOrganizationModal({
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  // Team members state
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [memberToRemove, setMemberToRemove] = useState<OrganizationMember & { user?: { name: string | null; email: string | null; phone?: string | null } } | null>(null);
-  const [isRemoving, setIsRemoving] = useState(false);
-
   // Fetch all users for owner selection
   const { data: users = [], isLoading: isLoadingUsers } = useQuery({
     queryKey: ['users'],
@@ -58,7 +51,7 @@ export default function EditOrganizationModal({
   });
 
   // Fetch owner information
-  const { data: owner, isLoading: isLoadingOwner } = useQuery({
+  const { data: owner } = useQuery({
     queryKey: ['user', organization?.ownerId],
     queryFn: () => userService.getUserByIdFromApi(organization!.ownerId),
     enabled: !!organization?.ownerId && isOpen,
@@ -89,36 +82,6 @@ export default function EditOrganizationModal({
       setUserSearchQuery(owner.email || '');
     }
   }, [organization, owner]);
-
-  // Fetch agents for this organization
-  const { data: agents = [], isLoading: isLoadingAgents } = useQuery({
-    queryKey: ['agents', 'organization', organization?.id],
-    queryFn: () => agentService.getAgentsByOrganization(organization!.id),
-    enabled: !!organization?.id && isOpen,
-  });
-
-  // Fetch organization members
-  const { data: members = [], isLoading: isLoadingMembers, refetch: refetchMembers } = useQuery({
-    queryKey: ['organization-members', organization?.id],
-    queryFn: () => organizationService.getOrganizationMembers(organization!.id),
-    enabled: !!organization?.id && isOpen,
-  });
-
-  // Enrich members with user details
-  const enrichedMembers = useMemo(() => {
-    return members.map(member => {
-      const user = users.find(u => u.id === member.userId);
-      return {
-        ...member,
-        user: user ? {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone
-        } : undefined
-      };
-    });
-  }, [members, users]);
 
   // Update organization mutation
   const updateMutation = useMutation({
@@ -183,54 +146,6 @@ export default function EditOrganizationModal({
   const handleUserSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserSearchQuery(e.target.value);
     setShowUserDropdown(true);
-  };
-
-  // Team member handlers
-  const handleOpenAssignModal = () => {
-    setIsAssignModalOpen(true);
-  };
-
-  const handleCloseAssignModal = () => {
-    setIsAssignModalOpen(false);
-  };
-
-  const handleAssignSuccess = async () => {
-    console.log('[EditOrganizationModal] Assignment successful, refetching members...');
-    // Invalidate and refetch both members and users (needed for enrichedMembers)
-    await queryClient.invalidateQueries({ queryKey: ['organization-members', organization?.id] });
-    await queryClient.invalidateQueries({ queryKey: ['users'] });
-    await refetchMembers();
-    console.log('[EditOrganizationModal] Members refetched');
-  };
-
-  const handleRemoveMember = (member: OrganizationMember & { user?: { name: string | null; email: string | null; phone?: string | null } }) => {
-    console.log('[EditOrganizationModal] Remove member clicked:', member);
-    setMemberToRemove(member);
-    setIsConfirmDialogOpen(true);
-  };
-
-  const confirmRemoveMember = async () => {
-    if (!organization?.id || !memberToRemove) return;
-
-    setIsRemoving(true);
-    try {
-      await organizationService.removeUserFromOrganization(organization.id, memberToRemove.userId);
-      toast.success(t('organizations.member_removed'));
-      refetchMembers();
-      setIsConfirmDialogOpen(false);
-      setMemberToRemove(null);
-    } catch (error) {
-      toast.error(t('organizations.remove_failed'));
-    } finally {
-      setIsRemoving(false);
-    }
-  };
-
-  const handleCloseConfirmDialog = () => {
-    if (!isRemoving) {
-      setIsConfirmDialogOpen(false);
-      setMemberToRemove(null);
-    }
   };
 
   if (!organization) return null;
@@ -389,148 +304,10 @@ export default function EditOrganizationModal({
           )}
 
           {/* Agents List */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-neutral-700">
-              {t('organizations.agents_count')} ({agents.length})
-            </label>
-            {isLoadingAgents ? (
-              <div className="p-4 bg-neutral-50 rounded-lg animate-pulse">
-                <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
-              </div>
-            ) : agents.length > 0 ? (
-              <div className="max-h-60 overflow-y-auto space-y-2">
-                {agents.map((agent) => (
-                  <div
-                    key={agent.id}
-                    className="p-3 bg-neutral-50 rounded-lg border border-neutral-200 hover:bg-neutral-100 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
-                        <Bot className="h-4 w-4 text-neutral-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-neutral-900 truncate">
-                          {agent.name}
-                        </div>
-                        {agent.description && (
-                          <div className="text-xs text-neutral-500 truncate">
-                            {agent.description}
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-xs text-neutral-400">
-                        {agent.status}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-4 bg-neutral-50 rounded-lg text-sm text-neutral-500 text-center">
-                {t('organizations.no_agents')}
-              </div>
-            )}
-          </div>
+          <OrganizationAgentsList organizationId={organization.id} enabled={isOpen} />
 
-          {/* Team Members Section */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-neutral-700">
-                {t('organizations.team_members_count')} ({enrichedMembers.length})
-              </label>
-              <button
-                type="button"
-                onClick={handleOpenAssignModal}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-brand-mojeeb hover:bg-brand-mojeeb/10 rounded-lg transition-colors"
-              >
-                <UserPlus className="h-4 w-4" />
-                {t('organizations.add_member')}
-              </button>
-            </div>
-            {isLoadingMembers ? (
-              <div className="p-4 bg-neutral-50 rounded-lg animate-pulse">
-                <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
-              </div>
-            ) : enrichedMembers.length > 0 ? (
-              <div className="max-h-60 overflow-y-auto border border-neutral-200 rounded-lg">
-                <table className="w-full">
-                  <thead className="bg-neutral-50 border-b border-neutral-200 sticky top-0">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                        {t('common.user')}
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                        {t('common.email')}
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                        {t('common.role')}
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                        {t('common.joined')}
-                      </th>
-                      <th className="px-4 py-2 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                        {t('common.actions')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-neutral-200">
-                    {enrichedMembers.map((member) => (
-                      <tr key={member.id} className="hover:bg-neutral-50 transition-colors">
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm font-medium text-neutral-900">
-                            {member.user?.name || '-'}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center gap-2 text-sm text-neutral-600">
-                            <Mail className="h-3 w-3" />
-                            {member.user?.email || '-'}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                            member.role === 'owner'
-                              ? 'bg-purple-100 text-purple-800'
-                              : member.role === 'admin'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-neutral-100 text-neutral-800'
-                          }`}>
-                            {member.role}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center gap-2 text-sm text-neutral-600">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(member.joinedAt).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-right">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleRemoveMember(member);
-                            }}
-                            className="text-red-600 hover:text-red-800 transition-colors p-2"
-                            title={t('organizations.remove_member')}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="p-4 bg-neutral-50 rounded-lg text-sm text-neutral-500 text-center">
-                {t('organizations.no_members')}
-              </div>
-            )}
-          </div>
+          {/* Team Members */}
+          <OrganizationMembersList organizationId={organization.id} enabled={isOpen} />
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
@@ -547,27 +324,6 @@ export default function EditOrganizationModal({
         </div>
       </form>
       </BaseModal>
-
-      {/* Assign User Modal */}
-      <AssignUserToOrgModal
-        isOpen={isAssignModalOpen}
-        onClose={handleCloseAssignModal}
-        onSuccess={handleAssignSuccess}
-        organizationId={organization.id}
-      />
-
-      {/* Remove Member Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={isConfirmDialogOpen}
-        onClose={handleCloseConfirmDialog}
-        onConfirm={confirmRemoveMember}
-        title={t('organizations.remove_member')}
-        message={t('organizations.remove_member_confirm', { name: memberToRemove?.user?.name || memberToRemove?.user?.email || 'this member' })}
-        confirmText={t('common.delete')}
-        cancelText={t('common.cancel')}
-        variant="danger"
-        isLoading={isRemoving}
-      />
     </>
   );
 }
