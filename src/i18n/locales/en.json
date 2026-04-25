@@ -742,6 +742,7 @@
     "title_connections": "Connections",
     "title_conversations": "Conversations",
     "title_forgot_password": "Reset Password",
+    "title_reset_password": "Set New Password",
     "title_google_callback": "Google Sign In",
     "title_install_widget": "Install Widget",
     "title_leads": "Leads",
@@ -857,7 +858,19 @@
     "login_failed": "Login failed. Please check your credentials.",
     "signup_failed": "Registration failed. Please try again.",
     "reset_link_sent": "Password reset link sent to your email",
-    "reset_link_failed": "Failed to send reset link"
+    "reset_link_failed": "Failed to send reset link",
+    "reset_password_title": "Set a new password",
+    "reset_password_description": "Choose a new password for your Mojeeb account.",
+    "reset_password_submit": "Reset password",
+    "reset_password_success": "Your password has been reset. You can sign in now.",
+    "reset_password_failed": "Failed to reset password. The link may be expired or invalid.",
+    "reset_password_invalid_token": "This reset link is invalid or has expired. Please request a new one.",
+    "reset_password_done_title": "Password updated",
+    "reset_password_done_description": "Your password was reset successfully. Sign in with your new password to continue.",
+    "new_password_placeholder": "New password",
+    "confirm_password_placeholder": "Confirm new password",
+    "confirm_password_required": "Please confirm your password",
+    "passwords_do_not_match": "Passwords do not match"
   },
   "studio": {
     "page_title": "Agent Setup",

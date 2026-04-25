@@ -396,9 +396,13 @@ class AuthService {
 
   /**
    * Reset password with token
+   * Backend expects snake_case fields per global Newtonsoft config + JsonPropertyName attributes.
    */
   async resetPassword(request: ResetPasswordRequest): Promise<void> {
-    await api.post('/api/auth/reset-password', request);
+    await api.post('/api/auth/reset-password', {
+      token: request.token,
+      new_password: request.newPassword,
+    });
   }
 
   /**

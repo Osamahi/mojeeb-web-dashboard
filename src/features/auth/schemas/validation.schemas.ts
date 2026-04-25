@@ -69,8 +69,24 @@ export const createForgotPasswordSchema = (t: TFunction) => z.object({
 });
 
 /**
+ * Reset password form validation schema
+ * Token comes from URL — only password fields are user input.
+ */
+export const createResetPasswordSchema = (t: TFunction) =>
+  z
+    .object({
+      newPassword: passwordField(t),
+      confirmPassword: z.string().min(1, t('auth.confirm_password_required')),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t('auth.passwords_do_not_match'),
+      path: ['confirmPassword'],
+    });
+
+/**
  * TypeScript types for form data
  */
 export type LoginFormData = z.infer<ReturnType<typeof createLoginSchema>>;
 export type SignUpFormData = z.infer<ReturnType<typeof createSignUpSchema>>;
 export type ForgotPasswordFormData = z.infer<ReturnType<typeof createForgotPasswordSchema>>;
+export type ResetPasswordFormData = z.infer<ReturnType<typeof createResetPasswordSchema>>;

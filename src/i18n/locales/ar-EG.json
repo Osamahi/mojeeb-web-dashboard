@@ -740,6 +740,7 @@
     "title_connections": "الاتصالات",
     "title_conversations": "المحادثات",
     "title_forgot_password": "إعادة تعيين كلمة المرور",
+    "title_reset_password": "تعيين كلمة مرور جديدة",
     "title_google_callback": "الدخول بجوجل",
     "title_install_widget": "تثبيت الأداة",
     "title_leads": "العملاء المحتملون",
@@ -855,7 +856,19 @@
     "login_failed": "فشل تسجيل الدخول. يرجى التحقق من بيانات الاعتماد الخاصة بك.",
     "signup_failed": "فشل التسجيل. يرجى المحاولة مرة أخرى.",
     "reset_link_sent": "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني",
-    "reset_link_failed": "فشل إرسال رابط إعادة التعيين"
+    "reset_link_failed": "فشل إرسال رابط إعادة التعيين",
+    "reset_password_title": "اختار كلمة مرور جديدة",
+    "reset_password_description": "اختار كلمة مرور جديدة لحسابك على مجيب.",
+    "reset_password_submit": "إعادة تعيين كلمة المرور",
+    "reset_password_success": "تم تغيير كلمة المرور. تقدر تدخل بحسابك دلوقتي.",
+    "reset_password_failed": "فشل إعادة تعيين كلمة المرور. الرابط ممكن يكون منتهي أو غير صالح.",
+    "reset_password_invalid_token": "الرابط ده غير صالح أو منتهي. اطلب رابط جديد.",
+    "reset_password_done_title": "تم تحديث كلمة المرور",
+    "reset_password_done_description": "تم تغيير كلمة المرور بنجاح. سجّل دخولك بكلمة المرور الجديدة.",
+    "new_password_placeholder": "كلمة المرور الجديدة",
+    "confirm_password_placeholder": "تأكيد كلمة المرور",
+    "confirm_password_required": "أكّد كلمة المرور",
+    "passwords_do_not_match": "كلمتا المرور غير متطابقتين"
   },
   "studio": {
     "page_title": "إعداد الإيجنت",

@@ -10,6 +10,7 @@ import { PageSkeleton } from './components/ui/PageSkeleton';
 const LoginPage = lazy(() => import('./features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignUpPage = lazy(() => import('./features/auth/pages/SignUpPage').then(m => ({ default: m.SignUpPage })));
 const ForgotPasswordPage = lazy(() => import('./features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import('./features/auth/pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const GoogleCallbackPage = lazy(() => import('./features/auth/pages/GoogleCallbackPage'));
 const OnboardingWizard = lazy(() => import('./features/onboarding/pages/OnboardingWizard'));
 const DashboardLayout = lazy(() => import('./components/layout/DashboardLayout').then(m => ({ default: m.DashboardLayout })));
@@ -199,6 +200,16 @@ export const router = createBrowserRouter([
         element: (
           <PublicRoute>
             <ForgotPasswordPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        // Authenticated users may also land here from an email link — show the form,
+        // and ResetPasswordPage logs them out after a successful reset so they sign in fresh.
+        path: '/reset-password',
+        element: (
+          <PublicRoute allowAuthenticatedAccess={true}>
+            <ResetPasswordPage />
           </PublicRoute>
         ),
       },
