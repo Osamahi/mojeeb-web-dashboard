@@ -146,25 +146,37 @@ export function SubscriptionTable({
           {subscriptions.map((subscription) => (
             <tr key={subscription.id} className="hover:bg-gray-50">
               <td className="whitespace-nowrap px-6 py-4">
-                <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900">
-                  <span>{subscription.organizationName}</span>
+                {/*
+                  Agent is the actionable identity admins recognize ("Blue Tours",
+                  "AYA AHMED") so it leads the cell. Org names are usually
+                  auto-generated from emails ("ofa22826@gmail.com Organization")
+                  and serve only as a contextual subtitle. Falls back to org-as-primary
+                  when an org has no usable agent.
+                */}
+                <div className="flex items-center gap-1.5 text-sm font-medium text-gray-900 max-w-[260px]">
+                  {subscription.firstAgentName ? (
+                    <AgentLink
+                      agentId={subscription.firstAgentId}
+                      agentName={subscription.firstAgentName}
+                      className="font-medium text-gray-900 underline underline-offset-2 hover:text-gray-700 disabled:opacity-60 disabled:cursor-wait truncate text-left"
+                    />
+                  ) : (
+                    <span className="truncate">{subscription.organizationName}</span>
+                  )}
                   {subscription.planCode === PlanCode.Starter && (
-                    <span className="text-base leading-none" role="img" aria-label={subscription.planName}>
+                    <span className="text-base leading-none flex-shrink-0" role="img" aria-label={subscription.planName}>
                       💰
                     </span>
                   )}
                   {subscription.planCode === PlanCode.Professional && (
-                    <span className="text-base leading-none" role="img" aria-label={subscription.planName}>
+                    <span className="text-base leading-none flex-shrink-0" role="img" aria-label={subscription.planName}>
                       💰💰
                     </span>
                   )}
                 </div>
                 {subscription.firstAgentName && (
-                  <div className="text-sm text-gray-500 truncate max-w-[220px]">
-                    <AgentLink
-                      agentId={subscription.firstAgentId}
-                      agentName={subscription.firstAgentName}
-                    />
+                  <div className="text-sm text-gray-500 truncate max-w-[260px]">
+                    {subscription.organizationName}
                   </div>
                 )}
               </td>
