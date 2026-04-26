@@ -67,7 +67,9 @@ export default function UsersTable({
       label: t('users.table_user'),
       sortable: false,
       render: (_, user) => {
-        const flag = countryToFlag(user.country);
+        // Egypt is the default audience — only flag non-EG users to reduce visual noise.
+        const isNonDefault = user.country && user.country.toUpperCase() !== 'EG';
+        const flag = isNonDefault ? countryToFlag(user.country) : '';
         return (
           <div className="flex items-center gap-3">
             <Avatar
