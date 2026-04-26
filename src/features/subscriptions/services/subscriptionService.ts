@@ -29,6 +29,10 @@ interface ApiSubscriptionResponse {
   grace_period_end: string | null;
   messages_used: number;
   agents_used: number;
+  // Optional — only the admin /api/admin/subscriptions endpoint populates these
+  // (via Migrations/065). Per-user / per-id endpoints don't include them yet.
+  first_agent_id?: string | null;
+  first_agent_name?: string | null;
 }
 
 interface ApiUsageResponse {
@@ -404,6 +408,8 @@ class SubscriptionService {
       gracePeriodEnd: apiResponse.grace_period_end,
       messagesUsed: apiResponse.messages_used,
       agentsUsed: apiResponse.agents_used,
+      firstAgentId: apiResponse.first_agent_id ?? null,
+      firstAgentName: apiResponse.first_agent_name ?? null,
     };
   }
 

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { PlanCode } from '../types/subscription.types';
 import type { SubscriptionDetails } from '../types/subscription.types';
 import { useDateLocale } from '@/lib/dateConfig';
+import { AgentLink } from '@/features/agents/components/AgentLink';
 
 interface SubscriptionTableProps {
   subscriptions: SubscriptionDetails[];
@@ -158,9 +159,14 @@ export function SubscriptionTable({
                     </span>
                   )}
                 </div>
-                <div className="text-sm text-gray-500">
-                  {subscription.paymentMethod}
-                </div>
+                {subscription.firstAgentName && (
+                  <div className="text-sm text-gray-500 truncate max-w-[220px]">
+                    <AgentLink
+                      agentId={subscription.firstAgentId}
+                      agentName={subscription.firstAgentName}
+                    />
+                  </div>
+                )}
               </td>
               <td className="whitespace-nowrap px-6 py-4">
                 <div className="text-sm font-medium text-gray-900">
@@ -208,6 +214,7 @@ export function SubscriptionTable({
                 </div>
                 <div className="text-sm text-gray-500">
                   {subscription.billingInterval}
+                  {subscription.paymentMethod && `, ${subscription.paymentMethod}`}
                 </div>
               </td>
               <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">

@@ -50,6 +50,10 @@ export interface SubscriptionDetails {
   // Usage data (from subscription_details view, 0 if no usage record for current period)
   messagesUsed: number;
   agentsUsed: number;
+  // Org's first non-deleted agent (alphabetical). Both optional — an org may
+  // have zero usable agents. Powers the clickable AgentLink in SubscriptionTable.
+  firstAgentId?: string | null;
+  firstAgentName?: string | null;
 }
 
 /**
