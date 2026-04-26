@@ -228,7 +228,12 @@ export const queryKeys = {
    * Query key for cursor-paginated users with filters.
    * Extends the base users key so partial matching still works for cache updates.
    */
-  usersFiltered: (filters?: { searchTerm?: string; role?: string }) =>
+  usersFiltered: (filters?: {
+    searchTerm?: string;
+    role?: string;
+    planCode?: string;
+    hasSubscription?: boolean;
+  }) =>
     ['users', 'infinite-cursor', filters] as const,
 
   /**

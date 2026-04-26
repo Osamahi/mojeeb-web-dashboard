@@ -12,6 +12,8 @@ import type { CursorPaginatedUsersResponse, Role } from '../types';
 interface UseInfiniteUsersOptions {
   searchTerm?: string;
   role?: Role;
+  planCode?: string;
+  hasSubscription?: boolean;
   /** Page size (default 50, backend clamps to [1, 100]). */
   pageSize?: number;
 }
@@ -19,16 +21,16 @@ interface UseInfiniteUsersOptions {
 /**
  * Cursor-paginated users list with infinite scroll support.
  *
- * Search and role filters are server-side: changing them spawns a fresh
- * cache entry (queryKey includes filters) and starts again from the first page.
+ * All filters are server-side: changing one spawns a fresh cache entry
+ * (queryKey includes filters) and starts again from the first page.
  */
 export function useInfiniteUsers(options?: UseInfiniteUsersOptions) {
-  const { searchTerm, role, pageSize = 50 } = options ?? {};
+  const { searchTerm, role, planCode, hasSubscription, pageSize = 50 } = options ?? {};
 
   return useInfiniteQuery({
-    queryKey: queryKeys.usersFiltered({ searchTerm, role }),
+    queryKey: queryKeys.usersFiltered({ searchTerm, role, planCode, hasSubscription }),
     queryFn: ({ pageParam }) =>
-      userService.getUsersCursor(pageSize, pageParam, searchTerm, role),
+      userService.getUsersCursor(pageSize, pageParam, searchTerm, role, planCode, hasSubscription),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: CursorPaginatedUsersResponse) =>
       lastPage.has_more ? lastPage.next_cursor ?? undefined : undefined,

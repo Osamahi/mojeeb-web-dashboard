@@ -22,13 +22,17 @@ class UserService {
     limit: number = 50,
     cursor?: string,
     searchTerm?: string,
-    role?: Role
+    role?: Role,
+    planCode?: string,
+    hasSubscription?: boolean
   ): Promise<CursorPaginatedUsersResponse> {
     const params = new URLSearchParams();
     params.append('limit', limit.toString());
     if (cursor) params.append('cursor', cursor);
     if (searchTerm && searchTerm.trim()) params.append('search', searchTerm.trim());
     if (role) params.append('role', role);
+    if (planCode) params.append('planCode', planCode);
+    if (hasSubscription !== undefined) params.append('hasSubscription', String(hasSubscription));
 
     const { data } = await api.get<CursorPaginatedUsersResponse>(
       `/api/usermanagement/users/cursor?${params.toString()}`

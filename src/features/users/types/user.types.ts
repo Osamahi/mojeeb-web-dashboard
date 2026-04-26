@@ -17,6 +17,17 @@ export interface User {
   created_at: string;
   updated_at: string;
   o_auth_provider?: string | null;
+
+  // Enrichment from get_users_cursor (Migration 063). All optional — a user
+  // may have no org, no agents, and/or no active subscription.
+  organization_id?: string | null;
+  organization_name?: string | null;
+  first_agent_name?: string | null;
+  plan_code?: string | null;
+  plan_name?: string | null;
+  plan_status?: string | null;
+  plan_currency?: string | null;
+  plan_billing_interval?: string | null;
 }
 
 export interface RoleStatistic {

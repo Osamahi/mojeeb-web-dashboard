@@ -12,7 +12,6 @@ export default function UsersPage() {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_users');
 
-  // Search state
   const [searchInput, setSearchInput] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
 
@@ -79,7 +78,7 @@ export default function UsersPage() {
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
             <input
               type="text"
-              placeholder={t('users.search_placeholder') || 'Search by email...'}
+              placeholder={t('users.search_placeholder') || 'Search by name, email, phone, or agent…'}
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="block w-full rounded-lg border border-neutral-300 ps-10 pe-10 py-2.5 text-sm
