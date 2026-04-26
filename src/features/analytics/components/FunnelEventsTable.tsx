@@ -2,6 +2,7 @@ import { Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { formatCountry } from '@/lib/countryUtils';
+import { AgentLink } from '@/features/agents/components/AgentLink';
 import { STAGE_LABELS, type FunnelRecentEvent } from '../types/funnel.types';
 
 interface FunnelEventsTableProps {
@@ -69,7 +70,9 @@ export function FunnelEventsTable({ events, isLoading, hasMore, isFetchingNextPa
                       </div>
                     </td>
                     <td className="py-2.5 pr-4 text-neutral-600 whitespace-nowrap">{formatCountry(e.userCountry)}</td>
-                    <td className="py-2.5 pr-4 text-neutral-600">{e.agentName || '-'}</td>
+                    <td className="py-2.5 pr-4 text-neutral-600">
+                      <AgentLink agentId={e.agentId} agentName={e.agentName} />
+                    </td>
                     <td className="py-2.5 text-neutral-500 whitespace-nowrap">
                       {formatDistanceToNow(new Date(e.createdAt), { addSuffix: true })}
                     </td>

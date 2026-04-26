@@ -15,6 +15,7 @@ import { useConversationStore } from '../../stores/conversationStore';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { toggleAIMode } from '../../services/conversationApi';
 import { queryKeys } from '@/lib/queryKeys';
+import { savedMessagesService } from '@/features/saved-messages/services/savedMessagesService';
 import { useChatEngine } from '../../hooks/useChatEngine';
 import { useZustandChatStorage } from '../../hooks/useChatStorage';
 import UnifiedChatView from './UnifiedChatView';
@@ -166,6 +167,23 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
     if (!conversation.id) return;
     fetchMessages(conversation.id, true); // true = refresh
   }, [conversation.id, fetchMessages]);
+
+  // Fire-and-forget: warm the saved-messages cache so the picker opens instantly.
+  // Won't block render, won't surface errors — failures just mean the picker
+  // falls back to its own fetch on first open.
+  useEffect(() => {
+    const agentId = conversation.agent_id;
+    if (!agentId) return;
+    queryClient
+      .prefetchQuery({
+        queryKey: queryKeys.savedMessages(agentId),
+        queryFn: () => savedMessagesService.list(agentId),
+        staleTime: Infinity,
+      })
+      .catch(() => {
+        // Silent — picker will retry on open.
+      });
+  }, [conversation.agent_id, queryClient]);
 
   // Extract profile picture
   const profilePictureUrl = conversation.customer_metadata?.profile_picture;

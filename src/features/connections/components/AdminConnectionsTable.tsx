@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
+import { AgentLink } from '@/features/agents/components/AgentLink';
 import type { AdminConnectionListItem } from '../services/adminConnectionService';
 
 interface AdminConnectionsTableProps {
@@ -208,7 +209,14 @@ export function AdminConnectionsTable({
                     {/* Agent + Organization */}
                     <td className="px-5 py-4">
                       <div className="text-sm text-neutral-900">
-                        {connection.agentName || t('common.unknown')}
+                        {connection.agentName ? (
+                          <AgentLink
+                            agentId={connection.agentId}
+                            agentName={connection.agentName}
+                          />
+                        ) : (
+                          t('common.unknown')
+                        )}
                       </div>
                       {connection.organizationName && (
                         <div className="text-xs text-neutral-400 mt-0.5">

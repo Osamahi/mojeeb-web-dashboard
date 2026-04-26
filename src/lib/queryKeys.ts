@@ -203,6 +203,11 @@ export const queryKeys = {
   leads: (agentId: string | undefined) => ['leads', agentId] as const,
 
   /**
+   * Query key for fetching saved messages (quick replies) by agent
+   */
+  savedMessages: (agentId: string | undefined) => ['saved-messages', agentId] as const,
+
+  /**
    * Query key for fetching a single lead by ID
    * @param {string | undefined} leadId - The lead ID
    * @returns {readonly ['lead', string | undefined]} Query key tuple

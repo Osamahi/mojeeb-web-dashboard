@@ -2301,6 +2301,36 @@
     "buffer_status": "المخزن المؤقت: {{count}} / 1000 سجل",
     "search_tip": "نصيحة: استخدم Ctrl+F للبحث داخل الطرفية"
   },
+  "saved_messages": {
+    "toggle_title": "الردود المحفوظة",
+    "toggle_aria": "افتح الردود المحفوظة",
+    "create_row": "إنشاء اختصار جديد",
+    "empty_state": "لا توجد ردود محفوظة بعد.",
+    "no_results": "لا توجد نتائج",
+    "create_title": "رد محفوظ جديد",
+    "edit_title": "تعديل الرد المحفوظ",
+    "form_subtitle": "ردود جاهزة يمكنك إدراجها في مربع الكتابة باستخدام الشرطة المائلة.",
+    "field_shortcut": "الاختصار",
+    "field_shortcut_placeholder": "مثال: hi",
+    "field_shortcut_help": "اكتب / متبوعة بهذا الاختصار في مربع الكتابة لإدراج الرد.",
+    "field_content": "نص الرسالة",
+    "field_content_placeholder": "النص الذي سيتم إدراجه في مربع الكتابة…",
+    "delete_title": "حذف الرد المحفوظ",
+    "delete_confirmation": "هل تريد حذف \"{{title}}\"؟ لا يمكن التراجع.",
+    "create_success": "تم إنشاء الرد المحفوظ",
+    "create_error": "تعذّر إنشاء الرد المحفوظ",
+    "update_success": "تم تحديث الرد المحفوظ",
+    "update_error": "تعذّر تحديث الرد المحفوظ",
+    "delete_success": "تم حذف الرد المحفوظ",
+    "delete_error": "تعذّر حذف الرد المحفوظ",
+    "errors": {
+      "shortcut_required": "الاختصار مطلوب.",
+      "shortcut_too_long": "يجب ألا يتجاوز الاختصار {{max}} حرفًا.",
+      "shortcut_no_spaces": "لا يمكن أن يحتوي الاختصار على مسافات.",
+      "content_required": "نص الرسالة مطلوب.",
+      "content_too_long": "يجب ألا يتجاوز نص الرسالة {{max}} حرفًا."
+    }
+  },
   "message_composer": {
     "upload_images_aria": "رفع الصور",
     "upload_audio_aria": "رفع ملفات صوتية",

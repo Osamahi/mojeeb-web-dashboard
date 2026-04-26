@@ -2329,6 +2329,36 @@
     "buffer_status": "Buffer: {{count}} / 1000 logs",
     "search_tip": "Tip: Use Ctrl+F to search within the terminal"
   },
+  "saved_messages": {
+    "toggle_title": "Saved messages",
+    "toggle_aria": "Open saved messages",
+    "create_row": "Create new shortcut",
+    "empty_state": "No saved messages yet.",
+    "no_results": "No matches",
+    "create_title": "New saved message",
+    "edit_title": "Edit saved message",
+    "form_subtitle": "Quick replies you can insert into the composer with a slash.",
+    "field_shortcut": "Shortcut",
+    "field_shortcut_placeholder": "e.g. hi",
+    "field_shortcut_help": "Type / followed by this shortcut in the composer to insert.",
+    "field_content": "Message",
+    "field_content_placeholder": "The text that will be inserted into the composer…",
+    "delete_title": "Delete saved message",
+    "delete_confirmation": "Delete \"{{title}}\"? This cannot be undone.",
+    "create_success": "Saved message created",
+    "create_error": "Couldn't create saved message",
+    "update_success": "Saved message updated",
+    "update_error": "Couldn't update saved message",
+    "delete_success": "Saved message deleted",
+    "delete_error": "Couldn't delete saved message",
+    "errors": {
+      "shortcut_required": "Shortcut is required.",
+      "shortcut_too_long": "Shortcut must be {{max}} characters or fewer.",
+      "shortcut_no_spaces": "Shortcut cannot contain spaces.",
+      "content_required": "Message content is required.",
+      "content_too_long": "Message must be {{max}} characters or fewer."
+    }
+  },
   "message_composer": {
     "upload_images_aria": "Upload images",
     "upload_audio_aria": "Upload audio files",

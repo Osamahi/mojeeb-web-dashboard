@@ -7,7 +7,7 @@
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, BotOff, X, AlertCircle, Mic, Music, Image, FileText, Upload, Video, LayoutTemplate } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, BotOff, X, AlertCircle, Mic, Music, Image, FileText, Upload, Video, LayoutTemplate, MessageSquareText } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,7 @@ import { chatToasts } from '../../utils/chatToasts';
 import { chatApiService } from '../../services/chatApiService';
 import type { MediaAttachment } from '../../types';
 import { VoiceRecorder } from './VoiceRecorder';
+import { SavedMessagesPicker } from '@/features/saved-messages/components/SavedMessagesPicker';
 
 // Constants
 const MAX_TEXTAREA_HEIGHT_PX = 120;
@@ -199,6 +200,13 @@ export default memo(function MessageComposer({
 
   // Track uploaded videos
   const [uploadedVideos, setUploadedVideos] = useState<UploadedVideo[]>([]);
+
+  // Saved messages (quick replies) picker
+  const [showSavedMessages, setShowSavedMessages] = useState(false);
+  // When `/` triggers the picker, this holds the slash+filter range so we can
+  // replace it with the selected content. Null when opened via mini button.
+  const [slashRange, setSlashRange] = useState<{ start: number; end: number } | null>(null);
+  const [savedMessagesFilter, setSavedMessagesFilter] = useState('');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -462,9 +470,87 @@ export default memo(function MessageComposer({
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // While the saved-messages popover is open, let it handle navigation keys.
+    if (showSavedMessages && (e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Escape')) {
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  /**
+   * Detect a `/keyword` token only when the slash is the FIRST character of
+   * the input. Mid-text slashes (e.g. URLs, dates) never trigger the picker.
+   */
+  const detectSlashTrigger = (
+    text: string,
+    caret: number
+  ): { start: number; end: number; query: string } | null => {
+    if (text.length === 0 || text[0] !== '/') return null;
+    // The token runs from index 0 up to the first whitespace; caret must be
+    // inside it (i.e. the user is still typing the shortcut).
+    const wsMatch = text.match(/\s/);
+    const tokenEnd = wsMatch ? wsMatch.index! : text.length;
+    if (caret > tokenEnd) return null;
+    const query = text.slice(1, caret);
+    if (/\s/.test(query)) return null;
+    return { start: 0, end: caret, query };
+  };
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setMessage(value);
+
+    const caret = e.target.selectionStart ?? value.length;
+    const detected = detectSlashTrigger(value, caret);
+    if (detected) {
+      setSlashRange({ start: detected.start, end: detected.end });
+      setSavedMessagesFilter(detected.query);
+      setShowSavedMessages(true);
+    } else if (showSavedMessages && slashRange) {
+      // Caret moved away from the slash token — close.
+      setShowSavedMessages(false);
+      setSlashRange(null);
+      setSavedMessagesFilter('');
+    }
+  };
+
+  const handleInsertSavedMessage = useCallback((content: string) => {
+    setMessage((prev) => {
+      if (slashRange) {
+        return prev.slice(0, slashRange.start) + content + prev.slice(slashRange.end);
+      }
+      // Mini-button path: insert at caret (or append).
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const start = textarea.selectionStart ?? prev.length;
+        const end = textarea.selectionEnd ?? prev.length;
+        return prev.slice(0, start) + content + prev.slice(end);
+      }
+      return prev + content;
+    });
+    setSlashRange(null);
+    setSavedMessagesFilter('');
+    // Refocus composer after the popover closes.
+    setTimeout(() => textareaRef.current?.focus(), 0);
+  }, [slashRange]);
+
+  const handleCloseSavedMessages = useCallback(() => {
+    setShowSavedMessages(false);
+    setSlashRange(null);
+    setSavedMessagesFilter('');
+  }, []);
+
+  const handleToggleSavedMessages = () => {
+    if (showSavedMessages) {
+      handleCloseSavedMessages();
+    } else {
+      // Mini-button open — no slash range, picker shows full list.
+      setSlashRange(null);
+      setSavedMessagesFilter('');
+      setShowSavedMessages(true);
     }
   };
 
@@ -1455,11 +1541,22 @@ export default memo(function MessageComposer({
         </div>
       )}
 
-      {/* Line 1: Input Field */}
+      {/* Line 1: Input Field (wrapped to anchor the slash-mode picker above the caret) */}
+      <div className="relative">
+        {/* Slash-trigger picker — read-only, anchored above the textarea */}
+        {agentId && showSavedMessages && slashRange && (
+          <SavedMessagesPicker
+            agentId={agentId}
+            onSelect={handleInsertSavedMessage}
+            onClose={handleCloseSavedMessages}
+            initialFilter={savedMessagesFilter}
+            mode="slash"
+          />
+        )}
       <textarea
         ref={textareaRef}
         value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        onChange={handleMessageChange}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
         placeholder={
@@ -1493,6 +1590,7 @@ export default memo(function MessageComposer({
         aria-multiline="true"
         aria-describedby="char-count"
       />
+      </div>
 
       {/* Character count (show when approaching limit) */}
       {message.length > MAX_MESSAGE_LENGTH * 0.8 && (
@@ -1556,6 +1654,37 @@ export default memo(function MessageComposer({
               </div>
             )}
           </div>
+
+          {/* Saved Messages (Quick Replies) Button + Popover */}
+          {agentId && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={handleToggleSavedMessages}
+                className={cn(
+                  'p-2 rounded-lg',
+                  'text-neutral-500',
+                  'hover:bg-neutral-100',
+                  'hover:text-neutral-700',
+                  'transition-all duration-150',
+                  showSavedMessages && 'bg-neutral-100 text-neutral-700'
+                )}
+                aria-label={t('saved_messages.toggle_aria')}
+                title={t('saved_messages.toggle_title')}
+              >
+                <MessageSquareText className="w-5 h-5" />
+              </button>
+              {showSavedMessages && !slashRange && (
+                <SavedMessagesPicker
+                  agentId={agentId}
+                  onSelect={handleInsertSavedMessage}
+                  onClose={handleCloseSavedMessages}
+                  initialFilter={savedMessagesFilter}
+                  mode="button"
+                />
+              )}
+            </div>
+          )}
 
           {/* WhatsApp Template Button */}
           {isWhatsApp && onTemplateClick && (

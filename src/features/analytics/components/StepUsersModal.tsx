@@ -2,6 +2,7 @@ import { BaseModal } from '@/components/ui/BaseModal';
 import { useStepUsers } from '../hooks/useStepUsers';
 import { STAGE_LABELS } from '../types/funnel.types';
 import { formatDistanceToNow } from 'date-fns';
+import { AgentLink } from '@/features/agents/components/AgentLink';
 
 interface StepUsersModalProps {
   isOpen: boolean;
@@ -20,7 +21,7 @@ export function StepUsersModal({ isOpen, onClose, eventName, startDate, endDate 
       isOpen={isOpen}
       onClose={onClose}
       title={label}
-      subtitle={`${users.length} user${users.length !== 1 ? 's' : ''} reached this step`}
+      subtitle={`${users.length} event${users.length !== 1 ? 's' : ''} for this step`}
       maxWidth="2xl"
       isLoading={isLoading}
     >
@@ -31,7 +32,7 @@ export function StepUsersModal({ isOpen, onClose, eventName, startDate, endDate 
           ))}
         </div>
       ) : users.length === 0 ? (
-        <p className="text-neutral-400 text-sm text-center py-8">No users found for this step</p>
+        <p className="text-neutral-400 text-sm text-center py-8">No events found for this step</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -44,16 +45,31 @@ export function StepUsersModal({ isOpen, onClose, eventName, startDate, endDate 
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
-                <tr key={u.userId} className="border-b border-neutral-100 hover:bg-neutral-50">
-                  <td className="py-2.5 pr-4 text-neutral-900">{u.userName || '-'}</td>
-                  <td className="py-2.5 pr-4 text-neutral-600">{u.userEmail || '-'}</td>
-                  <td className="py-2.5 pr-4 text-neutral-600">{u.agentName || '-'}</td>
-                  <td className="py-2.5 text-neutral-400 whitespace-nowrap">
-                    {formatDistanceToNow(new Date(u.eventCreatedAt), { addSuffix: true })}
-                  </td>
-                </tr>
-              ))}
+              {/*
+                Row key uses (userId|index|eventCreatedAt): a single user may
+                trigger the same step multiple times, and anonymous events have
+                userId = NULL — both would collide on userId alone.
+              */}
+              {users.map((u, idx) => {
+                const isAnonymous = !u.userId && !u.userName && !u.userEmail;
+                return (
+                  <tr
+                    key={`${u.userId ?? 'anon'}-${u.eventCreatedAt}-${idx}`}
+                    className="border-b border-neutral-100 hover:bg-neutral-50"
+                  >
+                    <td className="py-2.5 pr-4 text-neutral-900">
+                      {u.userName || (isAnonymous ? <span className="italic text-neutral-400">Anonymous</span> : '-')}
+                    </td>
+                    <td className="py-2.5 pr-4 text-neutral-600">{u.userEmail || '-'}</td>
+                    <td className="py-2.5 pr-4 text-neutral-600">
+                      <AgentLink agentId={u.agentId} agentName={u.agentName} />
+                    </td>
+                    <td className="py-2.5 text-neutral-400 whitespace-nowrap">
+                      {formatDistanceToNow(new Date(u.eventCreatedAt), { addSuffix: true })}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
