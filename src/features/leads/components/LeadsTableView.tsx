@@ -344,6 +344,7 @@ export function LeadsTableView({
         onAddLeadClick={onAddLeadClick}
         onStatusChange={handleStatusChangeMobile}
         onCopyPhone={handleCopyPhone}
+        onAddNoteClick={onAddNoteClick}
         isUpdating={updateMutation.isPending}
       />
     );

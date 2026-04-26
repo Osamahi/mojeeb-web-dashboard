@@ -10,6 +10,7 @@ import { formatPhoneNumber } from '../utils/formatting';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useLeadStatusSchema } from '../hooks/useLeadStatusSchema';
+import { LatestNoteCell } from './LatestNoteCell';
 import type { Lead, LeadStatus } from '../types';
 
 interface LeadCardProps {
@@ -20,6 +21,7 @@ interface LeadCardProps {
   onViewConversation: (conversationId: string) => void;
   onStatusChange: (leadId: string, newStatus: LeadStatus) => void;
   onCopyPhone: (phone: string, e: React.MouseEvent) => void;
+  onAddNoteClick: (leadId: string, name: string, agentId: string) => void;
   isUpdating?: boolean;
 }
 
@@ -31,6 +33,7 @@ export function LeadCard({
   onViewConversation,
   onStatusChange,
   onCopyPhone,
+  onAddNoteClick,
   isUpdating = false,
 }: LeadCardProps) {
   const { t } = useTranslation();
@@ -110,13 +113,32 @@ export function LeadCard({
 
       {/* Summary Preview */}
       {lead.summary && (
-        <p className="text-sm text-neutral-600 mb-2 line-clamp-2">
+        <p className="text-sm text-neutral-600 mb-3 line-clamp-2">
           {lead.summary}
         </p>
       )}
 
-      {/* Footer: Status + Date */}
+      {/* Latest Note */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="py-3 border-t border-neutral-100"
+      >
+        <LatestNoteCell lead={lead} onAddNoteClick={onAddNoteClick} />
+      </div>
+
+      {/* Footer: Date + Status */}
       <div className="flex items-center justify-between gap-3 pt-3 border-t border-neutral-100">
+        {/* Created Date */}
+        <div className="text-xs text-neutral-500">
+          {(() => {
+            try {
+              return formatSmartTimestamp(lead.createdAt);
+            } catch {
+              return '—';
+            }
+          })()}
+        </div>
+
         {/* Status Dropdown */}
         <div onClick={(e) => e.stopPropagation()} className="flex-shrink-0">
           <select
@@ -142,17 +164,6 @@ export function LeadCard({
               </option>
             ))}
           </select>
-        </div>
-
-        {/* Created Date */}
-        <div className="text-xs text-neutral-500 text-right">
-          {(() => {
-            try {
-              return formatSmartTimestamp(lead.createdAt);
-            } catch {
-              return '—';
-            }
-          })()}
         </div>
       </div>
     </div>

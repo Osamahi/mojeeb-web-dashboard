@@ -26,6 +26,7 @@ interface LeadsMobileCardViewProps {
   onAddLeadClick: () => void;
   onStatusChange: (leadId: string, newStatus: LeadStatus) => void;
   onCopyPhone: (phone: string, e: React.MouseEvent) => void;
+  onAddNoteClick: (leadId: string, name: string, agentId: string) => void;
   isUpdating?: boolean;
 }
 
@@ -42,6 +43,7 @@ export function LeadsMobileCardView({
   onAddLeadClick,
   onStatusChange,
   onCopyPhone,
+  onAddNoteClick,
   isUpdating = false,
 }: LeadsMobileCardViewProps) {
   const { t } = useTranslation();
@@ -160,6 +162,7 @@ export function LeadsMobileCardView({
                   onViewConversation={onViewConversation}
                   onStatusChange={onStatusChange}
                   onCopyPhone={onCopyPhone}
+                  onAddNoteClick={onAddNoteClick}
                   isUpdating={isUpdating}
                 />
               </motion.div>
