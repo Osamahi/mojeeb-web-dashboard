@@ -2,7 +2,5 @@ export type {
   User,
   Role,
   RoleStatistic,
-  UserFilters,
-  UserApiResponse,
-  RoleStatisticsApiResponse
+  CursorPaginatedUsersResponse
 } from './user.types';

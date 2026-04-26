@@ -1,37 +1,39 @@
 import api from '@/lib/api';
-import type { User, RoleStatistic, Role, UserApiResponse, RoleStatisticsApiResponse } from '../types';
+import type {
+  User,
+  RoleStatistic,
+  Role,
+  CursorPaginatedUsersResponse
+} from '../types';
 import { useUserStore } from '../stores/userStore';
 
 class UserService {
   /**
-   * Fetch all users from the backend
+   * Fetch a page of users with cursor pagination.
+   * Replaces both the load-everything getUsers() and the separate
+   * organizationService.searchUsers() — search is server-side here.
+   *
+   * @param limit Page size (1-100, default 50; backend clamps).
+   * @param cursor Base64 cursor from a prior page's next_cursor; omit for first page.
+   * @param searchTerm Fuzzy match on name/email/phone (ILIKE).
+   * @param role Filter by exact role.
    */
-  async getUsers(): Promise<User[]> {
-    try {
-      // Backend returns array directly (not wrapped in success/data)
-      const { data } = await api.get<User[]>('/api/usermanagement/users');
+  async getUsersCursor(
+    limit: number = 50,
+    cursor?: string,
+    searchTerm?: string,
+    role?: Role
+  ): Promise<CursorPaginatedUsersResponse> {
+    const params = new URLSearchParams();
+    params.append('limit', limit.toString());
+    if (cursor) params.append('cursor', cursor);
+    if (searchTerm && searchTerm.trim()) params.append('search', searchTerm.trim());
+    if (role) params.append('role', role);
 
-      useUserStore.getState().setUsers(data);
-      return data;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch users';
-      useUserStore.getState().setError(errorMessage);
-      throw error;
-    }
-  }
-
-  /**
-   * Fetch users filtered by role
-   */
-  async getUsersByRole(role: Role): Promise<User[]> {
-    try {
-      const { data } = await api.get<User[]>(`/api/usermanagement/users/by-role/${role}`);
-      return data;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch users by role';
-      useUserStore.getState().setError(errorMessage);
-      throw error;
-    }
+    const { data } = await api.get<CursorPaginatedUsersResponse>(
+      `/api/usermanagement/users/cursor?${params.toString()}`
+    );
+    return data;
   }
 
   /**
@@ -61,14 +63,6 @@ class UserService {
       useUserStore.getState().setError(errorMessage);
       throw error;
     }
-  }
-
-  /**
-   * Get a single user by ID (using local store)
-   */
-  getUserById(id: string): User | undefined {
-    const { users } = useUserStore.getState();
-    return users.find((user) => user.id === id);
   }
 }
 

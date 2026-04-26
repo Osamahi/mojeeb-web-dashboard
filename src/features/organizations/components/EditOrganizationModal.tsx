@@ -4,7 +4,7 @@
  * Refactored to use BaseModal component for consistency
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { X, User as UserIcon, Search, Check } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,14 +13,12 @@ import { isToastHandled } from '@/lib/errors';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Avatar } from '@/components/ui/Avatar';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { OrganizationAgentsList } from './OrganizationAgentsList';
 import { OrganizationMembersList } from './OrganizationMembersList';
 import { organizationService } from '../services/organizationService';
 import { userService } from '@/features/users/services/userService';
-import type { Organization, UpdateOrganizationRequest } from '../types';
-import type { User } from '@/features/users/types';
+import type { Organization, UpdateOrganizationRequest, UserSearchResult } from '../types';
 
 interface EditOrganizationModalProps {
   organization: Organization | null;
@@ -39,35 +37,38 @@ export default function EditOrganizationModal({
     name: '',
     contactEmail: '',
   });
-  const [selectedOwner, setSelectedOwner] = useState<User | null>(null);
+  const [selectedOwner, setSelectedOwner] = useState<UserSearchResult | null>(null);
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  // Fetch all users for owner selection
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => userService.getUsers(),
-    enabled: isOpen,
-  });
-
-  // Fetch owner information
+  // Fetch existing owner so we can show the chip on open. The User → UserSearchResult
+  // shape adapter drops avatar_url and currentOrganization (we don't need them here).
   const { data: owner } = useQuery({
     queryKey: ['user', organization?.ownerId],
     queryFn: () => userService.getUserByIdFromApi(organization!.ownerId),
     enabled: !!organization?.ownerId && isOpen,
   });
 
-  // Filter users based on search query (email, name, phone)
-  const filteredUsers = useMemo(() => {
-    if (!userSearchQuery.trim()) return users;
-    const query = userSearchQuery.toLowerCase();
-    return users.filter(
-      (user) =>
-        user.email?.toLowerCase().includes(query) ||
-        user.name?.toLowerCase()?.includes(query) ||
-        user.phone?.toLowerCase()?.includes(query)
-    );
-  }, [users, userSearchQuery]);
+  // Debounce search input (300ms — matches UserPickerField).
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(userSearchQuery.trim()), 300);
+    return () => clearTimeout(t);
+  }, [userSearchQuery]);
+
+  // Server-side fuzzy search. The query is suppressed when the input still matches
+  // the selected owner's email — otherwise we'd issue a search the moment the modal
+  // opens and prefills with the current owner.
+  const isSearchingForNewOwner =
+    debouncedQuery.length >= 2 &&
+    (!selectedOwner || debouncedQuery !== (selectedOwner.email ?? '').trim());
+
+  const { data: filteredUsers = [], isLoading: isLoadingUsers } = useQuery({
+    queryKey: ['user-search', debouncedQuery],
+    queryFn: () => organizationService.searchUsers(debouncedQuery),
+    enabled: isOpen && isSearchingForNewOwner,
+    staleTime: 30_000,
+  });
 
   // Initialize form data and owner when organization changes
   useEffect(() => {
@@ -78,7 +79,13 @@ export default function EditOrganizationModal({
       });
     }
     if (owner) {
-      setSelectedOwner(owner);
+      setSelectedOwner({
+        id: owner.id,
+        email: owner.email ?? '',
+        name: owner.name,
+        phone: owner.phone ?? null,
+        currentOrganization: null,
+      });
       setUserSearchQuery(owner.email || '');
     }
   }, [organization, owner]);
@@ -128,14 +135,14 @@ export default function EditOrganizationModal({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleUserSelect = (user: User) => {
+  const handleUserSelect = (user: UserSearchResult) => {
     setSelectedOwner(user);
     setUserSearchQuery(user.email || '');
     setShowUserDropdown(false);
 
     // Auto-populate contact email with new owner's email
     if (user.email) {
-      setFormData((prev) => ({ ...prev, contactEmail: user.email || '' }));
+      setFormData((prev) => ({ ...prev, contactEmail: user.email }));
     }
   };
 
@@ -215,7 +222,11 @@ export default function EditOrganizationModal({
               {/* User Dropdown */}
               {showUserDropdown && (
                 <div className="absolute z-[100] w-full mt-2 bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  {isLoadingUsers ? (
+                  {!isSearchingForNewOwner ? (
+                    <div className="p-4 text-center text-sm text-neutral-500">
+                      {t('organizations.owner_change_help')}
+                    </div>
+                  ) : isLoadingUsers ? (
                     <div className="p-4 text-center text-sm text-neutral-500">
                       {t('organizations.loading_users')}
                     </div>
@@ -228,13 +239,9 @@ export default function EditOrganizationModal({
                           onClick={() => handleUserSelect(user)}
                           className="w-full px-4 py-3 hover:bg-neutral-50 transition-colors flex items-center gap-3 text-left"
                         >
-                          {user.avatar_url ? (
-                            <Avatar src={user.avatar_url} name={user.name || user.email || 'User'} size="sm" />
-                          ) : (
-                            <div className="h-8 w-8 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
-                              <UserIcon className="h-4 w-4 text-neutral-400" />
-                            </div>
-                          )}
+                          <div className="h-8 w-8 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                            <UserIcon className="h-4 w-4 text-neutral-400" />
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-neutral-900 truncate">
                               {user.name || user.email}
@@ -271,13 +278,9 @@ export default function EditOrganizationModal({
           {selectedOwner && (
             <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
               <div className="flex items-center gap-3">
-                {selectedOwner.avatar_url ? (
-                  <Avatar src={selectedOwner.avatar_url} name={selectedOwner.name || selectedOwner.email || 'User'} size="md" />
-                ) : (
-                  <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
-                    <UserIcon className="h-5 w-5 text-neutral-600" />
-                  </div>
-                )}
+                <div className="h-10 w-10 rounded-full bg-neutral-200 flex items-center justify-center">
+                  <UserIcon className="h-5 w-5 text-neutral-600" />
+                </div>
                 <div className="flex-1">
                   <div className="font-medium text-neutral-900">
                     {selectedOwner.name || selectedOwner.email}

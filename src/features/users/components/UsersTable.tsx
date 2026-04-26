@@ -1,14 +1,16 @@
 /**
- * Users Table Component
- * Displays system users with sorting and infinite scroll
+ * Users Table
+ * Cursor-paginated user listing. Parent owns the pagination state and passes
+ * `onLoadMore` / `hasNextPage` / `isFetchingNextPage` from useInfiniteUsers.
  */
 
-import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Users as UsersIcon, Loader2 } from 'lucide-react';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { Avatar } from '@/components/ui/Avatar';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { DataTable, type ColumnDef } from '@/components/ui/DataTable';
@@ -19,16 +21,20 @@ import type { User } from '../types';
 
 interface UsersTableProps {
   users: User[];
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  onLoadMore: () => void;
 }
 
-export default function UsersTable({ users }: UsersTableProps) {
+export default function UsersTable({
+  users,
+  hasNextPage,
+  isFetchingNextPage,
+  onLoadMore,
+}: UsersTableProps) {
   const { t } = useTranslation();
   const { format } = useDateLocale();
   const isMobile = useIsMobile();
-
-  // Infinite scroll state
-  const [displayCount, setDisplayCount] = useState(50);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Phone copy handler (mobile only)
   const handleCopyPhone = useCallback((phone: string, e: React.MouseEvent) => {
@@ -41,38 +47,15 @@ export default function UsersTable({ users }: UsersTableProps) {
     });
   }, [t]);
 
-  // Displayed users with infinite scroll
-  const displayedUsers = useMemo(() => {
-    return users.slice(0, displayCount);
-  }, [users, displayCount]);
+  // IntersectionObserver-based trigger (shared hook). Window scroll won't fire
+  // here because DashboardLayout's <main> is the actual scroll container.
+  useInfiniteScroll({
+    fetchNextPage: onLoadMore,
+    hasMore: hasNextPage,
+    isFetching: isFetchingNextPage,
+    containerSelector: '[data-users-container]',
+  });
 
-  // Infinite scroll handler - using window scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      // Check if we're near the bottom of the page
-      const scrollTop = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-
-      // Load more when scrolled to 80% of the way down
-      if (scrollTop + windowHeight >= documentHeight * 0.8) {
-        if (!isLoadingMore && displayCount < users.length) {
-          setIsLoadingMore(true);
-
-          // Simulate loading delay for smooth UX
-          setTimeout(() => {
-            setDisplayCount(prev => Math.min(prev + 50, users.length));
-            setIsLoadingMore(false);
-          }, 300);
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [displayCount, users.length, isLoadingMore]);
-
-  // Define columns
   const columns = useMemo<ColumnDef<User>[]>(() => [
     {
       key: 'name',
@@ -132,36 +115,31 @@ export default function UsersTable({ users }: UsersTableProps) {
       sortable: true,
       render: (created_at) => {
         if (!created_at) return <div className="text-sm text-neutral-600">-</div>;
-
-        // Backend returns UTC time without 'Z', so we append it to ensure proper parsing
-        const dateString = (created_at as string).endsWith('Z')
-          ? created_at as string
-          : `${created_at}Z`;
-
         return (
           <div className="text-sm text-neutral-600">
-            {format(new Date(dateString), 'MMM dd, yyyy h:mm a')}
+            {format(new Date(created_at as string), 'MMM dd, yyyy h:mm a')}
           </div>
         );
       },
     },
   ], [t, format]);
 
-  // Render mobile card view
   if (isMobile) {
     return (
       <UsersMobileCardView
         users={users}
         onCopyPhone={handleCopyPhone}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={onLoadMore}
       />
     );
   }
 
-  // Render desktop table view
   return (
-    <>
+    <div data-users-container>
       <DataTable
-        data={displayedUsers}
+        data={users}
         columns={columns}
         rowKey="id"
         initialSortField="created_at"
@@ -175,22 +153,20 @@ export default function UsersTable({ users }: UsersTableProps) {
         }}
       />
 
-      {/* Loading More Indicator */}
-      {isLoadingMore && (
+      {isFetchingNextPage && (
         <div className="flex justify-center items-center py-8 bg-white rounded-lg border border-neutral-200 mt-4">
           <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
           <span className="ml-2 text-sm text-neutral-600">{t('users.loading_more')}</span>
         </div>
       )}
 
-      {/* End of results indicator */}
-      {displayedUsers.length >= users.length && users.length > 50 && (
+      {!hasNextPage && users.length > 50 && (
         <div className="flex justify-center items-center py-6 bg-white rounded-lg border border-neutral-200 mt-4">
           <span className="text-sm text-neutral-500">
             {t('users.all_loaded', { count: users.length })}
           </span>
         </div>
       )}
-    </>
+    </div>
   );
 }

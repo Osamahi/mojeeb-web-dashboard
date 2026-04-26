@@ -25,19 +25,13 @@ export interface RoleStatistic {
   count: number;
 }
 
-export interface UserFilters {
-  searchQuery?: string;
-  role?: Role | 'All';
-}
-
-export interface UserApiResponse {
-  success?: boolean;
-  message?: string;
-  data?: User[];
-}
-
-export interface RoleStatisticsApiResponse {
-  success?: boolean;
-  message?: string;
-  data?: RoleStatistic[];
+/**
+ * Cursor-paginated users response from GET /api/usermanagement/users/cursor.
+ * `next_cursor` is Base64-encoded; pass it back as the `cursor` query param
+ * for the next page. `has_more` is the authoritative "more pages?" signal.
+ */
+export interface CursorPaginatedUsersResponse {
+  items: User[];
+  next_cursor: string | null;
+  has_more: boolean;
 }

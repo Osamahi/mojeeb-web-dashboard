@@ -225,6 +225,13 @@ export const queryKeys = {
   users: () => ['users'] as const,
 
   /**
+   * Query key for cursor-paginated users with filters.
+   * Extends the base users key so partial matching still works for cache updates.
+   */
+  usersFiltered: (filters?: { searchTerm?: string; role?: string }) =>
+    ['users', 'infinite-cursor', filters] as const,
+
+  /**
    * Query key for fetching user role statistics (not agent-specific)
    * @returns {readonly ['user-role-stats']} Query key tuple
    */

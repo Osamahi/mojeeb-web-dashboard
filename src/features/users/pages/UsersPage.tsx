@@ -1,15 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users as UsersIcon, Search, X } from 'lucide-react';
-import { userService } from '../services/userService';
-import { organizationService } from '@/features/organizations/services/organizationService';
-import type { User } from '../types';
 import UsersTable from '../components/UsersTable';
 import { Spinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useInfiniteUsers } from '../hooks/useUsers';
 
 export default function UsersPage() {
   const { t } = useTranslation();
@@ -27,68 +24,38 @@ export default function UsersPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Fetch all users (when no search)
+  // Server-side search kicks in at >= 2 chars; otherwise list all.
+  const searchTerm = debouncedQuery.length >= 2 ? debouncedQuery : undefined;
+  const isSearchMode = !!searchTerm;
+
   const {
-    data: allUsers,
-    isLoading: isLoadingAllUsers,
-    error: allUsersError,
-  } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => userService.getUsers(),
-    enabled: !debouncedQuery || debouncedQuery.length < 2,
-  });
+    data,
+    isLoading,
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    error,
+  } = useInfiniteUsers({ searchTerm });
 
-  // Fetch search results (when searching)
-  const {
-    data: searchResults,
-    isLoading: isSearching,
-    error: searchError,
-  } = useQuery({
-    queryKey: ['user-search', debouncedQuery],
-    queryFn: () => organizationService.searchUsers(debouncedQuery),
-    enabled: debouncedQuery.length >= 2,
-    staleTime: 30000, // Cache for 30 seconds
-  });
+  const users = data?.users ?? [];
 
-  // Transform search results to User type format
-  const transformedSearchResults = useMemo((): User[] | undefined => {
-    if (!searchResults) return undefined;
-    return searchResults.map(result => ({
-      id: result.id,
-      email: result.email,
-      name: result.name,
-      phone: result.phone || null,
-      avatar_url: null,
-      role: 'Customer' as const, // Search doesn't return role, default to Customer
-      role_value: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      o_auth_provider: null,
-    }));
-  }, [searchResults]);
-
-  // Determine which data to display
-  const isSearchMode = debouncedQuery.length >= 2;
-  const displayUsers = isSearchMode ? transformedSearchResults : allUsers;
-  const isLoading = isSearchMode ? isSearching : isLoadingAllUsers;
-  const error = isSearchMode ? searchError : allUsersError;
-
-  // Clear search
   const handleClearSearch = () => {
     setSearchInput('');
     setDebouncedQuery('');
   };
 
+  // Initial load (no cached data yet).
+  const showFullPageLoader = isLoading && users.length === 0 && !isSearchMode;
+
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <BaseHeader
         title={t('users.title')}
         subtitle={t('users.subtitle')}
       />
 
-      {/* Loading State */}
-      {isLoading && !isSearchMode ? (
+      {showFullPageLoader ? (
         <div className="flex items-center justify-center min-h-[400px] bg-white border border-neutral-200 rounded-lg">
           <div className="text-center">
             <Spinner size="lg" />
@@ -105,7 +72,7 @@ export default function UsersPage() {
               : t('users.error_description')
           }
         />
-      ) : (displayUsers && displayUsers.length > 0) || isSearchMode ? (
+      ) : (
         <div className="bg-white border border-neutral-200 rounded-lg p-4 md:p-6 space-y-4">
           {/* Search Bar */}
           <div className="relative">
@@ -130,44 +97,51 @@ export default function UsersPage() {
                 <X className="h-4 w-4" />
               </button>
             )}
-            {isSearching && searchInput && (
+            {isSearchMode && isFetching && !isFetchingNextPage && (
               <div className="absolute end-10 top-1/2 -translate-y-1/2">
                 <Spinner size="sm" />
               </div>
             )}
           </div>
 
-          {/* Results Count */}
-          {isSearchMode && displayUsers && (
+          {/* Results Count (search mode only) */}
+          {isSearchMode && !isLoading && (
             <div className="text-sm text-neutral-600">
-              {t('users.search_results_count', { count: displayUsers.length })}
+              {t('users.search_results_count', { count: users.length })}
             </div>
           )}
 
-          {/* Table, Loading, or Empty State */}
-          {isSearching ? (
+          {/* Table / loader / empty state */}
+          {isLoading ? (
             <div className="flex items-center justify-center min-h-[200px]">
               <div className="text-center">
                 <Spinner size="lg" />
-                <p className="mt-4 text-neutral-600">{t('users.searching')}</p>
+                <p className="mt-4 text-neutral-600">
+                  {isSearchMode ? t('users.searching') : t('users.loading')}
+                </p>
               </div>
             </div>
-          ) : displayUsers && displayUsers.length > 0 ? (
-            <UsersTable users={displayUsers} />
+          ) : users.length > 0 ? (
+            <UsersTable
+              users={users}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={() => fetchNextPage()}
+            />
           ) : isSearchMode ? (
             <EmptyState
               icon={<Search className="w-12 h-12 text-neutral-400" />}
               title={t('users.no_search_results_title')}
               description={t('users.no_search_results_description', { query: debouncedQuery })}
             />
-          ) : null}
+          ) : (
+            <EmptyState
+              icon={<UsersIcon className="w-12 h-12 text-neutral-400" />}
+              title={t('users.no_users_title')}
+              description={t('users.no_users_description')}
+            />
+          )}
         </div>
-      ) : (
-        <EmptyState
-          icon={<UsersIcon className="w-12 h-12 text-neutral-400" />}
-          title={t('users.no_users_title')}
-          description={t('users.no_users_description')}
-        />
       )}
     </div>
   );

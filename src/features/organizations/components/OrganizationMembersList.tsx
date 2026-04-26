@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { UserPlus, Trash2, Mail, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -6,12 +6,7 @@ import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import AssignUserToOrgModal from './AssignUserToOrgModal';
 import { organizationService } from '../services/organizationService';
-import { userService } from '@/features/users/services/userService';
 import type { OrganizationMember } from '../types';
-
-type EnrichedMember = OrganizationMember & {
-  user?: { id: string; name: string | null; email: string | null; phone?: string | null };
-};
 
 interface OrganizationMembersListProps {
   organizationId: string;
@@ -30,14 +25,8 @@ export function OrganizationMembersList({
   const queryClient = useQueryClient();
 
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [memberToRemove, setMemberToRemove] = useState<EnrichedMember | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<OrganizationMember | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
-
-  const { data: users = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => userService.getUsers(),
-    enabled: enabled && !readOnly,
-  });
 
   const {
     data: members = [],
@@ -49,27 +38,8 @@ export function OrganizationMembersList({
     enabled: enabled && !!organizationId,
   });
 
-  // Backend already returns each member with a nested `user` object (see
-  // organizationService.transformOrganizationMember). We additionally enrich with
-  // `phone` from the users list when it has been fetched (edit mode).
-  const enrichedMembers: EnrichedMember[] = useMemo(() => {
-    return members.map((member) => {
-      const fullUser = users.find((u) => u.id === member.userId);
-      return {
-        ...member,
-        user: {
-          id: member.user?.id ?? member.userId,
-          name: member.user?.name ?? fullUser?.name ?? null,
-          email: member.user?.email ?? fullUser?.email ?? null,
-          phone: fullUser?.phone ?? null,
-        },
-      };
-    });
-  }, [members, users]);
-
   const handleAssignSuccess = async () => {
     await queryClient.invalidateQueries({ queryKey: ['organization-members', organizationId] });
-    await queryClient.invalidateQueries({ queryKey: ['users'] });
     await refetchMembers();
   };
 
@@ -95,7 +65,7 @@ export function OrganizationMembersList({
           <div className="flex items-center justify-between">
             {showHeader ? (
               <label className="block text-sm font-medium text-neutral-700">
-                {t('organizations.team_members_count')} ({enrichedMembers.length})
+                {t('organizations.team_members_count')} ({members.length})
               </label>
             ) : (
               <span />
@@ -117,7 +87,7 @@ export function OrganizationMembersList({
             <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
             <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
           </div>
-        ) : enrichedMembers.length > 0 ? (
+        ) : members.length > 0 ? (
           <div className="max-h-96 overflow-y-auto border border-neutral-200 rounded-lg">
             <table className="w-full">
               <thead className="bg-neutral-50 border-b border-neutral-200 sticky top-0">
@@ -142,7 +112,7 @@ export function OrganizationMembersList({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-neutral-200">
-                {enrichedMembers.map((member) => (
+                {members.map((member) => (
                   <tr key={member.id} className="hover:bg-neutral-50 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm font-medium text-neutral-900">

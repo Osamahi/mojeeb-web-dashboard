@@ -1,13 +1,13 @@
 /**
- * UsersMobileCardView Component
- * Mobile card-based view for users list
- * Includes infinite scroll, loading states, and empty states
+ * Mobile card view for the users listing.
+ * Pagination state lives in the parent (useInfiniteUsers); this component
+ * just triggers `onLoadMore` on scroll and renders loading/end indicators.
  */
 
-import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Users as UsersIcon } from 'lucide-react';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { UserCard } from './UserCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import type { User } from '../types';
@@ -15,45 +15,27 @@ import type { User } from '../types';
 interface UsersMobileCardViewProps {
   users: User[];
   onCopyPhone: (phone: string, e: React.MouseEvent) => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  onLoadMore: () => void;
 }
 
 export function UsersMobileCardView({
   users,
   onCopyPhone,
+  hasNextPage,
+  isFetchingNextPage,
+  onLoadMore,
 }: UsersMobileCardViewProps) {
   const { t } = useTranslation();
 
-  // Infinite scroll state
-  const [displayCount, setDisplayCount] = useState(50);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  useInfiniteScroll({
+    fetchNextPage: onLoadMore,
+    hasMore: hasNextPage,
+    isFetching: isFetchingNextPage,
+    containerSelector: '[data-users-container]',
+  });
 
-  // Displayed users with infinite scroll
-  const displayedUsers = users.slice(0, displayCount);
-
-  // Infinite scroll handler
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-
-      // Load more when scrolled to 80% of the way down
-      if (scrollTop + windowHeight >= documentHeight * 0.8) {
-        if (!isLoadingMore && displayCount < users.length) {
-          setIsLoadingMore(true);
-          setTimeout(() => {
-            setDisplayCount((prev) => Math.min(prev + 50, users.length));
-            setIsLoadingMore(false);
-          }, 300);
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [displayCount, users.length, isLoadingMore]);
-
-  // Empty state
   if (!users || users.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-neutral-200 p-12">
@@ -67,8 +49,7 @@ export function UsersMobileCardView({
   }
 
   return (
-    <>
-      {/* Cards with smooth transition */}
+    <div data-users-container>
       <AnimatePresence mode="wait">
         <motion.div
           key="users-mobile-cards"
@@ -79,7 +60,7 @@ export function UsersMobileCardView({
           className="relative"
         >
           <div className="space-y-3">
-            {displayedUsers.map((user, index) => (
+            {users.map((user, index) => (
               <motion.div
                 key={user.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -93,8 +74,7 @@ export function UsersMobileCardView({
         </motion.div>
       </AnimatePresence>
 
-      {/* Loading More Indicator */}
-      {isLoadingMore && (
+      {isFetchingNextPage && (
         <div className="flex justify-center items-center py-8 bg-white rounded-lg border border-neutral-200 mt-4">
           <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
           <span className="ml-2 text-sm text-neutral-600">
@@ -103,14 +83,13 @@ export function UsersMobileCardView({
         </div>
       )}
 
-      {/* End of results indicator */}
-      {displayedUsers.length >= users.length && users.length > 50 && (
+      {!hasNextPage && users.length > 50 && (
         <div className="flex justify-center items-center py-6 bg-white rounded-lg border border-neutral-200 mt-4">
           <span className="text-sm text-neutral-500">
             {t('users.all_loaded', { count: users.length })}
           </span>
         </div>
       )}
-    </>
+    </div>
   );
 }
