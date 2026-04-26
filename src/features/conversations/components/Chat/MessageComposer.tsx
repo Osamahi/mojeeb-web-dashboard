@@ -7,7 +7,7 @@
 
 import { useState, KeyboardEvent, useRef, useEffect, useCallback, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Loader2, Smile, Paperclip, Bot, BotOff, X, AlertCircle, Mic, Music, Image, FileText, Upload, Video, LayoutTemplate, MessageSquareText } from 'lucide-react';
+import { ArrowUp, Loader2, Smile, Paperclip, Bot, BotOff, X, AlertCircle, Mic, Music, Image, FileText, Upload, Video, LayoutTemplate, Bookmark } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -1672,7 +1672,7 @@ export default memo(function MessageComposer({
                 aria-label={t('saved_messages.toggle_aria')}
                 title={t('saved_messages.toggle_title')}
               >
-                <MessageSquareText className="w-5 h-5" />
+                <Bookmark className="w-5 h-5" />
               </button>
               {showSavedMessages && !slashRange && (
                 <SavedMessagesPicker
