@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Bot } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { agentService } from '@/features/agents/services/agentService';
+import { AgentLink } from '@/features/agents/components/AgentLink';
 
 interface OrganizationAgentsListProps {
   organizationId: string;
@@ -46,8 +47,12 @@ export function OrganizationAgentsList({
                   <Bot className="h-4 w-4 text-neutral-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-neutral-900 truncate">
-                    {agent.name}
+                  <div className="font-medium truncate">
+                    <AgentLink
+                      agentId={agent.id}
+                      agentName={agent.name}
+                      className="font-medium text-neutral-900 underline underline-offset-2 hover:text-neutral-700 text-left disabled:opacity-60 disabled:cursor-wait"
+                    />
                   </div>
                   {agent.description && (
                     <div className="text-xs text-neutral-500 truncate">

@@ -22,6 +22,7 @@ export interface User {
   // may have no org, no agents, and/or no active subscription.
   organization_id?: string | null;
   organization_name?: string | null;
+  first_agent_id?: string | null;
   first_agent_name?: string | null;
   plan_code?: string | null;
   plan_name?: string | null;

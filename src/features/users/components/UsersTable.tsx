@@ -4,10 +4,10 @@
  * `onLoadMore` / `hasNextPage` / `isFetchingNextPage` from useInfiniteUsers.
  */
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Users as UsersIcon, Loader2, Copy } from 'lucide-react';
+import { Users as UsersIcon, Loader2, Copy, MoreVertical, BarChart3 } from 'lucide-react';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
@@ -16,6 +16,10 @@ import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { DataTable, type ColumnDef } from '@/components/ui/DataTable';
 import { formatPhoneNumber } from '@/features/leads/utils/formatting';
 import { countryToFlag } from '@/lib/countryUtils';
+import { AgentLink } from '@/features/agents/components/AgentLink';
+import { ViewUsageModal } from '@/features/subscriptions/components/ViewUsageModal';
+import { subscriptionService } from '@/features/subscriptions/services/subscriptionService';
+import type { SubscriptionDetails } from '@/features/subscriptions/types/subscription.types';
 import { UsersMobileCardView } from './UsersMobileCardView';
 import type { User } from '../types';
 
@@ -35,6 +39,86 @@ export default function UsersTable({
   const { t } = useTranslation();
   const { format } = useDateLocale();
   const isMobile = useIsMobile();
+
+  // Row actions menu — mirrors SubscriptionTable's pattern.
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left?: number; right?: number } | null>(null);
+  const buttonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+
+  // View Usage modal state. We hold the resolved SubscriptionDetails (not just
+  // the user) so we can pass it directly to the shared ViewUsageModal — same
+  // component used by AdminSubscriptionsPage. The lookup uses the existing
+  // /api/admin/subscriptions search endpoint (no new backend work).
+  const [usageSubscription, setUsageSubscription] = useState<SubscriptionDetails | null>(null);
+  const [resolvingUserId, setResolvingUserId] = useState<string | null>(null);
+
+  const handleMenuToggle = useCallback((userId: string) => {
+    setOpenMenuId((current) => {
+      if (current === userId) {
+        setMenuPosition(null);
+        return null;
+      }
+      const button = buttonRefs.current[userId];
+      if (button) {
+        const rect = button.getBoundingClientRect();
+        const isRTL = document.documentElement.dir === 'rtl';
+        setMenuPosition(
+          isRTL
+            ? { top: rect.bottom + 8, left: rect.left }
+            : { top: rect.bottom + 8, right: window.innerWidth - rect.right }
+        );
+      }
+      return userId;
+    });
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setOpenMenuId(null);
+    setMenuPosition(null);
+  }, []);
+
+  // Close menu on scroll/resize so it doesn't float over the wrong row.
+  useEffect(() => {
+    if (!openMenuId) return;
+    window.addEventListener('scroll', closeMenu, true);
+    window.addEventListener('resize', closeMenu);
+    return () => {
+      window.removeEventListener('scroll', closeMenu, true);
+      window.removeEventListener('resize', closeMenu);
+    };
+  }, [openMenuId, closeMenu]);
+
+  const handleViewUsage = useCallback(async (user: User) => {
+    closeMenu();
+    if (!user.email) {
+      toast.error(t('users.usage_no_email'));
+      return;
+    }
+
+    setResolvingUserId(user.id);
+    try {
+      // Look up the org's subscription via the same admin endpoint
+      // AdminSubscriptionsPage uses. Email match is precise; we take the first
+      // hit (one user → one org → one active subscription per Phase 2 design).
+      const matches = await subscriptionService.getAllSubscriptions(
+        { searchTerm: user.email },
+        1,
+        1
+      );
+      const subscription = matches[0];
+      if (!subscription) {
+        toast.error(t('users.usage_no_subscription'));
+        return;
+      }
+      setUsageSubscription(subscription);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[UsersTable] failed to resolve subscription for user', user.id, err);
+      toast.error(t('users.usage_load_failed'));
+    } finally {
+      setResolvingUserId(null);
+    }
+  }, [t, closeMenu]);
 
   // Generic copy-to-clipboard handler. Mobile card view passes phone in;
   // desktop table cells call it directly with email or phone.
@@ -142,30 +226,14 @@ export default function UsersTable({
       key: 'first_agent_name',
       label: t('users.table_agent'),
       sortable: false,
-      render: (_, user) => {
-        const tooltipParts = [
-          user.plan_name,
-          user.plan_billing_interval,
-          user.plan_currency,
-        ].filter(Boolean);
-        return (
-          <div className="max-w-[220px]">
-            <div className="text-sm text-neutral-900 truncate">
-              {user.first_agent_name ?? <span className="text-neutral-400">—</span>}
-            </div>
-            {user.plan_code ? (
-              <div
-                className="text-xs text-neutral-500 capitalize truncate"
-                title={tooltipParts.join(' · ')}
-              >
-                {user.plan_code}
-              </div>
-            ) : (
-              <div className="text-xs text-neutral-400">{t('users.no_plan')}</div>
-            )}
-          </div>
-        );
-      },
+      render: (_, user) => (
+        <div className="max-w-[220px] text-sm truncate">
+          <AgentLink
+            agentId={user.first_agent_id}
+            agentName={user.first_agent_name}
+          />
+        </div>
+      ),
     },
     {
       key: 'created_at',
@@ -180,7 +248,59 @@ export default function UsersTable({
         );
       },
     },
-  ], [t, format, handleCopy]);
+    {
+      key: 'actions',
+      label: '',
+      sortable: false,
+      render: (_, user) => (
+        <div className="relative text-end">
+          <button
+            ref={(el) => { buttonRefs.current[user.id] = el; }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleMenuToggle(user.id);
+            }}
+            disabled={resolvingUserId === user.id}
+            className="text-neutral-400 hover:text-neutral-600 p-1 rounded disabled:opacity-60 disabled:cursor-wait"
+            aria-label={t('common.actions')}
+          >
+            {resolvingUserId === user.id ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <MoreVertical className="h-5 w-5" />
+            )}
+          </button>
+
+          {openMenuId === user.id && menuPosition && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={closeMenu}
+              />
+              <div
+                className="fixed z-20 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
+                style={{
+                  top: `${menuPosition.top}px`,
+                  ...(menuPosition.left !== undefined ? { left: `${menuPosition.left}px` } : {}),
+                  ...(menuPosition.right !== undefined ? { right: `${menuPosition.right}px` } : {}),
+                }}
+              >
+                <div className="py-1" role="menu">
+                  <button
+                    onClick={() => handleViewUsage(user)}
+                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    {t('subscriptions.view_usage')}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      ),
+    },
+  ], [t, format, handleCopy, openMenuId, menuPosition, handleMenuToggle, closeMenu, handleViewUsage, resolvingUserId]);
 
   if (isMobile) {
     return (
@@ -224,6 +344,15 @@ export default function UsersTable({
             {t('users.all_loaded', { count: users.length })}
           </span>
         </div>
+      )}
+
+      {/* Reuses the same modal AdminSubscriptionsPage opens — single source of truth. */}
+      {usageSubscription && (
+        <ViewUsageModal
+          isOpen={true}
+          onClose={() => setUsageSubscription(null)}
+          subscription={usageSubscription}
+        />
       )}
     </div>
   );

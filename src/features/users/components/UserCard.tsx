@@ -4,11 +4,12 @@
  * View-only card with phone copy functionality
  */
 
-import { Copy, Mail, Globe } from 'lucide-react';
+import { Copy, Mail, Globe, Bot } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '@/components/ui/Avatar';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
-import { formatCountry } from '@/lib/countryUtils';
+import { countryToFlag } from '@/lib/countryUtils';
+import { AgentLink } from '@/features/agents/components/AgentLink';
 import type { User } from '../types';
 
 interface UserCardProps {
@@ -18,6 +19,11 @@ interface UserCardProps {
 
 export function UserCard({ user, onCopyPhone }: UserCardProps) {
   const { t } = useTranslation();
+
+  // Egypt is the default audience — only flag non-EG users to reduce visual noise.
+  const countryUpper = user.country?.toUpperCase();
+  const isNonDefaultCountry = !!countryUpper && countryUpper !== 'EG';
+  const flag = isNonDefaultCountry ? countryToFlag(user.country) : '';
 
   return (
     <div className="bg-white border border-neutral-200 rounded-lg p-4 transition-colors">
@@ -55,11 +61,27 @@ export function UserCard({ user, onCopyPhone }: UserCardProps) {
           </div>
         )}
 
-        {/* Country */}
-        {user.country && (
+        {/* Country — flag only shown for non-Egypt users (Egypt is the default audience). */}
+        {isNonDefaultCountry && (
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4 text-neutral-400 flex-shrink-0" />
-            <span className="text-sm text-neutral-600">{formatCountry(user.country)}</span>
+            <span className="text-sm text-neutral-600">
+              {flag && <span className="me-1">{flag}</span>}
+              {countryUpper}
+            </span>
+          </div>
+        )}
+
+        {/* Agent — clickable for SuperAdmin via the centralized AgentLink. */}
+        {user.first_agent_name && (
+          <div className="flex items-center gap-2">
+            <Bot className="w-4 h-4 text-neutral-400 flex-shrink-0" />
+            <div className="text-sm truncate min-w-0">
+              <AgentLink
+                agentId={user.first_agent_id}
+                agentName={user.first_agent_name}
+              />
+            </div>
           </div>
         )}
 
@@ -89,25 +111,17 @@ export function UserCard({ user, onCopyPhone }: UserCardProps) {
       <div className="pt-3 border-t border-neutral-100">
         <div className="text-xs text-neutral-500">
           {(() => {
-            try {
-              if (!user.created_at) return '—';
-
-              const dateStr = user.created_at.toString();
-              const date = new Date(dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`);
-
-              if (isNaN(date.getTime())) return '—';
-
-              return (
-                <div className="flex items-center justify-between">
-                  <span>{t('users.created')}</span>
-                  <span className="font-medium">
-                    {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              );
-            } catch {
-              return '—';
-            }
+            if (!user.created_at) return '—';
+            const date = new Date(user.created_at);
+            if (isNaN(date.getTime())) return '—';
+            return (
+              <div className="flex items-center justify-between">
+                <span>{t('users.created')}</span>
+                <span className="font-medium">
+                  {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            );
           })()}
         </div>
       </div>
