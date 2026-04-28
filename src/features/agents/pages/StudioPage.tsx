@@ -8,11 +8,11 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus, MessageSquare, Bell, MoreVertical, Paperclip, BookOpen, ScrollText, Info } from 'lucide-react';
+import { Plus, MessageSquare, Bell, MoreVertical, Paperclip, BookOpen, ScrollText, Info, Search } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
@@ -44,6 +44,8 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useUIStore } from '@/stores/uiStore';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
 import { PlanCode } from '@/features/subscriptions/types/subscription.types';
+import { useStudioSearch } from '../hooks/useStudioSearch';
+import { StudioSearchBar } from '../components/StudioSearchBar';
 
 /**
  * Merge optimistic job IDs with backend jobs, removing duplicates
@@ -95,6 +97,7 @@ export default function StudioPage() {
     enabled: !!agentId,
   });
 
+
   // Fetch all active (pending/processing) document jobs
   const { data: allJobs } = useDocumentJobs(agentId);
   const backendActiveJobs = allJobs?.filter(
@@ -109,6 +112,9 @@ export default function StudioPage() {
     data: attachments,
     refetch: refetchAttachments,
   } = useAgentAttachments(agentId);
+
+  // Global Studio search — owns query state, matches, prev/next, scroll-to-match.
+  const search = useStudioSearch({ agent, knowledgeBases, attachments });
 
   // Check if agent has any conversations (lightweight: limit=1)
   const { data: hasConversations, isLoading: isLoadingConversations } = useQuery({
@@ -259,6 +265,22 @@ export default function StudioPage() {
               </div>
 
               <div className="flex items-center gap-2">
+                {search.shouldShow && (
+                  <button
+                    onClick={search.toggle}
+                    aria-label={t('studio.search_toggle', 'Search')}
+                    aria-expanded={search.isOpen}
+                    title={t('studio.search_toggle', 'Search')}
+                    className={cn(
+                      'w-10 h-10 rounded-lg border transition-colors flex items-center justify-center',
+                      search.isOpen
+                        ? 'border-brand-mojeeb bg-brand-mojeeb/10 text-brand-mojeeb'
+                        : 'border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700',
+                    )}
+                  >
+                    <Search className="w-5 h-5" />
+                  </button>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger>
                     <button
@@ -285,6 +307,31 @@ export default function StudioPage() {
                 </DropdownMenu>
               </div>
             </div>
+
+            {/* ── Global Search — pinned in the header, toggled from the toolbar ── */}
+            <AnimatePresence initial={false}>
+              {search.shouldShow && search.isOpen && (
+                <motion.div
+                  key="studio-search"
+                  initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                  animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
+                  exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                  transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                  className="overflow-hidden"
+                >
+                  <StudioSearchBar
+                    searchQuery={search.searchQuery}
+                    setSearchQuery={search.setSearchQuery}
+                    matches={search.matches}
+                    itemsWithMatches={search.itemsWithMatches}
+                    currentMatchIndex={search.currentMatchIndex}
+                    goToPrevMatch={search.goToPrevMatch}
+                    goToNextMatch={search.goToNextMatch}
+                    onClose={search.close}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Setup Checklist — below header with breathing room */}
@@ -323,7 +370,11 @@ export default function StudioPage() {
               </div>
 
               {/* Main Instruction Card */}
-              <MainInstructionCard />
+              <MainInstructionCard
+                searchQuery={search.searchQuery}
+                currentMatchKey={search.currentMatchKey}
+                forceExpanded={agent ? search.isCurrentItem('instruction', `instruction:${agent.id}`) : false}
+              />
               </motion.div>
 
               {/* ── Knowledge Section ── */}
@@ -362,6 +413,9 @@ export default function StudioPage() {
                       knowledgeBase={kb}
                       agentId={agentId!}
                       onUpdate={() => refetchKBs()}
+                      searchQuery={search.searchQuery}
+                      currentMatchKey={search.currentMatchKey}
+                      forceExpanded={search.isCurrentItem('knowledge', kb.id)}
                     />
                   ))}
                   <Button
@@ -436,6 +490,9 @@ export default function StudioPage() {
                           key={attachment.id}
                           attachment={attachment}
                           onUpdate={() => refetchAttachments()}
+                          searchQuery={search.searchQuery}
+                          currentMatchKey={search.currentMatchKey}
+                          forceExpanded={search.isCurrentItem('attachment', `attachment:${attachment.id}`)}
                         />
                       ))}
                       <Button

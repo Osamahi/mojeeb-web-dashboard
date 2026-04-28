@@ -57,6 +57,7 @@ export const RichTextEditor = ({
           'px-4 py-3'
         ),
         'data-placeholder': defaultPlaceholder,
+        spellcheck: 'true',
       },
     },
   });

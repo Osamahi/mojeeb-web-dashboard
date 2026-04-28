@@ -219,6 +219,7 @@ export default function AddKnowledgeBaseModal({
             }}
             error={errors.name}
             disabled={createMutation.isPending}
+            spellCheck
             required
           />
 
@@ -235,6 +236,7 @@ export default function AddKnowledgeBaseModal({
             minHeight={simplified ? 100 : 150}
             maxHeight={400}
             disabled={createMutation.isPending}
+            spellCheck
             required
           />
 

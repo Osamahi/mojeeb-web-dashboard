@@ -4,7 +4,7 @@
  * Clean, spacious layout for knowledge base list
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -18,21 +18,36 @@ import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { plainTextToHtml } from '@/lib/textUtils';
+import { highlightPlainText, highlightHtml } from '../utils/highlightSearch';
 
 interface KnowledgeBaseItemProps {
   knowledgeBase: KnowledgeBase;
   agentId: string;
   onUpdate: () => void;
+  /** Active search query — when present, matches are highlighted. */
+  searchQuery?: string;
+  /** Globally-current match key (the one prev/next is pointing at). */
+  currentMatchKey?: string | null;
+  /** Force the card to be expanded (used when current match is inside it). */
+  forceExpanded?: boolean;
 }
 
 export default function KnowledgeBaseItem({
   knowledgeBase,
   agentId,
   onUpdate,
+  searchQuery = '',
+  currentMatchKey = null,
+  forceExpanded = false,
 }: KnowledgeBaseItemProps) {
   const { t } = useTranslation();
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Auto-expand when the current search match lives inside this card.
+  useEffect(() => {
+    if (forceExpanded) setIsExpanded(true);
+  }, [forceExpanded]);
   const [isEditing, setIsEditing] = useState(false);
   const [currentName, setCurrentName] = useState(knowledgeBase.name);
   const [editName, setEditName] = useState(knowledgeBase.name);
@@ -153,7 +168,14 @@ export default function KnowledgeBaseItem({
 
           {/* Title */}
           <h3 className="flex-1 text-base font-semibold text-neutral-950 truncate">
-            {toTitleCase(currentName)}
+            {searchQuery
+              ? highlightPlainText(toTitleCase(currentName), {
+                  itemId: knowledgeBase.id,
+                  field: 'title',
+                  query: searchQuery,
+                  currentMatchKey,
+                })
+              : toTitleCase(currentName)}
           </h3>
 
           {/* Hover Actions (visible on hover or when expanded) */}
@@ -208,6 +230,7 @@ export default function KnowledgeBaseItem({
                     onChange={(e) => setEditName(e.target.value)}
                     placeholder="Knowledge base name..."
                     disabled={updateMutation.isPending}
+                    spellCheck
                     className={cn(
                       'w-full px-3 py-2 rounded-lg text-sm',
                       'bg-neutral-50 border border-neutral-200',
@@ -257,7 +280,16 @@ export default function KnowledgeBaseItem({
                 {knowledgeBase.content ? (
                   <div
                     className="text-sm text-neutral-700 leading-relaxed prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: plainTextToHtml(knowledgeBase.content) }}
+                    dangerouslySetInnerHTML={{
+                      __html: searchQuery
+                        ? highlightHtml(plainTextToHtml(knowledgeBase.content), {
+                            itemId: knowledgeBase.id,
+                            field: 'content',
+                            query: searchQuery,
+                            currentMatchKey,
+                          })
+                        : plainTextToHtml(knowledgeBase.content),
+                    }}
                   />
                 ) : (
                   <div className="text-sm text-neutral-400 italic">No content available</div>

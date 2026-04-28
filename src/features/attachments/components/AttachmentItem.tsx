@@ -4,7 +4,7 @@
  * Clicking the card expands/collapses; clicking the thumbnail opens media viewer.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight, Pencil, Trash2, Image, Film, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,18 +14,32 @@ import { EditAttachmentModal } from './EditAttachmentModal';
 import { ImageModal } from '@/features/conversations/components/Chat/ImageModal';
 import type { MessageAttachment } from '@/features/conversations/types';
 import type { Attachment } from '../types/attachment.types';
+import { highlightPlainText } from '@/features/agents/utils/highlightSearch';
 
 interface AttachmentItemProps {
   attachment: Attachment;
   onUpdate: () => void;
+  searchQuery?: string;
+  currentMatchKey?: string | null;
+  forceExpanded?: boolean;
 }
 
-export default function AttachmentItem({ attachment, onUpdate }: AttachmentItemProps) {
+export default function AttachmentItem({
+  attachment,
+  onUpdate,
+  searchQuery = '',
+  currentMatchKey = null,
+  forceExpanded = false,
+}: AttachmentItemProps) {
   const { t } = useTranslation();
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const deleteMutation = useDeleteAttachment();
 
   const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (forceExpanded) setIsExpanded(true);
+  }, [forceExpanded]);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [mediaViewerIndex, setMediaViewerIndex] = useState<number | null>(null);
 
@@ -98,7 +112,14 @@ export default function AttachmentItem({ attachment, onUpdate }: AttachmentItemP
 
           {/* Name */}
           <h3 className="text-base font-semibold text-neutral-950 truncate min-w-0">
-            {attachment.name}
+            {searchQuery
+              ? highlightPlainText(attachment.name, {
+                  itemId: `attachment:${attachment.id}`,
+                  field: 'title',
+                  query: searchQuery,
+                  currentMatchKey,
+                })
+              : attachment.name}
           </h3>
 
           {/* Thumbnail(s) — right after name, click opens media viewer */}
@@ -143,7 +164,14 @@ export default function AttachmentItem({ attachment, onUpdate }: AttachmentItemP
         {isExpanded && (
           <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-neutral-100">
             <p className="pt-3 text-sm text-neutral-700 leading-relaxed">
-              {attachment.triggerPrompt}
+              {searchQuery
+                ? highlightPlainText(attachment.triggerPrompt ?? '', {
+                    itemId: `attachment:${attachment.id}`,
+                    field: 'content',
+                    query: searchQuery,
+                    currentMatchKey,
+                  })
+                : attachment.triggerPrompt}
             </p>
           </div>
         )}

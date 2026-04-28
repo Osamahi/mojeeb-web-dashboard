@@ -7,7 +7,7 @@
  * Collapsed by default
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -17,11 +17,26 @@ import { queryKeys } from '@/lib/queryKeys';
 import PromptEditor from './PromptEditor';
 import { cn } from '@/lib/utils';
 import { plainTextToHtml } from '@/lib/textUtils';
+import { highlightPlainText, highlightHtml } from '../utils/highlightSearch';
 
-export default function MainInstructionCard() {
+interface MainInstructionCardProps {
+  searchQuery?: string;
+  currentMatchKey?: string | null;
+  forceExpanded?: boolean;
+}
+
+export default function MainInstructionCard({
+  searchQuery = '',
+  currentMatchKey = null,
+  forceExpanded = false,
+}: MainInstructionCardProps = {}) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (forceExpanded) setIsExpanded(true);
+  }, [forceExpanded]);
 
   // Get current agent from context
   const { agentId } = useAgentContext();
@@ -112,7 +127,14 @@ export default function MainInstructionCard() {
                     {t('studio.agent_name_label')}
                   </h4>
                   <p className="text-sm text-neutral-700 leading-relaxed">
-                    {agent.name || t('studio.untitled_agent')}
+                    {searchQuery
+                      ? highlightPlainText(agent.name || t('studio.untitled_agent'), {
+                          itemId: `instruction:${agent.id}`,
+                          field: 'title',
+                          query: searchQuery,
+                          currentMatchKey,
+                        })
+                      : agent.name || t('studio.untitled_agent')}
                   </p>
                 </div>
 
@@ -123,7 +145,16 @@ export default function MainInstructionCard() {
                   </h4>
                   <div
                     className="text-sm text-neutral-700 leading-relaxed prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: plainTextToHtml(agent.personaPrompt || '') }}
+                    dangerouslySetInnerHTML={{
+                      __html: searchQuery
+                        ? highlightHtml(plainTextToHtml(agent.personaPrompt || ''), {
+                            itemId: `instruction:${agent.id}`,
+                            field: 'content',
+                            query: searchQuery,
+                            currentMatchKey,
+                          })
+                        : plainTextToHtml(agent.personaPrompt || ''),
+                    }}
                   />
                 </div>
               </div>
