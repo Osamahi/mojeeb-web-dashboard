@@ -12,7 +12,14 @@ import { useConnections } from '../hooks/useConnections';
 import { useConnectPage } from '../hooks/useAddConnection';
 import { cleanupOAuthStorage } from '../utils/oauthManager';
 import { platformShowsWidget } from '../constants/platforms';
-import type { OAuthIntegrationType, InstagramAccount, WhatsAppPhoneNumber, PlatformType } from '../types';
+import type {
+  OAuthIntegrationType,
+  InstagramAccount,
+  WhatsAppPhoneNumber,
+  PlatformType,
+  ConnectPageRequest,
+  ConnectionConflictInfo,
+} from '../types';
 import { WidgetSnippetDialog } from './dialogs/WidgetSnippetDialog';
 
 import {
@@ -21,6 +28,7 @@ import {
   PlatformSelectStep,
   OAuthAuthorizeStep,
   AccountSelectStep,
+  TransferConfirmationStep,
 } from './steps';
 
 type AddConnectionModalProps = {
@@ -91,6 +99,14 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
   const contentRef = useRef<HTMLDivElement>(null);
   const [showWidgetDialog, setShowWidgetDialog] = useState(false);
 
+  // Pending transfer-confirmation: when the backend returns 409, we hold the
+  // conflict info AND the original request so a confirm-click can replay it
+  // with confirm_transfer_from_other_agent=true. Cleared on cancel/success.
+  const [pendingTransfer, setPendingTransfer] = useState<{
+    conflict: ConnectionConflictInfo;
+    request: ConnectPageRequest;
+  } | null>(null);
+
   // Log state changes
   useEffect(() => {
     logger.debug('📋 AddConnectionModal state changed', {
@@ -114,6 +130,7 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
       dispatch({ type: 'RESET' });
       cleanupOAuthStorage();
       setShowWidgetDialog(false);
+      setPendingTransfer(null);
     } else if (isOpen && initialPlatform && !platformShowsWidget(initialPlatform)) {
       // When modal opens with a new platform, reset and go to authorize
       dispatch({ type: 'SELECT_PLATFORM', platform: initialPlatform as OAuthIntegrationType });
@@ -160,6 +177,23 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
     dispatch({ type: 'OAUTH_SUCCESS', tempConnectionId });
   };
 
+  // Submit a connect request and route the result based on its discriminated kind.
+  // Extracted so initial-attempt and transfer-confirmation share the same branching.
+  const submitConnectRequest = (request: ConnectPageRequest) => {
+    connectPage(request, {
+      onSuccess: (result) => {
+        if (result.kind === 'success') {
+          setPendingTransfer(null);
+          dispatch({ type: 'CONNECTION_SUCCESS' });
+        } else if (result.kind === 'conflict') {
+          // Hold the original request so confirm can replay it with the flag.
+          setPendingTransfer({ conflict: result.conflict, request });
+        }
+        // 'error' falls through to the hook's onError → toast
+      },
+    });
+  };
+
   const handleAccountSelect = (
     pageId: string,
     instagramAccount?: InstagramAccount,
@@ -169,23 +203,28 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
   ) => {
     if (!state.tempConnectionId) return;
 
-    connectPage(
-      {
-        tempConnectionId: state.tempConnectionId,
-        pageId,
-        instagramAccountId: instagramAccount?.id,
-        instagramUsername: instagramAccount?.username,
-        whatsAppPhoneNumberId: whatsAppPhone?.id,
-        whatsAppBusinessAccountId: whatsAppPhone?.businessAccountId || undefined,
-        respondToMessages,
-        respondToComments,
-      },
-      {
-        onSuccess: () => {
-          dispatch({ type: 'CONNECTION_SUCCESS' });
-        },
-      }
-    );
+    submitConnectRequest({
+      tempConnectionId: state.tempConnectionId,
+      pageId,
+      instagramAccountId: instagramAccount?.id,
+      instagramUsername: instagramAccount?.username,
+      whatsAppPhoneNumberId: whatsAppPhone?.id,
+      whatsAppBusinessAccountId: whatsAppPhone?.businessAccountId || undefined,
+      respondToMessages,
+      respondToComments,
+    });
+  };
+
+  const handleTransferConfirm = () => {
+    if (!pendingTransfer) return;
+    submitConnectRequest({
+      ...pendingTransfer.request,
+      confirmTransferFromOtherAgent: true,
+    });
+  };
+
+  const handleTransferCancel = () => {
+    setPendingTransfer(null);
   };
 
   const handleBack = () => {
@@ -253,13 +292,22 @@ export function AddConnectionModal({ isOpen, onClose, initialPlatform }: AddConn
               );
             })()}
 
-            {state.step === 'select' && state.platform && state.tempConnectionId && (
+            {state.step === 'select' && state.platform && state.tempConnectionId && !pendingTransfer && (
               <AccountSelectStep
                 tempConnectionId={state.tempConnectionId}
                 platform={state.platform}
                 onSelect={handleAccountSelect}
                 onBack={handleBack}
                 isConnecting={isConnecting}
+              />
+            )}
+
+            {state.step === 'select' && pendingTransfer && (
+              <TransferConfirmationStep
+                conflict={pendingTransfer.conflict}
+                isPending={isConnecting}
+                onConfirm={handleTransferConfirm}
+                onCancel={handleTransferCancel}
               />
             )}
 

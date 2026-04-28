@@ -15,7 +15,7 @@ import type {
   OAuthIntegrationType,
   OAuthInitiationResponse,
   ConnectPageRequest,
-  ConnectPageResponse,
+  ConnectPageResult,
   FacebookPagesResponse,
   WhatsAppAccountsResponse,
 } from '../types';
@@ -85,24 +85,34 @@ export function useWhatsAppAccounts(tempConnectionId: string | null) {
 }
 
 /**
- * Hook for connecting a selected Facebook page (and optionally Instagram account)
- * Invalidates connections cache on success
+ * Hook for connecting a selected Facebook page / Instagram account / WhatsApp number.
+ * Returns a discriminated `ConnectPageResult` so callers can branch between
+ * success / conflict (transfer modal) / error without relying on thrown exceptions.
+ *
+ * Side effects (toast, cache invalidation, analytics) only fire on `kind: 'success'`.
+ * The `conflict` case is silent — the caller renders the transfer modal and re-invokes.
  */
 export function useConnectPage() {
   const queryClient = useQueryClient();
   const { agentId } = useAgentContext();
 
-  return useMutation<ConnectPageResponse, Error, ConnectPageRequest>({
+  return useMutation<ConnectPageResult, Error, ConnectPageRequest>({
     mutationFn: (request) => connectionService.connectSelectedPage(request),
-    onSuccess: (data) => {
+    onSuccess: (result) => {
+      if (result.kind !== 'success') {
+        // Conflict path is handled by the caller (modal). Errors are caught by onError.
+        // Nothing to do here for non-success results — avoid spurious toasts/refetches.
+        return;
+      }
+
       logger.info('Platform connected successfully', {
-        connectionId: data.connectionId,
-        platform: data.platform,
+        connectionId: result.connectionId,
+        platform: result.platform,
       });
-      toast.success(`${data.platform} connected successfully!`);
+      toast.success(`${result.platform} connected successfully!`);
 
       // Track channel connection for funnel
-      analytics.track('channel_connected', { platform: data.platform });
+      analytics.track('channel_connected', { platform: result.platform });
 
       // Invalidate connections cache to trigger refetch
       queryClient.invalidateQueries({

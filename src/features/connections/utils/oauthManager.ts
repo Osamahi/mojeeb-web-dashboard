@@ -156,6 +156,8 @@ export function openOAuthPopup(authUrl: string): Promise<{ tempConnectionId: str
         'https://app.mojeeb.app',
         'http://localhost:3000',
         'https://localhost:3000',
+        'http://localhost:3001',
+        'https://localhost:3001',
       ];
       if (!allowedOrigins.includes(event.origin)) {
         logger.warn('Received message from unauthorized origin', {

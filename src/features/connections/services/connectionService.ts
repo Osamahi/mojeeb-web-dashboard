@@ -9,7 +9,8 @@ import type {
   FacebookPagesResponse,
   WhatsAppAccountsResponse,
   ConnectPageRequest,
-  ConnectPageResponse,
+  ConnectPageResult,
+  ConnectionConflictInfo,
   ApiOAuthInitiationResponse,
   ApiFacebookPagesResponse,
   ApiWhatsAppAccountsResponse,
@@ -307,73 +308,89 @@ class ConnectionService {
   }
 
   /**
-   * Connect a selected Facebook page (and optionally Instagram account)
+   * Connect a selected Facebook page / Instagram account / WhatsApp number.
+   *
+   * Returns a discriminated result:
+   * - `success` — the connection was created or restored
+   * - `conflict` — the account is held by another agent; surface the transfer
+   *   modal and replay with `confirmTransferFromOtherAgent: true`
+   * - `error` — any other failure
+   *
+   * The 409 path intentionally does NOT throw; it is a normal product flow,
+   * not an error worth toasting at the global interceptor.
    */
-  async connectSelectedPage(request: ConnectPageRequest): Promise<ConnectPageResponse> {
+  async connectSelectedPage(request: ConnectPageRequest): Promise<ConnectPageResult> {
+    logger.info('🔗 [connectSelectedPage] Starting page connection', {
+      request: {
+        tempConnectionId: request.tempConnectionId,
+        pageId: request.pageId,
+        instagramAccountId: request.instagramAccountId,
+        instagramUsername: request.instagramUsername,
+        confirmTransferFromOtherAgent: request.confirmTransferFromOtherAgent,
+      },
+    });
+
+    // Backend uses snake_case for JSON serialization (Newtonsoft.Json with SnakeCaseNamingStrategy)
+    const payload = {
+      temp_connection_id: request.tempConnectionId,
+      page_id: request.pageId,
+      ...(request.instagramAccountId && {
+        instagram_account_id: request.instagramAccountId,
+        instagram_username: request.instagramUsername,
+      }),
+      ...(request.whatsAppPhoneNumberId && {
+        whats_app_phone_number_id: request.whatsAppPhoneNumberId,
+        whats_app_business_account_id: request.whatsAppBusinessAccountId,
+      }),
+      ...(request.respondToMessages !== undefined && {
+        respond_to_messages: request.respondToMessages,
+      }),
+      ...(request.respondToComments !== undefined && {
+        respond_to_comments: request.respondToComments,
+      }),
+      ...(request.confirmTransferFromOtherAgent && {
+        confirm_transfer_from_other_agent: true,
+      }),
+    };
+
     try {
-      logger.info('🔗 [connectSelectedPage] Starting page connection', {
-        request: {
-          tempConnectionId: request.tempConnectionId,
-          pageId: request.pageId,
-          instagramAccountId: request.instagramAccountId,
-          instagramUsername: request.instagramUsername,
-        },
-      });
-
-      // Backend uses snake_case for JSON serialization (Newtonsoft.Json with SnakeCaseNamingStrategy)
-      const payload = {
-        temp_connection_id: request.tempConnectionId,
-        page_id: request.pageId,
-        ...(request.instagramAccountId && {
-          instagram_account_id: request.instagramAccountId,
-          instagram_username: request.instagramUsername,
-        }),
-        ...(request.whatsAppPhoneNumberId && {
-          whats_app_phone_number_id: request.whatsAppPhoneNumberId,
-          whats_app_business_account_id: request.whatsAppBusinessAccountId,
-        }),
-        ...(request.respondToMessages !== undefined && {
-          respond_to_messages: request.respondToMessages,
-        }),
-        ...(request.respondToComments !== undefined && {
-          respond_to_comments: request.respondToComments,
-        }),
-      };
-
-      logger.info('📤 [connectSelectedPage] Sending API request', {
-        endpoint: API_PATHS.OAUTH_CONNECT_PAGE,
-        payload,
-        payloadKeys: Object.keys(payload),
-        payloadStringified: JSON.stringify(payload),
-      });
-
       const { data } = await api.post<ApiConnectPageResponse>(API_PATHS.OAUTH_CONNECT_PAGE, payload);
 
       logger.info('✅ [connectSelectedPage] Page connected successfully', {
-        response: data,
         connectionId: data.connection_id,
         platform: data.platform,
-        message: data.message,
       });
 
       return {
-        success: data.success,
+        kind: 'success',
         connectionId: data.connection_id,
         platform: data.platform,
         message: data.message,
       };
     } catch (error: any) {
+      // 409 = cross-agent conflict, awaiting user transfer confirmation. Not an
+      // error in the product sense; let the caller drive the modal flow.
+      if (error?.response?.status === 409 && error?.response?.data?.conflict) {
+        const c = error.response.data.conflict;
+        const conflict: ConnectionConflictInfo = {
+          conflictType: c.conflict_type,
+          platform: c.platform,
+          accountName: c.account_name,
+          existingAgentName: c.existing_agent_name ?? null,
+        };
+        // Mark handled so the global axios interceptor does not toast.
+        if (error.response) {
+          error._toastHandled = true;
+        }
+        logger.info('ℹ️ [connectSelectedPage] Transfer confirmation required', { conflict });
+        return { kind: 'conflict', conflict };
+      }
+
       logger.error('❌ [connectSelectedPage] Error connecting page', {
         request,
-        error,
         errorMessage: error?.message,
         errorResponse: error?.response?.data,
         errorStatus: error?.response?.status,
-        errorConfig: {
-          url: error?.config?.url,
-          method: error?.config?.method,
-          data: error?.config?.data,
-        },
       });
       handleApiError(error, 'Connection', request.pageId);
     }

@@ -61,14 +61,30 @@ export type ConnectPageRequest = {
   whatsAppBusinessAccountId?: string;
   respondToMessages?: boolean;
   respondToComments?: boolean;
+  /**
+   * When true, instructs the backend to deactivate the existing connection
+   * (held by another agent) and create a fresh row for the requesting agent.
+   * Set after the user confirms the transfer modal.
+   */
+  confirmTransferFromOtherAgent?: boolean;
 };
 
-export type ConnectPageResponse = {
-  success: boolean;
-  connectionId: string;
+export type ConnectionConflictInfo = {
+  conflictType: 'same_org' | 'cross_org';
   platform: string;
-  message: string;
+  accountName: string;
+  /** Omitted (null) for cross-org conflicts to avoid leaking other workspaces' agent names. */
+  existingAgentName: string | null;
 };
+
+/**
+ * Discriminated result of attempting to connect a page. Allows callers to
+ * branch cleanly between success, transfer-confirmation-required, and error.
+ */
+export type ConnectPageResult =
+  | { kind: 'success'; connectionId: string; platform: string; message: string }
+  | { kind: 'conflict'; conflict: ConnectionConflictInfo }
+  | { kind: 'error'; message: string };
 
 // API Response types for OAuth (snake_case from backend)
 export interface ApiFacebookPage {
