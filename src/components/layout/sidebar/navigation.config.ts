@@ -248,7 +248,9 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.broadcasts',
     href: '/broadcasts',
     icon: Megaphone,
-    // SuperAdmin-only.
+    // Hidden from the sidebar for now. Feature is plan-gated to Professional
+    // (see useHasBroadcastsAccess); the page itself enforces access for anyone
+    // who reaches it via direct URL.
     requireSuperAdmin: true,
   },
   {

@@ -7,9 +7,9 @@ interface PlanFeaturesListProps {
   messageLimit: number;
   /** Number of agents allowed */
   agentLimit: number;
-  /** Optional features array (e.g., ['analytics', 'priority_support']) */
+  /** Optional features array (e.g., ['analytics', 'priority_support', 'whatsapp', 'broadcasts']) */
   features?: string[];
-  /** Plan code (used to determine static features like WhatsApp) */
+  /** Plan code (kept for callers; no longer used to derive features) */
   planCode?: string;
 }
 
@@ -17,25 +17,15 @@ interface PlanFeaturesListProps {
  * PlanFeaturesList Component
  *
  * Displays a list of features for a subscription plan with checkmark icons.
- * Extracted from duplicate code in PlanSelectionGrid and PlanChangeWizard.
- *
- * Features displayed:
- * - Message limit (always shown)
- * - Agent limit (always shown)
- * - Analytics (if in features array)
- * - Priority Support (if in features array)
- * - API Access (if in features array)
+ * All features are driven by the `features` array sourced from the backend
+ * `/api/subscriptions/plans` response — no plan-code hardcoding.
  */
 export const PlanFeaturesList = memo(({
   messageLimit,
   agentLimit,
   features = [],
-  planCode,
 }: PlanFeaturesListProps) => {
   const { t } = useTranslation();
-
-  // Determine if WhatsApp Integration should be shown (static, website-level feature)
-  const showWhatsAppIntegration = planCode === 'starter_production' || planCode === 'professional_production';
 
   return (
     <ul className="space-y-2 text-sm">
@@ -52,6 +42,13 @@ export const PlanFeaturesList = memo(({
       </li>
 
       {/* Optional Features */}
+      {features.includes('whatsapp') && (
+        <li className="flex items-center gap-2">
+          <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+          <span>{t('plan_features.whatsapp_integration')}</span>
+        </li>
+      )}
+
       {features.includes('analytics') && (
         <li className="flex items-center gap-2">
           <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
@@ -73,11 +70,10 @@ export const PlanFeaturesList = memo(({
         </li>
       )}
 
-      {/* WhatsApp Integration - Static feature for Starter and Professional plans */}
-      {showWhatsAppIntegration && (
+      {features.includes('broadcasts') && (
         <li className="flex items-center gap-2">
           <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-          <span>{t('plan_features.whatsapp_integration')}</span>
+          <span>{t('plan_features.broadcasts')}</span>
         </li>
       )}
     </ul>

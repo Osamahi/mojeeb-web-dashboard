@@ -1891,7 +1891,8 @@
     "analytics": "Analytics",
     "priority_support": "Priority Support",
     "api_access": "API Access",
-    "whatsapp_integration": "WhatsApp Integration"
+    "whatsapp_integration": "WhatsApp Integration",
+    "broadcasts": "WhatsApp Broadcast"
   },
   "plan_change_wizard": {
     "pay_with_stripe": "Next",

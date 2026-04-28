@@ -65,6 +65,8 @@ interface ApiPlanResponse {
   has_analytics: boolean;
   has_priority_support: boolean;
   has_api_access: boolean;
+  has_whatsapp: boolean;
+  has_broadcasts: boolean;
   is_active: boolean;
 }
 
@@ -447,6 +449,8 @@ class SubscriptionService {
     if (apiResponse.has_analytics) features.push('analytics');
     if (apiResponse.has_priority_support) features.push('priority_support');
     if (apiResponse.has_api_access) features.push('api_access');
+    if (apiResponse.has_whatsapp) features.push('whatsapp');
+    if (apiResponse.has_broadcasts) features.push('broadcasts');
 
     return {
       id: apiResponse.id,

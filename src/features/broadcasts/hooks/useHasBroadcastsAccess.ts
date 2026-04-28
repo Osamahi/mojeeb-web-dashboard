@@ -10,9 +10,9 @@
  *   - Professional plan: full access
  *   - Starter / Free / no subscription: NO access (page renders an upgrade prompt)
  *
- * Note: Starter users still see the sidebar link (see navigation.config.ts)
- * so they can discover the feature — they land on the page and get the
- * in-page upgrade prompt.
+ * Note: the sidebar link is SuperAdmin-only (see navigation.config.ts), so
+ * Starter/Free users won't typically reach this page through the UI. The
+ * upgrade prompt still renders for anyone who arrives via direct URL.
  */
 
 import { useAuthStore } from '@/features/auth/stores/authStore';
