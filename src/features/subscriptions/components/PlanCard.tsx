@@ -112,7 +112,7 @@ export const PlanCard = memo(({
 
       {/* Price */}
       <div className="mb-4">
-        <div className="flex items-baseline gap-1">
+        <div className="flex items-baseline gap-1" dir="ltr">
           <span className="text-3xl font-bold text-gray-900">
             {price.toLocaleString()}
           </span>

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { AlertCircle, Calendar, TrendingUp, Users, MessageSquare, Rocket, Settings, X, CreditCard, Loader2, Pencil, Lock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { useSubscriptionStore } from '../stores/subscriptionStore';
 import { PlanCode } from '../types/subscription.types';
 import { BaseHeader } from '@/components/ui/BaseHeader';
@@ -77,6 +78,18 @@ export default function MySubscriptionPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedAddon, setSelectedAddon] = useState<AddonPlan | null>(null);
   const [showUpgradeRequiredModal, setShowUpgradeRequiredModal] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Auto-open the plan change wizard when arriving via an upgrade gate
+  // (e.g. ?highlight=whatsapp from the connections page).
+  useEffect(() => {
+    if (searchParams.get('highlight') && subscription) {
+      setShowWizard(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('highlight');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, subscription, setSearchParams]);
 
   // Add-ons data
   const { data: addons } = useAvailableAddons();
