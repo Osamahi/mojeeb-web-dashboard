@@ -50,6 +50,14 @@ export const navigation: NavigationItem[] = [
     icon: MessageSquare,
   },
   {
+    name: 'Analytics',
+    translationKey: 'navigation.analytics',
+    href: '/analytics',
+    icon: BarChart3,
+    requiresAgent: true,
+    requireSuperAdmin: true,
+  },
+  {
     name: 'Comments',
     translationKey: 'navigation.comments',
     href: '/comments',
