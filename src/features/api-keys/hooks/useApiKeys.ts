@@ -17,10 +17,17 @@ import type {
 
 export const apiKeysQueryKey = ['api-keys'] as const;
 
-export function useApiKeys() {
+/**
+ * @param enabled - Gate the network call on the caller's access state.
+ *   Default true so existing call sites keep working, but the page passes
+ *   `hasAccess` explicitly so non-Professional users don't fire a request
+ *   that would 403 (and trigger the centralized 403 toast).
+ */
+export function useApiKeys(enabled: boolean = true) {
   return useQuery<ApiKey[]>({
     queryKey: apiKeysQueryKey,
     queryFn: () => apiKeysService.list(),
+    enabled,
     staleTime: 30_000,
   });
 }

@@ -7,6 +7,7 @@ import { useDateLocale } from '@/lib/dateConfig';
 import { useApiKeys } from '../hooks/useApiKeys';
 import { useHasApiAccess } from '../hooks/useHasApiAccess';
 import { formatApiKeyDisplay, type ApiKey } from '../types/apiKey.types';
+import { AgentIdsSection } from '../components/AgentIdsSection';
 import { ApiKeysUpgradePrompt } from '../components/ApiKeysUpgradePrompt';
 import { CreateApiKeyModal } from '../components/CreateApiKeyModal';
 import { RevokeApiKeyDialog } from '../components/RevokeApiKeyDialog';
@@ -27,7 +28,10 @@ const QUICKSTART_URL = 'https://docs.mojeeb.app/docs/developers/quickstart';
 export function ApiKeysPage() {
   const { t } = useTranslation();
   const hasAccess = useHasApiAccess();
-  const { data: keys = [], isLoading, isError } = useApiKeys();
+  // Don't fire the GET until we know the org has access — otherwise the
+  // backend 403s and the centralized interceptor flashes a toast under
+  // the upgrade prompt.
+  const { data: keys = [], isLoading, isError } = useApiKeys(hasAccess);
   const { formatSmartTimestamp } = useDateLocale();
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -210,6 +214,8 @@ export function ApiKeysPage() {
           </div>
         </section>
       )}
+
+      <AgentIdsSection />
 
       <CreateApiKeyModal isOpen={createOpen} onClose={() => setCreateOpen(false)} />
       <RevokeApiKeyDialog

@@ -1,37 +1,29 @@
 /**
  * useHasApiAccess
  *
- * Source of truth for whether the current user can manage API keys.
+ * Single source of truth for whether the current user can use the API
+ * Keys feature. Mirrors useHasBroadcastsAccess.
  *
- * Access rules (mirror useHasBroadcastsAccess):
+ * Access rules:
  *   - SuperAdmin: always full access (bypass — SuperAdmins have no subscription)
- *   - Plans with the 'api_access' feature: full access
- *   - Otherwise: NO access (page renders an upgrade prompt)
+ *   - Professional plan: full access
+ *   - Starter / Free / no subscription: NO access (page renders upgrade prompt)
  *
- * The 'api_access' feature flag is set per-plan by the admin in the
- * subscription_plans table. Today only Professional has it; admins can flip
- * it on for other plans without code changes.
- *
- * Role gating (owner/admin can write, members can read) is enforced
- * **inline in the page** via useOrganizationAuth — same pattern as
- * EditMemberRoleModal and AgentCard. Keeping role logic out of the
- * plan-feature hook matches the rest of the dashboard.
- *
- * Implementation note: each Zustand selector below returns a stable
- * primitive (boolean). Returning a fresh array (e.g. `s.subscription?.features ?? []`)
- * would create a new reference every render, triggering React's
- * "getSnapshot should be cached" warning and an infinite re-render loop.
+ * Note: the sidebar entry is plan-gated independently
+ * (navigation.config.ts → requiredPlans), so non-Professional users
+ * usually never see the link. The upgrade prompt covers anyone who
+ * arrives via direct URL or stale tab.
  */
 
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
 import { useSubscriptionStore } from '@/features/subscriptions/stores/subscriptionStore';
+import { PlanCode } from '@/features/subscriptions/types/subscription.types';
 
 export function useHasApiAccess(): boolean {
   const isSuperAdmin = useAuthStore((s) => s.user?.role === Role.SuperAdmin);
-  const hasApiAccessFeature = useSubscriptionStore(
-    (s) => s.subscription?.features?.includes('api_access') ?? false
-  );
+  const planCode = useSubscriptionStore((s) => s.subscription?.planCode);
 
-  return isSuperAdmin || hasApiAccessFeature;
+  if (isSuperAdmin) return true;
+  return planCode === PlanCode.Professional;
 }
