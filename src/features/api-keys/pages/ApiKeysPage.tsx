@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BookOpen, ExternalLink, KeyRound, Plus, Trash2 } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useApiKeys } from '../hooks/useApiKeys';
 import { useHasApiAccess } from '../hooks/useHasApiAccess';
@@ -69,9 +70,40 @@ export function ApiKeysPage() {
       />
 
       {isLoading && (
-        <div className="text-center text-sm text-neutral-500 py-12">
-          {t('common.loading', 'Loading…')}
-        </div>
+        // 3 skeleton rows mirror the active-keys table layout (7 columns)
+        // so the page doesn't jump when data lands. Wrapper styling matches
+        // the real "Active" section header + bordered list below it.
+        <section className="space-y-2" aria-label={t('common.loading', 'Loading…') ?? 'Loading'}>
+          <Skeleton height="14px" width="80px" />
+          <div className="overflow-hidden rounded-lg border border-neutral-200">
+            <table className="w-full text-sm">
+              <thead className="bg-neutral-50 text-xs uppercase text-neutral-500">
+                <tr>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_name', 'Name')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_key', 'Key')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_scopes', 'Scopes')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_agents', 'Agents')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_last_used', 'Last used')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_created', 'Created')}</th>
+                  <th className="px-4 py-2 w-12" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-200">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={`skeleton-${i}`}>
+                    <td className="px-4 py-3"><Skeleton height="14px" width="120px" /></td>
+                    <td className="px-4 py-3"><Skeleton height="14px" width="160px" /></td>
+                    <td className="px-4 py-3"><Skeleton height="20px" width="100px" className="rounded" /></td>
+                    <td className="px-4 py-3"><Skeleton height="20px" width="80px" className="rounded" /></td>
+                    <td className="px-4 py-3"><Skeleton height="14px" width="80px" /></td>
+                    <td className="px-4 py-3"><Skeleton height="14px" width="80px" /></td>
+                    <td className="px-4 py-3"><Skeleton height="16px" width="16px" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
 
       {isError && (
@@ -118,14 +150,14 @@ export function ApiKeysPage() {
           </h2>
           <div className="overflow-hidden rounded-lg border border-neutral-200">
             <table className="w-full text-sm">
-              <thead className="bg-neutral-50 text-left text-xs uppercase text-neutral-500">
+              <thead className="bg-neutral-50 text-xs uppercase text-neutral-500">
                 <tr>
-                  <th className="px-4 py-2 font-medium">{t('api_keys.col_name', 'Name')}</th>
-                  <th className="px-4 py-2 font-medium">{t('api_keys.col_key', 'Key')}</th>
-                  <th className="px-4 py-2 font-medium">{t('api_keys.col_scopes', 'Scopes')}</th>
-                  <th className="px-4 py-2 font-medium">{t('api_keys.col_agents', 'Agents')}</th>
-                  <th className="px-4 py-2 font-medium">{t('api_keys.col_last_used', 'Last used')}</th>
-                  <th className="px-4 py-2 font-medium">{t('api_keys.col_created', 'Created')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_name', 'Name')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_key', 'Key')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_scopes', 'Scopes')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_agents', 'Agents')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_last_used', 'Last used')}</th>
+                  <th className="px-4 py-2 font-medium text-start">{t('api_keys.col_created', 'Created')}</th>
                   <th className="px-4 py-2 w-12" />
                 </tr>
               </thead>
