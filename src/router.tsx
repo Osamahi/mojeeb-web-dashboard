@@ -34,6 +34,7 @@ const IntegrationsPage = lazy(() => import('./features/integrations/pages/Integr
 const WhatsAppManagementPage = lazy(() => import('./features/whatsapp/pages/WhatsAppManagementPage'));
 const BroadcastsPage = lazy(() => import('./features/broadcasts/pages/BroadcastsPage'));
 const BroadcastDetailPage = lazy(() => import('./features/broadcasts/pages/BroadcastDetailPage'));
+const ApiKeysPage = lazy(() => import('./features/api-keys/pages/ApiKeysPage'));
 const InstallWidgetPage = lazy(() => import('./pages/InstallWidgetPage').then(m => ({ default: m.InstallWidgetPage })));
 const AdminSubscriptionsPage = lazy(() => import('./features/subscriptions/pages/AdminSubscriptionsPage'));
 const AdminFollowUpJobsPage = lazy(() => import('./features/followups/pages/AdminFollowUpJobsPage'));
@@ -359,6 +360,14 @@ export const router = createBrowserRouter([
             <BroadcastDetailPage />
           </SuperAdminRoute>
         ),
+      },
+      {
+        // Plan-gated inside the page via useHasApiAccess. Any authenticated
+        // user can navigate here; non-Professional plans see the upgrade
+        // prompt rendered in-place. Sidebar visibility is plan-gated too
+        // (see navigation.config.ts when added).
+        path: 'api-keys',
+        element: <ApiKeysPage />,
       },
       {
         path: 'users',

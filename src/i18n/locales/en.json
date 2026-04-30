@@ -1104,6 +1104,7 @@
     "app_config": "App Config",
     "whatsapp": "WhatsApp",
     "broadcasts": "Broadcasts",
+    "api_keys": "API Keys",
     "integrations": "Integrations",
     "support": "Support",
     "main_aria_label": "Main navigation"

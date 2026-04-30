@@ -33,6 +33,7 @@ import {
   Ticket,
   BadgeCheck,
   HandCoins,
+  KeyRound,
 } from 'lucide-react';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { PlanCode } from '@/features/subscriptions/types/subscription.types';
@@ -260,6 +261,17 @@ export const navigation: NavigationItem[] = [
     // (see useHasBroadcastsAccess); the page itself enforces access for anyone
     // who reaches it via direct URL.
     requireSuperAdmin: true,
+  },
+  {
+    name: 'API Keys',
+    translationKey: 'navigation.api_keys',
+    href: '/api-keys',
+    icon: KeyRound,
+    // Plan-gated to plans with the api_access feature. The page itself
+    // (useHasApiAccess) re-checks for direct-URL navigators on lower plans.
+    // Sidebar visibility uses requiredPlans for now; could evolve to a
+    // requiredFeature field if more feature-gated entries appear.
+    requiredPlans: [PlanCode.Professional],
   },
   {
     name: 'Support',
