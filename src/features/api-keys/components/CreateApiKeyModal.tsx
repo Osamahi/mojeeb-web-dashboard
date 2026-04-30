@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, Check, AlertTriangle } from 'lucide-react';
+import { Copy, Check, AlertTriangle, BookOpen, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { useCreateApiKey } from '../hooks/useApiKeys';
 import { isToastHandled } from '@/lib/errors';
+
+const QUICKSTART_URL = 'https://docs.mojeeb.app/docs/developers/quickstart';
 
 interface CreateApiKeyModalProps {
   isOpen: boolean;
@@ -15,27 +17,27 @@ interface CreateApiKeyModalProps {
  * CreateApiKeyModal
  *
  * Two-stage UX:
- *   1. Form: name + scopes selection.
+ *   1. Form: name only (scope is locked to whatsapp:send for v1; key works
+ *      on all org agents — per-agent restriction lives in the backend
+ *      contract but isn't surfaced in this UI yet).
  *   2. Reveal: shows the plain key ONCE with a copy button + warning that
  *      it cannot be retrieved again. Closing this stage refreshes the list.
  *
- * Scope picker is intentionally simple for v1 — just two checkboxes for
- * `whatsapp:send` (today) and `whatsapp:read` (future). Adding more
- * channels is one line each.
+ * When more scopes land (whatsapp:read, messenger:send, instagram:send),
+ * restore the scope picker. When per-agent restriction has a real customer
+ * use case, add it back as an "Advanced" disclosure — radio buttons in the
+ * primary flow felt confusing.
  */
 export function CreateApiKeyModal({ isOpen, onClose }: CreateApiKeyModalProps) {
   const { t } = useTranslation();
   const createMutation = useCreateApiKey();
 
-  // Stage state
   const [name, setName] = useState('');
-  const [scopes, setScopes] = useState<string[]>(['whatsapp:send']);
   const [createdPlainKey, setCreatedPlainKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const reset = () => {
     setName('');
-    setScopes(['whatsapp:send']);
     setCreatedPlainKey(null);
     setCopied(false);
   };
@@ -46,26 +48,19 @@ export function CreateApiKeyModal({ isOpen, onClose }: CreateApiKeyModalProps) {
     onClose();
   };
 
-  const toggleScope = (scope: string) => {
-    setScopes((prev) =>
-      prev.includes(scope) ? prev.filter((s) => s !== scope) : [...prev, scope]
-    );
-  };
-
   const handleCreate = async () => {
     if (name.trim().length === 0) {
       toast.error(t('api_keys.create_modal.name_required', 'Name is required'));
-      return;
-    }
-    if (scopes.length === 0) {
-      toast.error(t('api_keys.create_modal.scopes_required', 'Select at least one scope'));
       return;
     }
 
     try {
       const response = await createMutation.mutateAsync({
         name: name.trim(),
-        scopes,
+        // Only scope available in v1. agent_ids omitted = backend defaults
+        // to "all org agents" — matches the static info card the customer
+        // sees in the form.
+        scopes: ['whatsapp:send'],
       });
       setCreatedPlainKey(response.plain_key);
     } catch (error) {
@@ -128,21 +123,27 @@ export function CreateApiKeyModal({ isOpen, onClose }: CreateApiKeyModalProps) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              {t('api_keys.create_modal.scopes_label', 'Scopes')}
-            </label>
-            <div className="space-y-2">
-              <ScopeCheckbox
-                value="whatsapp:send"
-                label={t('api_keys.scope.whatsapp_send', 'WhatsApp send')}
-                description={t(
-                  'api_keys.scope.whatsapp_send_desc',
-                  'Send messages and templates via /v1/whatsapp/...'
-                )}
-                checked={scopes.includes('whatsapp:send')}
-                onToggle={toggleScope}
-              />
+          {/* Scopes section is hidden while there's only one available option
+              (whatsapp:send). The state still holds it selected so the create
+              request goes through with the right scope. When messenger:send /
+              instagram:send / whatsapp:read land, restore the picker so
+              customers can pick. */}
+
+          {/* Agents: always "all agents" for v1. Per-agent restriction was
+              spec'd but customers found the radio confusing — we may bring
+              back a separate "Restrict to agents" advanced section later as
+              a collapsed disclosure, not as a primary choice. The backend
+              still accepts agent_ids[] and the static info card below tells
+              the customer exactly what they're getting. */}
+          <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-sm">
+            <div className="font-medium text-neutral-900">
+              {t('api_keys.create_modal.agents_all', 'All agents')}
+            </div>
+            <div className="text-xs text-neutral-600 mt-1">
+              {t(
+                'api_keys.create_modal.agents_all_desc',
+                'Key works on every agent in your organization, including future ones.'
+              )}
             </div>
           </div>
 
@@ -181,6 +182,29 @@ export function CreateApiKeyModal({ isOpen, onClose }: CreateApiKeyModalProps) {
             {createdPlainKey}
           </div>
 
+          {/* Next-steps hint — they have the key, now point them at the
+              quickstart so they don't have to hunt for it. */}
+          <a
+            href={QUICKSTART_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-2 p-3 rounded-lg border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 transition-colors group"
+          >
+            <BookOpen className="w-5 h-5 text-neutral-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-neutral-900 group-hover:text-neutral-700">
+                {t('api_keys.create_modal.next_steps_title', 'Next: send your first message')}
+              </div>
+              <div className="text-xs text-neutral-600">
+                {t(
+                  'api_keys.create_modal.next_steps_desc',
+                  'Open the Quickstart for a 5-minute curl walkthrough.'
+                )}
+              </div>
+            </div>
+            <ExternalLink className="w-4 h-4 text-neutral-400 flex-shrink-0 mt-1" />
+          </a>
+
           <div className="flex justify-end gap-2">
             <button
               onClick={handleCopy}
@@ -201,32 +225,6 @@ export function CreateApiKeyModal({ isOpen, onClose }: CreateApiKeyModalProps) {
         </div>
       )}
     </BaseModal>
-  );
-}
-
-interface ScopeCheckboxProps {
-  value: string;
-  label: string;
-  description: string;
-  checked: boolean;
-  onToggle: (scope: string) => void;
-}
-
-function ScopeCheckbox({ value, label, description, checked, onToggle }: ScopeCheckboxProps) {
-  return (
-    <label className="flex items-start gap-3 p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer transition-colors">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={() => onToggle(value)}
-        className="mt-0.5"
-      />
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-neutral-900">{label}</div>
-        <div className="text-xs text-neutral-500 font-mono">{value}</div>
-        <div className="text-xs text-neutral-600 mt-1">{description}</div>
-      </div>
-    </label>
   );
 }
 

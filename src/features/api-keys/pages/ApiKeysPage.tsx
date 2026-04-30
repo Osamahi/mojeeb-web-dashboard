@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyRound, Plus, Trash2 } from 'lucide-react';
+import { BookOpen, ExternalLink, KeyRound, Plus, Trash2 } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useDateLocale } from '@/lib/dateConfig';
@@ -10,6 +10,9 @@ import { formatApiKeyDisplay, type ApiKey } from '../types/apiKey.types';
 import { ApiKeysUpgradePrompt } from '../components/ApiKeysUpgradePrompt';
 import { CreateApiKeyModal } from '../components/CreateApiKeyModal';
 import { RevokeApiKeyDialog } from '../components/RevokeApiKeyDialog';
+
+const DOCS_URL = 'https://docs.mojeeb.app/docs/developers/overview';
+const QUICKSTART_URL = 'https://docs.mojeeb.app/docs/developers/quickstart';
 
 /**
  * ApiKeysPage
@@ -42,6 +45,18 @@ export function ApiKeysPage() {
       <BaseHeader
         title={t('api_keys.page_title', 'API Keys')}
         subtitle={t('api_keys.subtitle', 'Manage credentials for the Mojeeb public API')}
+        additionalActions={
+          <a
+            href={DOCS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
+          >
+            <BookOpen className="w-4 h-4" />
+            {t('api_keys.docs_link', 'Developer docs')}
+            <ExternalLink className="w-3.5 h-3.5 text-neutral-400" />
+          </a>
+        }
         primaryAction={{
           label: t('api_keys.create_cta', 'Create key'),
           icon: Plus,
@@ -70,13 +85,24 @@ export function ApiKeysPage() {
             "Create your first key to start integrating with Mojeeb's public API."
           )}
           action={
-            <button
-              onClick={() => setCreateOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              {t('api_keys.create_cta', 'Create key')}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCreateOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                {t('api_keys.create_cta', 'Create key')}
+              </button>
+              <a
+                href={QUICKSTART_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm text-neutral-700 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
+              >
+                <BookOpen className="w-4 h-4" />
+                {t('api_keys.read_quickstart', 'Read the quickstart')}
+              </a>
+            </div>
           }
         />
       )}
@@ -93,6 +119,7 @@ export function ApiKeysPage() {
                   <th className="px-4 py-2 font-medium">{t('api_keys.col_name', 'Name')}</th>
                   <th className="px-4 py-2 font-medium">{t('api_keys.col_key', 'Key')}</th>
                   <th className="px-4 py-2 font-medium">{t('api_keys.col_scopes', 'Scopes')}</th>
+                  <th className="px-4 py-2 font-medium">{t('api_keys.col_agents', 'Agents')}</th>
                   <th className="px-4 py-2 font-medium">{t('api_keys.col_last_used', 'Last used')}</th>
                   <th className="px-4 py-2 font-medium">{t('api_keys.col_created', 'Created')}</th>
                   <th className="px-4 py-2 w-12" />
@@ -116,6 +143,22 @@ export function ApiKeysPage() {
                           </span>
                         ))}
                       </div>
+                    </td>
+                    <td className="px-4 py-3 text-neutral-600">
+                      {key.agent_ids === null || key.agent_ids.length === 0 ? (
+                        <span className="inline-flex rounded bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 border border-emerald-200">
+                          {t('api_keys.agents_all', 'All agents')}
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex rounded bg-amber-50 px-2 py-0.5 text-xs text-amber-800 border border-amber-200"
+                          title={key.agent_ids.join('\n')}
+                        >
+                          {key.agent_ids.length === 1
+                            ? t('api_keys.agents_restricted_one', '1 agent')
+                            : `${key.agent_ids.length} ${t('api_keys.agents_word', 'agents')}`}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-neutral-600">
                       {key.last_used_at

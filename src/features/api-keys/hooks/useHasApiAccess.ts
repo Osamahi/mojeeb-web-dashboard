@@ -12,6 +12,11 @@
  * subscription_plans table. Today only Professional has it; admins can flip
  * it on for other plans without code changes.
  *
+ * Role gating (owner/admin can write, members can read) is enforced
+ * **inline in the page** via useOrganizationAuth — same pattern as
+ * EditMemberRoleModal and AgentCard. Keeping role logic out of the
+ * plan-feature hook matches the rest of the dashboard.
+ *
  * Implementation note: each Zustand selector below returns a stable
  * primitive (boolean). Returning a fresh array (e.g. `s.subscription?.features ?? []`)
  * would create a new reference every render, triggering React's
