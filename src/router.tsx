@@ -343,23 +343,16 @@ export const router = createBrowserRouter([
         element: <WhatsAppManagementPage />,
       },
       {
-        // Plan-gated inside the page itself via useHasBroadcastsAccess.
-        // SuperAdmin-only. Sidebar visibility is handled separately
-        // in navigation.config.ts via the `requireSuperAdmin` field.
+        // Plan-gated inside the page via useHasBroadcastsAccess. Any
+        // authenticated user can navigate here; non-Professional plans see
+        // the upgrade prompt rendered in-place. Sidebar visibility is
+        // plan-gated separately (navigation.config.ts requiredPlans).
         path: 'broadcasts',
-        element: (
-          <SuperAdminRoute>
-            <BroadcastsPage />
-          </SuperAdminRoute>
-        ),
+        element: <BroadcastsPage />,
       },
       {
         path: 'broadcasts/:campaignId',
-        element: (
-          <SuperAdminRoute>
-            <BroadcastDetailPage />
-          </SuperAdminRoute>
-        ),
+        element: <BroadcastDetailPage />,
       },
       {
         // Plan-gated inside the page via useHasApiAccess. Any authenticated

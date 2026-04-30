@@ -250,17 +250,20 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.whatsapp',
     href: '/whatsapp-management',
     icon: WhatsAppIcon,
-    requireSuperAdmin: true,
+    // Plan-gated to Professional. Customer-grade template management page —
+    // browse templates, view details, send template messages. Scoped by
+    // agentId via useAgentContext, so cross-org access isn't possible.
+    // SuperAdmin bypasses requiredPlans (no subscription).
+    requiredPlans: [PlanCode.Professional],
   },
   {
     name: 'Broadcasts',
     translationKey: 'navigation.broadcasts',
     href: '/broadcasts',
     icon: Megaphone,
-    // Hidden from the sidebar for now. Feature is plan-gated to Professional
-    // (see useHasBroadcastsAccess); the page itself enforces access for anyone
-    // who reaches it via direct URL.
-    requireSuperAdmin: true,
+    // Plan-gated to Professional. Page itself uses useHasBroadcastsAccess
+    // for direct-URL navigators, same defense-in-depth pattern as API Keys.
+    requiredPlans: [PlanCode.Professional],
   },
   {
     name: 'API Keys',
