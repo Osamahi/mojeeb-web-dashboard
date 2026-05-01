@@ -2925,6 +2925,8 @@
     "filter_delivered": "اتسلمت",
     "filter_read": "اتقرت",
     "filter_failed": "فشلت",
+    "export_csv": "تنزيل CSV",
+    "export_error": "معرفناش نصدّر المستلمين",
     "wizard_title": "بث جديد",
     "wizard_step_upload": "رفع CSV",
     "wizard_step_template": "اختيار القالب",

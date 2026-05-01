@@ -3198,6 +3198,8 @@
     "filter_delivered": "Delivered",
     "filter_read": "Read",
     "filter_failed": "Failed",
+    "export_csv": "Export CSV",
+    "export_error": "Failed to export recipients",
     "wizard_title": "New Broadcast",
     "wizard_step_upload": "Upload CSV",
     "wizard_step_template": "Select Template",

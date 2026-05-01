@@ -68,4 +68,24 @@ export const broadcastService = {
       params: { agentId },
     });
   },
+
+  async exportRecipientsCsv(
+    agentId: string,
+    campaignId: string,
+    status?: string
+  ): Promise<{ blob: Blob; filename: string }> {
+    const response = await api.get<Blob>(
+      `${BROADCASTS_BASE}/${campaignId}/export`,
+      {
+        params: { agentId, status },
+        responseType: 'blob',
+      }
+    );
+
+    // Pull filename from Content-Disposition; fall back to a sensible default.
+    const cd = response.headers['content-disposition'] as string | undefined;
+    const match = cd?.match(/filename="?([^"]+)"?/);
+    const filename = match?.[1] ?? `broadcast_${status ?? 'all'}.csv`;
+    return { blob: response.data, filename };
+  },
 };

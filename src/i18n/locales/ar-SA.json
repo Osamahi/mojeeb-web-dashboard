@@ -3047,6 +3047,8 @@
     "filter_delivered": "تم التسليم",
     "filter_read": "تمت القراءة",
     "filter_failed": "فشل",
+    "export_csv": "تصدير CSV",
+    "export_error": "تعذّر تصدير المستلمين",
     "wizard_title": "بث جديد",
     "wizard_step_upload": "رفع CSV",
     "wizard_step_template": "اختيار القالب",

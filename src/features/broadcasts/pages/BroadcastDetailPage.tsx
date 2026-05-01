@@ -1,13 +1,14 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Send, CheckCircle2, Eye, XCircle, Loader2, RotateCcw,
+  ArrowLeft, Send, CheckCircle2, Eye, XCircle, Loader2, RotateCcw, Download,
 } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
+import { broadcastService } from '../services/broadcastService';
 import { useBroadcastDetail, useBroadcastRecipients, useRetryFailed } from '../hooks/useBroadcasts';
 import { useBroadcastDetailRealtime } from '../hooks/useBroadcastRealtime';
 import { useHasBroadcastsAccess } from '../hooks/useHasBroadcastsAccess';
@@ -53,6 +54,7 @@ function BroadcastDetailPageContent() {
   const { formatSmartTimestamp } = useDateLocale();
   const { t } = useTranslation();
   const [recipientFilter, setRecipientFilter] = useState<string | undefined>(undefined);
+  const [isExporting, setIsExporting] = useState(false);
 
   useBroadcastDetailRealtime(campaignId);
 
@@ -87,6 +89,28 @@ function BroadcastDetailPageContent() {
       onError: () => toast.error(t('broadcasts.retry_error')),
     });
   }, [campaignId, agentId, retryMutation, t]);
+
+  const handleExport = useCallback(async () => {
+    if (!campaignId || !agentId || isExporting) return;
+    setIsExporting(true);
+    try {
+      const { blob, filename } = await broadcastService.exportRecipientsCsv(
+        agentId, campaignId, recipientFilter
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t('broadcasts.export_error'));
+    } finally {
+      setIsExporting(false);
+    }
+  }, [campaignId, agentId, recipientFilter, isExporting, t]);
 
   const statusFilters = useMemo(() => [
     { label: t('broadcasts.filter_all'), value: undefined },
@@ -178,20 +202,34 @@ function BroadcastDetailPageContent() {
         data-broadcast-recipients-container
         className="bg-white border border-neutral-200 rounded-lg overflow-hidden"
       >
-        <div className="px-4 py-3 border-b border-neutral-100 flex items-center gap-2">
-          {statusFilters.map((f) => (
-            <button
-              key={f.label}
-              onClick={() => setRecipientFilter(f.value)}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                recipientFilter === f.value
-                  ? 'bg-neutral-900 text-white'
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
+        <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {statusFilters.map((f) => (
+              <button
+                key={f.label}
+                onClick={() => setRecipientFilter(f.value)}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  recipientFilter === f.value
+                    ? 'bg-neutral-900 text-white'
+                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={handleExport}
+            disabled={isExporting || recipients.length === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-1 text-sm rounded-full bg-neutral-100 text-neutral-700 hover:bg-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isExporting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Download className="w-3.5 h-3.5" />
+            )}
+            {t('broadcasts.export_csv')}
+          </button>
         </div>
 
         <table className="w-full">
