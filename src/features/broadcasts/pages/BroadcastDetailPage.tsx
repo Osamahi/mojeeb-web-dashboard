@@ -4,6 +4,7 @@ import {
   ArrowLeft, Send, CheckCircle2, Eye, XCircle, Loader2, RotateCcw,
 } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -69,6 +70,13 @@ function BroadcastDetailPageContent() {
     () => recipientData?.pages.flatMap((page) => page.items) ?? [],
     [recipientData]
   );
+
+  useInfiniteScroll({
+    fetchNextPage,
+    hasMore: hasNextPage ?? false,
+    isFetching: isFetchingNextPage,
+    containerSelector: '[data-broadcast-recipients-container]',
+  });
 
   useDocumentTitle(campaign?.campaign_name ?? t('broadcasts.title'));
 
@@ -166,7 +174,10 @@ function BroadcastDetailPageContent() {
       </div>
 
       {/* Recipients Table */}
-      <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
+      <div
+        data-broadcast-recipients-container
+        className="bg-white border border-neutral-200 rounded-lg overflow-hidden"
+      >
         <div className="px-4 py-3 border-b border-neutral-100 flex items-center gap-2">
           {statusFilters.map((f) => (
             <button
@@ -186,6 +197,7 @@ function BroadcastDetailPageContent() {
         <table className="w-full">
           <thead>
             <tr className="bg-neutral-50 border-b border-neutral-200">
+              <th className="text-start px-4 py-2 text-xs font-medium text-neutral-500 uppercase w-12">#</th>
               <th className="text-start px-4 py-2 text-xs font-medium text-neutral-500 uppercase">{t('broadcasts.col_phone')}</th>
               <th className="text-start px-4 py-2 text-xs font-medium text-neutral-500 uppercase">{t('broadcasts.col_name')}</th>
               <th className="text-start px-4 py-2 text-xs font-medium text-neutral-500 uppercase">{t('broadcasts.col_status')}</th>
@@ -195,10 +207,11 @@ function BroadcastDetailPageContent() {
             </tr>
           </thead>
           <tbody>
-            {recipients.map((r) => {
+            {recipients.map((r, idx) => {
               const badgeStyle = STATUS_BADGE_STYLES[r.status] ?? STATUS_BADGE_STYLES.pending;
               return (
                 <tr key={r.id} className="border-b border-neutral-50">
+                  <td className="px-4 py-2 text-sm font-mono text-neutral-400 tabular-nums">{idx + 1}</td>
                   <td className="px-4 py-2 text-sm font-mono text-neutral-700">{r.phone}</td>
                   <td className="px-4 py-2 text-sm text-neutral-600">{r.name || '—'}</td>
                   <td className="px-4 py-2">
@@ -220,7 +233,7 @@ function BroadcastDetailPageContent() {
             })}
             {recipients.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-neutral-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-sm text-neutral-400">
                   {t('broadcasts.no_recipients')}
                 </td>
               </tr>
@@ -228,15 +241,10 @@ function BroadcastDetailPageContent() {
           </tbody>
         </table>
 
-        {hasNextPage && (
-          <div className="px-4 py-3 border-t border-neutral-100">
-            <button
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
-            >
-              {isFetchingNextPage ? t('broadcasts.loading') : t('broadcasts.load_more')}
-            </button>
+        {isFetchingNextPage && (
+          <div className="px-4 py-3 border-t border-neutral-100 flex items-center justify-center gap-2 text-sm text-neutral-500">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            {t('broadcasts.loading')}
           </div>
         )}
       </div>
