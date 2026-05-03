@@ -2275,7 +2275,10 @@
   "conversation_list_item": {
     "no_messages_yet": "No messages yet",
     "urgent": "Urgent",
-    "needs_attention": "Needs attention"
+    "needs_attention": "Needs attention",
+    "sentiment_very_unhappy": "Very unhappy customer",
+    "sentiment_unhappy": "Unhappy customer",
+    "sentiment_very_happy": "Very happy customer"
   },
   "conversation_context_menu": {
     "mark_as_read": "Mark as Read",

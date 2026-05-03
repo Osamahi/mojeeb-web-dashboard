@@ -89,8 +89,6 @@ export function TooltipContent({
 }: TooltipContentProps) {
   const { isOpen } = React.useContext(TooltipContext);
 
-  if (!isOpen) return null;
-
   const sideClass = {
     top: 'bottom-full mb-2',
     bottom: 'top-full mt-2',
@@ -107,7 +105,14 @@ export function TooltipContent({
   return (
     <div
       className={cn(
-        'absolute z-50 overflow-hidden rounded-md bg-neutral-900 px-3 py-1.5 text-xs text-white shadow-md animate-in fade-in-0 zoom-in-95 max-w-[200px]',
+        'absolute z-50 rounded-md bg-white border border-neutral-200 px-2.5 py-1 text-xs text-neutral-700 shadow-lg',
+        'max-w-[260px] w-max leading-snug',
+        // Smooth fade + slight scale via CSS transitions; mounted always so
+        // mouseleave can animate out instead of unmounting instantly.
+        'transition-[opacity,transform] duration-150 ease-out origin-bottom',
+        isOpen
+          ? 'opacity-100 scale-100 pointer-events-auto'
+          : 'opacity-0 scale-95 pointer-events-none',
         sideClass[side],
         alignmentClass[align],
         className

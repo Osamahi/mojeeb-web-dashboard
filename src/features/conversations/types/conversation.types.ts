@@ -16,10 +16,11 @@ export enum ConversationStatus {
 }
 
 export enum ConversationSentiment {
-  Negative = 1,
+  VeryUnhappy = 1,
   Unhappy = 2,
   Neutral = 3,
   Happy = 4,
+  VeryHappy = 5,
 }
 
 export interface CustomerMetadata {
@@ -341,10 +342,11 @@ export const getConversationStatusLabel = (status: ConversationStatus): string =
 export const getSentimentLabel = (sentiment: ConversationSentiment | null): string => {
   if (!sentiment) return 'Unknown';
   const labels: Record<ConversationSentiment, string> = {
-    [ConversationSentiment.Negative]: 'Negative',
+    [ConversationSentiment.VeryUnhappy]: 'Very Unhappy',
     [ConversationSentiment.Unhappy]: 'Unhappy',
     [ConversationSentiment.Neutral]: 'Neutral',
     [ConversationSentiment.Happy]: 'Happy',
+    [ConversationSentiment.VeryHappy]: 'Very Happy',
   };
   return labels[sentiment];
 };

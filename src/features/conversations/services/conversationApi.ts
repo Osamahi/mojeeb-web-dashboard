@@ -23,7 +23,7 @@ export interface ConversationResponse {
   is_ai: boolean;
   is_active: boolean;
   topic?: string;
-  sentiment?: string;
+  sentiment?: number;
   requires_human_attention?: boolean;
   urgent?: boolean;
   am_not_sure_how_to_answer?: boolean;

@@ -22,7 +22,7 @@ export function useMarkConversationAsResolved() {
         urgent: false,
         requires_human_attention: false,
         am_not_sure_how_to_answer: false,
-        sentiment: '3',
+        sentiment: 3,
       });
 
       return { previousData };

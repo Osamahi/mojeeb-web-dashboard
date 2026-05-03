@@ -2125,7 +2125,10 @@
   "conversation_list_item": {
     "no_messages_yet": "مفيش رسايل لسه",
     "urgent": "مستعجل",
-    "needs_attention": "محتاج اهتمام"
+    "needs_attention": "محتاج اهتمام",
+    "sentiment_very_unhappy": "عميل زعلان جداً",
+    "sentiment_unhappy": "عميل مش مبسوط",
+    "sentiment_very_happy": "عميل مبسوط جداً"
   },
   "conversation_context_menu": {
     "mark_as_read": "علّم كمقروء",

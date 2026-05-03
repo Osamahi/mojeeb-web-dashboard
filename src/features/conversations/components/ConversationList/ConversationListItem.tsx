@@ -12,6 +12,7 @@ import { formatConversationTime } from '../../utils/timeFormatters';
 import { truncateText, getInitials } from '../../utils/textFormatters';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { ConversationContextMenu } from './ConversationContextMenu';
 import { useDeleteConversation } from '../../hooks/useDeleteConversation';
@@ -65,7 +66,9 @@ const ConversationListItem = memo(function ConversationListItem({
 
   // Status indicators
   const showHumanMode = !conversation.is_ai;
-  const showUnhappySentiment = conversation.sentiment === 1 || conversation.sentiment === 2;
+  const showVeryUnhappySentiment = conversation.sentiment === 1;
+  const showUnhappySentiment = conversation.sentiment === 2;
+  const showVeryHappySentiment = conversation.sentiment === 5;
   const showUrgent = conversation.urgent;
   const showNeedsAttention = conversation.requires_human_attention;
 
@@ -176,17 +179,81 @@ const ConversationListItem = memo(function ConversationListItem({
                 </motion.span>
               )}
 
-              {/* Unhappy sentiment indicator */}
-              {showUnhappySentiment && (
+              {/* Very unhappy sentiment (1) */}
+              {showVeryUnhappySentiment && (
                 <motion.span
-                  key="sentiment"
+                  key="sentiment-very-unhappy"
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.5 }}
                   transition={{ duration: 0.2 }}
-                  className="text-xs flex-shrink-0"
+                  className="flex-shrink-0"
                 >
-                  😟
+                  <Tooltip delayDuration={150}>
+                    <TooltipTrigger>
+                      <span
+                        className="text-xs cursor-help"
+                        aria-label={t('conversation_list_item.sentiment_very_unhappy')}
+                      >
+                        😡
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      {t('conversation_list_item.sentiment_very_unhappy')}
+                    </TooltipContent>
+                  </Tooltip>
+                </motion.span>
+              )}
+
+              {/* Unhappy sentiment (2) */}
+              {showUnhappySentiment && (
+                <motion.span
+                  key="sentiment-unhappy"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex-shrink-0"
+                >
+                  <Tooltip delayDuration={150}>
+                    <TooltipTrigger>
+                      <span
+                        className="text-xs cursor-help"
+                        aria-label={t('conversation_list_item.sentiment_unhappy')}
+                      >
+                        😕
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      {t('conversation_list_item.sentiment_unhappy')}
+                    </TooltipContent>
+                  </Tooltip>
+                </motion.span>
+              )}
+
+              {/* Very happy sentiment (5) */}
+              {showVeryHappySentiment && (
+                <motion.span
+                  key="sentiment-very-happy"
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex-shrink-0"
+                >
+                  <Tooltip delayDuration={150}>
+                    <TooltipTrigger>
+                      <span
+                        className="text-xs cursor-help"
+                        aria-label={t('conversation_list_item.sentiment_very_happy')}
+                      >
+                        💚
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      {t('conversation_list_item.sentiment_very_happy')}
+                    </TooltipContent>
+                  </Tooltip>
                 </motion.span>
               )}
 
