@@ -38,6 +38,7 @@ function toTimeseries(wire: MetricsTimeseriesWire): MetricsTimeseries {
     granularityMinutes: wire.granularity_minutes,
     from: wire.from,
     to: wire.to,
+    total: wire.total ?? null,
     points: (wire.points ?? []).map(toTimeseriesPoint),
   };
 }
@@ -63,19 +64,16 @@ export const analyticsService = {
   /**
    * Time-series chart data for one metric over a window.
    * `from` and `to` are ISO 8601 UTC strings.
+   * Granularity is decided server-side from window size — the response
+   * echoes the resolved value back via `granularityMinutes`.
    */
   getTimeseries: async (
     agentId: string,
     metric: AnalyticsMetric,
     from: string,
-    to?: string,
-    granularityMinutes = 1
+    to?: string
   ): Promise<MetricsTimeseries> => {
-    const params: Record<string, string> = {
-      metric,
-      from,
-      granularityMinutes: granularityMinutes.toString(),
-    };
+    const params: Record<string, string> = { metric, from };
     if (to) {
       params.to = to;
     }
@@ -83,6 +81,75 @@ export const analyticsService = {
     const { data } = await api.get(`/api/v2/agents/${agentId}/analytics/timeseries`, {
       params,
     });
+    return toTimeseries(data.data as MetricsTimeseriesWire);
+  },
+
+  /**
+   * Per-bucket count of distinct conversations that had at least one message
+   * in the bucket. A single conversation messaging across N buckets shows up
+   * in all N. Granularity decided server-side from window size.
+   */
+  getActiveConversations: async (
+    agentId: string,
+    from: string,
+    to?: string
+  ): Promise<MetricsTimeseries> => {
+    const params: Record<string, string> = { from };
+    if (to) {
+      params.to = to;
+    }
+
+    const { data } = await api.get(
+      `/api/v2/agents/${agentId}/analytics/active-conversations`,
+      { params }
+    );
+    return toTimeseries(data.data as MetricsTimeseriesWire);
+  },
+
+  /**
+   * Scalar count: total distinct conversations active anywhere in the window.
+   * Each conversation counts once regardless of how many buckets it spans.
+   */
+  getActiveConversationsCount: async (
+    agentId: string,
+    from: string,
+    to?: string
+  ): Promise<{ total: number; from: string; to: string }> => {
+    const params: Record<string, string> = { from };
+    if (to) {
+      params.to = to;
+    }
+
+    const { data } = await api.get(
+      `/api/v2/agents/${agentId}/analytics/active-conversations/count`,
+      { params }
+    );
+    return {
+      total: data.data.total,
+      from: data.data.from,
+      to: data.data.to,
+    };
+  },
+
+  /**
+   * Per-bucket count of conversations born in the bucket
+   * (conversations.created_at falls in the bucket). Each conversation appears
+   * in exactly one bucket. Granularity decided server-side from window size.
+   */
+  getNewConversations: async (
+    agentId: string,
+    from: string,
+    to?: string
+  ): Promise<MetricsTimeseries> => {
+    const params: Record<string, string> = { from };
+    if (to) {
+      params.to = to;
+    }
+
+    const { data } = await api.get(
+      `/api/v2/agents/${agentId}/analytics/new-conversations`,
+      { params }
+    );
     return toTimeseries(data.data as MetricsTimeseriesWire);
   },
 

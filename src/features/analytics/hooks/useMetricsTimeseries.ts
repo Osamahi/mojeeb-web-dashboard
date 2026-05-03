@@ -10,10 +10,10 @@ import {
 /**
  * Time-series chart data for one metric over a window.
  *
- * The window controls both the time range (how far back) and the default
- * granularity (1m for the 1h view, 5m for 24h, 1h for 7d, 1d for 30d).
- * Granularity can be overridden per-call but the defaults match what
- * makes the chart readable.
+ * The window controls only the time range (how far back). Granularity is
+ * decided server-side from window size — single source of truth shared
+ * across every analytics endpoint (messages, sentiment, angry, actions,
+ * active conversations, new conversations).
  *
  * IMPORTANT: `from` and `to` are computed inside the queryFn (NOT memoized
  * upfront) so every fetch — initial mount, window switch, Realtime
@@ -28,12 +28,9 @@ import {
 export function useMetricsTimeseries(
   agentId: string | undefined,
   metric: AnalyticsMetric,
-  window: TimeseriesWindow,
-  granularityOverrideMinutes?: number
+  window: TimeseriesWindow
 ) {
   const config = TIMESERIES_WINDOWS[window];
-  const granularityMinutes =
-    granularityOverrideMinutes ?? config.defaultGranularityMinutes;
 
   return useQuery({
     queryKey: [
@@ -41,7 +38,6 @@ export function useMetricsTimeseries(
       'timeseries',
       metric,
       window,
-      granularityMinutes,
     ] as const,
     queryFn: () => {
       const now = new Date();
@@ -50,8 +46,7 @@ export function useMetricsTimeseries(
         agentId!,
         metric,
         from.toISOString(),
-        now.toISOString(),
-        granularityMinutes
+        now.toISOString()
       );
     },
     enabled: !!agentId,

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { type UseQueryResult } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
   BarChart,
@@ -13,16 +14,17 @@ import {
 } from 'recharts';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { useMetricsTimeseries } from '../hooks/useMetricsTimeseries';
 import {
   TIMESERIES_WINDOWS,
-  type AnalyticsMetric,
+  type MetricsTimeseries,
   type TimeseriesWindow,
 } from '../types/analytics.types';
 
 interface MetricChartProps {
-  agentId: string | undefined;
-  metric: AnalyticsMetric;
+  /** TanStack query result from any timeseries hook (useMetricsTimeseries,
+   * useActiveConversations, useNewConversations, ...). The component is
+   * source-agnostic — caller picks the hook. */
+  query: UseQueryResult<MetricsTimeseries>;
   window: TimeseriesWindow;
   title: string;
   variant: 'bar' | 'line';
@@ -32,20 +34,19 @@ interface MetricChartProps {
 }
 
 /**
- * Single chart wired to one metric. Receives its window from the parent so
- * one page-level toggle drives every chart at once.
+ * Single chart wired to a query result. Receives its window from the parent
+ * so one page-level toggle drives every chart at once.
  *
- * Reads time-series via useMetricsTimeseries → get_agent_metrics_timeseries
- * RPC. Live updates via the parent's useAnalyticsRealtime subscription
- * (this hook just refetches when its query key is invalidated).
+ * Live updates are handled by the parent's useAnalyticsRealtime subscription
+ * — when invalidation happens upstream, the query passed in here refetches
+ * automatically.
  *
- * No client-side aggregation, no derived data — Recharts plots whatever
- * the backend hands us, on a fixed time-domain X-axis matching the
- * requested window.
+ * No client-side aggregation, no derived data — Recharts plots whatever the
+ * backend hands us, on a fixed time-domain X-axis matching the requested
+ * window.
  */
 export function MetricChart({
-  agentId,
-  metric,
+  query,
   window,
   title,
   variant,
@@ -53,7 +54,6 @@ export function MetricChart({
   decimal = false,
 }: MetricChartProps) {
   const { t } = useTranslation();
-  const query = useMetricsTimeseries(agentId, metric, window);
 
   const { domainStart, domainEnd, ticks } = useMemo(() => {
     const config = TIMESERIES_WINDOWS[window];

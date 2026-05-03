@@ -17,10 +17,17 @@ export interface MetricsTimeseriesPointWire {
 
 export interface MetricsTimeseriesWire {
   agent_id: string;
-  metric: AnalyticsMetric;
+  // Backend echoes the metric name. For /timeseries it's one of
+  // AnalyticsMetric; for /active-conversations and /new-conversations it's
+  // 'active_conversations' / 'new_conversations'. Loosening to string keeps
+  // the wire type reusable across all timeseries endpoints.
+  metric: string;
   granularity_minutes: number;
   from: string;
   to: string;
+  /** Window-level scalar for the tile. Null when the aggregation isn't
+   *  composable from buckets (e.g. sentiment). */
+  total: number | null;
   points: MetricsTimeseriesPointWire[];
 }
 
@@ -48,10 +55,15 @@ export interface MetricsTimeseriesPoint {
 
 export interface MetricsTimeseries {
   agentId: string;
-  metric: AnalyticsMetric;
+  // Same as wire — loosened to string so this type is reusable across
+  // /timeseries, /active-conversations, /new-conversations.
+  metric: string;
   granularityMinutes: number;
   from: string;
   to: string;
+  /** Window-level scalar for the tile. Null when the aggregation isn't
+   *  composable from buckets (e.g. sentiment). */
+  total: number | null;
   points: MetricsTimeseriesPoint[];
 }
 
@@ -74,12 +86,16 @@ export type TimeseriesWindow = '1h' | '24h' | '7d' | '30d';
 
 export interface TimeseriesWindowConfig {
   fromOffsetMs: number;
-  defaultGranularityMinutes: number;
 }
 
+/**
+ * Frontend window presets — only the time-range offset. Granularity is
+ * resolved server-side (see backend AnalyticsQueryService.ComputeGranularityMinutes)
+ * and echoed back in each response so the chart knows the bucket size.
+ */
 export const TIMESERIES_WINDOWS: Record<TimeseriesWindow, TimeseriesWindowConfig> = {
-  '1h':  { fromOffsetMs: 60 * 60 * 1000,            defaultGranularityMinutes: 1   },
-  '24h': { fromOffsetMs: 24 * 60 * 60 * 1000,       defaultGranularityMinutes: 5   },
-  '7d':  { fromOffsetMs: 7 * 24 * 60 * 60 * 1000,   defaultGranularityMinutes: 60  },
-  '30d': { fromOffsetMs: 30 * 24 * 60 * 60 * 1000,  defaultGranularityMinutes: 1440 },
+  '1h':  { fromOffsetMs: 60 * 60 * 1000           },
+  '24h': { fromOffsetMs: 24 * 60 * 60 * 1000      },
+  '7d':  { fromOffsetMs: 7 * 24 * 60 * 60 * 1000  },
+  '30d': { fromOffsetMs: 30 * 24 * 60 * 60 * 1000 },
 };

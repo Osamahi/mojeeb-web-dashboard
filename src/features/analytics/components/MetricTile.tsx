@@ -4,13 +4,16 @@ import { Skeleton } from '@/components/ui/Skeleton';
 interface MetricTileProps {
   label: string;
   value: string | number | null | undefined;
+  /** Optional inline annotation rendered next to the value in a smaller,
+   * muted style. Used for breakdowns like "5,000 (300 new)". */
+  subtext?: string;
   icon: ComponentType<{ className?: string }>;
   isLoading?: boolean;
   variant?: 'default' | 'warning';
 }
 
 /**
- * Single-purpose KPI tile. Number + label + icon, no fluff.
+ * Single-purpose KPI tile. Number + optional subtext + label + icon, no fluff.
  *
  * Pure presentational component — receives the value pre-computed. The
  * AgentAnalyticsPage owns the math (sums chart points to keep tiles + charts
@@ -19,6 +22,7 @@ interface MetricTileProps {
 export function MetricTile({
   label,
   value,
+  subtext,
   icon: Icon,
   isLoading,
   variant = 'default',
@@ -54,6 +58,11 @@ export function MetricTile({
           }`}
         >
           {formatValue(value)}
+          {subtext ? (
+            <span className="ms-2 text-base font-normal text-neutral-500">
+              {subtext}
+            </span>
+          ) : null}
         </p>
       )}
     </div>

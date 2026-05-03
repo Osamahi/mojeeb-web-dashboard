@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MessageSquare, Frown, Smile, Workflow } from 'lucide-react';
+import { MessageSquare, Frown, Smile, Workflow, Users } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useAgentContext } from '@/hooks/useAgentContext';
@@ -8,6 +8,9 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { MetricTile } from '../components/MetricTile';
 import { MetricChart } from '../components/MetricChart';
 import { useMetricsTimeseries } from '../hooks/useMetricsTimeseries';
+import { useActiveConversations } from '../hooks/useActiveConversations';
+import { useActiveConversationsCount } from '../hooks/useActiveConversationsCount';
+import { useNewConversations } from '../hooks/useNewConversations';
 import { useAnalyticsRealtime } from '../hooks/useAnalyticsRealtime';
 import type {
   MetricsTimeseries,
@@ -21,12 +24,26 @@ const WINDOWS: TimeseriesWindow[] = ['1h', '24h', '7d', '30d'];
  *
  * Layout:
  *   - Page header with shared time-window toggle (1h/24h/7d/30d)
- *   - Four KPI tiles (today's totals from get_agent_live_summary)
- *   - Four time-series charts (one per metric, all reacting to the
- *     shared window)
+ *   - 5 KPI tiles: Active Conversations (with new-count subtext),
+ *     Total Messages, Satisfaction, Actions, Angry
+ *   - 4 time-series charts: Active, Messages, Actions, Angry — all driven
+ *     by the shared window selector
  *
- * Data source: ONLY agent_live_metrics + agent_action_metrics via existing
- * RPCs. Zero client-side aggregation. Live updates via useAnalyticsRealtime.
+ * Data sources (all via Postgres RPCs):
+ *   - chats                  → active conversations (via index-only scan)
+ *   - conversations          → new conversations
+ *   - agent_live_metrics     → messages, sentiment, angry
+ *   - agent_action_metrics   → actions
+ *
+ * Aggregation rule: tiles read `data.total` from the RPC envelope (computed
+ * in SQL via CTE-shared scans — see migration 088). The exception is
+ * sentiment, whose `total` is intentionally null because avg-of-bucket-
+ * averages is wrong (Simpson's paradox); a weighted-average scalar RPC is
+ * deferred. Active uses a dedicated scalar RPC because COUNT(DISTINCT)
+ * isn't composable from per-bucket distinct counts.
+ *
+ * Live updates: useAnalyticsRealtime invalidates the analytics query-key
+ * prefix on counter-table changes; all 7 hooks refetch in parallel.
  */
 export default function AgentAnalyticsPage() {
   const { t } = useTranslation();
@@ -39,19 +56,29 @@ export default function AgentAnalyticsPage() {
   // Single page-level window selector — all charts react.
   const [window, setWindow] = useState<TimeseriesWindow>('24h');
 
-  // Tile values come from the SAME timeseries data the charts render — we
-  // just sum the points client-side. This guarantees tiles and charts always
-  // agree (impossible to drift) and the totals reflect the active window
-  // (1h tile = last hour, 24h tile = last 24h, etc.) instead of "today since
-  // UTC midnight" which had a timezone mismatch issue.
   const messagesQuery   = useMetricsTimeseries(agentId, 'messages',  window);
   const actionsQuery    = useMetricsTimeseries(agentId, 'actions',   window);
   const angryQuery      = useMetricsTimeseries(agentId, 'angry',     window);
   const sentimentQuery  = useMetricsTimeseries(agentId, 'sentiment', window);
+  const activeQuery       = useActiveConversations(agentId, window);
+  const activeCountQuery  = useActiveConversationsCount(agentId, window);
+  const newConvsQuery     = useNewConversations(agentId, window);
 
-  const messagesTotal  = useMemo(() => sumPoints(messagesQuery.data),  [messagesQuery.data]);
-  const actionsTotal   = useMemo(() => sumPoints(actionsQuery.data),   [actionsQuery.data]);
-  const angryTotal     = useMemo(() => sumPoints(angryQuery.data),     [angryQuery.data]);
+  // Tile values come from the backend's `total` field (computed in SQL —
+  // see migration 088). No frontend aggregation: SUM/COUNT done in one
+  // CTE-shared scan with the bucket points, so tile and chart can't drift.
+  const messagesTotal = messagesQuery.data?.total ?? 0;
+  const actionsTotal  = actionsQuery.data?.total  ?? 0;
+  const angryTotal    = angryQuery.data?.total    ?? 0;
+  // Active Conversations: dedicated scalar RPC because COUNT(DISTINCT) isn't
+  // composable from per-bucket distinct counts (the same conversation across
+  // multiple buckets must be counted once overall, not N times).
+  const activeCount   = activeCountQuery.data?.total ?? 0;
+  // New Conversations subtext: backend total = COUNT(*) over window.
+  const newCount      = newConvsQuery.data?.total ?? 0;
+  // Sentiment: backend `total` is intentionally null (avg-of-bucket-averages
+  // is wrong; weighted average needs a separate scalar RPC — deferred).
+  // Falls back to mean of bucket-averages until that's built.
   const satisfactionAvg = useMemo(() => avgPoints(sentimentQuery.data), [sentimentQuery.data]);
 
   if (!isAgentSelected) {
@@ -80,10 +107,17 @@ export default function AgentAnalyticsPage() {
         <WindowToggle value={window} onChange={setWindow} />
       </div>
 
-      {/* KPI tiles — values are summed from the same timeseries the charts render,
-          so tile totals always match the active window and the chart contents.
-          Per-tile isLoading so a slow query doesn't flicker the other three. */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* KPI tiles — values are derived from the same timeseries the charts render,
+          so tiles always match the active window. Per-tile isLoading so a slow
+          query doesn't flicker the others. */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <MetricTile
+          label={t('analytics.tile_active')}
+          value={activeCount}
+          subtext={t('analytics.tile_active_new_subtext', { count: newCount })}
+          icon={Users}
+          isLoading={activeCountQuery.isLoading || newConvsQuery.isLoading}
+        />
         <MetricTile
           label={t('analytics.tile_messages')}
           value={messagesTotal}
@@ -111,29 +145,36 @@ export default function AgentAnalyticsPage() {
         />
       </div>
 
-      {/* Charts — stacked, page-level window controls all three.
-          Satisfaction has its own tile but no chart — a line chart of a
-          bounded 1-4 score on a sparse window adds little signal. */}
+      {/* Charts — stacked, page-level window controls them all.
+          - Active Customers: shown as chart (engagement trend matters most).
+          - New Customers: tile only — count by window is enough; the trend
+            is implicit in the Active chart's growth.
+          - Satisfaction: tile only — a line chart of a bounded 1-5 score
+            on a sparse window adds little signal. */}
       <div className="space-y-4">
         <MetricChart
-          agentId={agentId}
-          metric="messages"
+          query={activeQuery}
+          window={window}
+          title={t('analytics.chart_active')}
+          variant="bar"
+          color="#10b981"
+        />
+        <MetricChart
+          query={messagesQuery}
           window={window}
           title={t('analytics.chart_messages')}
           variant="bar"
           color="#3b82f6"
         />
         <MetricChart
-          agentId={agentId}
-          metric="actions"
+          query={actionsQuery}
           window={window}
           title={t('analytics.chart_actions')}
           variant="bar"
           color="#8b5cf6"
         />
         <MetricChart
-          agentId={agentId}
-          metric="angry"
+          query={angryQuery}
           window={window}
           title={t('analytics.chart_angry')}
           variant="bar"
@@ -175,24 +216,16 @@ function WindowToggle({ value, onChange }: WindowToggleProps) {
 }
 
 // ============================================================================
-// Tile aggregation helpers
+// Sentiment fallback helper
 // ----------------------------------------------------------------------------
-// Tile values come from summing the same timeseries data the charts render.
-// Guarantees tiles match charts exactly, and totals reflect the active window
-// (1h tile = last hour, 24h tile = last 24h) instead of "today since UTC midnight".
+// All other tile values come from the backend's `total` field (computed in
+// SQL). Sentiment is the exception — its `total` is intentionally null
+// because avg-of-bucket-averages is mathematically wrong (Simpson's paradox).
+// Until a separate weighted-average scalar RPC is built, we fall back to
+// mean-of-bucket-averages here. Slightly biased toward sparse buckets, but
+// good enough as a placeholder.
 // ============================================================================
 
-function sumPoints(data: MetricsTimeseries | undefined): number {
-  if (!data?.points) return 0;
-  return data.points.reduce((acc, p) => acc + (p.value ?? 0), 0);
-}
-
-/**
- * Average for the satisfaction tile. The sentiment timeseries returns
- * already-averaged values per bucket (sum/count from the RPC), so the tile
- * shows the mean of those bucket-averages — a simple and consistent reading.
- * Returns null when no data so the tile renders an em-dash.
- */
 function avgPoints(data: MetricsTimeseries | undefined): number | null {
   if (!data?.points || data.points.length === 0) return null;
   const valid = data.points.filter((p) => p.value !== null && p.value !== undefined);
