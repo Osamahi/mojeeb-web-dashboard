@@ -234,7 +234,7 @@
     "page_subtitle": "Live performance for the selected agent",
     "no_agent_selected": "No agent selected",
     "no_agent_selected_hint": "Pick an agent from the top of the page to see its analytics.",
-    "tile_messages": "Messages",
+    "tile_messages": "Total Messages",
     "tile_satisfaction": "Satisfaction",
     "tile_actions": "Actions",
     "tile_angry": "Angry",

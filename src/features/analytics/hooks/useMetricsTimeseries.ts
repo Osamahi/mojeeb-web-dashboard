@@ -55,6 +55,11 @@ export function useMetricsTimeseries(
       );
     },
     enabled: !!agentId,
-    staleTime: 10 * 1000,
+    // 60s — Realtime invalidation is the primary freshness source for this
+    // dashboard (useAnalyticsRealtime debounce-invalidates on counter UPSERTs).
+    // The stale window only kicks in as a safety net for tab refocus / dropped
+    // WebSocket. 60s avoids the thundering-herd refetch of 4 timeseries on
+    // every focus event when nothing has actually changed.
+    staleTime: 60 * 1000,
   });
 }

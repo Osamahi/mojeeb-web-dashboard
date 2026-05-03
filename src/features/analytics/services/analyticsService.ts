@@ -3,8 +3,6 @@ import type {
   AnalyticsMetric,
   AngryConversation,
   AngryConversationWire,
-  LiveSummary,
-  LiveSummaryWire,
   MetricsTimeseries,
   MetricsTimeseriesPoint,
   MetricsTimeseriesPointWire,
@@ -15,7 +13,6 @@ import type {
  * Service layer for live per-agent analytics endpoints.
  *
  * Backend routes (all gated by [OrgPermission("read")]):
- *   GET /api/v2/agents/{agentId}/analytics/live-summary
  *   GET /api/v2/agents/{agentId}/analytics/timeseries
  *   GET /api/v2/agents/{agentId}/analytics/angry
  *
@@ -26,19 +23,6 @@ import type {
 // ============================================================================
 // Transformers — wire (snake_case) → frontend (camelCase)
 // ============================================================================
-
-function toLiveSummary(wire: LiveSummaryWire): LiveSummary {
-  return {
-    asOf: wire.as_of,
-    dayStart: wire.day_start,
-    messagesToday: wire.messages_today,
-    conversationsActive: wire.conversations_active,
-    uniqueCustomersToday: wire.unique_customers_today,
-    avgSentimentToday: wire.avg_sentiment_today,
-    angryCountToday: wire.angry_count_today,
-    actionsExecutedToday: wire.actions_executed_today,
-  };
-}
 
 function toTimeseriesPoint(wire: MetricsTimeseriesPointWire): MetricsTimeseriesPoint {
   return {
@@ -76,15 +60,6 @@ function toAngryConversation(wire: AngryConversationWire): AngryConversation {
 // ============================================================================
 
 export const analyticsService = {
-  /**
-   * Today's hero numbers for the dashboard. Single round-trip.
-   * Backend's BaseController wraps the response in `{ data: ... }`.
-   */
-  getLiveSummary: async (agentId: string): Promise<LiveSummary> => {
-    const { data } = await api.get(`/api/v2/agents/${agentId}/analytics/live-summary`);
-    return toLiveSummary(data.data as LiveSummaryWire);
-  },
-
   /**
    * Time-series chart data for one metric over a window.
    * `from` and `to` are ISO 8601 UTC strings.

@@ -11,7 +11,10 @@ interface MetricTileProps {
 
 /**
  * Single-purpose KPI tile. Number + label + icon, no fluff.
- * Sourced exclusively from get_agent_live_summary RPC — no client-side math.
+ *
+ * Pure presentational component — receives the value pre-computed. The
+ * AgentAnalyticsPage owns the math (sums chart points to keep tiles + charts
+ * aligned to the active window).
  */
 export function MetricTile({
   label,

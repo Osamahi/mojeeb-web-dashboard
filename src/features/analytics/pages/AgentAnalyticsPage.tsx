@@ -54,9 +54,6 @@ export default function AgentAnalyticsPage() {
   const angryTotal     = useMemo(() => sumPoints(angryQuery.data),     [angryQuery.data]);
   const satisfactionAvg = useMemo(() => avgPoints(sentimentQuery.data), [sentimentQuery.data]);
 
-  const tilesLoading = messagesQuery.isLoading || actionsQuery.isLoading
-    || angryQuery.isLoading || sentimentQuery.isLoading;
-
   if (!isAgentSelected) {
     return (
       <div className="p-6 space-y-6">
@@ -84,31 +81,32 @@ export default function AgentAnalyticsPage() {
       </div>
 
       {/* KPI tiles — values are summed from the same timeseries the charts render,
-          so tile totals always match the active window and the chart contents. */}
+          so tile totals always match the active window and the chart contents.
+          Per-tile isLoading so a slow query doesn't flicker the other three. */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricTile
           label={t('analytics.tile_messages')}
           value={messagesTotal}
           icon={MessageSquare}
-          isLoading={tilesLoading}
+          isLoading={messagesQuery.isLoading}
         />
         <MetricTile
           label={t('analytics.tile_satisfaction')}
-          value={satisfactionAvg !== null ? satisfactionAvg.toFixed(2) : null}
+          value={satisfactionAvg !== null ? `${satisfactionAvg.toFixed(2)} / 5` : null}
           icon={Smile}
-          isLoading={tilesLoading}
+          isLoading={sentimentQuery.isLoading}
         />
         <MetricTile
           label={t('analytics.tile_actions')}
           value={actionsTotal}
           icon={Workflow}
-          isLoading={tilesLoading}
+          isLoading={actionsQuery.isLoading}
         />
         <MetricTile
           label={t('analytics.tile_angry')}
           value={angryTotal}
           icon={Frown}
-          isLoading={tilesLoading}
+          isLoading={angryQuery.isLoading}
           variant={angryTotal > 0 ? 'warning' : 'default'}
         />
       </div>

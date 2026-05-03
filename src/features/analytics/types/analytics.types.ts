@@ -10,17 +10,6 @@
 // Wire-format (snake_case) — what comes off the API
 // ============================================================================
 
-export interface LiveSummaryWire {
-  as_of: string;
-  day_start: string;
-  messages_today: number;
-  conversations_active: number;
-  unique_customers_today: number;
-  avg_sentiment_today: number | null;
-  angry_count_today: number;
-  actions_executed_today: number;
-}
-
 export interface MetricsTimeseriesPointWire {
   bucket_at: string;
   value: number | null;
@@ -51,17 +40,6 @@ export interface AngryConversationWire {
 // ============================================================================
 
 export type AnalyticsMetric = 'messages' | 'sentiment' | 'angry' | 'actions';
-
-export interface LiveSummary {
-  asOf: string;
-  dayStart: string;
-  messagesToday: number;
-  conversationsActive: number;
-  uniqueCustomersToday: number;
-  avgSentimentToday: number | null;
-  angryCountToday: number;
-  actionsExecutedToday: number;
-}
 
 export interface MetricsTimeseriesPoint {
   bucketAt: string;
