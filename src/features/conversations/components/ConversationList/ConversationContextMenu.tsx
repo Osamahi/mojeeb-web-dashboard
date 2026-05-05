@@ -9,6 +9,7 @@ import { useUnpinConversation } from '../../hooks/useUnpinConversation';
 import { useMarkConversationAsUrgent } from '../../hooks/useMarkConversationAsUrgent';
 import { useMarkConversationAsResolved } from '../../hooks/useMarkConversationAsResolved';
 import { useToggleAIMode } from '../../hooks/useToggleAIMode';
+import { useResumeAi } from '../../hooks/useResumeAi';
 
 interface ConversationContextMenuProps {
   conversation: ConversationResponse;
@@ -46,11 +47,18 @@ export function ConversationContextMenu({
   const { mutate: markAsUrgent, isPending: isPendingUrgent } = useMarkConversationAsUrgent();
   const { mutate: markAsResolved, isPending: isPendingResolved } = useMarkConversationAsResolved();
   const { mutate: toggleAI, isPending: isPendingAI } = useToggleAIMode();
+  const { mutate: resumeAi, isPending: isPendingResumeAi } = useResumeAi();
 
-  const isPending = isPendingRead || isPendingUnread || isPendingPin || isPendingUnpin || isPendingUrgent || isPendingResolved || isPendingAI;
+  const isPending = isPendingRead || isPendingUnread || isPendingPin || isPendingUnpin || isPendingUrgent || isPendingResolved || isPendingAI || isPendingResumeAi;
   const isUnread = !conversation.is_read;
   const isPinned = conversation.is_pinned;
   const isAIEnabled = conversation.is_ai;
+  // Handoff window is active when ai_handoff_until is in the future. When this is true,
+  // show "Resume AI" (clears the pause) instead of "Disable AI" — the AI is already
+  // paused, disabling further is meaningless.
+  const isHandoffActive =
+    !!conversation.ai_handoff_until &&
+    new Date(conversation.ai_handoff_until).getTime() > Date.now();
   const hasUnhappySentiment = conversation.sentiment !== undefined && conversation.sentiment !== null && (conversation.sentiment === 1 || conversation.sentiment === 2);
   const hasAttentionFlags = conversation.urgent || conversation.requires_human_attention || conversation.am_not_sure_how_to_answer || hasUnhappySentiment;
 
@@ -115,6 +123,12 @@ export function ConversationContextMenu({
     if (isPending) return;
     onClose();
     toggleAI({ conversationId: conversation.id, isAI: !isAIEnabled });
+  };
+
+  const handleResumeAi = () => {
+    if (isPending) return;
+    onClose();
+    resumeAi({ conversationId: conversation.id });
   };
 
   const handleToggleUrgentStatus = () => {
@@ -207,7 +221,7 @@ export function ConversationContextMenu({
               : <><Mail className="w-4 h-4" />{t('conversation_context_menu.mark_as_unread')}</>}
           </button>
           <button
-            onClick={handleToggleAIMode}
+            onClick={isHandoffActive ? handleResumeAi : handleToggleAIMode}
             disabled={isPending}
             className={`w-full px-4 py-2 text-start text-sm transition-colors flex items-center gap-2 ${
               isPending
@@ -215,15 +229,15 @@ export function ConversationContextMenu({
                 : 'text-neutral-700 hover:bg-neutral-50'
             }`}
             title={
-              isAIEnabled
-                ? t('conversation_context_menu.disable_ai_tooltip')
-                : t('conversation_context_menu.enable_ai_tooltip')
+              isHandoffActive || !isAIEnabled
+                ? t('conversation_context_menu.enable_ai_tooltip')
+                : t('conversation_context_menu.disable_ai_tooltip')
             }
             role="menuitem"
           >
-            {isAIEnabled
-              ? <><BotOff className="w-4 h-4" />{t('conversation_context_menu.disable_ai')}</>
-              : <><Bot className="w-4 h-4" />{t('conversation_context_menu.enable_ai')}</>}
+            {isHandoffActive || !isAIEnabled
+              ? <><Bot className="w-4 h-4" />{t('conversation_context_menu.enable_ai')}</>
+              : <><BotOff className="w-4 h-4" />{t('conversation_context_menu.disable_ai')}</>}
           </button>
 
           <button
