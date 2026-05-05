@@ -1000,6 +1000,9 @@
     "duration_label": "Pause duration",
     "unit_minutes": "Minutes",
     "unit_hours": "Hours",
+    "unit_min_short": "m",
+    "unit_hour_short": "h",
+    "custom": "Custom",
     "saved": "Handoff window updated",
     "save_failed": "Failed to update handoff window"
   },
@@ -2859,7 +2862,9 @@
   "handoff": {
     "paused_resumes_in": "AI paused — resumes in",
     "resume_ai_now": "Resume AI now",
-    "resuming": "Resuming…"
+    "resuming": "Resuming…",
+    "confirm_resume_title": "Enable AI?",
+    "confirm_resume_button": "Yes, enable"
   },
   "whatsapp": {
     "title": "WhatsApp Management",

@@ -34,7 +34,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getWhatsAppWindowStatus, WhatsAppExpiredBanner, WhatsAppActiveBanner } from './WhatsAppSessionBanner';
-import { HandoffPauseBanner } from './HandoffPauseBanner';
 import TemplatePicker from './TemplatePicker';
 
 interface ChatPanelProps {
@@ -304,18 +303,11 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
                 onTemplateClick={handleTemplateClick}
                 hideComposer={isWhatsApp && windowExpired}
                 composerFooter={
-                  <>
-                    {isWhatsApp && !windowExpired && waWindow && waWindow.remaining < 4 * 60 * 60 * 1000 && (
-                      <WhatsAppActiveBanner remainingMs={waWindow.remaining} />
-                    )}
-                    {conversation.ai_handoff_until && (
-                      <HandoffPauseBanner
-                        conversationId={conversation.id}
-                        aiHandoffUntil={conversation.ai_handoff_until}
-                      />
-                    )}
-                  </>
+                  isWhatsApp && !windowExpired && waWindow && waWindow.remaining < 4 * 60 * 60 * 1000 ? (
+                    <WhatsAppActiveBanner remainingMs={waWindow.remaining} />
+                  ) : null
                 }
+                aiHandoffUntil={conversation.ai_handoff_until}
                 className="bg-white flex-1 min-h-0"
               />
 

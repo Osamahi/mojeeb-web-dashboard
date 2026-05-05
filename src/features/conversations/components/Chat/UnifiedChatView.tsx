@@ -45,6 +45,8 @@ export interface UnifiedChatViewProps {
   onTemplateClick?: () => void;
   hideComposer?: boolean;
   composerFooter?: React.ReactNode;
+  /** Forwarded to MessageComposer to render the handoff chip in the toggle slot. */
+  aiHandoffUntil?: string | null;
 
   // Styling
   className?: string;
@@ -126,6 +128,7 @@ export default function UnifiedChatView({
   onTemplateClick,
   hideComposer,
   composerFooter,
+  aiHandoffUntil,
   className,
 }: UnifiedChatViewProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -339,6 +342,7 @@ export default function UnifiedChatView({
             onTemplateClick={onTemplateClick}
             conversationId={conversationId}
             agentId={agentId}
+            aiHandoffUntil={aiHandoffUntil}
           />
           {composerFooter}
         </div>

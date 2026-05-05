@@ -5,7 +5,7 @@
 
 import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BotOff, Bot, Pin } from 'lucide-react';
+import { BotOff, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Conversation } from '../../types';
 import { formatConversationTime } from '../../utils/timeFormatters';
@@ -190,23 +190,31 @@ const ConversationListItem = memo(function ConversationListItem({
             </span>
 
             <AnimatePresence mode="popLayout">
-              {/* AI disabled indicator. For handoff state we append a live mm:ss
-                  countdown so admins can see at a glance how long the pause has left. */}
+              {/* AI disabled indicator — uses the shared Badge primitive so it sits
+                  in the same visual family as the Urgent badge below. Two states:
+                    • Active handoff pause → warning (amber) + mm:ss countdown
+                    • Manual off (is_ai=false) → default neutral, icon only
+                  Same BotOff icon in both for continuity with dashboard language. */}
               {showHumanMode && (
                 <motion.span
                   key="human-mode"
-                  initial={{ opacity: 0, scale: 0.5 }}
+                  initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
                   transition={{ duration: 0.2 }}
-                  className="flex-shrink-0 flex items-center gap-1"
+                  className="flex-shrink-0"
                 >
-                  <BotOff className="w-3.5 h-3.5 text-neutral-400" />
-                  {handoffRemainingLabel && (
-                    <span className="font-mono tabular-nums text-[10px] text-neutral-500 leading-none">
-                      {handoffRemainingLabel}
-                    </span>
-                  )}
+                  <Badge
+                    variant={isPausedByHandoff ? 'warning' : 'default'}
+                    className="gap-1 text-xs"
+                  >
+                    <BotOff className="w-3 h-3" />
+                    {handoffRemainingLabel && (
+                      <span className="font-mono tabular-nums">
+                        {handoffRemainingLabel}
+                      </span>
+                    )}
+                  </Badge>
                 </motion.span>
               )}
 

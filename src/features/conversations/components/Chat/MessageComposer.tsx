@@ -17,6 +17,11 @@ import { chatApiService } from '../../services/chatApiService';
 import type { MediaAttachment } from '../../types';
 import { VoiceRecorder } from './VoiceRecorder';
 import { SavedMessagesPicker } from '@/features/saved-messages/components/SavedMessagesPicker';
+import { Badge } from '@/components/ui/Badge';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { BaseModal } from '@/components/ui/BaseModal';
+import { ModalActions } from '@/components/ui/ModalActions';
+import { useResumeAi } from '../../hooks/useResumeAi';
 
 // Constants
 const MAX_TEXTAREA_HEIGHT_PX = 120;
@@ -78,6 +83,10 @@ interface MessageComposerProps {
   agentId?: string;
   isWhatsApp?: boolean;
   onTemplateClick?: () => void;
+  /** ISO 8601 timestamp. When set and in the future, the AI toggle slot is
+      replaced by an interactive handoff chip (BotOff + mm:ss) that, on click,
+      prompts to resume the AI immediately. */
+  aiHandoffUntil?: string | null;
 }
 
 /**
@@ -129,10 +138,33 @@ interface UploadedVideo {
   isUploading: boolean;
 }
 
-function AiToggle({ isAIMode, onToggle }: { isAIMode: boolean; onToggle: () => void }) {
+function AiToggle({
+  isAIMode,
+  onToggle,
+  conversationId,
+  aiHandoffUntil,
+}: {
+  isAIMode: boolean;
+  onToggle: () => void;
+  conversationId: string;
+  aiHandoffUntil?: string | null;
+}) {
   const { t } = useTranslation();
   const [showLabel, setShowLabel] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  // Live countdown — only ticks while a pause is active. Recomputed every second.
+  const [now, setNow] = useState(() => Date.now());
+  const expiryMs = aiHandoffUntil ? new Date(aiHandoffUntil).getTime() : null;
+  const isPausedByHandoff = expiryMs !== null && expiryMs > now;
+  useEffect(() => {
+    if (!isPausedByHandoff) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [isPausedByHandoff]);
+
+  const resumeMutation = useResumeAi();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleClick = useCallback(() => {
     onToggle();
@@ -141,7 +173,74 @@ function AiToggle({ isAIMode, onToggle }: { isAIMode: boolean; onToggle: () => v
     timerRef.current = setTimeout(() => setShowLabel(false), 3000);
   }, [onToggle]);
 
+  const handleHandoffClick = useCallback(() => {
+    if (resumeMutation.isPending) return;
+    setShowConfirm(true);
+  }, [resumeMutation.isPending]);
+
+  const handleConfirmResume = useCallback(() => {
+    setShowConfirm(false);
+    resumeMutation.mutate({ conversationId });
+  }, [conversationId, resumeMutation]);
+
   useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  // Handoff-active state — render the chip in the same slot as the toggle.
+  if (isPausedByHandoff && expiryMs !== null) {
+    const remainingMs = Math.max(0, expiryMs - now);
+    const minutes = Math.floor(remainingMs / 60000);
+    const seconds = Math.floor((remainingMs % 60000) / 1000);
+    const formatted = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+    return (
+      <>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <Badge
+              variant="warning"
+              className="gap-1 text-xs cursor-pointer hover:bg-warning/15 transition-colors"
+              onClick={handleHandoffClick}
+              role="button"
+              aria-label={t('handoff.confirm_resume_button', 'Enable AI')}
+            >
+              <BotOff className="w-3 h-3" />
+              <span className="font-mono tabular-nums">{formatted}</span>
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {resumeMutation.isPending
+              ? t('handoff.resuming', 'Resuming…')
+              : t('handoff.confirm_resume_button', 'Enable AI')}
+          </TooltipContent>
+        </Tooltip>
+
+        {/* iOS-style stacked confirm — mirrors SimpleConfirmModal: title only,
+            primary "Yes, enable" then secondary "Back". RTL-safe by virtue of
+            stacked vertical layout (no left/right alignment to flip). */}
+        <BaseModal
+          isOpen={showConfirm}
+          onClose={() => setShowConfirm(false)}
+          title={t('handoff.confirm_resume_title', 'Enable AI now?')}
+          maxWidth="sm"
+        >
+          <div className="text-center space-y-6">
+            <ModalActions
+              primary={{
+                label: t('handoff.confirm_resume_button', 'Yes, enable'),
+                onClick: handleConfirmResume,
+              }}
+              secondary={{
+                label: t('simple_confirm.back_button'),
+                onClick: () => setShowConfirm(false),
+                variant: 'secondary',
+              }}
+              layout="vertical"
+            />
+          </div>
+        </BaseModal>
+      </>
+    );
+  }
 
   return (
     <div className="flex items-center gap-1.5">
@@ -180,6 +279,7 @@ export default memo(function MessageComposer({
   agentId,
   isWhatsApp,
   onTemplateClick,
+  aiHandoffUntil,
 }: MessageComposerProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
@@ -1741,9 +1841,14 @@ export default memo(function MessageComposer({
             )}
           </div>
 
-          {/* AI Agent Toggle */}
+          {/* AI Agent Toggle — replaced by handoff chip when a pause is active */}
           {onModeToggle && (
-            <AiToggle isAIMode={isAIMode} onToggle={onModeToggle} />
+            <AiToggle
+              isAIMode={isAIMode}
+              onToggle={onModeToggle}
+              conversationId={conversationId}
+              aiHandoffUntil={aiHandoffUntil}
+            />
           )}
         </div>
 

@@ -998,6 +998,9 @@
     "duration_label": "مدة الإيقاف",
     "unit_minutes": "دقايق",
     "unit_hours": "ساعات",
+    "unit_min_short": " د",
+    "unit_hour_short": " س",
+    "custom": "مخصص",
     "saved": "تم تحديث مدة الإيقاف",
     "save_failed": "فشل تحديث مدة الإيقاف"
   },
@@ -2586,7 +2589,9 @@
   "handoff": {
     "paused_resumes_in": "الذكاء الاصطناعي متوقف مؤقتاً — هيرجع شغّال خلال",
     "resume_ai_now": "تشغيل الذكاء الاصطناعي دلوقتي",
-    "resuming": "جاري التشغيل…"
+    "resuming": "جاري التشغيل…",
+    "confirm_resume_title": "تشغيل الذكاء الاصطناعي؟",
+    "confirm_resume_button": "نعم، شغّل"
   },
   "whatsapp": {
     "title": "إدارة الواتساب",
