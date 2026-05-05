@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Plus, MessageSquare, Bell, MoreVertical, Paperclip, BookOpen, ScrollText, Info, Search } from 'lucide-react';
+import { Plus, MessageSquare, Bell, MoreVertical, Paperclip, BookOpen, ScrollText, Info, Search, BotOff } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { agentService } from '../services/agentService';
@@ -31,6 +31,7 @@ import KnowledgeBaseItem from '../components/KnowledgeBaseItem';
 import AddKnowledgeBaseModal from '../components/AddKnowledgeBaseModal';
 import DocumentUploadProgressCard from '../components/DocumentUploadProgressCard';
 import FollowUpSettingsModal from '../components/FollowUpSettingsModal';
+import AiHandoffSettingsModal from '../components/AiHandoffSettingsModal';
 import TestChat from '../components/TestChat';
 import TestChatPanel from '../components/TestChatPanel';
 import { SetupChecklist } from '../components/SetupChecklist';
@@ -70,6 +71,7 @@ export default function StudioPage() {
   const [isAddKBModalOpen, setIsAddKBModalOpen] = useState(false);
   const [isAddAttachmentModalOpen, setIsAddAttachmentModalOpen] = useState(false);
   const [isFollowUpModalOpen, setIsFollowUpModalOpen] = useState(false);
+  const [isHandoffModalOpen, setIsHandoffModalOpen] = useState(false);
   const [isChatPanelOpen, setIsChatPanelOpen] = useState(false);
   const [isTestGateOpen, setIsTestGateOpen] = useState(false);
   const [activeUploadJobs, setActiveUploadJobs] = useState<string[]>([]);
@@ -302,6 +304,10 @@ export default function StudioPage() {
                     <DropdownMenuItem onClick={() => setIsFollowUpModalOpen(true)}>
                       <Bell className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
                       <span>{t('studio.automated_follow_ups')}</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsHandoffModalOpen(true)}>
+                      <BotOff className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
+                      <span>{t('studio.ai_handoff_window')}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -599,6 +605,13 @@ export default function StudioPage() {
       <FollowUpSettingsModal
         isOpen={isFollowUpModalOpen}
         onClose={() => setIsFollowUpModalOpen(false)}
+        agent={agent}
+      />
+
+      {/* AI Handoff Window Modal */}
+      <AiHandoffSettingsModal
+        isOpen={isHandoffModalOpen}
+        onClose={() => setIsHandoffModalOpen(false)}
         agent={agent}
       />
 

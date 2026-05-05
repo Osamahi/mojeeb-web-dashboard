@@ -38,6 +38,7 @@ class ChatApiService {
    */
   async sendMessage(params: {
     conversationId: string;
+    agentId: string;
     message: string;
     senderRole: number;
     senderId?: string;
@@ -47,6 +48,7 @@ class ChatApiService {
     try {
       const { data } = await api.post<ChatMessage>('/api/chat/message', {
         conversationId: params.conversationId,
+        agentId: params.agentId,
         message: params.message,
         senderRole: params.senderRole,
         senderId: params.senderId,

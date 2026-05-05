@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getWhatsAppWindowStatus, WhatsAppExpiredBanner, WhatsAppActiveBanner } from './WhatsAppSessionBanner';
+import { HandoffPauseBanner } from './HandoffPauseBanner';
 import TemplatePicker from './TemplatePicker';
 
 interface ChatPanelProps {
@@ -97,6 +98,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
       // No AI response generation, just platform delivery
       const response = await chatApiService.sendMessage({
         conversationId: params.conversationId,
+        agentId: params.agentId,
         message: params.message,
         senderRole: SenderRole.HumanAgent, // Mark as admin message
         messageType: params.messageType || MessageType.Text,
@@ -302,9 +304,17 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
                 onTemplateClick={handleTemplateClick}
                 hideComposer={isWhatsApp && windowExpired}
                 composerFooter={
-                  isWhatsApp && !windowExpired && waWindow && waWindow.remaining < 4 * 60 * 60 * 1000
-                    ? <WhatsAppActiveBanner remainingMs={waWindow.remaining} />
-                    : undefined
+                  <>
+                    {isWhatsApp && !windowExpired && waWindow && waWindow.remaining < 4 * 60 * 60 * 1000 && (
+                      <WhatsAppActiveBanner remainingMs={waWindow.remaining} />
+                    )}
+                    {conversation.ai_handoff_until && (
+                      <HandoffPauseBanner
+                        conversationId={conversation.id}
+                        aiHandoffUntil={conversation.ai_handoff_until}
+                      />
+                    )}
+                  </>
                 }
                 className="bg-white flex-1 min-h-0"
               />

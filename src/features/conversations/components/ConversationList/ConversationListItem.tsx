@@ -3,7 +3,7 @@
  * WhatsApp-style conversation preview with avatar, name, last message, timestamp
  */
 
-import { memo, useState, useCallback, useRef } from 'react';
+import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BotOff, Bot, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -64,8 +64,33 @@ const ConversationListItem = memo(function ConversationListItem({
   const timestamp = conversation.last_message_at || conversation.created_at;
   const formattedTime = formatConversationTime(timestamp);
 
+  // Per-second tick — only registered when this row is in an active handoff window.
+  // Drives the mm:ss countdown next to the BotOff icon. Other rows pay zero cost.
+  const [now, setNow] = useState(() => Date.now());
+  const handoffExpiryMs = conversation.ai_handoff_until
+    ? new Date(conversation.ai_handoff_until).getTime()
+    : null;
+  const isPausedByHandoff = handoffExpiryMs !== null && handoffExpiryMs > now;
+  useEffect(() => {
+    if (!isPausedByHandoff) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [isPausedByHandoff]);
+
+  const handoffRemainingLabel = (() => {
+    if (!isPausedByHandoff || handoffExpiryMs === null) return null;
+    const remainingMs = Math.max(0, handoffExpiryMs - now);
+    const minutes = Math.floor(remainingMs / 60000);
+    const seconds = Math.floor((remainingMs % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  })();
+
   // Status indicators
-  const showHumanMode = !conversation.is_ai;
+  // showHumanMode covers both states where AI won't auto-reply:
+  //   1. Manual permanent off (is_ai = false)
+  //   2. Active hands-off pause window (ai_handoff_until > NOW())
+  // Same BotOff icon for both — countdown is appended only for the handoff case.
+  const showHumanMode = !conversation.is_ai || isPausedByHandoff;
   const showVeryUnhappySentiment = conversation.sentiment === 1;
   const showUnhappySentiment = conversation.sentiment === 2;
   const showVeryHappySentiment = conversation.sentiment === 5;
@@ -165,7 +190,8 @@ const ConversationListItem = memo(function ConversationListItem({
             </span>
 
             <AnimatePresence mode="popLayout">
-              {/* AI disabled indicator */}
+              {/* AI disabled indicator. For handoff state we append a live mm:ss
+                  countdown so admins can see at a glance how long the pause has left. */}
               {showHumanMode && (
                 <motion.span
                   key="human-mode"
@@ -173,9 +199,14 @@ const ConversationListItem = memo(function ConversationListItem({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.5 }}
                   transition={{ duration: 0.2 }}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 flex items-center gap-1"
                 >
                   <BotOff className="w-3.5 h-3.5 text-neutral-400" />
+                  {handoffRemainingLabel && (
+                    <span className="font-mono tabular-nums text-[10px] text-neutral-500 leading-none">
+                      {handoffRemainingLabel}
+                    </span>
+                  )}
                 </motion.span>
               )}
 

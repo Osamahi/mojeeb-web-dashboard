@@ -170,6 +170,15 @@ export async function toggleAIMode(
 }
 
 /**
+ * Manually resume the AI on a conversation that's currently in a hands-off pause.
+ * Clears `ai_handoff_until` and cancels any pending re-engagement follow-up.
+ * The next customer message will be processed by the AI immediately.
+ */
+export async function resumeAi(conversationId: string): Promise<void> {
+  await api.post(`/api/v2/conversations/${conversationId}/resume-ai`);
+}
+
+/**
  * Mark a conversation as read
  *
  * @param conversationId - Conversation ID

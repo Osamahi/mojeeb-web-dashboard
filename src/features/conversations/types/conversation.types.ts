@@ -40,6 +40,10 @@ export interface Conversation {
   last_message: string | null;
   last_message_at: string | null;
   is_ai: boolean;
+  // AI hands-off pause expiry. NULL = AI not paused. ISO timestamp string when set.
+  // While > NOW(), the backend gate skips AI invocation and a follow-up job
+  // re-engages at this timestamp.
+  ai_handoff_until: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

@@ -959,6 +959,7 @@
     "delete_label": "حذف",
     "follow_ups": "المتابعات",
     "automated_follow_ups": "المتابعات التلقائية",
+    "ai_handoff_window": "مدة إيقاف الذكاء الاصطناعي",
     "add_attachment": "إضافة مرفق",
     "instructions_section_title": "التعليمات",
     "knowledge_section_title": "المعرفة",
@@ -990,6 +991,15 @@
     "saved": "تم حفظ إعدادات المتابعة",
     "save_failed": "فشل حفظ إعدادات المتابعة",
     "kb_hint": "نصيحة: أضف تعليمات المتابعة كمدخل في قاعدة المعرفة ليعرف الذكاء الاصطناعي كيفية صياغة رسائل المتابعة."
+  },
+  "handoff_settings": {
+    "title": "مدة إيقاف الذكاء الاصطناعي",
+    "subtitle": "المدة اللي بيفضل فيها الذكاء الاصطناعي ساكت بعد ما يرد المسؤول. هيرجع تلقائيًا لما تنتهي المدة.",
+    "duration_label": "مدة الإيقاف",
+    "unit_minutes": "دقايق",
+    "unit_hours": "ساعات",
+    "saved": "تم تحديث مدة الإيقاف",
+    "save_failed": "فشل تحديث مدة الإيقاف"
   },
   "onboarding": {
     "skip": "تخطي",
@@ -2572,6 +2582,11 @@
     "cropImageSubtitle": "ظبط منطقة القص زي ما تحب",
     "avatarInvalidType": "مسموح بس بصور JPEG و PNG و WebP",
     "avatarTooLarge": "حجم الملف لازم يكون أقل من 5 ميجا"
+  },
+  "handoff": {
+    "paused_resumes_in": "الذكاء الاصطناعي متوقف مؤقتاً — هيرجع شغّال خلال",
+    "resume_ai_now": "تشغيل الذكاء الاصطناعي دلوقتي",
+    "resuming": "جاري التشغيل…"
   },
   "whatsapp": {
     "title": "إدارة الواتساب",

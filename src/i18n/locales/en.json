@@ -961,6 +961,7 @@
     "delete_label": "Delete",
     "follow_ups": "Follow-ups",
     "automated_follow_ups": "Automated Follow-ups",
+    "ai_handoff_window": "AI Handoff Window",
     "add_attachment": "Add Attachment",
     "instructions_section_title": "Instructions",
     "knowledge_section_title": "Knowledge",
@@ -992,6 +993,15 @@
     "saved": "Follow-up settings saved",
     "save_failed": "Failed to save follow-up settings",
     "kb_hint": "Tip: Add follow-up instructions as a Knowledge Base entry so the AI knows how to craft follow-up messages."
+  },
+  "handoff_settings": {
+    "title": "AI Handoff Window",
+    "subtitle": "How long the AI stays silent after a human admin replies. The AI re-engages automatically when the window expires.",
+    "duration_label": "Pause duration",
+    "unit_minutes": "Minutes",
+    "unit_hours": "Hours",
+    "saved": "Handoff window updated",
+    "save_failed": "Failed to update handoff window"
   },
   "onboarding": {
     "skip": "Skip",
@@ -2845,6 +2855,11 @@
     "cropImageSubtitle": "Adjust the crop area to your liking",
     "avatarInvalidType": "Only JPEG, PNG, and WebP images are allowed",
     "avatarTooLarge": "File size must be less than 5MB"
+  },
+  "handoff": {
+    "paused_resumes_in": "AI paused — resumes in",
+    "resume_ai_now": "Resume AI now",
+    "resuming": "Resuming…"
   },
   "whatsapp": {
     "title": "WhatsApp Management",

@@ -32,6 +32,7 @@ export type Agent = {
   canManageAccess?: boolean;
   followUpEnabled: boolean;
   followUpPlatforms: string[];
+  aiHandoffWindowMinutes: number;
   aiModel: string | null;
 };
 
@@ -60,6 +61,7 @@ export type UpdateAgentRequest = {
   status?: AgentStatus;
   followUpEnabled?: boolean;
   followUpPlatforms?: string[];
+  aiHandoffWindowMinutes?: number;
   aiModel?: string | null;
 };
 

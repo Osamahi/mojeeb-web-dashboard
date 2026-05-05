@@ -9,6 +9,8 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { queryKeys } from '@/lib/queryKeys';
+import { useConversationStore } from '../stores/conversationStore';
+import type { Conversation } from '../types';
 
 interface UseConversationRealtimeOptions {
   agentId: string;
@@ -25,6 +27,9 @@ interface UseConversationRealtimeOptions {
 export function useConversationRealtime(options: UseConversationRealtimeOptions) {
   const { agentId, enabled = true } = options;
   const queryClient = useQueryClient();
+  const patchSelectedConversation = useConversationStore(
+    (state) => state.patchSelectedConversation
+  );
 
   useEffect(() => {
     if (!enabled || !agentId) {
@@ -50,6 +55,17 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
             console.log('[Realtime] Received event:', payload.eventType);
           }
 
+          // Mirror UPDATEs onto the open conversation in Zustand so ChatPanel
+          // (which reads from selectedConversation, not the list query) reflects
+          // server-side changes like ai_handoff_until set/cleared, is_ai toggled,
+          // last_message_at updated, etc. — without requiring a page refresh.
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            const next = payload.new as Partial<Conversation> & { id?: string };
+            if (next.id) {
+              patchSelectedConversation(next.id, next);
+            }
+          }
+
           // Invalidate all conversation queries for this agent
           // This triggers a refetch, keeping all filtered views in sync with the DB
           queryClient.invalidateQueries({
@@ -69,5 +85,5 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
       }
       supabase.removeChannel(channel);
     };
-  }, [agentId, enabled, queryClient]);
+  }, [agentId, enabled, queryClient, patchSelectedConversation]);
 }
