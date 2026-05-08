@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bot, Copy } from 'lucide-react';
 import { toast } from 'sonner';
-import { agentService } from '@/features/agents/services/agentService';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Button } from '@/components/ui/Button';
+import { useInfiniteAgents } from '@/features/agents/hooks/useInfiniteAgents';
 
 /**
  * AgentIdsSection
@@ -12,24 +13,32 @@ import { Skeleton } from '@/components/ui/Skeleton';
  * API Keys page so customers can grab the agent_id values they need for
  * curl examples without hunting through agent settings or URLs.
  *
- * Why on the API Keys page (not agent settings):
- *   - Customers come here AFTER copying their API key, looking at docs,
- *     and realizing the curl examples need an agent_id. They're on this
- *     screen at the moment of need.
- *   - Stripe puts API keys + account ID together on the same dashboard
- *     page for the same reason — co-locate identifiers a customer pastes
- *     into code.
- *
- * Cache: shares the ['agents','all'] queryKey with anything else fetching
- * the org's agent list.
+ * Pagination: uses useInfiniteAgents with auto-load-more, so customers with
+ * many agents see all of them via the same intersection-observer pattern as
+ * the AgentsPage.
  */
 export function AgentIdsSection() {
   const { t } = useTranslation();
-  const { data: agents = [], isLoading } = useQuery({
-    queryKey: ['agents', 'all'],
-    queryFn: () => agentService.getAgents(),
-    staleTime: 60_000,
-  });
+  const { agents, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useInfiniteAgents();
+
+  // Auto-load more when the sentinel scrolls into view.
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!hasNextPage) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Hide entirely once we know the org has zero agents — empty list is
   // noise. While loading, render skeleton rows that match the real layout
@@ -97,6 +106,18 @@ export function AgentIdsSection() {
                 </button>
               </div>
             ))}
+
+        {hasNextPage && (
+          <div ref={sentinelRef} className="px-4 py-2 flex justify-center">
+            {isFetchingNextPage ? (
+              <Skeleton height="14px" width="80px" />
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => fetchNextPage()}>
+                {t('common.load_more')}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -91,10 +91,6 @@
     "plan_free": "المجانية",
     "plan_starter": "المبتدئة",
     "plan_professional": "الاحترافية",
-    "sort_by_label": "الترتيب حسب",
-    "sort_created": "تاريخ الإنشاء (الأحدث أولاً)",
-    "sort_updated": "تاريخ التحديث (الأحدث أولاً)",
-    "sort_name": "الاسم (أ-ي)",
     "clear_all": "مسح الكل",
     "apply_filters": "تطبيق الفلاتر"
   },

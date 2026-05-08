@@ -94,10 +94,6 @@
     "plan_free": "Free",
     "plan_starter": "Starter",
     "plan_professional": "Professional",
-    "sort_by_label": "Sort By",
-    "sort_created": "Created Date (Newest First)",
-    "sort_updated": "Updated Date (Newest First)",
-    "sort_name": "Name (A-Z)",
     "clear_all": "Clear All",
     "apply_filters": "Apply Filters"
   },

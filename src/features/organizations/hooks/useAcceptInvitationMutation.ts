@@ -9,7 +9,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { invitationService } from '../services/invitationService';
-import { authService } from '@/features/auth/services/authService';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useConversationStore } from '@/features/conversations/stores/conversationStore';
@@ -51,13 +50,27 @@ export function useAcceptInvitationMutation() {
         logger.info('[useAcceptInvitationMutation] Step 1/4: Clearing conversation selection');
         useConversationStore.getState().selectConversation(null);
 
-        // 2. Fetch and set new organization's agents
-        logger.info('[useAcceptInvitationMutation] Step 2/4: Fetching new agents');
-        const agents = await agentService.getAgents();
-        useAgentStore.getState().setAgents(agents);
-        useAgentStore.getState().initializeAgentSelection();
+        // 2. Seed the new org's first agent so the dashboard renders an agent
+        // immediately after navigation. Full list is loaded on demand by
+        // GlobalAgentSelector / AgentsPage via useInfiniteAgents.
+        logger.info('[useAcceptInvitationMutation] Step 2/4: Seeding global selected agent');
+        try {
+          const firstPage = await agentService.getAgentsCursor({ limit: 1 });
+          const firstAgent = firstPage.items[0];
+          if (firstAgent) {
+            useAgentStore.getState().setGlobalSelectedAgent(firstAgent);
+          } else {
+            useAgentStore.getState().setGlobalSelectedAgent(null);
+          }
+        } catch (probeError) {
+          logger.warn(
+            '[useAcceptInvitationMutation] Agent probe after invitation failed (non-fatal)',
+            probeError,
+          );
+        }
 
-        // 3. Invalidate all organization-scoped queries
+        // 3. Invalidate all organization-scoped queries (includes the
+        // useInfiniteAgents cache so consumers refetch against the new org).
         logger.info('[useAcceptInvitationMutation] Step 3/4: Invalidating queries');
         await refreshOrganizationData(queryClient);
 

@@ -6,28 +6,31 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { useInfiniteAgents } from '@/features/agents/hooks/useInfiniteAgents';
 import { useOnboardingStore } from '@/features/onboarding/stores/onboardingStore';
 
 export const OnboardingPromptBanner = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const agents = useAgentStore((state) => state.agents);
+  // We only need to know "does the user have at least one agent?" — fetch a
+  // single row instead of the full list. Reuses the same React Query cache
+  // as other consumers, so this is effectively free if another component
+  // already hydrated it.
+  const { agents, isLoading } = useInfiniteAgents({ limit: 1 });
+  const hasAnyAgent = agents.length > 0;
   const hasCompletedOnboarding = useOnboardingStore((state) => state.hasCompletedOnboarding);
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // Reset dismiss state when agents change
+  // Reset dismiss state when agents arrive (e.g. after creation flow).
   useEffect(() => {
-    if (agents.length > 0) {
+    if (hasAnyAgent) {
       setIsDismissed(false);
     }
-  }, [agents]);
+  }, [hasAnyAgent]);
 
-  // Don't show if:
-  // - User has agents
-  // - User has completed onboarding
-  // - User dismissed the banner
-  if (agents.length > 0 || hasCompletedOnboarding || isDismissed) {
+  // Don't show while loading (avoids a flicker), or if the user has agents,
+  // has completed onboarding, or dismissed the banner.
+  if (isLoading || hasAnyAgent || hasCompletedOnboarding || isDismissed) {
     return null;
   }
 

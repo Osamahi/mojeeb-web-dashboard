@@ -1,53 +1,65 @@
 /**
- * Mojeeb Minimal Agents Page
- * Clean agents list with search, filters, and vertical cards
- * NO animations, NO glass effects - just professional simplicity
+ * Mojeeb Agents Page
+ * Cursor-paginated agents list with server-side filters.
  *
- * NOTE: This page reads agents from Zustand store - DashboardLayout handles fetching
+ * Sort is fixed at created_at DESC (the cursor's keyset). Filters
+ * (search, status, model, platform, plan) are pushed to SQL so they apply
+ * across all pages, not just the loaded subset.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAgentStore } from '../stores/agentStore';
 import AgentCard from '../components/AgentCard';
 import AgentFormModal from '../components/AgentFormModal';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import AgentsFilterDrawer, { type AgentFilters } from '../components/AgentsFilterDrawer';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import type { Agent } from '../types/agent.types';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
 import { AgentListSkeleton } from '../components/AgentCardSkeleton';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useInfiniteAgents } from '../hooks/useInfiniteAgents';
+
+const DEFAULT_FILTERS: AgentFilters = {
+  search: '',
+  status: 'all',
+  modelProvider: 'all',
+  platformTarget: 'all',
+  planCode: 'all',
+};
+
+// Convert "all" sentinel to undefined so the hook drops the param.
+const cleanFilter = (value: string) => (value === 'all' ? undefined : value);
 
 export default function AgentsPage() {
   const { t } = useTranslation();
   useDocumentTitle('pages.title_agents');
-  // Read agents from store - DashboardLayout handles fetching and syncing
-  const agents = useAgentStore((state) => state.agents);
-  const isLoading = useAgentStore((state) => state.isLoading);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // Check if user is SuperAdmin
   const user = useAuthStore((state) => state.user);
   const isSuperAdmin = user?.role === Role.SuperAdmin;
 
-  // Filter state
-  const [filters, setFilters] = useState<AgentFilters>({
-    search: '',
-    status: 'all',
-    modelProvider: 'all',
-    platformTarget: 'all',
-    planCode: 'all',
-    sortBy: 'createdAt',
-  });
-
-  // Filter drawer state
+  const [filters, setFilters] = useState<AgentFilters>(DEFAULT_FILTERS);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
-  // Calculate active filter count (excludes default values)
+  // Debounce the search filter so typing doesn't fire a query per keystroke.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(filters.search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [filters.search]);
+
+  const { agents, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useInfiniteAgents({
+    searchTerm: debouncedSearch || undefined,
+    status: cleanFilter(filters.status),
+    modelProvider: cleanFilter(filters.modelProvider),
+    platformTarget: cleanFilter(filters.platformTarget),
+    planCode: cleanFilter(filters.planCode),
+  });
+
+  // Active filter count for the header badge (excludes 'all' defaults).
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.search) count++;
@@ -55,80 +67,26 @@ export default function AgentsPage() {
     if (filters.modelProvider !== 'all') count++;
     if (filters.platformTarget !== 'all') count++;
     if (filters.planCode !== 'all') count++;
-    if (filters.sortBy !== 'createdAt') count++;
     return count;
   }, [filters]);
 
-  // Filter and sort agents (client-side)
-  const filteredAgents = useMemo(() => {
-    if (!agents) return [];
-
-    // Step 1: Filter
-    let result = agents.filter((agent) => {
-      // Search filter (name, description, organization)
-      if (filters.search) {
-        const searchLower = filters.search.toLowerCase();
-        const matchesName = agent.name.toLowerCase().includes(searchLower);
-        const matchesDescription = agent.description?.toLowerCase().includes(searchLower);
-        const matchesOrg = agent.organizationName?.toLowerCase().includes(searchLower);
-
-        if (!matchesName && !matchesDescription && !matchesOrg) {
-          return false;
+  // Auto-load more when the sentinel scrolls into view.
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!hasNextPage) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isFetchingNextPage) {
+          fetchNextPage();
         }
-      }
-
-      // Status filter
-      if (filters.status !== 'all' && agent.status !== filters.status) {
-        return false;
-      }
-
-      // Model provider filter
-      if (filters.modelProvider !== 'all' && agent.modelProvider !== filters.modelProvider) {
-        return false;
-      }
-
-      // Platform target filter
-      if (filters.platformTarget !== 'all' && agent.platformTarget !== filters.platformTarget) {
-        return false;
-      }
-
-      // Subscription plan filter — matches production codes (free_production)
-      // and legacy codes (free) via prefix, consistent with backend PlanCode.IsValid.
-      if (filters.planCode !== 'all') {
-        const code = agent.planCode ?? '';
-        if (!code.startsWith(filters.planCode)) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-
-    // Step 2: Sort
-    result = [...result].sort((a, b) => {
-      if (filters.sortBy === 'name') {
-        return a.name.localeCompare(b.name);
-      }
-      if (filters.sortBy === 'createdAt') {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      }
-      if (filters.sortBy === 'updatedAt') {
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      }
-      return 0;
-    });
-
-    return result;
-  }, [agents, filters]);
-
-  // Handlers
-  const handleFilterDrawerToggle = () => {
-    setIsFilterDrawerOpen(!isFilterDrawerOpen);
-  };
-
-  const handleFilterDrawerClose = () => {
-    setIsFilterDrawerOpen(false);
-  };
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleApplyFilters = (newFilters: AgentFilters) => {
     setFilters(newFilters);
@@ -136,82 +94,76 @@ export default function AgentsPage() {
 
   return (
     <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-      {/* Header with Filter Button (SuperAdmin only) */}
       <BaseHeader
         title={t('agents.title')}
         subtitle={t('agents.subtitle')}
         showFilterButton={isSuperAdmin}
         activeFilterCount={activeFilterCount}
-        onFilterClick={handleFilterDrawerToggle}
+        onFilterClick={() => setIsFilterDrawerOpen(!isFilterDrawerOpen)}
         primaryAction={{
           label: t('common.create'),
           icon: Plus,
-          onClick: () => setIsCreateModalOpen(true)
+          onClick: () => setIsCreateModalOpen(true),
         }}
       />
 
-      {/* Show loading state with skeleton */}
-      {isLoading || !agents ? (
+      {isLoading ? (
         <AgentListSkeleton count={5} />
-      ) : (
+      ) : agents.length > 0 ? (
         <>
-          {/* Agents List - Vertical Cards */}
-          {filteredAgents.length > 0 ? (
-            <div className="space-y-4">
-              {filteredAgents.map((agent) => (
-                <AgentCard key={agent.id} agent={agent} />
-              ))}
+          <div className="space-y-4">
+            {agents.map((agent) => (
+              <AgentCard key={agent.id} agent={agent} />
+            ))}
+          </div>
+
+          {/* Sentinel + load-more affordance */}
+          {hasNextPage && (
+            <div ref={sentinelRef} className="flex justify-center pt-4">
+              {isFetchingNextPage ? (
+                <AgentListSkeleton count={2} />
+              ) : (
+                <Button variant="outline" onClick={() => fetchNextPage()}>
+                  {t('common.load_more')}
+                </Button>
+              )}
             </div>
-          ) : agents && agents.length > 0 ? (
-            // Has agents but no matches after filtering
-            <EmptyState
-              icon={<Search className="w-12 h-12 text-neutral-400" />}
-              title={t('agents.no_match_title')}
-              description={t('agents.no_match_description')}
-              action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setFilters({
-                      search: '',
-                      status: 'all',
-                      modelProvider: 'all',
-                      platformTarget: 'all',
-                      planCode: 'all',
-                      sortBy: 'createdAt',
-                    });
-                  }}
-                >
-                  {t('common.clear_filters')}
-                </Button>
-              }
-            />
-          ) : (
-            // No agents at all
-            <EmptyState
-              icon={<Search className="w-12 h-12 text-neutral-400" />}
-              title={t('agents.no_agents_title')}
-              description={t('agents.no_agents_description')}
-              action={
-                <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t('agents.create_agent')}
-                </Button>
-              }
-            />
           )}
         </>
+      ) : activeFilterCount > 0 ? (
+        // Filters active but no matches.
+        <EmptyState
+          icon={<Search className="w-12 h-12 text-neutral-400" />}
+          title={t('agents.no_match_title')}
+          description={t('agents.no_match_description')}
+          action={
+            <Button variant="outline" onClick={() => setFilters(DEFAULT_FILTERS)}>
+              {t('common.clear_filters')}
+            </Button>
+          }
+        />
+      ) : (
+        // No agents at all.
+        <EmptyState
+          icon={<Search className="w-12 h-12 text-neutral-400" />}
+          title={t('agents.no_agents_title')}
+          description={t('agents.no_agents_description')}
+          action={
+            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              {t('agents.create_agent')}
+            </Button>
+          }
+        />
       )}
 
-      {/* Filter Drawer */}
       <AgentsFilterDrawer
         isOpen={isFilterDrawerOpen}
         filters={filters}
-        onClose={handleFilterDrawerClose}
+        onClose={() => setIsFilterDrawerOpen(false)}
         onApplyFilters={handleApplyFilters}
       />
 
-      {/* Create Agent Modal */}
       <AgentFormModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}

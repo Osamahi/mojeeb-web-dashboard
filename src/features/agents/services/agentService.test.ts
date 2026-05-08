@@ -110,22 +110,28 @@ describe('agentService', () => {
     vi.clearAllMocks();
   });
 
-  describe('getAgents', () => {
-    it('should fetch all agents and transform to camelCase', async () => {
+  describe('getAgentsCursor', () => {
+    it('should fetch first page of agents and transform to camelCase', async () => {
       server.use(
         http.get('http://localhost:5267/api/agents', () => {
           return HttpResponse.json({
             success: true,
             message: null,
-            data: [mockApiAgent],
+            data: {
+              items: [mockApiAgent],
+              has_more: false,
+              next_cursor: null,
+            },
           });
-        })
+        }),
       );
 
-      const result = await agentService.getAgents();
+      const result = await agentService.getAgentsCursor({ limit: 50 });
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toMatchObject({
+      expect(result.hasMore).toBe(false);
+      expect(result.nextCursor).toBeNull();
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0]).toMatchObject({
         id: 'agent-123',
         name: 'Test Agent',
         personaPrompt: 'You are a helpful assistant',
@@ -136,33 +142,57 @@ describe('agentService', () => {
       });
     });
 
-    it('should handle empty agents list', async () => {
+    it('should handle empty agents page', async () => {
       server.use(
         http.get('http://localhost:5267/api/agents', () => {
           return HttpResponse.json({
             success: true,
             message: null,
-            data: [],
+            data: {
+              items: [],
+              has_more: false,
+              next_cursor: null,
+            },
           });
-        })
+        }),
       );
 
-      const result = await agentService.getAgents();
+      const result = await agentService.getAgentsCursor({});
 
-      expect(result).toEqual([]);
+      expect(result.items).toEqual([]);
+      expect(result.hasMore).toBe(false);
+      expect(result.nextCursor).toBeNull();
+    });
+
+    it('should surface a next_cursor when more pages exist', async () => {
+      server.use(
+        http.get('http://localhost:5267/api/agents', () => {
+          return HttpResponse.json({
+            success: true,
+            message: null,
+            data: {
+              items: [mockApiAgent],
+              has_more: true,
+              next_cursor: 'opaque-cursor-base64',
+            },
+          });
+        }),
+      );
+
+      const result = await agentService.getAgentsCursor({ limit: 1 });
+
+      expect(result.hasMore).toBe(true);
+      expect(result.nextCursor).toBe('opaque-cursor-base64');
     });
 
     it('should handle API error', async () => {
       server.use(
         http.get('http://localhost:5267/api/agents', () => {
-          return HttpResponse.json(
-            { message: 'Server error' },
-            { status: 500 }
-          );
-        })
+          return HttpResponse.json({ message: 'Server error' }, { status: 500 });
+        }),
       );
 
-      await expect(agentService.getAgents()).rejects.toThrow();
+      await expect(agentService.getAgentsCursor({})).rejects.toThrow();
     });
   });
 
@@ -409,12 +439,12 @@ describe('agentService', () => {
                 content: body.content,
               },
             },
-            { status: 201 }
+            { status: 201 },
           );
-        })
+        }),
       );
 
-      const result = await agentService.createKnowledgeBase(createRequest);
+      const result = await agentService.createKnowledgeBase('agent-123', createRequest);
 
       expect(result).toMatchObject({
         id: 'new-kb-id',
@@ -440,10 +470,10 @@ describe('agentService', () => {
             name: body.name,
             content: body.content,
           });
-        })
+        }),
       );
 
-      const result = await agentService.updateKnowledgeBase('kb-123', updateRequest);
+      const result = await agentService.updateKnowledgeBase('kb-123', 'agent-123', updateRequest);
 
       expect(result).toMatchObject({
         id: 'kb-123',

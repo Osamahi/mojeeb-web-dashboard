@@ -19,7 +19,6 @@ export interface AgentFilters {
   modelProvider: ModelProvider | 'all';
   platformTarget: PlatformTarget | 'all';
   planCode: PlanFilter;
-  sortBy: 'name' | 'createdAt' | 'updatedAt';
 }
 
 interface AgentsFilterDrawerProps {
@@ -56,7 +55,6 @@ export default function AgentsFilterDrawer({
       modelProvider: 'all',
       platformTarget: 'all',
       planCode: 'all',
-      sortBy: 'createdAt',
     };
     setDraftFilters(defaultFilters);
     onApplyFilters(defaultFilters);
@@ -234,39 +232,6 @@ export default function AgentsFilterDrawer({
             </div>
           </div>
 
-          {/* Sort By */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
-              {t('agents_filter.sort_by_label')}
-            </label>
-            <div className="space-y-2">
-              {[
-                { value: 'createdAt', label: t('agents_filter.sort_created') },
-                { value: 'updatedAt', label: t('agents_filter.sort_updated') },
-                { value: 'name', label: t('agents_filter.sort_name') },
-              ].map((sort) => (
-                <label
-                  key={sort.value}
-                  className="flex items-center gap-3 p-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50 transition-colors"
-                >
-                  <input
-                    type="radio"
-                    name="sortBy"
-                    value={sort.value}
-                    checked={draftFilters.sortBy === sort.value}
-                    onChange={(e) =>
-                      setDraftFilters({
-                        ...draftFilters,
-                        sortBy: e.target.value as 'name' | 'createdAt' | 'updatedAt',
-                      })
-                    }
-                    className="w-4 h-4 text-brand-mojeeb focus:ring-brand-mojeeb"
-                  />
-                  <span className="text-sm text-neutral-950">{sort.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Footer Actions */}

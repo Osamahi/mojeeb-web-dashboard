@@ -137,12 +137,43 @@ class AgentService {
   }
 
   /**
-   * Get all agents for current user.
-   * `search` and `limit` are honored server-side for global admins only.
+   * Cursor-paginated agent listing — the only way to fetch agents.
+   *
+   * Matches the codebase convention for cursor pagination (conversations /
+   * leads / users): items + has_more + base64-encoded next_cursor.
+   *
+   * Filters are applied server-side. Sort is fixed at created_at DESC, id
+   * DESC (the cursor's keyset).
    */
-  async getAgents(params?: { search?: string; limit?: number }): Promise<Agent[]> {
-    const { data } = await api.get<ApiResponse<ApiAgentResponse[]>>('/api/agents', { params });
-    return data.data.map(agent => this.transformAgent(agent));
+  async getAgentsCursor(params: {
+    searchTerm?: string;
+    limit?: number;
+    cursor?: string;
+    status?: string;
+    modelProvider?: string;
+    platformTarget?: string;
+    planCode?: string;
+  }): Promise<{ items: Agent[]; nextCursor: string | null; hasMore: boolean }> {
+    // Translate camelCase params to snake_case query string (matches backend convention).
+    const queryParams: Record<string, string | number | undefined> = {
+      search_term: params.searchTerm,
+      limit: params.limit,
+      cursor: params.cursor,
+      status: params.status,
+      model_provider: params.modelProvider,
+      platform_target: params.platformTarget,
+      plan_code: params.planCode,
+    };
+
+    const { data } = await api.get<
+      ApiResponse<{ items: ApiAgentResponse[]; next_cursor: string | null; has_more: boolean }>
+    >('/api/agents', { params: queryParams });
+
+    return {
+      items: data.data.items.map((agent) => this.transformAgent(agent)),
+      nextCursor: data.data.next_cursor,
+      hasMore: data.data.has_more,
+    };
   }
 
   /**

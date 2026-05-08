@@ -1,21 +1,23 @@
 /**
  * Mojeeb Global Agent Selector Component
- * Modal-based selector for switching between agents globally
- * Displays in top navigation bar and persists selection to localStorage
+ * Modal-based selector for switching between agents globally.
+ *
+ * Architecture: cursor-paginated. The selector loads page 1 on open and
+ * reveals "load more" for additional pages. Search is server-side and works
+ * for all roles uniformly (the SuperAdmin / regular-user distinction is
+ * handled by the backend RPC routing).
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Check, Plus, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
 import { useAgentStore } from '../stores/agentStore';
-import { agentService } from '../services/agentService';
-import { useAuthStore } from '@/features/auth/stores/authStore';
-import { Role } from '@/features/auth/types/auth.types';
 import { Spinner } from '@/components/ui/Spinner';
 import { BaseModal } from '@/components/ui/BaseModal';
+import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
+import { useInfiniteAgents } from '../hooks/useInfiniteAgents';
 
 export default function GlobalAgentSelector() {
   const { t } = useTranslation();
@@ -24,69 +26,76 @@ export default function GlobalAgentSelector() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const user = useAuthStore((state) => state.user);
-  const isSuperAdmin = user?.role === Role.SuperAdmin;
+  const { globalSelectedAgent, isAgentSwitching, switchAgent, setGlobalSelectedAgent } =
+    useAgentStore();
 
-  const {
-    agents,
-    globalSelectedAgent,
-    isAgentSwitching,
-    isLoading,
-    switchAgent,
-    setAgents,
-  } = useAgentStore();
-
-  // Debounce the search input — 300ms matches other dashboard search fields
+  // Debounce search input — 300ms matches other dashboard search fields.
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // For SuperAdmins the local store is capped at 1000 by the backend, so fetch
-  // matching agents server-side. Regular users see only their org and can filter locally.
-  const { data: searchResults, isFetching: isSearching } = useQuery({
-    queryKey: ['agents', 'search', debouncedSearch],
-    queryFn: () => agentService.getAgents({ search: debouncedSearch }),
-    enabled: isModalOpen && isSuperAdmin && debouncedSearch.length > 0,
-    staleTime: 30 * 1000,
+  // Page 1 fetched eagerly on mount so the trigger button can render the
+  // "select an agent" empty state. Additional pages load on demand inside
+  // the modal via fetchNextPage().
+  const {
+    agents,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteAgents({
+    searchTerm: debouncedSearch || undefined,
+    enabled: true,
   });
 
-  const filteredAgents = useMemo(() => {
-    if (!isSuperAdmin) return agents;
-    if (!debouncedSearch) return agents;
-    return searchResults ?? [];
-  }, [agents, searchResults, debouncedSearch, isSuperAdmin]);
+  // Bootstrap `globalSelectedAgent` from the first cursor page if the store
+  // has none yet. Replaces the eager initializeAgentSelection() that used to
+  // run from DashboardLayout. Fires unconditionally on the unfiltered first
+  // page so re-running it after a search doesn't override the user's choice.
+  useEffect(() => {
+    if (globalSelectedAgent || debouncedSearch || agents.length === 0) return;
+    setGlobalSelectedAgent(agents[0]);
+  }, [globalSelectedAgent, debouncedSearch, agents, setGlobalSelectedAgent]);
+
+  // Auto-load more on scroll inside the modal list.
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!isModalOpen || !hasNextPage) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { root: null, rootMargin: '50px' },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [isModalOpen, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleAgentSelect = async (agentId: string) => {
     setIsModalOpen(false);
-    setSearchQuery(''); // Clear search on close
+    setSearchQuery('');
     if (globalSelectedAgent?.id === agentId) return;
-
-    // SuperAdmin search results may contain agents that aren't in the local
-    // store (the initial fetch is capped at 1000 rows). Merge the picked agent
-    // in first so switchAgent() can find it.
-    if (isSuperAdmin && !agents.some(a => a.id === agentId)) {
-      const picked = searchResults?.find(a => a.id === agentId);
-      if (picked) setAgents([picked, ...agents]);
-    }
-
-    // No callback needed - React Query will auto-refetch queries with agentId in keys
     await switchAgent(agentId);
   };
 
   const handleCreateAgent = () => {
     setIsModalOpen(false);
-    setSearchQuery(''); // Clear search on close
+    setSearchQuery('');
     navigate('/onboarding');
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setSearchQuery(''); // Clear search on close
+    setSearchQuery('');
   };
 
-  // Show loading skeleton during initial agent load
-  if (isLoading && agents.length === 0) {
+  // Initial load skeleton (no agents and no selected agent).
+  if (isLoading && agents.length === 0 && !globalSelectedAgent) {
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-md">
         <div className="h-3.5 w-20 bg-neutral-200 rounded animate-pulse" />
@@ -95,7 +104,6 @@ export default function GlobalAgentSelector() {
     );
   }
 
-  // Show loading spinner during agent switching
   if (isAgentSwitching) {
     return (
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-neutral-50">
@@ -105,23 +113,24 @@ export default function GlobalAgentSelector() {
     );
   }
 
-  // Show empty state if no agents exist
-  if (agents.length === 0) {
+  // Empty state — no agents at all (and none selected).
+  if (!isLoading && agents.length === 0 && !globalSelectedAgent) {
     return (
       <button
         onClick={handleCreateAgent}
         className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-neutral-50 transition-colors"
       >
         <Plus className="w-4 h-4 text-brand-mojeeb" />
-        <span className="text-sm font-medium text-brand-mojeeb">{t('agent_selector.create_agent')}</span>
+        <span className="text-sm font-medium text-brand-mojeeb">
+          {t('agent_selector.create_agent')}
+        </span>
       </button>
     );
   }
 
-  // Show agent selector
   return (
     <>
-      {/* Trigger Button - Minimal Style */}
+      {/* Trigger button */}
       <button
         onClick={() => setIsModalOpen(true)}
         className="flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors max-w-[180px] hover:bg-neutral-50"
@@ -136,13 +145,15 @@ export default function GlobalAgentSelector() {
           </>
         ) : (
           <>
-            <span className="text-sm text-neutral-500">{t('agent_selector.select_placeholder')}</span>
+            <span className="text-sm text-neutral-500">
+              {t('agent_selector.select_placeholder')}
+            </span>
             <ChevronDown className="w-4 h-4 text-neutral-600 flex-shrink-0" />
           </>
         )}
       </button>
 
-      {/* Agent Selection Modal */}
+      {/* Selection modal */}
       <BaseModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
@@ -150,65 +161,89 @@ export default function GlobalAgentSelector() {
         maxWidth="sm"
       >
         <div className="flex flex-col">
-          {/* Search Input - Only for Super Admins */}
-          {isSuperAdmin && (
-            <div className="relative mb-4">
-              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('agent_selector.search_placeholder')}
-                className="w-full ps-10 pe-4 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-mojeeb focus:border-transparent"
-                autoFocus
-              />
-            </div>
-          )}
+          {/* Search input — server-side, available to all roles. */}
+          <div className="relative mb-4">
+            <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('agent_selector.search_placeholder')}
+              className="w-full ps-10 pe-4 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-mojeeb focus:border-transparent"
+              autoFocus
+            />
+          </div>
 
-          {/* Agent List - Scrollable */}
+          {/* Agent list (scrollable, infinite) */}
           <div className="max-h-[400px] overflow-y-auto space-y-1 mb-3">
-            {isSuperAdmin && debouncedSearch && isSearching ? (
+            {isLoading ? (
               <div className="flex justify-center py-8">
                 <Spinner size="sm" />
               </div>
-            ) : filteredAgents.length === 0 && isSuperAdmin && debouncedSearch ? (
+            ) : agents.length === 0 && debouncedSearch ? (
               <div className="text-center py-8 text-neutral-500">
-                <p className="text-sm">{t('agent_selector.no_results', { query: debouncedSearch })}</p>
+                <p className="text-sm">
+                  {t('agent_selector.no_results', { query: debouncedSearch })}
+                </p>
               </div>
             ) : (
-              filteredAgents.map((agent) => (
-              <button
-                key={agent.id}
-                onClick={() => handleAgentSelect(agent.id)}
-                className={cn(
-                  'w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-neutral-50 transition-colors',
-                  globalSelectedAgent?.id === agent.id && 'bg-brand-mojeeb text-white hover:bg-brand-mojeeb'
+              <>
+                {agents.map((agent) => (
+                  <button
+                    key={agent.id}
+                    onClick={() => handleAgentSelect(agent.id)}
+                    className={cn(
+                      'w-full flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-neutral-50 transition-colors',
+                      globalSelectedAgent?.id === agent.id &&
+                        'bg-brand-mojeeb text-white hover:bg-brand-mojeeb',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'text-sm font-medium truncate',
+                        globalSelectedAgent?.id === agent.id
+                          ? 'text-white'
+                          : 'text-neutral-950',
+                      )}
+                    >
+                      {agent.name}
+                    </span>
+                    {globalSelectedAgent?.id === agent.id && (
+                      <Check className="w-4 h-4 text-white flex-shrink-0" />
+                    )}
+                  </button>
+                ))}
+
+                {/* Load-more sentinel + button */}
+                {hasNextPage && (
+                  <div ref={sentinelRef} className="py-2 flex justify-center">
+                    {isFetchingNextPage ? (
+                      <Spinner size="sm" />
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fetchNextPage()}
+                      >
+                        {t('common.load_more')}
+                      </Button>
+                    )}
+                  </div>
                 )}
-              >
-                <span className={cn(
-                  'text-sm font-medium truncate',
-                  globalSelectedAgent?.id === agent.id ? 'text-white' : 'text-neutral-950'
-                )}>
-                  {agent.name}
-                </span>
-                {globalSelectedAgent?.id === agent.id && (
-                  <Check className="w-4 h-4 text-white flex-shrink-0" />
-                )}
-              </button>
-              ))
+              </>
             )}
           </div>
 
-          {/* Divider */}
           <div className="border-t border-neutral-200 mb-3" />
 
-          {/* Create New Agent Button */}
           <button
             onClick={handleCreateAgent}
             className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg hover:bg-neutral-50 transition-colors"
           >
             <Plus className="w-4 h-4 text-brand-mojeeb" />
-            <span className="text-sm font-medium text-brand-mojeeb">{t('agent_selector.create_new')}</span>
+            <span className="text-sm font-medium text-brand-mojeeb">
+              {t('agent_selector.create_new')}
+            </span>
           </button>
         </div>
       </BaseModal>

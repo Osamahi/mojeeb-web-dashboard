@@ -79,36 +79,39 @@ class AuthService {
       return { destination: '/conversations', reason: 'has_agents' };
     }
 
-    // 1. Fetch and initialize agents
-    logger.info('Fetching user agents', {
+    // 1. Decide whether the user has any agents (drives the "go to /conversations
+    //    vs /onboarding" branch below). We only need to know if at least one
+    //    exists, so fetch a single row instead of a full list.
+    logger.info('Probing whether user has any agents', {
       component: 'AuthService',
       method: 'completeAuthFlow',
-      step: 'fetch_agents',
+      step: 'probe_agents',
     });
     let hasAgents = false;
 
     try {
-      const agents = await agentService.getAgents();
+      const firstPage = await agentService.getAgentsCursor({ limit: 1 });
 
-      // Check abort after async operation
       if (signal?.aborted) {
-        logger.info('Auth flow aborted after agent fetch', {
+        logger.info('Auth flow aborted after agent probe', {
           component: 'AuthService',
           method: 'completeAuthFlow',
         });
         return { destination: '/conversations', reason: 'has_agents' };
       }
 
-      hasAgents = agents && agents.length > 0;
+      const firstAgent = firstPage.items[0];
+      hasAgents = !!firstAgent;
 
-      if (hasAgents) {
-        useAgentStore.getState().setAgents(agents);
-        useAgentStore.getState().initializeAgentSelection();
-        logger.info('Agent selection initialized', {
+      if (hasAgents && firstAgent) {
+        // Seed the global selection so the dashboard renders an agent on
+        // first paint. The full agent list is loaded on demand by the
+        // GlobalAgentSelector / AgentsPage via useInfiniteAgents.
+        useAgentStore.getState().setGlobalSelectedAgent(firstAgent);
+        logger.info('Initial agent selection seeded from first cursor page', {
           component: 'AuthService',
           method: 'completeAuthFlow',
-          selectedAgentId: agents[0]?.id,
-          totalAgents: agents.length,
+          selectedAgentId: firstAgent.id,
         });
       } else {
         logger.info('User has no agents', {
@@ -117,11 +120,10 @@ class AuthService {
         });
       }
     } catch (error) {
-      logger.error('Error fetching agents (non-fatal, continuing)', error instanceof Error ? error : new Error(String(error)), {
+      logger.error('Error probing agents (non-fatal, continuing)', error instanceof Error ? error : new Error(String(error)), {
         component: 'AuthService',
         method: 'completeAuthFlow',
       });
-      // Continue with hasAgents = false
     }
 
     // 2. Check for pending invitations

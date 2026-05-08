@@ -8,8 +8,7 @@ import { Search } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { useInfiniteFailedMessages } from '../hooks/useFailedMessages';
 import { FailedMessagesTable } from '../components/FailedMessagesTable';
-import { agentService } from '@/features/agents/services/agentService';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteAgents } from '@/features/agents/hooks/useInfiniteAgents';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import type { FailedMessageFilters } from '../types';
 
@@ -35,20 +34,30 @@ export function FailedMessagesPage() {
     [debouncedSearch]
   );
 
-  // Fetch all agents (for agent name mapping)
-  const { data: agentsData } = useQuery({
-    queryKey: ['agents', 'all'],
-    queryFn: () => agentService.getAgents(),
-  });
+  // Build agent name lookup. We fetch all pages so the table can label every
+  // agent by name regardless of which page they fall on.
+  const {
+    agents: agentList,
+    hasNextPage: agentsHasNextPage,
+    fetchNextPage: fetchNextAgentsPage,
+    isFetchingNextPage: isFetchingNextAgentsPage,
+  } = useInfiniteAgents();
 
-  // Create agent name mapping
+  useEffect(() => {
+    if (agentsHasNextPage && !isFetchingNextAgentsPage) {
+      fetchNextAgentsPage();
+    }
+  }, [agentsHasNextPage, isFetchingNextAgentsPage, fetchNextAgentsPage]);
+
   const agentNames = useMemo(() => {
-    if (!agentsData) return {};
-    return agentsData.reduce((acc, agent) => {
-      acc[agent.id] = agent.name;
-      return acc;
-    }, {} as Record<string, string>);
-  }, [agentsData]);
+    return agentList.reduce(
+      (acc, agent) => {
+        acc[agent.id] = agent.name;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+  }, [agentList]);
 
   // Data fetching with cursor pagination
   const {

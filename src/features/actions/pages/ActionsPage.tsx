@@ -19,8 +19,7 @@ import { ActionDetailsDrawer } from '../components/ActionDetailsDrawer';
 import { ActionExecutionsModal } from '../components/ActionExecutionsModal';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
-import { agentService } from '@/features/agents/services/agentService';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteAgents } from '@/features/agents/hooks/useInfiniteAgents';
 
 export function ActionsPage() {
   const user = useAuthStore((state) => state.user);
@@ -45,21 +44,32 @@ export function ActionsPage() {
     [filters, search]
   );
 
-  // Fetch all agents (for agent name mapping)
-  const { data: agentsData } = useQuery({
-    queryKey: ['agents', 'all'],
-    queryFn: () => agentService.getAgents(),
-    enabled: true, // Always fetch for name display in table
-  });
+  // Build agent name lookup. We fetch all pages so the table can label every
+  // agent by name regardless of which page they fall on. For typical orgs
+  // this is one round-trip; for SuperAdmin views it auto-paginates in the
+  // background via the effect below.
+  const {
+    agents: agentList,
+    hasNextPage: agentsHasNextPage,
+    fetchNextPage: fetchNextAgentsPage,
+    isFetchingNextPage: isFetchingNextAgentsPage,
+  } = useInfiniteAgents();
 
-  // Create agent name mapping
+  useEffect(() => {
+    if (agentsHasNextPage && !isFetchingNextAgentsPage) {
+      fetchNextAgentsPage();
+    }
+  }, [agentsHasNextPage, isFetchingNextAgentsPage, fetchNextAgentsPage]);
+
   const agentNames = useMemo(() => {
-    if (!agentsData) return {};
-    return agentsData.reduce((acc, agent) => {
-      acc[agent.id] = agent.name;
-      return acc;
-    }, {} as Record<string, string>);
-  }, [agentsData]);
+    return agentList.reduce(
+      (acc, agent) => {
+        acc[agent.id] = agent.name;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+  }, [agentList]);
 
   // Data fetching - SuperAdmin sees all actions, others see only their agent's actions
   const agentActionsQuery = useInfiniteActions(combinedFilters);

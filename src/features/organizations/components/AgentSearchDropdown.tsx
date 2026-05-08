@@ -1,15 +1,20 @@
 /**
  * Agent Search Dropdown Component
- * Allows searching and selecting an agent
- * Used in team management for assigning users to organizations
+ * Allows searching and selecting an agent.
+ * Used in team management for assigning users to organizations.
+ *
+ * Pagination: search is debounced and pushed to the server via
+ * useInfiniteAgents. Results are limited to the first page (50 agents) plus
+ * any "load more" pages the user requests — same pattern as
+ * GlobalAgentSelector.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { Input } from '@/components/ui/Input';
 import type { Agent } from '@/features/agents/types/agent.types';
+import { useInfiniteAgents } from '@/features/agents/hooks/useInfiniteAgents';
 
 interface AgentSearchDropdownProps {
   selectedAgent: Agent | null;
@@ -20,26 +25,25 @@ interface AgentSearchDropdownProps {
 export default function AgentSearchDropdown({
   selectedAgent,
   onAgentSelect,
-  placeholder
+  placeholder,
 }: AgentSearchDropdownProps) {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const { agents, isLoading } = useAgentStore();
+  // Debounce search input — 300ms matches GlobalAgentSelector.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { agents, isLoading } = useInfiniteAgents({
+    searchTerm: debouncedSearch || undefined,
+    enabled: showDropdown,
+  });
+
   const placeholderText = placeholder || t('agent_search_dropdown.placeholder');
-
-  // Filter agents by search query
-  const filteredAgents = useMemo(() => {
-    if (!searchQuery.trim()) return agents;
-
-    const query = searchQuery.toLowerCase();
-    return agents.filter(
-      (agent) =>
-        agent.name.toLowerCase().includes(query) ||
-        agent.id.toLowerCase().includes(query)
-    );
-  }, [agents, searchQuery]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -56,9 +60,9 @@ export default function AgentSearchDropdown({
     setShowDropdown(false);
   };
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside.
   const handleBlur = () => {
-    // Delay to allow click events on dropdown items
+    // Delay to allow click events on dropdown items.
     setTimeout(() => setShowDropdown(false), 200);
   };
 
@@ -87,9 +91,9 @@ export default function AgentSearchDropdown({
             <div className="p-4 text-center text-sm text-neutral-500">
               {t('agent_search_dropdown.loading')}
             </div>
-          ) : filteredAgents.length > 0 ? (
+          ) : agents.length > 0 ? (
             <div className="py-2">
-              {filteredAgents.map((agent) => (
+              {agents.map((agent) => (
                 <button
                   key={agent.id}
                   type="button"

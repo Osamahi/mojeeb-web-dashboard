@@ -36,7 +36,7 @@ vi.mock('@/features/agents/services/agentService', () => ({
 vi.mock('@/features/agents/stores/agentStore', () => ({
   useAgentStore: {
     getState: () => ({
-      initializeAgentSelection: vi.fn(),
+      setGlobalSelectedAgent: vi.fn(),
     }),
   },
 }));

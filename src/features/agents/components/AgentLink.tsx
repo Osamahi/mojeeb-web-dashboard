@@ -20,7 +20,6 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useAgentStore } from '../stores/agentStore';
 import { useAuthStore } from '@/features/auth/stores/authStore';
-import { agentService } from '../services/agentService';
 import { Role } from '@/features/auth/types/auth.types';
 
 interface AgentLinkProps {
@@ -45,8 +44,6 @@ export function AgentLink({
   const user = useAuthStore((state) => state.user);
   const isSuperAdmin = user?.role === Role.SuperAdmin;
 
-  const agents = useAgentStore((state) => state.agents);
-  const setAgents = useAgentStore((state) => state.setAgents);
   const switchAgent = useAgentStore((state) => state.switchAgent);
 
   const [isNavigating, setIsNavigating] = useState(false);
@@ -64,13 +61,8 @@ export function AgentLink({
 
     setIsNavigating(true);
     try {
-      // SuperAdmins may target an agent that isn't in their loaded list (the
-      // global store is capped at 1000 rows). Mirror GlobalAgentSelector:
-      // fetch + prepend before switchAgent so the store lookup succeeds.
-      if (!agents.some((a) => a.id === agentId)) {
-        const picked = await agentService.getAgent(agentId);
-        setAgents([picked, ...agents]);
-      }
+      // switchAgent fetches the agent by id internally, so it works even
+      // when the target isn't in any currently-loaded page.
       await switchAgent(agentId);
       navigate('/studio');
     } catch (err) {

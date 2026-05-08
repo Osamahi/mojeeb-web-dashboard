@@ -96,9 +96,17 @@ export const handlers = [
 
   // ========== Agents Endpoints ==========
 
-  // Get all agents
+  // Cursor-paginated agents listing (matches the production response shape)
   http.get(`${API_URL}/api/agents`, () => {
-    return HttpResponse.json([mockAgent]);
+    return HttpResponse.json({
+      success: true,
+      message: null,
+      data: {
+        items: [mockAgent],
+        has_more: false,
+        next_cursor: null,
+      },
+    });
   }),
 
   // Get single agent

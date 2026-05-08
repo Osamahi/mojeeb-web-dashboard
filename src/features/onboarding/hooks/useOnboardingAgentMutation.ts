@@ -30,7 +30,6 @@ interface UseOnboardingAgentMutationOptions {
 
 export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationOptions) => {
   const queryClient = useQueryClient();
-  const addAgent = useAgentStore((state) => state.addAgent);
   const setGlobalSelectedAgent = useAgentStore((state) => state.setGlobalSelectedAgent);
 
   return useMutation<CreateOnboardingAgentResult, Error, CreateOnboardingAgentParams>({
@@ -48,14 +47,16 @@ export const useOnboardingAgentMutation = (options?: UseOnboardingAgentMutationO
 
       logger.info('✅ Agent created', { agentId: agent.id });
 
-      // Add to store and select globally
-      addAgent(agent);
+      // Select the new agent globally so the dashboard renders it on next paint.
+      // The agents-list cache lives in React Query (useInfiniteAgents) and is
+      // invalidated below so consumers pick up the new agent.
       setGlobalSelectedAgent(agent);
 
       return { agent };
     },
     onSuccess: (data) => {
-      // Invalidate queries so dashboard has fresh data
+      // Invalidate ALL agents queries (flat + cursor-paginated views) so any
+      // open agent list refetches and shows the newly created agent.
       queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
       toast.success('Agent created successfully!');
 

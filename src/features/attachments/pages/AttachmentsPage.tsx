@@ -16,7 +16,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CreateAttachmentModal } from '../components/CreateAttachmentModal';
 import { EditAttachmentModal } from '../components/EditAttachmentModal';
 import { UploadMediaModal } from '../components/UploadMediaModal';
-import { useAgentStore } from '@/features/agents/stores/agentStore';
+import { useInfiniteAgents } from '@/features/agents/hooks/useInfiniteAgents';
 
 export function AttachmentsPage() {
   const { t } = useTranslation();
@@ -29,8 +29,21 @@ export function AttachmentsPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  // Build agent name map from store
-  const agents = useAgentStore((state) => state.agents);
+  // Build agent name map from cursor-paginated agents. Auto-loads all pages
+  // so the table can label every agent regardless of which page it lands on.
+  const {
+    agents,
+    hasNextPage: agentsHasNextPage,
+    fetchNextPage: fetchNextAgentsPage,
+    isFetchingNextPage: isFetchingNextAgentsPage,
+  } = useInfiniteAgents();
+
+  useEffect(() => {
+    if (agentsHasNextPage && !isFetchingNextAgentsPage) {
+      fetchNextAgentsPage();
+    }
+  }, [agentsHasNextPage, isFetchingNextAgentsPage, fetchNextAgentsPage]);
+
   const agentNameMap = useMemo(() => {
     const map: Record<string, string> = {};
     for (const agent of agents) {

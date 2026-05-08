@@ -21,6 +21,18 @@ export const queryKeys = {
   agents: () => ['agents'] as const,
 
   /**
+   * Query key for cursor-paginated agents listings. Extends ['agents'] so
+   * cache invalidation on the base key still flushes filtered views.
+   */
+  agentsInfinite: (filters: {
+    searchTerm?: string;
+    status?: string;
+    modelProvider?: string;
+    platformTarget?: string;
+    planCode?: string;
+  }) => ['agents', 'infinite', filters] as const,
+
+  /**
    * Query key for fetching a single agent by ID
    * @param {string | undefined} agentId - The agent ID
    * @returns {readonly ['agent', string | undefined]} Query key tuple

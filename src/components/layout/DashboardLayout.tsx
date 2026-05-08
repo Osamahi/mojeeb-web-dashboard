@@ -1,35 +1,32 @@
 import { useRef, useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { OnboardingPromptBanner } from './OnboardingPromptBanner';
 import { PhoneCollectionModal } from '@/features/auth/components/PhoneCollectionModal';
 import { PendingInvitationModal } from '@/features/organizations/components/PendingInvitationModal';
 import { useCheckPendingInvitations } from '@/features/organizations/hooks/useCheckPendingInvitations';
-import { agentService } from '@/features/agents/services/agentService';
-import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useConversationStore } from '@/features/conversations/stores/conversationStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { sessionHelper } from '@/lib/sessionHelper';
-import { queryKeys } from '@/lib/queryKeys';
 import { useAnalytics } from '@/lib/analytics';
 
 export const DashboardLayout = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const selectedConversation = useConversationStore((state) => state.selectedConversation);
-  const { setAgents, initializeAgentSelection, setLoading } = useAgentStore();
   const { user } = useAuthStore();
-  const hasInitialized = useRef(false);
   const hasProcessedPhoneCheck = useRef<string | null>(null); // Track which user we've processed
   const [showPhoneModal, setShowPhoneModal] = useState(false);
 
   // Check for pending invitations when dashboard loads
   // This ensures invitations are displayed even when user navigates directly
   useCheckPendingInvitations();
+
+  // No eager agent fetch here. Agents are loaded lazily by the components
+  // that need them (GlobalAgentSelector, AgentsPage, OnboardingPromptBanner)
+  // via useInfiniteAgents — pages that don't display agents pay zero cost.
 
   // Track first dashboard visit (funnel activation signal)
   const { track } = useAnalytics();
@@ -70,42 +67,6 @@ export const DashboardLayout = () => {
     // Mark this user as processed
     hasProcessedPhoneCheck.current = user.id;
   }, [user]);
-
-  // Fetch agents on mount - critical for GlobalAgentSelector to work on refresh
-  const { data: agents, isLoading } = useQuery({
-    queryKey: queryKeys.agents(),
-    queryFn: () => agentService.getAgents(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: (failureCount, error: AxiosError) => {
-      // Don't retry on authentication errors (401, 403)
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
-        return false;
-      }
-      // Don't retry on rate limiting
-      if (error?.response?.status === 429) {
-        return false;
-      }
-      // Retry other errors up to 2 times
-      return failureCount < 2;
-    },
-  });
-
-  // Sync agents and loading state to store whenever data changes
-  useEffect(() => {
-    // Sync loading state
-    setLoading(isLoading);
-
-    // Sync agents once loaded
-    if (!isLoading && agents) {
-      setAgents(agents);  // Always sync agents to store
-      if (!hasInitialized.current) {
-        initializeAgentSelection();  // Only initialize selection once
-        hasInitialized.current = true;
-      }
-    }
-    // Zustand functions are stable - no need in dependency array
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, agents]);
 
   return (
     <>
