@@ -52,23 +52,16 @@ export interface ApiIntegrationConnectionResponse {
 }
 
 /**
- * Create connection request
+ * Create connection request. The OAuth session ID is returned by
+ * `POST /api/integrations/google/oauth-sessions` after the browser-side GIS
+ * auth-code flow completes.
  */
 export interface CreateConnectionRequest {
   connectorType: ConnectorType;
   name: string;
   description?: string;
   config: Record<string, any>;
-  tempConnectionId: string;
-}
-
-/**
- * Update connection request
- */
-export interface UpdateConnectionRequest {
-  name?: string;
-  description?: string;
-  config?: Record<string, any>;
+  oauthSessionId: string;
 }
 
 /**
@@ -79,14 +72,6 @@ export interface TestConnectionResult {
   message: string | null;
   error: string | null;
   metadata: Record<string, any> | null;
-}
-
-/**
- * Connector type info from backend
- */
-export interface ConnectorInfo {
-  type: ConnectorType;
-  label: string;
 }
 
 /**

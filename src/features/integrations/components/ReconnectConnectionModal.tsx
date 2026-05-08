@@ -1,53 +1,54 @@
 import { useState, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import { BaseModal } from '@/components/ui/BaseModal';
-import { useCreateConnection } from '../hooks/useIntegrations';
+import { useReconnectConnection } from '../hooks/useIntegrations';
 import { exchangeAuthCode, getOAuthSessionAccessToken } from '../services/googleOAuthApi';
 import { openSpreadsheetPicker, type PickedSpreadsheet } from '../utils/googlePicker';
 import { requestGoogleAuthCode } from '../utils/googleAuth';
-import { FileSpreadsheet, CheckCircle2, X, Loader2 } from 'lucide-react';
+import { FileSpreadsheet, CheckCircle2, X, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import type { IntegrationConnection } from '../types';
 
 const GOOGLE_DRIVE_FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
-interface CreateConnectionModalProps {
+interface ReconnectConnectionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  connection: IntegrationConnection;
 }
 
-export default function CreateConnectionModal({ isOpen, onClose }: CreateConnectionModalProps) {
-  const { t } = useTranslation();
-  const createMutation = useCreateConnection();
+/**
+ * Reconnect modal — refresh OAuth tokens for an existing connection by re-running the GIS code
+ * flow + Picker. The user MUST pick the same spreadsheet that the connection was originally bound
+ * to; picking a different sheet is rejected so column mappings on dependent actions stay valid.
+ */
+export default function ReconnectConnectionModal({ isOpen, onClose, connection }: ReconnectConnectionModalProps) {
+  const reconnectMutation = useReconnectConnection();
 
-  const connectorType = 'google_sheets' as const;
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [defaultTab, setDefaultTab] = useState('');
   const [oauthSessionId, setOauthSessionId] = useState<string | null>(null);
   const [pickedSheet, setPickedSheet] = useState<PickedSpreadsheet | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isPicking, setIsPicking] = useState(false);
+  const [pickerError, setPickerError] = useState<string | null>(null);
 
   const developerKey = import.meta.env.VITE_GOOGLE_API_KEY as string | undefined;
   const appId = import.meta.env.VITE_GOOGLE_PROJECT_NUMBER as string | undefined;
   const integrationsClientId = import.meta.env.VITE_GOOGLE_INTEGRATIONS_CLIENT_ID as string | undefined;
+  const expectedSheetId = connection.config?.spreadsheet_id as string | undefined;
 
   const resetForm = useCallback(() => {
-    setName('');
-    setDescription('');
-    setDefaultTab('');
     setOauthSessionId(null);
     setPickedSheet(null);
     setIsConnecting(false);
     setIsPicking(false);
+    setPickerError(null);
   }, []);
 
   const handleClose = useCallback(() => {
-    if (!createMutation.isPending && !isConnecting && !isPicking) {
+    if (!reconnectMutation.isPending && !isConnecting && !isPicking) {
       resetForm();
       onClose();
     }
-  }, [createMutation.isPending, isConnecting, isPicking, resetForm, onClose]);
+  }, [reconnectMutation.isPending, isConnecting, isPicking, resetForm, onClose]);
 
   const handleConnectGoogle = useCallback(async () => {
     if (!integrationsClientId) {
@@ -55,15 +56,14 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
       return;
     }
     setIsConnecting(true);
+    setPickerError(null);
     try {
-      // Browser-side GIS auth-code flow — required for Drive Picker drive.file binding to work.
       const code = await requestGoogleAuthCode({
         clientId: integrationsClientId,
         scope: GOOGLE_DRIVE_FILE_SCOPE,
       });
       const newSessionId = await exchangeAuthCode(code);
       setOauthSessionId(newSessionId);
-      toast.success('Google account connected');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to connect Google account';
       toast.error(message);
@@ -79,12 +79,22 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
       return;
     }
     setIsPicking(true);
+    setPickerError(null);
     try {
       const oauthToken = await getOAuthSessionAccessToken(oauthSessionId);
       const result = await openSpreadsheetPicker({ oauthToken, developerKey, appId });
       if (result) {
+        if (expectedSheetId && result.id !== expectedSheetId) {
+          // User picked a different sheet — reject to preserve column mapping integrity on
+          // dependent actions. They can delete the connection and create a new one if they
+          // genuinely want to switch sheets.
+          setPickerError(
+            `This connection is bound to a different spreadsheet. Please pick the original sheet, or delete the connection and create a new one to switch.`
+          );
+          setPickedSheet(null);
+          return;
+        }
         setPickedSheet(result);
-        if (!name.trim()) setName(result.name);
       }
     } catch (error) {
       console.error('Picker failed', error);
@@ -92,83 +102,61 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
     } finally {
       setIsPicking(false);
     }
-  }, [oauthSessionId, developerKey, name]);
-
-  const clearConnection = useCallback(() => {
-    setOauthSessionId(null);
-    setPickedSheet(null);
-  }, []);
-
-  const clearPickedSheet = useCallback(() => {
-    setPickedSheet(null);
-  }, []);
+  }, [oauthSessionId, developerKey, appId, expectedSheetId]);
 
   const handleSubmit = useCallback(async () => {
-    if (!name.trim() || !pickedSheet || !oauthSessionId) return;
-
+    if (!pickedSheet || !oauthSessionId) return;
     try {
-      await createMutation.mutateAsync({
-        connectorType,
-        name: name.trim(),
-        description: description.trim() || undefined,
-        config: {
-          spreadsheet_id: pickedSheet.id,
-          default_tab: defaultTab.trim() || undefined,
-        },
+      await reconnectMutation.mutateAsync({
+        connectionId: connection.id,
         oauthSessionId,
       });
       resetForm();
       onClose();
     } catch {
-      // Error handled in hook
+      // Error toast handled in hook
     }
-  }, [connectorType, name, description, pickedSheet, defaultTab, oauthSessionId, createMutation, resetForm, onClose]);
+  }, [pickedSheet, oauthSessionId, reconnectMutation, connection.id, resetForm, onClose]);
 
-  const isValid = name.trim() && pickedSheet && oauthSessionId;
+  const isValid = !!pickedSheet && !!oauthSessionId && !pickerError;
 
   return (
     <BaseModal
       isOpen={isOpen}
       onClose={handleClose}
-      title={t('integrations.create_connection')}
-      subtitle={t('integrations.create_connection_subtitle')}
+      title="Reconnect Google Account"
+      subtitle={`Refresh authorization for "${connection.name}"`}
       maxWidth="lg"
-      isLoading={createMutation.isPending}
-      closable={!createMutation.isPending && !isConnecting && !isPicking}
+      isLoading={reconnectMutation.isPending}
+      closable={!reconnectMutation.isPending && !isConnecting && !isPicking}
     >
       <div className="space-y-5">
-        {/* Connector Type - visual selector */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-2">
-            {t('integrations.connector_type')}
-          </label>
-          <div className="flex items-center gap-3 rounded-xl border-2 border-primary-200 bg-primary-50/50 px-4 py-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-100">
-              <FileSpreadsheet className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-neutral-900">Google Sheets</p>
-              <p className="text-xs text-neutral-500">{t('integrations.google_sheets_desc')}</p>
+        {/* Connection summary */}
+        <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <FileSpreadsheet className="h-5 w-5 shrink-0 text-green-600" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-neutral-900">{connection.name}</p>
+              <p className="truncate font-mono text-xs text-neutral-500">{expectedSheetId}</p>
             </div>
           </div>
         </div>
 
-        {/* Step 1: Google Account Connection */}
+        {/* Step 1: Re-authenticate */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">
-            {t('integrations.google_account')} <span className="text-red-500">*</span>
+            Google Account <span className="text-red-500">*</span>
           </label>
-
           {!oauthSessionId ? (
             <button
               onClick={handleConnectGoogle}
-              disabled={isConnecting || createMutation.isPending}
+              disabled={isConnecting || reconnectMutation.isPending}
               className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-4 py-4 text-sm font-medium text-neutral-700 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isConnecting ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin text-primary-500" />
-                  {t('integrations.connecting')}
+                  Connecting…
                 </>
               ) : (
                 <>
@@ -178,7 +166,7 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                   </svg>
-                  {t('integrations.connect_with_google')}
+                  Reconnect with Google
                 </>
               )}
             </button>
@@ -186,12 +174,11 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
             <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
               <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-green-800">{t('integrations.google_connected')}</p>
-                <p className="text-xs text-green-600">{t('integrations.google_connected_hint')}</p>
+                <p className="text-sm font-medium text-green-800">Google account connected</p>
               </div>
               <button
-                onClick={clearConnection}
-                disabled={createMutation.isPending}
+                onClick={() => { setOauthSessionId(null); setPickedSheet(null); setPickerError(null); }}
+                disabled={reconnectMutation.isPending}
                 className="shrink-0 rounded-md p-1 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100"
               >
                 <X className="h-4 w-4" />
@@ -200,17 +187,16 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
           )}
         </div>
 
-        {/* Step 2: Pick spreadsheet (only after Google is connected) */}
+        {/* Step 2: Re-bind same sheet via Picker */}
         {oauthSessionId && (
           <div>
             <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Spreadsheet <span className="text-red-500">*</span>
+              Confirm spreadsheet <span className="text-red-500">*</span>
             </label>
-
             {!pickedSheet ? (
               <button
                 onClick={handlePickSheet}
-                disabled={isPicking || createMutation.isPending}
+                disabled={isPicking || reconnectMutation.isPending}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-4 py-4 text-sm font-medium text-neutral-700 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isPicking ? (
@@ -221,7 +207,7 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
                 ) : (
                   <>
                     <FileSpreadsheet className="h-5 w-5 text-green-600" />
-                    Pick a spreadsheet
+                    Pick the same spreadsheet again
                   </>
                 )}
               </button>
@@ -232,82 +218,37 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
                   <p className="truncate text-sm font-medium text-green-800">{pickedSheet.name}</p>
                   <p className="truncate font-mono text-xs text-green-600">{pickedSheet.id}</p>
                 </div>
-                <button
-                  onClick={clearPickedSheet}
-                  disabled={createMutation.isPending}
-                  className="shrink-0 rounded-md p-1 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100"
-                  aria-label="Pick a different spreadsheet"
-                >
-                  <X className="h-4 w-4" />
-                </button>
               </div>
             )}
+
+            {pickerError && (
+              <div className="mt-2 flex items-start gap-2 rounded-md bg-amber-50 px-3 py-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
+                <p className="text-xs text-amber-700">{pickerError}</p>
+              </div>
+            )}
+
             <p className="mt-1 text-xs text-neutral-400">
-              We only get access to the spreadsheet you select. Nothing else in your Drive.
+              For data integrity, reconnecting requires picking the same spreadsheet. To switch sheets, delete this connection and create a new one.
             </p>
           </div>
         )}
 
-        {/* Connection Name */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            {t('integrations.connection_name')} <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t('integrations.connection_name_placeholder')}
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            disabled={createMutation.isPending}
-          />
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            {t('integrations.description')}
-          </label>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={t('integrations.description_placeholder')}
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            disabled={createMutation.isPending}
-          />
-        </div>
-
-        {/* Default Tab */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            {t('integrations.default_tab')}
-          </label>
-          <input
-            type="text"
-            value={defaultTab}
-            onChange={(e) => setDefaultTab(e.target.value)}
-            placeholder={t('integrations.default_tab_placeholder')}
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            disabled={createMutation.isPending}
-          />
-        </div>
-
-        {/* Submit */}
+        {/* Footer */}
         <div className="flex justify-end gap-3 pt-2 border-t border-neutral-100">
           <button
             onClick={handleClose}
-            disabled={createMutation.isPending}
+            disabled={reconnectMutation.isPending}
             className="rounded-lg border border-neutral-300 px-4 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
           >
-            {t('common.cancel')}
+            Cancel
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!isValid || createMutation.isPending}
+            disabled={!isValid || reconnectMutation.isPending}
             className="rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {createMutation.isPending ? t('common.saving') : t('integrations.create_connection')}
+            {reconnectMutation.isPending ? 'Reconnecting…' : 'Reconnect'}
           </button>
         </div>
       </div>

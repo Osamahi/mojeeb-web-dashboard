@@ -1,6 +1,9 @@
 /**
- * Integration service for API communication
- * Handles snake_case (backend) ↔ camelCase (frontend) transformation
+ * Integration service for connection CRUD against `/api/integrations`.
+ * Handles snake_case (backend) ↔ camelCase (frontend) transformation.
+ *
+ * Google OAuth one-shot calls (auth-code exchange, picker-token fetch) live in
+ * `./googleOAuthApi.ts` to keep the OAuth handoff visible separately from CRUD.
  */
 
 import api from '@/lib/api';
@@ -8,15 +11,10 @@ import type {
   IntegrationConnection,
   ApiIntegrationConnectionResponse,
   CreateConnectionRequest,
-  UpdateConnectionRequest,
   TestConnectionResult,
-  ConnectorInfo,
   SheetMetadataResponse,
 } from '../types';
 
-/**
- * Transform snake_case API response to camelCase frontend model
- */
 function transformConnection(apiConn: ApiIntegrationConnectionResponse): IntegrationConnection {
   return {
     id: apiConn.id,
@@ -38,17 +36,6 @@ function transformConnection(apiConn: ApiIntegrationConnectionResponse): Integra
 }
 
 class IntegrationService {
-  /**
-   * Get available connector types
-   */
-  async getConnectorTypes(): Promise<ConnectorInfo[]> {
-    const { data } = await api.get<{ data: ConnectorInfo[] }>('/api/integrations/connectors');
-    return data.data;
-  }
-
-  /**
-   * Get all integration connections for the current organization
-   */
   async getConnections(): Promise<IntegrationConnection[]> {
     const { data } = await api.get<{ data: ApiIntegrationConnectionResponse[] }>(
       '/api/integrations/connections'
@@ -56,9 +43,6 @@ class IntegrationService {
     return data.data.map(transformConnection);
   }
 
-  /**
-   * Get a single connection by ID
-   */
   async getConnection(connectionId: string): Promise<IntegrationConnection> {
     const { data } = await api.get<{ data: ApiIntegrationConnectionResponse }>(
       `/api/integrations/connections/${connectionId}`
@@ -66,16 +50,13 @@ class IntegrationService {
     return transformConnection(data.data);
   }
 
-  /**
-   * Create a new integration connection
-   */
   async createConnection(request: CreateConnectionRequest): Promise<IntegrationConnection> {
     const payload = {
       connector_type: request.connectorType,
       name: request.name,
       description: request.description,
       config: request.config,
-      temp_connection_id: request.tempConnectionId,
+      oauth_session_id: request.oauthSessionId,
     };
     const { data } = await api.post<{ data: ApiIntegrationConnectionResponse }>(
       '/api/integrations/connections',
@@ -84,56 +65,22 @@ class IntegrationService {
     return transformConnection(data.data);
   }
 
-  /**
-   * Update an existing connection
-   */
-  async updateConnection(
-    connectionId: string,
-    request: UpdateConnectionRequest
-  ): Promise<IntegrationConnection> {
-    const payload: Record<string, any> = {};
-    if (request.name !== undefined) payload.name = request.name;
-    if (request.description !== undefined) payload.description = request.description;
-    if (request.config !== undefined) payload.config = request.config;
-
-    const { data } = await api.put<{ data: ApiIntegrationConnectionResponse }>(
-      `/api/integrations/connections/${connectionId}`,
-      payload
-    );
-    return transformConnection(data.data);
-  }
-
-  /**
-   * Delete an integration connection
-   */
   async deleteConnection(connectionId: string): Promise<void> {
     await api.delete(`/api/integrations/connections/${connectionId}`);
   }
 
   /**
-   * Initiate Google OAuth flow — returns the authorization URL for the popup
+   * Reconnect an existing integration connection with fresh OAuth tokens. The OAuth session ID
+   * is obtained from `googleOAuthApi.exchangeAuthCode` — same handoff as create.
    */
-  async initiateGoogleOAuth(): Promise<string> {
-    const { data } = await api.get<{ data: { authorization_url: string } }>(
-      '/api/integrations/google/authorize'
-    );
-    return data.data.authorization_url;
-  }
-
-  /**
-   * Reconnect an existing integration connection with fresh OAuth tokens
-   */
-  async reconnectConnection(connectionId: string, tempConnectionId: string): Promise<IntegrationConnection> {
+  async reconnectConnection(connectionId: string, oauthSessionId: string): Promise<IntegrationConnection> {
     const { data } = await api.post<{ data: ApiIntegrationConnectionResponse }>(
       `/api/integrations/connections/${connectionId}/reconnect`,
-      { temp_connection_id: tempConnectionId }
+      { oauth_session_id: oauthSessionId }
     );
     return transformConnection(data.data);
   }
 
-  /**
-   * Test an integration connection
-   */
   async testConnection(connectionId: string): Promise<TestConnectionResult> {
     const { data } = await api.post<{ data: TestConnectionResult }>(
       `/api/integrations/connections/${connectionId}/test`
@@ -141,9 +88,6 @@ class IntegrationService {
     return data.data;
   }
 
-  /**
-   * Get spreadsheet metadata (tabs + column headers) for a connection
-   */
   async getSheetMetadata(connectionId: string): Promise<SheetMetadataResponse> {
     const { data } = await api.get<{ data: SheetMetadataResponse }>(
       `/api/integrations/connections/${connectionId}/sheets`

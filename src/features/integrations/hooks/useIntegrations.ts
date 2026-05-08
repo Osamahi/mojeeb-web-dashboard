@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { integrationService } from '../services/integrationService';
-import type { CreateConnectionRequest, UpdateConnectionRequest } from '../types';
+import type { CreateConnectionRequest } from '../types';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/queryKeys';
 
@@ -16,29 +16,6 @@ export function useIntegrationConnections() {
     queryKey: queryKeys.integrationConnections(),
     queryFn: () => integrationService.getConnections(),
     staleTime: 5 * 60 * 1000,
-  });
-}
-
-/**
- * Fetch available connector types
- */
-export function useConnectorTypes() {
-  return useQuery({
-    queryKey: ['connector-types'],
-    queryFn: () => integrationService.getConnectorTypes(),
-    staleTime: 30 * 60 * 1000, // rarely changes
-  });
-}
-
-/**
- * Initiate Google OAuth authorization — returns the authorization URL
- */
-export function useInitiateGoogleOAuth() {
-  return useMutation({
-    mutationFn: () => integrationService.initiateGoogleOAuth(),
-    onError: () => {
-      toast.error('Failed to initiate Google authorization');
-    },
   });
 }
 
@@ -62,33 +39,14 @@ export function useCreateConnection() {
 }
 
 /**
- * Update an existing integration connection
- */
-export function useUpdateConnection() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, request }: { id: string; request: UpdateConnectionRequest }) =>
-      integrationService.updateConnection(id, request),
-    onSuccess: () => {
-      toast.success('Connection updated successfully');
-      queryClient.invalidateQueries({ queryKey: queryKeys.integrationConnections() });
-    },
-    onError: () => {
-      toast.error('Failed to update connection');
-    },
-  });
-}
-
-/**
  * Reconnect an existing integration connection with fresh OAuth tokens
  */
 export function useReconnectConnection() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ connectionId, tempConnectionId }: { connectionId: string; tempConnectionId: string }) =>
-      integrationService.reconnectConnection(connectionId, tempConnectionId),
+    mutationFn: ({ connectionId, oauthSessionId }: { connectionId: string; oauthSessionId: string }) =>
+      integrationService.reconnectConnection(connectionId, oauthSessionId),
     onSuccess: () => {
       toast.success('Connection reconnected successfully');
       queryClient.invalidateQueries({ queryKey: queryKeys.integrationConnections() });
