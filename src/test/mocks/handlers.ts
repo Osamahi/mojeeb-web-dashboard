@@ -3,12 +3,17 @@ import { http, HttpResponse } from 'msw';
 // Mock API URL - use a test URL since env won't be available in tests
 const API_URL = 'http://localhost:5267';
 
-// Mock data
+// Mock data — wire shape from the backend (snake_case).
+// Optional fields (phone, avatar_url, o_auth_provider, o_auth_provider_user_id)
+// are intentionally omitted so transformUser maps them to `undefined`, which
+// is what the User type expects when the backend doesn't provide them.
 const mockUser = {
   id: 'user-123',
   email: 'test@example.com',
   name: 'Test User',
   role: 'SuperAdmin',
+  created_at: '2026-05-08T08:00:00.000Z',
+  updated_at: '2026-05-08T08:00:00.000Z',
 };
 
 const mockAgent = {

@@ -40,10 +40,10 @@ export const testSupabaseConnection = async (): Promise<boolean> => {
 
 /**
  * Update Supabase client auth session with fresh tokens
- * Call this after token refresh to keep Supabase real-time channels authenticated
+ * Call this after token refresh to keep Supabase real-time channels authenticated.
  *
- * Note: Even though we use custom JWT auth and persistSession=false,
- * updating the session helps Supabase real-time maintain authenticated connections
+ * Even though we use custom JWT auth and persistSession=false, updating the
+ * session helps Supabase real-time maintain authenticated connections.
  *
  * @param accessToken - The fresh access token
  * @param refreshToken - The fresh refresh token
@@ -53,23 +53,20 @@ export const updateSupabaseAuth = async (
   refreshToken: string
 ): Promise<void> => {
   try {
-    console.log('[Supabase] Updating auth session with fresh tokens');
-
-    // Update Supabase auth session
     const { error } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
     });
 
     if (error) {
-      logger.warn('Failed to update Supabase auth session', error);
-      console.warn('[Supabase] Failed to update auth session:', error);
+      logger.warn('[Supabase] Failed to update auth session', error);
     } else {
-      console.log('[Supabase] Auth session updated successfully');
-      logger.info('Supabase auth session updated');
+      logger.debug('[Supabase] Auth session updated successfully');
     }
   } catch (error) {
-    logger.error('Error updating Supabase auth session', error instanceof Error ? error : new Error(String(error)));
-    console.error('[Supabase] Error updating auth session:', error);
+    logger.error(
+      '[Supabase] Error updating auth session',
+      error instanceof Error ? error : new Error(String(error)),
+    );
   }
 };

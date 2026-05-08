@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Role, type User } from '../types/auth.types';
+import type { User } from '../types/auth.types';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/test/mocks/server';
 
@@ -7,37 +7,36 @@ import { server } from '@/test/mocks/server';
 const mocks = vi.hoisted(() => ({
   mockSetAuth: vi.fn(),
   mockSetUser: vi.fn(),
-  mockLogout: vi.fn(),
   mockIsAuthenticated: vi.fn(() => false),
   mockUser: vi.fn(() => null),
-  mockGetAgents: vi.fn(),
-  mockInitializeAgentSelection: vi.fn(),
 }));
 
-// Mock the stores
+// Mock the auth store. Logout is intentionally not stubbed here — these tests
+// don't exercise logout (logoutService has its own surface).
 vi.mock('../stores/authStore', () => ({
   useAuthStore: {
     getState: () => ({
       setAuth: mocks.mockSetAuth,
       setUser: mocks.mockSetUser,
-      logout: mocks.mockLogout,
       isAuthenticated: mocks.mockIsAuthenticated(),
       user: mocks.mockUser(),
     }),
   },
 }));
 
-// Mock agent service and store
+// Stub agent service and store. authService.completeAuthFlow imports them at
+// module load — the stubs prevent ReferenceError; tests here don't exercise
+// completeAuthFlow so the inner functions stay no-op.
 vi.mock('@/features/agents/services/agentService', () => ({
   agentService: {
-    getAgents: mocks.mockGetAgents,
+    getAgents: vi.fn(),
   },
 }));
 
 vi.mock('@/features/agents/stores/agentStore', () => ({
   useAgentStore: {
     getState: () => ({
-      initializeAgentSelection: mocks.mockInitializeAgentSelection,
+      initializeAgentSelection: vi.fn(),
     }),
   },
 }));
@@ -78,56 +77,61 @@ vi.mock('@/lib/api', async () => {
 import { authService } from './authService';
 
 describe('authService', () => {
-  const mockUserData: User = {
+  // What the BACKEND returns — snake_case, the wire shape consumed by transformUser.
+  const apiUser = {
     id: 'user-123',
     email: 'test@example.com',
     name: 'Test User',
-    role: 'SuperAdmin' as any, // API returns string, not enum
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    role: 'SuperAdmin' as const,
+    phone: undefined,
+    avatar_url: undefined,
+    created_at: '2026-05-08T08:00:00.000Z',
+    updated_at: '2026-05-08T08:00:00.000Z',
+    o_auth_provider: undefined,
+    o_auth_provider_user_id: undefined,
+  };
+
+  // What the FRONTEND expects after transformUser maps the wire shape.
+  const expectedUser: User = {
+    id: 'user-123',
+    email: 'test@example.com',
+    name: 'Test User',
+    role: 'SuperAdmin' as any, // API returns string, not enum value
+    phone: undefined,
+    avatarUrl: undefined,
+    createdAt: '2026-05-08T08:00:00.000Z',
+    updatedAt: '2026-05-08T08:00:00.000Z',
+    oauthProvider: undefined,
+    oauthProviderUserId: undefined,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset mock implementations
-    mocks.mockGetAgents.mockResolvedValue([]);
-    mocks.mockInitializeAgentSelection.mockResolvedValue(undefined);
   });
+
+  // Note: login/oauth/register only authenticate the user and write tokens.
+  // Post-auth steps (agent fetch, agent selection, navigation) are handled by
+  // the `usePostAuthNavigation` hook calling `authService.completeAuthFlow`.
+  // The agent-related assertions belong in completeAuthFlow tests.
 
   describe('login', () => {
     it('should login successfully and update auth store', async () => {
-      const credentials = {
+      const result = await authService.login({
         email: 'test@example.com',
         password: 'password123',
-      };
-
-      const result = await authService.login(credentials);
-
-      // Should return properly transformed auth response
-      expect(result).toMatchObject({
-        accessToken: 'mock-access-token',
-        refreshToken: 'mock-refresh-token',
-        user: expect.objectContaining({
-          id: 'user-123',
-          email: 'test@example.com',
-          name: 'Test User',
-        }),
       });
 
-      // Should update auth store
-      expect(mocks.mockSetAuth).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'user-123',
-          email: 'test@example.com',
-          name: 'Test User',
-        }),
-        'mock-access-token',
-        'mock-refresh-token'
-      );
+      expect(result).toEqual({
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+        user: expectedUser,
+      });
 
-      // Should initialize agent data
-      expect(mocks.mockGetAgents).toHaveBeenCalledOnce();
-      expect(mocks.mockInitializeAgentSelection).toHaveBeenCalledOnce();
+      expect(mocks.mockSetAuth).toHaveBeenCalledWith(
+        expectedUser,
+        'mock-access-token',
+        'mock-refresh-token',
+      );
     });
 
     it('should handle login failure', async () => {
@@ -135,47 +139,19 @@ describe('authService', () => {
         http.post('http://localhost:5267/api/auth/login', () => {
           return HttpResponse.json(
             { message: 'Invalid credentials' },
-            { status: 401 }
+            { status: 401 },
           );
-        })
+        }),
       );
 
       await expect(
         authService.login({
           email: 'wrong@example.com',
           password: 'wrongpass',
-        })
+        }),
       ).rejects.toThrow();
 
-      // Should not update auth store on failure
       expect(mocks.mockSetAuth).not.toHaveBeenCalled();
-      expect(mocks.mockGetAgents).not.toHaveBeenCalled();
-    });
-
-    it('should complete login even if agent initialization fails', async () => {
-      mocks.mockGetAgents.mockRejectedValue(new Error('Agent fetch failed'));
-
-      const result = await authService.login({
-        email: 'test@example.com',
-        password: 'password123',
-      });
-
-      // Should still return auth response
-      expect(result).toMatchObject({
-        accessToken: 'mock-access-token',
-        refreshToken: 'mock-refresh-token',
-        user: expect.objectContaining({
-          id: 'user-123',
-          email: 'test@example.com',
-          name: 'Test User',
-        }),
-      });
-
-      // Should still update auth store
-      expect(mocks.mockSetAuth).toHaveBeenCalled();
-
-      // Agent initialization should have been attempted
-      expect(mocks.mockGetAgents).toHaveBeenCalled();
     });
   });
 
@@ -189,29 +165,32 @@ describe('authService', () => {
             return HttpResponse.json({
               access_token: 'google-access-token',
               refresh_token: 'google-refresh-token',
-              user: mockUserData,
+              user: apiUser,
             });
           }
 
           return HttpResponse.json({ message: 'Invalid provider' }, { status: 400 });
-        })
+        }),
       );
 
-      const result = await authService.loginWithGoogle('google-oauth-token');
+      const result = await authService.loginWithGoogle(
+        'google-oauth-token',
+        apiUser.email,
+        apiUser.name,
+        '',
+      );
 
       expect(result).toEqual({
         accessToken: 'google-access-token',
         refreshToken: 'google-refresh-token',
-        user: mockUserData,
+        user: expectedUser,
       });
 
       expect(mocks.mockSetAuth).toHaveBeenCalledWith(
-        mockUserData,
+        expectedUser,
         'google-access-token',
-        'google-refresh-token'
+        'google-refresh-token',
       );
-
-      expect(mocks.mockGetAgents).toHaveBeenCalledOnce();
     });
 
     it('should handle Google OAuth failure', async () => {
@@ -219,13 +198,13 @@ describe('authService', () => {
         http.post('http://localhost:5267/api/auth/oauth', () => {
           return HttpResponse.json(
             { message: 'OAuth authentication failed' },
-            { status: 401 }
+            { status: 401 },
           );
-        })
+        }),
       );
 
       await expect(
-        authService.loginWithGoogle('invalid-token')
+        authService.loginWithGoogle('invalid-token', apiUser.email, apiUser.name, ''),
       ).rejects.toThrow();
 
       expect(mocks.mockSetAuth).not.toHaveBeenCalled();
@@ -242,12 +221,12 @@ describe('authService', () => {
             return HttpResponse.json({
               access_token: 'apple-access-token',
               refresh_token: 'apple-refresh-token',
-              user: mockUserData,
+              user: apiUser,
             });
           }
 
           return HttpResponse.json({ message: 'Invalid provider' }, { status: 400 });
-        })
+        }),
       );
 
       const result = await authService.loginWithApple('apple-id-token');
@@ -255,13 +234,13 @@ describe('authService', () => {
       expect(result).toEqual({
         accessToken: 'apple-access-token',
         refreshToken: 'apple-refresh-token',
-        user: mockUserData,
+        user: expectedUser,
       });
 
       expect(mocks.mockSetAuth).toHaveBeenCalledWith(
-        mockUserData,
+        expectedUser,
         'apple-access-token',
-        'apple-refresh-token'
+        'apple-refresh-token',
       );
     });
   });
@@ -272,16 +251,19 @@ describe('authService', () => {
         http.post('http://localhost:5267/api/auth/register', async ({ request }) => {
           const body = (await request.json()) as any;
 
-          return HttpResponse.json({
-            accessToken: 'new-access-token',
-            refreshToken: 'new-refresh-token',
-            user: {
-              ...mockUserData,
-              email: body.email,
-              name: body.name,
+          return HttpResponse.json(
+            {
+              access_token: 'new-access-token',
+              refresh_token: 'new-refresh-token',
+              user: {
+                ...apiUser,
+                email: body.email,
+                name: body.name,
+              },
             },
-          }, { status: 201 });
-        })
+            { status: 201 },
+          );
+        }),
       );
 
       const registerData = {
@@ -294,8 +276,16 @@ describe('authService', () => {
 
       expect(result.user.email).toBe(registerData.email);
       expect(result.user.name).toBe(registerData.name);
-      expect(mocks.mockSetAuth).toHaveBeenCalled();
-      expect(mocks.mockGetAgents).toHaveBeenCalled();
+      expect(result.accessToken).toBe('new-access-token');
+      expect(result.refreshToken).toBe('new-refresh-token');
+      expect(mocks.mockSetAuth).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: registerData.email,
+          name: registerData.name,
+        }),
+        'new-access-token',
+        'new-refresh-token',
+      );
     });
 
     it('should handle registration failure for duplicate email', async () => {
@@ -303,9 +293,9 @@ describe('authService', () => {
         http.post('http://localhost:5267/api/auth/register', () => {
           return HttpResponse.json(
             { message: 'Email already exists' },
-            { status: 409 }
+            { status: 409 },
           );
-        })
+        }),
       );
 
       await expect(
@@ -313,36 +303,16 @@ describe('authService', () => {
           email: 'existing@example.com',
           password: 'password123',
           name: 'Test User',
-        })
+        }),
       ).rejects.toThrow();
 
       expect(mocks.mockSetAuth).not.toHaveBeenCalled();
     });
   });
 
-  describe('logout', () => {
-    it('should logout successfully and clear auth store', async () => {
-      await authService.logout();
-
-      expect(mocks.mockLogout).toHaveBeenCalledOnce();
-    });
-
-    it('should clear auth store even if API call fails', async () => {
-      server.use(
-        http.post('http://localhost:5267/api/auth/logout', () => {
-          return HttpResponse.json(
-            { message: 'Server error' },
-            { status: 500 }
-          );
-        })
-      );
-
-      await authService.logout();
-
-      // Should still logout locally
-      expect(mocks.mockLogout).toHaveBeenCalledOnce();
-    });
-  });
+  // Logout no longer lives on authService — it's owned by features/auth/services/logoutService
+  // (orchestrates the 15-step cleanup) and exposed via useAuthStore.getState().logout().
+  // Logout tests should target performLogout directly in a logoutService test file.
 
   describe('forgotPassword', () => {
     it('should send forgot password request successfully', async () => {
@@ -447,14 +417,14 @@ describe('authService', () => {
     it('should get current user and update store', async () => {
       server.use(
         http.get('http://localhost:5267/api/auth/me', () => {
-          return HttpResponse.json(mockUserData);
-        })
+          return HttpResponse.json(apiUser);
+        }),
       );
 
       const result = await authService.getCurrentUser();
 
-      expect(result).toEqual(mockUserData);
-      expect(mocks.mockSetUser).toHaveBeenCalledWith(mockUserData);
+      expect(result).toEqual(expectedUser);
+      expect(mocks.mockSetUser).toHaveBeenCalledWith(expectedUser);
     });
 
     it('should handle unauthorized request', async () => {
@@ -462,9 +432,9 @@ describe('authService', () => {
         http.get('http://localhost:5267/api/auth/me', () => {
           return HttpResponse.json(
             { message: 'Unauthorized' },
-            { status: 401 }
+            { status: 401 },
           );
-        })
+        }),
       );
 
       await expect(authService.getCurrentUser()).rejects.toThrow();
@@ -492,11 +462,11 @@ describe('authService', () => {
 
   describe('getUser', () => {
     it('should return user from store', () => {
-      mocks.mockUser.mockReturnValue(mockUserData);
+      mocks.mockUser.mockReturnValue(expectedUser);
 
       const result = authService.getUser();
 
-      expect(result).toEqual(mockUserData);
+      expect(result).toEqual(expectedUser);
     });
 
     it('should return null when no user in store', () => {
@@ -508,55 +478,8 @@ describe('authService', () => {
     });
   });
 
-  describe('refreshToken', () => {
-    it('should refresh access token successfully', async () => {
-      server.use(
-        http.post('http://localhost:5267/api/auth/refresh', () => {
-          return HttpResponse.json({
-            accessToken: 'new-access-token',
-            refreshToken: 'new-refresh-token',
-          });
-        })
-      );
-
-      const result = await authService.refreshToken('old-refresh-token');
-
-      expect(result).toEqual({
-        accessToken: 'new-access-token',
-        refreshToken: 'new-refresh-token',
-      });
-    });
-
-    it('should handle invalid refresh token', async () => {
-      server.use(
-        http.post('http://localhost:5267/api/auth/refresh', () => {
-          return HttpResponse.json(
-            { message: 'Invalid refresh token' },
-            { status: 401 }
-          );
-        })
-      );
-
-      await expect(
-        authService.refreshToken('invalid-refresh-token')
-      ).rejects.toThrow();
-    });
-
-    it('should handle expired refresh token', async () => {
-      server.use(
-        http.post('http://localhost:5267/api/auth/refresh', () => {
-          return HttpResponse.json(
-            { message: 'Refresh token expired' },
-            { status: 401 }
-          );
-        })
-      );
-
-      await expect(
-        authService.refreshToken('expired-refresh-token')
-      ).rejects.toThrow();
-    });
-  });
+  // Token refresh tests moved to lib/authSession.test.ts — refresh ownership
+  // was extracted from authService into the authSession coordinator.
 
   describe('snake_case to camelCase transformation', () => {
     it('should correctly transform login response from snake_case to camelCase', async () => {

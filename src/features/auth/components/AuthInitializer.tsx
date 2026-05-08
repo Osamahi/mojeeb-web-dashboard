@@ -1,33 +1,45 @@
 import { useState, useEffect, useRef, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { getAccessToken, getRefreshToken } from '@/lib/tokenStore';
-import { authService } from '../services/authService';
+import { authSession } from '@/lib/authSession';
+import { TerminalAuthError } from '@/features/auth/errors';
 import { logger } from '@/lib/logger';
 import { useOnAppResume } from '@/contexts/AppLifecycleContext';
 import { SubscriptionInitializer } from '@/features/subscriptions/components/SubscriptionInitializer';
 import { PlanInitializer } from '@/features/subscriptions/components/PlanInitializer';
 import { useAnalytics } from '@/lib/analytics';
-import { isTokenExpired } from '../utils/tokenUtils';
 
 interface AuthInitializerProps {
   children: ReactNode;
 }
 
+const PUBLIC_PATHS = new Set([
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+]);
+
 /**
- * AuthInitializer — runs inside protected routes. Its job:
+ * AuthInitializer — gate for protected routes.
  *
- * On mount (once per protected-route entry):
- *   - If we have a refresh token but no access token in memory (common case
- *     after a page reload, since access tokens aren't persisted), refresh now
- *     so that the first API call from a child component already has a Bearer
- *     header. Prevents the "flash of 401 → retry" on first paint.
- *   - If refresh fails, let the axios interceptor handle it when API calls
- *     happen. We don't force a logout here.
+ * Two responsibilities:
  *
- * On app resume (mobile / tab switch):
- *   - If the access token is missing or expired, kick off a refresh so the
- *     user doesn't see a latency hit on their first action.
+ * 1. On mount of a protected route, ensure we have a valid access token. The
+ *    access token isn't persisted (memory only) so it's missing on every page
+ *    load. We call authSession.ensureFresh() to populate it before child
+ *    components fire their first API call (avoids a flash of 401 → retry).
+ *
+ * 2. On real app resume (≥30s of background, gated by AppLifecycleContext),
+ *    re-validate the session. Same path, different trigger.
+ *
+ * Error handling:
+ *   - TerminalAuthError → refresh token is dead. Sign the user out via the
+ *     centralized logout service. Route guards redirect to /login.
+ *   - Anything else (TransientAuthError, network blip, etc.) → log and move
+ *     on. The next protected API call will go through the axios interceptor,
+ *     which will retry the refresh. We don't blow up the user's session
+ *     because of a one-time network hiccup.
  */
 export const AuthInitializer = ({ children }: AuthInitializerProps) => {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -36,88 +48,34 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
   const { identify, reset } = useAnalytics();
   const location = useLocation();
 
-  // Don't re-run initialization on auth state changes.
+  // useEffect runs twice in React StrictMode dev — guard with a ref.
   const hasInitialized = useRef(false);
 
   useEffect(() => {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
-    const initializeAuth = async () => {
-      try {
-        // Skip on auth pages — they don't need a session and triggering a
-        // refresh here creates loops if the refresh token is bad.
-        const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
-        if (publicPaths.includes(location.pathname)) {
-          return;
-        }
+    // Public auth pages don't need a session.
+    if (PUBLIC_PATHS.has(location.pathname) || !isAuthenticated) {
+      setIsInitializing(false);
+      return;
+    }
 
-        if (!isAuthenticated) {
-          return;
-        }
-
-        const accessToken = getAccessToken();
-        const refreshToken = getRefreshToken();
-
-        // Already have both — nothing to do.
-        if (accessToken && refreshToken) {
-          return;
-        }
-
-        // Have refresh token but no access token — happens on every page reload.
-        // Refresh now so first API call from a child doesn't have to wait.
-        if (!accessToken && refreshToken) {
-          try {
-            await authService.refreshAndUpdateSession(refreshToken);
-          } catch (error) {
-            // Don't force logout on a single failure here — the axios
-            // interceptor will re-try on the next real API call, and if the
-            // refresh token is truly dead, it will clear the session then.
-            logger.warn('[AuthInitializer] Refresh-on-mount failed, deferring to interceptor', error);
-          }
-          return;
-        }
-
-        // Store says authenticated but no refresh token anywhere — corrupted
-        // state. Clear it so guards redirect to /login.
-        if (!refreshToken && isAuthenticated) {
-          useAuthStore.setState({
-            user: null,
-            accessToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
-          });
-        }
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-
-    initializeAuth();
+    void authSession
+      .ensureFresh()
+      .catch((err) => handleSessionError(err, 'mount'))
+      .finally(() => setIsInitializing(false));
     // Run once on mount only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // App resume handler (mobile browser coming back from background)
   useOnAppResume(async () => {
     if (!isAuthenticated) return;
-
-    const accessToken = getAccessToken();
-    const refreshToken = getRefreshToken();
-
-    const needsRefresh =
-      (!accessToken && refreshToken) ||
-      (accessToken && refreshToken && isTokenExpired(accessToken));
-
-    if (!needsRefresh) return;
-
     setIsReconnecting(true);
     try {
-      await authService.refreshAndUpdateSession(refreshToken!);
-    } catch (error) {
-      // Don't logout — let the next API call go through the interceptor,
-      // which will handle the error properly.
-      logger.warn('[AuthInitializer] Refresh on app resume failed', error);
+      await authSession.ensureFresh();
+    } catch (err) {
+      await handleSessionError(err, 'resume');
     } finally {
       setIsReconnecting(false);
     }
@@ -179,3 +137,27 @@ export const AuthInitializer = ({ children }: AuthInitializerProps) => {
     </>
   );
 };
+
+async function handleSessionError(err: unknown, source: 'mount' | 'resume') {
+  if (err instanceof TerminalAuthError) {
+    logger.info(`[AuthInitializer] Terminal auth error on ${source} — signing out`, {
+      reason: err.reason,
+    });
+    try {
+      const { performLogout } = await import('../services/logoutService');
+      await performLogout({
+        callBackend: false,
+        redirect: false, // route guards handle the redirect
+        reason: 'token-invalid',
+      });
+    } catch (logoutErr) {
+      logger.error(
+        `[AuthInitializer] performLogout failed during terminal auth handling`,
+        logoutErr instanceof Error ? logoutErr : new Error(String(logoutErr)),
+      );
+    }
+    return;
+  }
+  // Transient — keep session, next API call will retry via interceptor.
+  logger.warn(`[AuthInitializer] Transient refresh failure on ${source}`, err);
+}

@@ -4,6 +4,7 @@
  * Provides utilities for decoding and validating JWT tokens without requiring
  * external libraries. Handles token expiration checks and basic token parsing.
  */
+import { logger } from '@/lib/logger';
 
 interface JWTPayload {
   exp?: number;
@@ -33,11 +34,12 @@ export function decodeJWT(token: string): JWTPayload | null {
     const parts = token.split('.');
 
     if (parts.length !== 3) {
-      // This is a genuine bug signal: someone passed a non-JWT (probably an
-      // opaque refresh token — backend issues those — or ciphertext from
-      // SecureLS) where a JWT was expected. Report enough detail to locate
-      // the caller without leaking the token value.
-      console.warn(`[TokenUtils] Invalid JWT format - expected 3 parts, got ${parts.length} (length=${token.length})`);
+      // Genuine bug signal: someone passed a non-JWT (e.g. an opaque refresh
+      // token, or ciphertext from legacy SecureLS) where a JWT was expected.
+      logger.warn('[TokenUtils] Invalid JWT format', {
+        partsCount: parts.length,
+        tokenLength: token.length,
+      });
       return null;
     }
 
@@ -55,7 +57,10 @@ export function decodeJWT(token: string): JWTPayload | null {
 
     return JSON.parse(jsonPayload) as JWTPayload;
   } catch (error) {
-    console.error('[TokenUtils] Failed to decode JWT:', error);
+    logger.error(
+      '[TokenUtils] Failed to decode JWT',
+      error instanceof Error ? error : new Error(String(error)),
+    );
     return null;
   }
 }
@@ -75,7 +80,7 @@ export function isTokenExpired(token: string, bufferSeconds: number = 30): boole
   const payload = decodeJWT(token);
 
   if (!payload || !payload.exp) {
-    console.warn('[TokenUtils] Token has no expiration claim');
+    logger.warn('[TokenUtils] Token has no expiration claim');
     return true;
   }
 
@@ -84,64 +89,6 @@ export function isTokenExpired(token: string, bufferSeconds: number = 30): boole
   const currentTime = Date.now();
   const bufferTime = bufferSeconds * 1000;
 
-  const isExpired = currentTime >= (expirationTime - bufferTime);
-
-  if (isExpired) {
-    const expirationDate = new Date(expirationTime);
-    console.log(
-      `[TokenUtils] Token expired at ${expirationDate.toISOString()} ` +
-      `(${Math.floor((currentTime - expirationTime) / 1000)}s ago)`
-    );
-  }
-
-  return isExpired;
+  return currentTime >= (expirationTime - bufferTime);
 }
 
-/**
- * Gets the remaining time until token expiration
- *
- * @param token - The JWT token string
- * @returns Remaining milliseconds until expiration, or 0 if expired/invalid
- */
-export function getTokenRemainingTime(token: string): number {
-  if (!token) {
-    return 0;
-  }
-
-  const payload = decodeJWT(token);
-
-  if (!payload || !payload.exp) {
-    return 0;
-  }
-
-  const expirationTime = payload.exp * 1000;
-  const currentTime = Date.now();
-  const remaining = expirationTime - currentTime;
-
-  return Math.max(0, remaining);
-}
-
-/**
- * Extracts user ID from JWT token
- *
- * @param token - The JWT token string
- * @returns User ID (nameid claim) or null if not found
- */
-export function getUserIdFromToken(token: string): string | null {
-  const payload = decodeJWT(token);
-  return payload?.nameid || null;
-}
-
-/**
- * Checks if a token will expire within a given time window
- *
- * @param token - The JWT token string
- * @param windowMinutes - Time window in minutes (default: 3)
- * @returns true if token expires within the window
- */
-export function isTokenExpiringSoon(token: string, windowMinutes: number = 3): boolean {
-  const remainingMs = getTokenRemainingTime(token);
-  const windowMs = windowMinutes * 60 * 1000;
-
-  return remainingMs > 0 && remainingMs <= windowMs;
-}

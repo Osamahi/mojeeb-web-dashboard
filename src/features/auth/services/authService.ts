@@ -1,6 +1,4 @@
 import api from '@/lib/api';
-import axios from 'axios';
-import { API_URL } from '@/lib/api';
 import { env } from '@/config/env';
 import type {
   LoginCredentials,
@@ -16,8 +14,6 @@ import { useAuthStore } from '../stores/authStore';
 import { agentService } from '@/features/agents/services/agentService';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { logger } from '@/lib/logger';
-import { setTokens } from '@/lib/tokenStore';
-import { updateSupabaseAuth } from '@/lib/supabase';
 import { detectCountryFromTimezone } from '@/features/onboarding/utils/countryDetector';
 
 // API Response Types (snake_case from backend)
@@ -40,15 +36,7 @@ interface ApiAuthResponse {
   user: ApiUserResponse;
 }
 
-interface ApiRefreshResponse {
-  access_token: string;
-  refresh_token: string;
-}
-
 class AuthService {
-  // Prevent concurrent token refreshes - store the in-flight refresh promise
-  private refreshPromise: Promise<{ accessToken: string; refreshToken: string }> | null = null;
-
   /**
    * Complete post-authentication flow
    * Unified business logic for all auth methods (login, signup, Google, Apple)
@@ -436,98 +424,10 @@ class AuthService {
     return useAuthStore.getState().user;
   }
 
-  /**
-   * Refresh access token using refresh token
-   * Centralized token refresh logic to avoid duplication
-   *
-   * Note: Uses raw axios instead of api instance to avoid triggering interceptors
-   * and causing recursion when called from the response interceptor
-   *
-   * Includes race condition protection - if multiple calls happen simultaneously,
-   * they will share the same refresh promise
-   */
-  async refreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
-    // If a refresh is already in progress, return that promise
-    if (this.refreshPromise) {
-      return this.refreshPromise;
-    }
-
-    // Create the refresh promise
-    const promise = (async () => {
-      try {
-        const { data } = await axios.post<ApiRefreshResponse>(`${API_URL}/api/auth/refresh`, {
-          refreshToken: refreshToken,
-        });
-
-        // Backend returns snake_case, convert to camelCase
-        const result = {
-          accessToken: data.access_token,
-          refreshToken: data.refresh_token,
-        };
-
-        return result;
-      } catch (error) {
-        throw error;
-      }
-    })();
-
-    // Store the promise for concurrent callers to share
-    this.refreshPromise = promise;
-
-    try {
-      return await promise;
-    } finally {
-      // Only clear if this is still the active promise (prevents race condition)
-      if (this.refreshPromise === promise) {
-        this.refreshPromise = null;
-      }
-    }
-  }
-
-  /**
-   * Refresh token and update all auth-related systems
-   * Consolidates: token refresh + storage + Supabase auth update
-   *
-   * This method should be used whenever tokens need to be refreshed to ensure
-   * consistent behavior across the app (AuthInitializer, API interceptor, etc.)
-   *
-   * @param refreshToken - The current refresh token
-   * @returns The new tokens
-   * @throws Error if refresh fails
-   */
-  async refreshAndUpdateSession(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
-    logger.info('Refreshing session and updating auth systems', { component: 'AuthService' });
-
-    try {
-      // 1. Refresh tokens from backend
-      const tokens = await this.refreshToken(refreshToken);
-
-      // 2. Store tokens (access in memory, refresh in localStorage)
-      setTokens(tokens.accessToken, tokens.refreshToken);
-
-      // 3. Mirror into the auth store so route guards see the fresh values
-      useAuthStore.setState({
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-      });
-
-      // 4. Update Supabase auth session for real-time channels
-      await updateSupabaseAuth(tokens.accessToken, tokens.refreshToken);
-
-      logger.info('Session refresh complete', {
-        component: 'AuthService',
-        accessTokenLength: tokens.accessToken.length,
-        refreshTokenLength: tokens.refreshToken.length,
-      });
-
-      return tokens;
-    } catch (error) {
-      logger.error('Session refresh failed', error instanceof Error ? error : new Error(String(error)), {
-        component: 'AuthService',
-      });
-      throw error;
-    }
-  }
+  // Token refresh is owned by lib/authSession.ts. See it for the full
+  // refresh flow, dedup, and error model. AuthService no longer participates
+  // in refresh — login/signup paths still write tokens via setAuth, but
+  // refresh-on-401 and refresh-on-mount route through authSession.
 }
 
 export const authService = new AuthService();

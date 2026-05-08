@@ -98,7 +98,11 @@ export const waitForLoadingToFinish = () => {
 };
 
 /**
- * Mock authentication state helper
+ * Mock authentication state helper.
+ *
+ * The access token is in-memory only at runtime, so we don't seed it here
+ * (tests that need one should set it via the tokenStore setter). The refresh
+ * token lives in localStorage under 'mojeeb.refreshToken' (see lib/tokenStore).
  */
 export function mockAuthenticatedUser() {
   const mockUser = {
@@ -108,17 +112,18 @@ export function mockAuthenticatedUser() {
     role: 'SuperAdmin' as const,
   };
 
-  localStorage.setItem('accessToken', 'mock-access-token');
-  localStorage.setItem('refreshToken', 'mock-refresh-token');
+  localStorage.setItem('mojeeb.refreshToken', 'mock-refresh-token');
 
   return mockUser;
 }
 
 /**
- * Clear authentication state helper
+ * Clear authentication state helper.
  */
 export function clearAuth() {
+  localStorage.removeItem('mojeeb.refreshToken');
+  localStorage.removeItem('mojeeb-auth-storage');
+  // Clean up any legacy keys that older test setups may have written.
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
-  localStorage.removeItem('mojeeb-auth-storage');
 }

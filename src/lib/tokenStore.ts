@@ -36,7 +36,15 @@ let accessToken: string | null = null;
 
 /**
  * One-time migration + cleanup, run when this module first loads.
- * Safe to run on every load — it's idempotent and fast.
+ *
+ * Migrates legacy 'refreshToken' / 'accessToken' / SecureLS-prefixed keys to
+ * the namespaced REFRESH_TOKEN_KEY. Idempotent and fast.
+ *
+ * Sunset: this function exists only to carry pre-2026-05 sessions forward to
+ * the new key. Once we're confident every active user has logged in at least
+ * once after that date (give it ~3 months for monthly-active users, longer
+ * for sporadic ones), this whole function can be deleted along with the
+ * LEGACY_* constants. Earliest safe removal: 2026-08-08.
  */
 function migrateAndCleanup(): void {
   try {
@@ -123,8 +131,3 @@ export const clearTokens = (): void => {
     logger.error('[tokenStore] Failed to clear refresh token', error);
   }
 };
-
-/**
- * True if a refresh token exists (session can potentially be restored).
- */
-export const hasSession = (): boolean => !!getRefreshToken();

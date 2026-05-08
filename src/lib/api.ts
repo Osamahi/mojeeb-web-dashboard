@@ -1,19 +1,13 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { QueryClient } from '@tanstack/react-query';
-import {
-  setTokens,
-  getAccessToken,
-  getRefreshToken,
-  clearTokens,
-} from './tokenStore';
+import { getAccessToken, clearTokens } from './tokenStore';
 import { env } from '@/config/env';
 import { shouldRetry, calculateExponentialDelay, sleep } from './retryConfig';
 import { toast } from 'sonner';
 import { logger } from './logger';
 import i18n from '@/i18n/config';
-
-// Re-export token accessors for back-compat with existing imports.
-export { setTokens, getAccessToken, getRefreshToken, clearTokens };
+import { authSession } from './authSession';
+import { TerminalAuthError } from '@/features/auth/errors';
 
 export const API_URL = env.VITE_API_URL;
 const API_TIMEOUT = env.VITE_API_TIMEOUT;
@@ -86,6 +80,18 @@ api.interceptors.response.use(
     }
 
     // --- 401: refresh flow ---
+    //
+    // Refresh strategy:
+    //   - The actual /api/auth/refresh call is owned by authSession (single
+    //     coordinator, dedup'd, idempotent side effects).
+    //   - This interceptor still maintains its own `isRefreshing` queue so
+    //     that 10 concurrent 401s don't all kick off retries until the first
+    //     one's refresh has resolved. The queue is for retry coordination,
+    //     not for refresh deduplication.
+    //   - Terminal failures (refresh token rejected) → sign out via the
+    //     central performLogout. Transient failures (network/5xx) → reject
+    //     and preserve session. The next API call will trigger another
+    //     refresh attempt.
     if (error.response?.status === 401 && !originalRequest._retry) {
       // Another request is already refreshing — queue this one.
       if (isRefreshing) {
@@ -104,45 +110,44 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = getRefreshToken();
-      if (!refreshToken) {
-        // No refresh token to work with — nothing to do but reject. The route
-        // guards will redirect on the next navigation; we do NOT force-redirect
-        // here, to avoid blowing users out of their current page on transient
-        // background 401s.
-        isRefreshing = false;
-        return Promise.reject(error);
-      }
-
       try {
-        // Dynamic import avoids a circular dep with authService → api.
-        const { authService } = await import('@/features/auth/services/authService');
-        const tokens = await authService.refreshAndUpdateSession(refreshToken);
-
+        const tokens = await authSession.ensureFresh();
         processQueue(null, tokens.accessToken);
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
         }
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh itself failed — refresh token is invalid/expired/revoked, or
-        // the backend is down. Clear tokens and let the caller reject; route
-        // guards will redirect to /login on the next navigation.
         processQueue(refreshError as AxiosError, null);
-        clearTokens();
-        // Also null the store so guards see the change.
-        try {
-          const { useAuthStore } = await import('@/features/auth/stores/authStore');
-          useAuthStore.setState({
-            accessToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
-            user: null,
+
+        if (refreshError instanceof TerminalAuthError) {
+          // Refresh token is dead. Route through the centralized logout
+          // service so all the cleanup (stores, channels, query cache,
+          // cross-tab broadcast) happens in one place.
+          logger.warn('[API] Refresh token rejected — signing out', {
+            reason: refreshError.reason,
           });
-        } catch {
-          // ignore — tokens are already cleared from storage
+          try {
+            const { performLogout } = await import('@/features/auth/services/logoutService');
+            await performLogout({
+              callBackend: false, // backend already rejected us; no point retrying
+              redirect: false, // route guards redirect on next navigation
+              reason: 'token-invalid',
+            });
+          } catch (logoutErr) {
+            // Belt-and-suspenders: if logoutService import or execution fails,
+            // at least clear tokens so the next navigation won't loop.
+            logger.error(
+              '[API] performLogout failed during terminal auth — clearing tokens directly',
+              logoutErr instanceof Error ? logoutErr : new Error(String(logoutErr)),
+            );
+            clearTokens();
+          }
+          return Promise.reject(refreshError);
         }
-        logger.warn('[API] Token refresh failed — session cleared', {
+
+        // Transient: keep the session, surface the error to the caller.
+        logger.warn('[API] Refresh failed transiently — session preserved', {
           error: refreshError instanceof Error ? refreshError.message : String(refreshError),
         });
         return Promise.reject(refreshError);

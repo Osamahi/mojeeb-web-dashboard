@@ -14,11 +14,11 @@ import { identifyClarityUser } from '@/lib/clarity';
  * What's persisted to localStorage under 'mojeeb-auth-storage':
  *   user, refreshToken, isAuthenticated
  * (accessToken stays in memory only — it's re-derived on page load by
- *  AuthInitializer calling /refresh.)
+ *  AuthInitializer calling authSession.ensureFresh().)
  *
  * The refreshToken is ALSO persisted to a separate key 'mojeeb.refreshToken'
- * by tokenStore — that's the value the axios interceptor reads. The store's
- * copy is the signal route guards use ("do we have a session?"); the
+ * by tokenStore — that's the value authSession reads when refreshing. The
+ * store's copy is the signal route guards use ("do we have a session?"); the
  * tokenStore copy is what actually gets sent to /refresh. They're kept in
  * sync by setTokens / setAuth / logout.
  */

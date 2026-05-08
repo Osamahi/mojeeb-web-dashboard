@@ -102,9 +102,24 @@ export function useAppVisibility(): AppLifecycleContextValue {
 }
 
 /**
- * Hook to run a callback when the app resumes from background
+ * Minimum hidden duration (ms) before a hidden→visible transition counts as
+ * a real "app resume" worth notifying subscribers about. Anything shorter is
+ * treated as a transient flicker (focus loss, OS notifications, devtools
+ * docking) and ignored.
  *
- * @param callback - Function to execute when app becomes visible
+ * Why this matters: on initial page load we frequently see a sub-second
+ * hidden→visible flip that is NOT user-meaningful. Without this guard,
+ * subscribers (auth refresh, websocket reconnect) fire spuriously on every
+ * page load and stack on top of their initial-mount logic.
+ */
+const MIN_BACKGROUND_DURATION_MS = 30_000;
+
+/**
+ * Hook to run a callback when the app resumes from a real backgrounding
+ * (hidden for at least {@link MIN_BACKGROUND_DURATION_MS}).
+ *
+ * @param callback - Function to execute when app becomes visible after a
+ *   real backgrounding. NOT fired for sub-30s visibility flickers.
  *
  * @example
  * ```tsx
@@ -119,23 +134,39 @@ export function useOnAppResume(callback: () => void | Promise<void>) {
   const { isVisible } = useAppVisibility();
   const callbackRef = useRef(callback);
   const prevVisibleRef = useRef(isVisible);
+  const hiddenAtRef = useRef<number | null>(null);
 
-  // Keep callback ref up to date - runs synchronously before paint
-  // Uses useLayoutEffect to ensure ref is updated before any effects that depend on it
+  // Keep callback ref up to date — runs synchronously before paint.
+  // useLayoutEffect ensures the ref is current before any effects run.
   useLayoutEffect(() => {
     callbackRef.current = callback;
-  }); // No deps - updates every render (safe because it's just a ref assignment)
+  }); // No deps — updates every render (safe; just a ref assignment).
 
-  // Trigger callback when transitioning from hidden → visible
   useEffect(() => {
-    const wasHidden = !prevVisibleRef.current;
-    const isNowVisible = isVisible;
+    const wasVisible = prevVisibleRef.current;
 
-    if (wasHidden && isNowVisible) {
-      if (import.meta.env.DEV) {
-        console.log('[useOnAppResume] App resumed - executing callback');
+    if (wasVisible && !isVisible) {
+      // Going to background — record when.
+      hiddenAtRef.current = Date.now();
+    } else if (!wasVisible && isVisible) {
+      // Coming back from background — only fire if it lasted long enough.
+      const hiddenFor = hiddenAtRef.current
+        ? Date.now() - hiddenAtRef.current
+        : 0;
+      hiddenAtRef.current = null;
+
+      if (hiddenFor >= MIN_BACKGROUND_DURATION_MS) {
+        if (import.meta.env.DEV) {
+          console.log(
+            `[useOnAppResume] App resumed after ${Math.round(hiddenFor / 1000)}s — executing callback`,
+          );
+        }
+        callbackRef.current();
+      } else if (import.meta.env.DEV) {
+        console.log(
+          `[useOnAppResume] Visibility flicker (${hiddenFor}ms < ${MIN_BACKGROUND_DURATION_MS}ms) — ignored`,
+        );
       }
-      callbackRef.current();
     }
 
     prevVisibleRef.current = isVisible;
