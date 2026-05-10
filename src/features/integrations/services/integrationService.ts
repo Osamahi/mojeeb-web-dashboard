@@ -43,13 +43,6 @@ class IntegrationService {
     return data.data.map(transformConnection);
   }
 
-  async getConnection(connectionId: string): Promise<IntegrationConnection> {
-    const { data } = await api.get<{ data: ApiIntegrationConnectionResponse }>(
-      `/api/integrations/connections/${connectionId}`
-    );
-    return transformConnection(data.data);
-  }
-
   async createConnection(request: CreateConnectionRequest): Promise<IntegrationConnection> {
     const payload = {
       connector_type: request.connectorType,
@@ -88,9 +81,12 @@ class IntegrationService {
     return data.data;
   }
 
-  async getSheetMetadata(connectionId: string): Promise<SheetMetadataResponse> {
+  async getConnectionMetadata(connectionId: string): Promise<SheetMetadataResponse> {
+    // Generic endpoint; the response shape is connector-specific (Sheets returns
+    // { spreadsheet_title, tabs }, Calendar would return calendars, etc.). The frontend
+    // dispatches per-connector rendering off the connection's connector_type.
     const { data } = await api.get<{ data: SheetMetadataResponse }>(
-      `/api/integrations/connections/${connectionId}/sheets`
+      `/api/integrations/connections/${connectionId}/metadata`
     );
     return data.data;
   }

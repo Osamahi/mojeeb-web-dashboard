@@ -5,14 +5,13 @@
 import type { ActionType } from '../types';
 
 /**
- * Action type options for select inputs
+ * Action type options for create/edit form select inputs.
+ * Matches backend ActionTypeValidator.ValidTypes — adding a new type requires both sides.
  */
 export const actionTypeOptions: { label: string; value: ActionType }[] = [
   { label: 'API Call', value: 'api_call' },
   { label: 'Webhook', value: 'webhook' },
-  { label: 'Database', value: 'database' },
-  { label: 'Email', value: 'email' },
-  { label: 'SMS', value: 'sms' },
+  { label: 'Lead Generation', value: 'lead_generation' },
   { label: 'Integration', value: 'integration' },
 ];
 

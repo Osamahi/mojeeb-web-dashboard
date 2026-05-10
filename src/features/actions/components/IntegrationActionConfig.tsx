@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
-import { useIntegrationConnections, useSheetMetadata } from '@/features/integrations/hooks/useIntegrations';
+import { useIntegrationConnections, useConnectionMetadata } from '@/features/integrations/hooks/useIntegrations';
 import { ColumnMappingBuilder } from './ColumnMappingBuilder';
 import type { ColumnMappingEntry } from '@/features/integrations/types';
 import { headerToVariableName } from '../utils/integrationUtils';
@@ -27,7 +27,7 @@ interface IntegrationActionConfigProps {
 export function IntegrationActionConfig({ connectionId, onConnectionChange, value, onChange, onAutoFill }: IntegrationActionConfigProps) {
   const { t } = useTranslation();
   const { data: connections, isLoading: connectionsLoading } = useIntegrationConnections();
-  const { data: sheetMetadata, isLoading: metadataLoading } = useSheetMetadata(
+  const { data: connectionMetadata, isLoading: metadataLoading } = useConnectionMetadata(
     connectionId || null
   );
 
@@ -41,7 +41,7 @@ export function IntegrationActionConfig({ connectionId, onConnectionChange, valu
     [activeConnections, connectionId]
   );
 
-  const tabs = sheetMetadata?.tabs || [];
+  const tabs = connectionMetadata?.tabs || [];
   const selectedTab = tabs.find((tab) => tab.name === value.targetTab);
 
   // Keep a ref to the latest value to avoid stale closures in effects
@@ -143,9 +143,9 @@ export function IntegrationActionConfig({ connectionId, onConnectionChange, valu
             <p className="text-sm text-neutral-500">{t('integrations.no_tabs', 'No tabs found')}</p>
           ) : (
             <>
-              {sheetMetadata?.spreadsheet_title && (
+              {connectionMetadata?.spreadsheet_title && (
                 <p className="text-xs text-neutral-500 mb-1.5">
-                  {sheetMetadata.spreadsheet_title}
+                  {connectionMetadata.spreadsheet_title}
                 </p>
               )}
               <select
@@ -196,6 +196,9 @@ export function serializeIntegrationConfig(config: IntegrationConfigValue): Reco
   });
 
   return {
+    // Routes the executor to AddRowOperation. Hardcoded to add_row for now since this UI is
+    // Sheets-specific; when the dynamic operation picker lands, this becomes a user-chosen value.
+    operation: 'add_row',
     target_tab: config.targetTab,
     column_mapping: columnMapping,
   };

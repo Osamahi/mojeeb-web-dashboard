@@ -8,7 +8,6 @@ import { Eye, Pencil, Trash2, Play, ChevronDown, ChevronUp } from 'lucide-react'
 import type { Action } from '../types';
 import { ActionTypeBadge } from './ActionTypeBadge';
 import {
-  formatPriority,
   getPriorityColor,
   truncateText,
 } from '../utils/formatting';

@@ -48,19 +48,6 @@ export function useInfiniteAllActions(filters?: ActionFilters & { agentId?: stri
 }
 
 /**
- * Single action hook
- */
-export function useAction(actionId: string | undefined) {
-  const { agentId } = useAgentContext();
-
-  return useQuery({
-    queryKey: ['actions', agentId, actionId],
-    queryFn: () => actionService.getAction(actionId!, agentId!),
-    enabled: !!actionId && !!agentId,
-  });
-}
-
-/**
  * Action execution history hook
  */
 export function useActionExecutions(actionId: string | undefined, limit: number = 50) {
