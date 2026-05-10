@@ -22,6 +22,7 @@ import {
   Puzzle,
   Layers,
   Workflow,
+  Sparkles,
   Paperclip,
   Timer,
   ListOrdered,
@@ -70,6 +71,15 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.setup',
     href: '/studio',
     icon: Wrench,
+    requiresAgent: true,
+  },
+  {
+    // Customer-facing tools page — agent-scoped CRUD over actions, available to org members.
+    // Distinct from /actions (SuperAdmin-only, cross-agent admin view).
+    name: 'Tools',
+    translationKey: 'navigation.tools',
+    href: '/tools',
+    icon: Sparkles,
     requiresAgent: true,
   },
   {
@@ -161,7 +171,6 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.integrations',
     href: '/integrations',
     icon: Cable,
-    requireSuperAdmin: true,
   },
   {
     name: 'Stripe Products',

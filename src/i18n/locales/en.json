@@ -247,6 +247,18 @@
     "no_data_in_window": "No data in this window",
     "error_loading_chart": "Could not load chart"
   },
+  "tools": {
+    "title": "Agent Tools",
+    "subtitle": "Tools your AI can use to take actions during conversations.",
+    "create_button": "Create Tool",
+    "search_placeholder": "Search tools by name, description, or trigger...",
+    "no_agent_title": "Select an agent",
+    "no_agent_description": "Pick an agent from the top of the dashboard to view its tools.",
+    "empty_title": "No tools yet",
+    "empty_description": "Create a tool to give this AI agent abilities like saving leads to a Google Sheet.",
+    "delete_title": "Delete Tool",
+    "delete_message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+  },
   "leads": {
     "title": "Clients",
     "subtitle": "Manage your clients",
@@ -1094,6 +1106,7 @@
     "billing": "Billing",
     "team": "Team",
     "actions": "Actions",
+    "tools": "Tools",
     "action_executions": "Action Executions",
     "attachments": "Attachments",
     "failed_messages": "Failed Messages",

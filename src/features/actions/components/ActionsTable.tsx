@@ -25,7 +25,11 @@ interface ActionsTableProps {
   onView: (action: Action) => void;
   onEdit: (action: Action) => void;
   onDelete: (action: Action) => void;
-  onViewExecutions: (action: Action) => void;
+  /**
+   * Optional execution-history handler. When omitted (e.g. customer-facing /tools page), the
+   * "View Executions" affordance is hidden from the row + mobile card menus.
+   */
+  onViewExecutions?: (action: Action) => void;
   agentNames: Record<string, string>;
 }
 
@@ -186,7 +190,8 @@ interface TableRowProps {
   onView: (action: Action) => void;
   onEdit: (action: Action) => void;
   onDelete: (action: Action) => void;
-  onViewExecutions: (action: Action) => void;
+  /** Optional. When omitted, the row's "View Executions" button is hidden. */
+  onViewExecutions?: (action: Action) => void;
   formatSmartTimestamp: (date: string) => string;
 }
 
@@ -205,8 +210,10 @@ function TableRow({
   const handleView = useCallback(() => onView(action), [action, onView]);
   const handleEdit = useCallback(() => onEdit(action), [action, onEdit]);
   const handleDelete = useCallback(() => onDelete(action), [action, onDelete]);
+  // No-op fallback when caller doesn't supply an executions handler (e.g. /tools page).
+  // The button is also hidden in that case so this is just defensive.
   const handleViewExecutions = useCallback(
-    () => onViewExecutions(action),
+    () => onViewExecutions?.(action),
     [action, onViewExecutions]
   );
 
@@ -285,13 +292,15 @@ function TableRow({
         {/* Actions */}
         <td className="px-4 py-3">
           <div className="flex items-center justify-end gap-1">
-            <button
-              onClick={handleViewExecutions}
-              className="p-1.5 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-              title="View Executions"
-            >
-              <Play className="w-4 h-4" />
-            </button>
+            {onViewExecutions && (
+              <button
+                onClick={handleViewExecutions}
+                className="p-1.5 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                title="View Executions"
+              >
+                <Play className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={handleView}
               className="p-1.5 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
@@ -346,7 +355,8 @@ interface MobileCardProps {
   onView: (action: Action) => void;
   onEdit: (action: Action) => void;
   onDelete: (action: Action) => void;
-  onViewExecutions: (action: Action) => void;
+  /** Optional. When omitted, the card's "View Executions" button is hidden. */
+  onViewExecutions?: (action: Action) => void;
   formatSmartTimestamp: (date: string) => string;
 }
 
@@ -363,8 +373,9 @@ function MobileCard({
   const handleView = useCallback(() => onView(action), [action, onView]);
   const handleEdit = useCallback(() => onEdit(action), [action, onEdit]);
   const handleDelete = useCallback(() => onDelete(action), [action, onDelete]);
+  // No-op fallback when caller doesn't supply an executions handler (e.g. /tools page).
   const handleViewExecutions = useCallback(
-    () => onViewExecutions(action),
+    () => onViewExecutions?.(action),
     [action, onViewExecutions]
   );
 
@@ -389,12 +400,14 @@ function MobileCard({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={handleViewExecutions}
-            className="p-2 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-          >
-            <Play className="w-4 h-4" />
-          </button>
+          {onViewExecutions && (
+            <button
+              onClick={handleViewExecutions}
+              className="p-2 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+            >
+              <Play className="w-4 h-4" />
+            </button>
+          )}
           <button
             onClick={handleView}
             className="p-2 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"

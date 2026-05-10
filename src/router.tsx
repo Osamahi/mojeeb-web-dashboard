@@ -26,6 +26,7 @@ const AdminConnectionsPage = lazy(() => import('./features/connections/pages/Adm
 const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthCallbackPage'));
 const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 const ActionsPage = lazy(() => import('./features/actions/pages/ActionsPage').then(m => ({ default: m.ActionsPage })));
+const ToolsPage = lazy(() => import('./features/actions/pages/ToolsPage').then(m => ({ default: m.ToolsPage })));
 const ActionExecutionsPage = lazy(() => import('./features/actions/pages/ActionExecutionsPage').then(m => ({ default: m.ActionExecutionsPage })));
 const FunnelDashboardPage = lazy(() => import('./features/analytics/pages/FunnelDashboardPage'));
 const AgentAnalyticsPage = lazy(() => import('./features/analytics/pages/AgentAnalyticsPage'));
@@ -276,11 +277,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'integrations',
-        element: (
-          <SuperAdminRoute>
-            <IntegrationsPage />
-          </SuperAdminRoute>
-        ),
+        element: <IntegrationsPage />,
       },
       {
         path: 'leads',
@@ -289,6 +286,10 @@ export const router = createBrowserRouter([
       {
         path: 'comments',
         element: <CommentsPage />,
+      },
+      {
+        path: 'tools',
+        element: <ToolsPage />,
       },
       {
         path: 'actions',
