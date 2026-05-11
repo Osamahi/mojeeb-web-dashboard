@@ -3089,6 +3089,22 @@
     "catalog_shopify_desc": "مزامنة الطلبات وبيانات المنتجات مع متجر Shopify.",
     "op_create_order": "إنشاء طلب",
     "op_find_product": "البحث عن منتج",
-    "op_update_order": "تعديل طلب"
+    "op_update_order": "تعديل طلب",
+    "tab_suffix": "تبويب",
+    "edit": "تعديل",
+    "edit_modal_title": "تعديل {{name}}",
+    "edit_modal_subtitle": "فعّل أو ألغِ العمليات وحدّث متى تُشغَّل.",
+    "edit_modal_readonly_heading": "الاتصال",
+    "edit_modal_readonly_hint": "لتغيير الملف أو التبويب أو الأعمدة، أعد الربط أو استخدم صفحة الإجراءات.",
+    "edit_modal_columns_label": "الأعمدة:",
+    "edit_modal_prompt_label": "متى يستخدم المساعد هذه العملية؟",
+    "edit_modal_prompt_placeholder": "مثال: عندما يقدم العميل اسمه ورقمه وتفاصيل طلبه، احفظهم في الجدول.",
+    "edit_modal_base_op_badge": "دائماً مفعلة",
+    "edit_modal_saved": "تم حفظ التغييرات.",
+    "edit_modal_partial_failure": "فشل {{count}} من {{total}} تغييرات. راجع وحاول مرة أخرى.",
+    "edit_modal_no_clone_source": "لا يوجد إجراء سابق لبناء هذا منه. أنشئ واحداً من الكتالوج أولاً.",
+    "edit_modal_file_label": "اسم الملف",
+    "edit_modal_sheet_label": "اسم التبويب",
+    "edit_modal_operations_heading": "العمليات"
   }
 }

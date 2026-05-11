@@ -40,6 +40,8 @@ import {
 } from '@/features/integrations/components/sections/ConnectedIntegrationsSection';
 import { AvailableIntegrationsSection } from '@/features/integrations/components/sections/AvailableIntegrationsSection';
 import CreateConnectionModal from '@/features/integrations/components/CreateConnectionModal';
+import { EditConnectionActionsModal } from '@/features/integrations/components/EditConnectionActionsModal';
+import type { Action } from '../types';
 
 export function ToolsPage() {
   const { t } = useTranslation();
@@ -48,6 +50,11 @@ export function ToolsPage() {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteCandidateId, setDeleteCandidateId] = useState<string | null>(null);
+
+  // Edit-actions modal — host state at page level so a single modal serves
+  // every connection card. Holds the targeted connection id; modal closes by
+  // clearing it. This matches the pattern used by /connections's edit drawer.
+  const [editTargetConnectionId, setEditTargetConnectionId] = useState<string | null>(null);
 
   // Org-scoped integration connections (not agent-scoped — same connection can
   // be shared across agents in the same org via FK on actions.integration_connection_id).
@@ -66,29 +73,66 @@ export function ToolsPage() {
   // chips for power-users with >50 actions degrades gracefully (chip just shows outlined).
   const { data: actionsData } = useInfiniteActions();
 
-  const enabledOpsByConnection = useMemo(() => {
-    const map = new Map<string, Set<string>>();
+  // Three derivations from the same actions list:
+  //   1. Which operations are wired up per connection (drives the op chips)
+  //   2. Which tab each connection is most commonly targeted at (drives the
+  //      "leads tab" segment in the subtitle).
+  //   3. The full action list per connection (drives the Edit modal, where
+  //      we need each existing action to diff against the user's form state).
+  const {
+    enabledOpsByConnection,
+    mostUsedTabByConnection,
+    actionsByConnection,
+  } = useMemo(() => {
+    const opsMap = new Map<string, Set<string>>();
+    const tabCounts = new Map<string, Map<string, number>>();
+    const actionsMap = new Map<string, Action[]>();
     const actions = actionsData?.actions ?? [];
 
     for (const action of actions) {
       if (action.actionType !== 'integration') continue;
       if (!action.integrationConnectionId) continue;
 
-      // The operation id lives in action_config.operation (per INTEGRATIONS.md
-      // hard rule — operation is in JSON, not a column). Defensive read in case
-      // an old action predates the operation field.
       const operationId = action.actionConfig?.operation as string | undefined;
-      if (!operationId) continue;
+      const targetTab = action.actionConfig?.target_tab as string | undefined;
+      const connId = action.integrationConnectionId;
 
-      const existing = map.get(action.integrationConnectionId);
-      if (existing) {
-        existing.add(operationId);
-      } else {
-        map.set(action.integrationConnectionId, new Set([operationId]));
+      if (operationId) {
+        const existing = opsMap.get(connId);
+        if (existing) existing.add(operationId);
+        else opsMap.set(connId, new Set([operationId]));
       }
+
+      if (targetTab) {
+        const tabs = tabCounts.get(connId) ?? new Map<string, number>();
+        tabs.set(targetTab, (tabs.get(targetTab) ?? 0) + 1);
+        tabCounts.set(connId, tabs);
+      }
+
+      const bucket = actionsMap.get(connId) ?? [];
+      bucket.push(action);
+      actionsMap.set(connId, bucket);
     }
 
-    return map;
+    // Reduce each connection's tab-count map to its single most-used tab.
+    const tabMap = new Map<string, string>();
+    for (const [connId, counts] of tabCounts) {
+      let bestTab = '';
+      let bestCount = 0;
+      for (const [tab, count] of counts) {
+        if (count > bestCount) {
+          bestCount = count;
+          bestTab = tab;
+        }
+      }
+      if (bestTab) tabMap.set(connId, bestTab);
+    }
+
+    return {
+      enabledOpsByConnection: opsMap,
+      mostUsedTabByConnection: tabMap,
+      actionsByConnection: actionsMap,
+    };
   }, [actionsData]);
 
   // Connect-row CTA — currently always opens CreateConnectionModal (which today
@@ -101,6 +145,14 @@ export function ToolsPage() {
 
   const handleCloseCreateModal = useCallback(() => {
     setIsCreateModalOpen(false);
+  }, []);
+
+  const handleEdit = useCallback((connectionId: string) => {
+    setEditTargetConnectionId(connectionId);
+  }, []);
+
+  const handleCloseEditModal = useCallback(() => {
+    setEditTargetConnectionId(null);
   }, []);
 
   const handleDelete = useCallback((connectionId: string) => {
@@ -183,7 +235,9 @@ export function ToolsPage() {
             <ConnectedIntegrationsSection
               connections={connections}
               enabledOpsByConnection={enabledOpsByConnection}
+              mostUsedTabByConnection={mostUsedTabByConnection}
               isLoading={isLoadingConnections}
+              onEdit={handleEdit}
               onDelete={handleDelete}
               deletingId={
                 deleteMutation.isPending ? deleteMutation.variables ?? null : null
@@ -224,6 +278,22 @@ export function ToolsPage() {
       <CreateConnectionModal
         isOpen={isCreateModalOpen}
         onClose={handleCloseCreateModal}
+      />
+
+      <EditConnectionActionsModal
+        isOpen={!!editTargetConnectionId}
+        onClose={handleCloseEditModal}
+        connection={
+          editTargetConnectionId
+            ? connections?.find((c) => c.id === editTargetConnectionId) ?? null
+            : null
+        }
+        connectionActions={
+          editTargetConnectionId ? actionsByConnection.get(editTargetConnectionId) ?? [] : []
+        }
+        mostUsedTab={
+          editTargetConnectionId ? mostUsedTabByConnection.get(editTargetConnectionId) : undefined
+        }
       />
 
       <ConfirmDialog

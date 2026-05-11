@@ -18,7 +18,11 @@ export interface ConnectedIntegrationsSectionProps {
   connections: IntegrationConnection[];
   /** Map of connectionId → set of enabled op ids. Computed once in the page. */
   enabledOpsByConnection: Map<string, Set<string>>;
+  /** Map of connectionId → most-used target tab name (drives the subtitle's "leads tab" segment). */
+  mostUsedTabByConnection: Map<string, string>;
   isLoading?: boolean;
+  /** Open the edit-actions modal for this connection. */
+  onEdit: (connectionId: string) => void;
   onDelete: (connectionId: string) => void;
   deletingId?: string | null;
 }
@@ -26,7 +30,9 @@ export interface ConnectedIntegrationsSectionProps {
 export function ConnectedIntegrationsSection({
   connections,
   enabledOpsByConnection,
+  mostUsedTabByConnection,
   isLoading = false,
+  onEdit,
   onDelete,
   deletingId,
 }: ConnectedIntegrationsSectionProps) {
@@ -62,6 +68,8 @@ export function ConnectedIntegrationsSection({
               key={connection.id}
               connection={connection}
               enabledOps={enabledOpsByConnection.get(connection.id) ?? new Set()}
+              mostUsedTab={mostUsedTabByConnection.get(connection.id)}
+              onEdit={onEdit}
               onDelete={onDelete}
               isDeleting={deletingId === connection.id}
             />

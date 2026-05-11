@@ -18,7 +18,7 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MoreVertical, Trash2, RefreshCw, FlaskConical, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { MoreVertical, Trash2, RefreshCw, FlaskConical, Loader2, CheckCircle2, XCircle, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -29,7 +29,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { IntegrationIcon } from '../IntegrationIcon';
 import ReconnectConnectionModal from '../ReconnectConnectionModal';
-import { useTestConnection } from '../../hooks/useIntegrations';
+import { useTestConnection, useConnectionMetadata } from '../../hooks/useIntegrations';
 import { getIntegrationById, type IntegrationOperationMeta } from '../../constants/integrations';
 import type { IntegrationConnection } from '../../types';
 
@@ -37,6 +37,12 @@ export interface ConnectedIntegrationCardProps {
   connection: IntegrationConnection;
   /** Set of operation ids enabled on THIS connection (derived from agent's actions). */
   enabledOps: Set<string>;
+  /** Most-used target tab for this connection's actions (e.g. "leads"). Undefined when the
+   *  connection has no actions yet. Drives the third subtitle segment. */
+  mostUsedTab?: string;
+  /** Callback fired when the user picks "Edit" from the menu. The page hosts the actual
+   *  edit modal (so a single modal serves every card). */
+  onEdit: (connectionId: string) => void;
   onDelete: (id: string) => void;
   isDeleting: boolean;
   className?: string;
@@ -45,6 +51,8 @@ export interface ConnectedIntegrationCardProps {
 export function ConnectedIntegrationCard({
   connection,
   enabledOps,
+  mostUsedTab,
+  onEdit,
   onDelete,
   isDeleting,
   className,
@@ -77,14 +85,21 @@ export function ConnectedIntegrationCard({
   // hide the dot; the user will see them via the row's reduced opacity instead.
   const isHealthy = connection.status === 'active' && !connection.isTokenExpired;
 
-  // Subtitle text — short, low-noise, mirrors the /connections card's metadata strip.
-  // The connector name + a chip-style "spreadsheet id" anchor are the only crumbs the
-  // user actually needs at a glance.
+  // Subtitle = three crumbs: connector name + spreadsheet title (from /metadata) +
+  // most-used tab (derived from actions). The spreadsheet title fetch piggybacks on
+  // the existing /metadata cache (2-minute staleTime, shared with action setup) so
+  // this is effectively free when the user has already touched action setup recently.
+  //
+  // Fallback chain: if the spreadsheet title isn't loaded yet OR the fetch failed,
+  // we omit that segment entirely rather than showing the cryptic spreadsheet id —
+  // the segment reappears once the cached metadata resolves.
+  const { data: metadata } = useConnectionMetadata(connection.id);
+  const spreadsheetTitle = metadata?.spreadsheet_title;
+
   const subtitleChunks: string[] = [];
   if (meta?.name) subtitleChunks.push(meta.name);
-  if (connection.config?.spreadsheet_id) {
-    subtitleChunks.push(`${(connection.config.spreadsheet_id as string).substring(0, 14)}…`);
-  }
+  if (spreadsheetTitle) subtitleChunks.push(`"${spreadsheetTitle}"`);
+  if (mostUsedTab) subtitleChunks.push(`${mostUsedTab} ${t('tools.tab_suffix')}`);
 
   return (
     <>
@@ -158,6 +173,11 @@ export function ConnectedIntegrationCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[180px]">
+                <DropdownMenuItem onClick={() => onEdit(connection.id)}>
+                  <Pencil className="h-4 w-4 me-2" />
+                  {t('tools.edit')}
+                </DropdownMenuItem>
+
                 <DropdownMenuItem onClick={handleTest} disabled={testMutation.isPending}>
                   {testMutation.isPending ? (
                     <Loader2 className="h-4 w-4 me-2 animate-spin" />
