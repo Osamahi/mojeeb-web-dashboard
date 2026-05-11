@@ -106,3 +106,15 @@
   height: 0;
   pointer-events: none;
 }
+
+/* Hide scrollbar while keeping scroll behavior intact.
+ * Used by horizontally-scrollable previews (e.g. the column-header table in
+ * the Tools-page Edit modal) where edge fades take the role of "more content
+ * this way" without the visual noise of a scrollbar. */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* WebKit (Safari, Chrome) */
+}

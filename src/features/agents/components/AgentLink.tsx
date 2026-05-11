@@ -2,10 +2,10 @@
  * AgentLink — centralized clickable agent reference.
  *
  * For SuperAdmins: clicking switches the global agent context to the target
- * agent and navigates to /studio (the agent setup page).
+ * agent and navigates to /setup (the agent setup page).
  * For non-SuperAdmins: renders the agent name as plain text. The destination
  * page reads agent from context, so cmd-click / new-tab is intentionally
- * suppressed — opening Studio in a new tab loses the in-memory selection.
+ * suppressed — opening Setup in a new tab loses the in-memory selection.
  *
  * Usage:
  *   <AgentLink agentId={user.first_agent_id} agentName={user.first_agent_name} />
@@ -64,7 +64,7 @@ export function AgentLink({
       // switchAgent fetches the agent by id internally, so it works even
       // when the target isn't in any currently-loaded page.
       await switchAgent(agentId);
-      navigate('/studio');
+      navigate('/setup');
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[AgentLink] failed to switch to agent', agentId, err);

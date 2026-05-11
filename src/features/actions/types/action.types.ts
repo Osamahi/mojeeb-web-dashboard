@@ -4,10 +4,8 @@
  */
 
 // Action types supported by the system
-export type ActionType = 'api_call' | 'webhook' | 'database' | 'email' | 'sms' | 'lead_generation' | 'integration';
-
-// Action status
-export type ActionStatus = 'active' | 'inactive';
+// Matches backend ActionTypeValidator.ValidTypes — keep in sync.
+export type ActionType = 'api_call' | 'webhook' | 'lead_generation' | 'integration';
 
 /**
  * Frontend model (camelCase)
@@ -21,10 +19,7 @@ export interface Action {
   actionType: ActionType;
   actionConfig: Record<string, any>;
   requestExample: Record<string, any> | null;
-  responseExample: Record<string, any> | null;
-  responseMapping: Record<string, any> | null;
   testData: Record<string, any> | null;
-  sandboxOptions: Record<string, any> | null;
   isActive: boolean;
   priority: number;
   integrationConnectionId: string | null;
@@ -44,10 +39,7 @@ export interface ApiActionResponse {
   action_type: ActionType;
   action_config: Record<string, any>;
   request_example: Record<string, any> | null;
-  response_example: Record<string, any> | null;
-  response_mapping: Record<string, any> | null;
   test_data: Record<string, any> | null;
-  sandbox_options: Record<string, any> | null;
   is_active: boolean;
   priority: number;
   integration_connection_id: string | null;
@@ -66,10 +58,7 @@ export interface CreateActionRequest {
   actionType: ActionType;
   actionConfig: Record<string, any>;
   requestExample?: Record<string, any>;
-  responseExample?: Record<string, any>;
-  responseMapping?: Record<string, any>;
   testData?: Record<string, any>;
-  sandboxOptions?: Record<string, any>;
   isActive: boolean;
   priority: number;
   integrationConnectionId?: string;
@@ -85,10 +74,7 @@ export interface UpdateActionRequest {
   actionType?: ActionType;
   actionConfig?: Record<string, any>;
   requestExample?: Record<string, any>;
-  responseExample?: Record<string, any>;
-  responseMapping?: Record<string, any>;
   testData?: Record<string, any>;
-  sandboxOptions?: Record<string, any>;
   isActive?: boolean;
   priority?: number;
   integrationConnectionId?: string;

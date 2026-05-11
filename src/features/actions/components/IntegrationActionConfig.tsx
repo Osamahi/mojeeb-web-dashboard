@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
-import { useIntegrationConnections, useSheetMetadata } from '@/features/integrations/hooks/useIntegrations';
+import { useIntegrationConnections, useConnectionMetadata } from '@/features/integrations/hooks/useIntegrations';
 import { ColumnMappingBuilder } from './ColumnMappingBuilder';
 import type { ColumnMappingEntry } from '@/features/integrations/types';
 import { headerToVariableName } from '../utils/integrationUtils';
@@ -10,9 +10,15 @@ import { headerToVariableName } from '../utils/integrationUtils';
  * Integration config stored in action_config JSONB.
  * Note: connectionId and connectorType are NO LONGER part of action_config —
  * they live on the actions.integration_connection_id FK column.
+ *
+ * `targetSheetId` is the numeric `gid` of the picked tab. Required by the backend
+ * `AddRowOperation` so it can attach developer metadata to the appended row (metadata
+ * locations require `sheetId`, not the tab name). Captured automatically when the user
+ * picks a tab from the metadata dropdown.
  */
 export interface IntegrationConfigValue {
   targetTab: string;
+  targetSheetId: number;
   columnMapping: ColumnMappingEntry[];
 }
 
@@ -27,7 +33,7 @@ interface IntegrationActionConfigProps {
 export function IntegrationActionConfig({ connectionId, onConnectionChange, value, onChange, onAutoFill }: IntegrationActionConfigProps) {
   const { t } = useTranslation();
   const { data: connections, isLoading: connectionsLoading } = useIntegrationConnections();
-  const { data: sheetMetadata, isLoading: metadataLoading } = useSheetMetadata(
+  const { data: connectionMetadata, isLoading: metadataLoading } = useConnectionMetadata(
     connectionId || null
   );
 
@@ -41,18 +47,19 @@ export function IntegrationActionConfig({ connectionId, onConnectionChange, valu
     [activeConnections, connectionId]
   );
 
-  const tabs = sheetMetadata?.tabs || [];
+  const tabs = connectionMetadata?.tabs || [];
   const selectedTab = tabs.find((tab) => tab.name === value.targetTab);
 
   // Keep a ref to the latest value to avoid stale closures in effects
   const valueRef = useRef(value);
   valueRef.current = value;
 
-  // Auto-select first tab when metadata loads
+  // Auto-select first tab when metadata loads. We capture sheet_id alongside the name
+  // because the backend requires the numeric gid (target_sheet_id) for metadata attach.
   useEffect(() => {
     const current = valueRef.current;
     if (tabs.length > 0 && !current.targetTab) {
-      onChange({ ...current, targetTab: tabs[0].name });
+      onChange({ ...current, targetTab: tabs[0].name, targetSheetId: tabs[0].sheet_id });
     }
   }, [tabs, value.targetTab, onChange]);
 
@@ -89,11 +96,19 @@ export function IntegrationActionConfig({ connectionId, onConnectionChange, valu
 
   const handleConnectionChange = (newConnectionId: string) => {
     onConnectionChange(newConnectionId);
-    onChange({ targetTab: '', columnMapping: [] });
+    onChange({ targetTab: '', targetSheetId: 0, columnMapping: [] });
   };
 
   const handleTabChange = (tabName: string) => {
-    onChange({ ...value, targetTab: tabName, columnMapping: [] });
+    // Resolve sheet_id alongside the name so we can persist the numeric gid in
+    // action_config.target_sheet_id (required by the backend for metadata attach).
+    const picked = tabs.find((t) => t.name === tabName);
+    onChange({
+      ...value,
+      targetTab: tabName,
+      targetSheetId: picked?.sheet_id ?? 0,
+      columnMapping: [],
+    });
   };
 
   return (
@@ -143,9 +158,9 @@ export function IntegrationActionConfig({ connectionId, onConnectionChange, valu
             <p className="text-sm text-neutral-500">{t('integrations.no_tabs', 'No tabs found')}</p>
           ) : (
             <>
-              {sheetMetadata?.spreadsheet_title && (
+              {connectionMetadata?.spreadsheet_title && (
                 <p className="text-xs text-neutral-500 mb-1.5">
-                  {sheetMetadata.spreadsheet_title}
+                  {connectionMetadata.spreadsheet_title}
                 </p>
               )}
               <select
@@ -196,7 +211,13 @@ export function serializeIntegrationConfig(config: IntegrationConfigValue): Reco
   });
 
   return {
+    // Routes the executor to AddRowOperation. Hardcoded to add_row for now since this UI is
+    // Sheets-specific; when the dynamic operation picker lands, this becomes a user-chosen value.
+    operation: 'add_row',
     target_tab: config.targetTab,
+    // Numeric tab gid — required by the backend so AddRowOperation can attach developer
+    // metadata to the appended row (DimensionRange.SheetId is numeric, not a tab name).
+    target_sheet_id: config.targetSheetId,
     column_mapping: columnMapping,
   };
 }
@@ -220,6 +241,7 @@ export function deserializeIntegrationConfig(actionConfig: Record<string, any>):
 
   return {
     targetTab: actionConfig.target_tab || '',
+    targetSheetId: typeof actionConfig.target_sheet_id === 'number' ? actionConfig.target_sheet_id : 0,
     columnMapping,
   };
 }

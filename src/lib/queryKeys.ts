@@ -291,6 +291,14 @@ export const queryKeys = {
    */
   integrationConnections: () => ['integration-connections'] as const,
 
+  /**
+   * Connector-specific metadata for a single integration connection (Sheets returns
+   * tabs+headers; Calendar would return calendars; etc.). Backend endpoint is
+   * <c>/api/integrations/connections/{id}/metadata</c> — connector-agnostic.
+   */
+  connectionMetadata: (connectionId: string) =>
+    ['connection-metadata', connectionId] as const,
+
   // ==================== Comment Queries ====================
 
   /**

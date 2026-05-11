@@ -447,7 +447,7 @@ export function CreateAttachmentModal({ isOpen, onClose, agentId }: CreateAttach
                         e.stopPropagation();
                         removeFile(idx);
                       }}
-                      className="absolute top-1 right-1 p-0.5 rounded-full hover:bg-neutral-200 transition-colors"
+                      className="absolute top-1 end-1 p-0.5 rounded-full hover:bg-neutral-200 transition-colors"
                     >
                       <X className="w-3.5 h-3.5 text-neutral-400" />
                     </button>

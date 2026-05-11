@@ -95,7 +95,7 @@ export function ImageModal({ images, initialIndex, onClose }: ImageModalProps) {
           {/* Close button — subtle top-right corner */}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-white/80 hover:bg-neutral-100 transition-colors shadow-sm border border-neutral-200/50"
+            className="absolute top-3 end-3 z-20 p-1.5 rounded-full bg-white/80 hover:bg-neutral-100 transition-colors shadow-sm border border-neutral-200/50"
             aria-label={t('common.close')}
           >
             <X className="w-4 h-4 text-neutral-600" />

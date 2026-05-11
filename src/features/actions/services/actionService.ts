@@ -22,17 +22,6 @@ import type {
  * Transform snake_case API response to camelCase frontend model
  */
 function transformAction(apiAction: ApiActionResponse): Action {
-  // Debug logging for date investigation
-  if (!apiAction.created_at || !apiAction.updated_at) {
-    console.warn('[ActionService] Missing date fields:', {
-      id: apiAction.id,
-      name: apiAction.name,
-      created_at: apiAction.created_at,
-      updated_at: apiAction.updated_at,
-      fullObject: apiAction,
-    });
-  }
-
   return {
     id: apiAction.id,
     agentId: apiAction.agent_id,
@@ -42,15 +31,12 @@ function transformAction(apiAction: ApiActionResponse): Action {
     actionType: apiAction.action_type,
     actionConfig: apiAction.action_config,
     requestExample: apiAction.request_example,
-    responseExample: apiAction.response_example,
-    responseMapping: apiAction.response_mapping,
     testData: apiAction.test_data,
-    sandboxOptions: apiAction.sandbox_options,
     isActive: apiAction.is_active,
     priority: apiAction.priority,
     integrationConnectionId: apiAction.integration_connection_id,
-    createdAt: apiAction.created_at || new Date().toISOString(),
-    updatedAt: apiAction.updated_at || new Date().toISOString(),
+    createdAt: apiAction.created_at,
+    updatedAt: apiAction.updated_at,
   };
 }
 
@@ -66,10 +52,7 @@ function transformCreateRequest(request: CreateActionRequest): Record<string, an
     action_type: request.actionType,
     action_config: request.actionConfig,
     request_example: request.requestExample,
-    response_example: request.responseExample,
-    response_mapping: request.responseMapping,
     test_data: request.testData,
-    sandbox_options: request.sandboxOptions,
     is_active: request.isActive,
     priority: request.priority,
     integration_connection_id: request.integrationConnectionId,
@@ -88,10 +71,7 @@ function transformUpdateRequest(request: UpdateActionRequest): Record<string, an
   if (request.actionType !== undefined) transformed.action_type = request.actionType;
   if (request.actionConfig !== undefined) transformed.action_config = request.actionConfig;
   if (request.requestExample !== undefined) transformed.request_example = request.requestExample;
-  if (request.responseExample !== undefined) transformed.response_example = request.responseExample;
-  if (request.responseMapping !== undefined) transformed.response_mapping = request.responseMapping;
   if (request.testData !== undefined) transformed.test_data = request.testData;
-  if (request.sandboxOptions !== undefined) transformed.sandbox_options = request.sandboxOptions;
   if (request.isActive !== undefined) transformed.is_active = request.isActive;
   if (request.priority !== undefined) transformed.priority = request.priority;
   if (request.integrationConnectionId !== undefined) transformed.integration_connection_id = request.integrationConnectionId;
@@ -201,16 +181,6 @@ class ActionService {
   }
 
   /**
-   * Get a single action by ID
-   */
-  async getAction(actionId: string, agentId: string): Promise<Action> {
-    const { data } = await api.get<{ data: ApiActionResponse }>(
-      `/api/actions/${actionId}?agentId=${agentId}`
-    );
-    return transformAction(data.data);
-  }
-
-  /**
    * Create a new action
    */
   async createAction(request: CreateActionRequest): Promise<Action> {
@@ -296,14 +266,14 @@ class ActionService {
         id: data.data.action.id,
         name: data.data.action.name,
         type: data.data.action.type,
-        isActive: data.data.action.isActive || data.data.action.is_active,
+        isActive: data.data.action.is_active,
       },
       executions: data.data.executions.map(transformActionExecution),
       stats: {
         total: data.data.stats.total,
         successful: data.data.stats.successful,
         failed: data.data.stats.failed,
-        avgExecutionTime: data.data.stats.avgExecutionTime || data.data.stats.avg_execution_time,
+        avgExecutionTime: data.data.stats.avg_execution_time,
       },
     };
   }

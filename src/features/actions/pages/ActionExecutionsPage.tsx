@@ -196,7 +196,10 @@ export function ActionExecutionsPage() {
     { value: 'pending', label: t('action_executions.status_pending') },
   ], [t]);
 
-  const actionTypeOptions = useMemo(() => [
+  // Filter dropdown options — includes the "all types" sentinel and translated labels.
+  // Distinct from the create/edit-form's actionTypeOptions in utils/validation.ts (which has
+  // English labels and no "all" entry).
+  const actionTypeFilterOptions = useMemo(() => [
     { value: '', label: t('action_executions.all_types') },
     { value: 'api_call', label: t('action_executions.type_api_call') },
     { value: 'webhook', label: t('action_executions.type_webhook') },
@@ -237,7 +240,7 @@ export function ActionExecutionsPage() {
           onChange={(e) => setActionTypeFilter(e.target.value)}
           className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          {actionTypeOptions.map((opt) => (
+          {actionTypeFilterOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>

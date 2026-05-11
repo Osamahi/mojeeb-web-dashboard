@@ -196,8 +196,8 @@ export function ActionsPage() {
         onConfirm={confirmDelete}
         title="Delete Action"
         message={`Are you sure you want to delete "${selectedAction?.name}"? This action cannot be undone.`}
-        confirmLabel="Delete"
-        confirmVariant="danger"
+        confirmText="Delete"
+        variant="danger"
         isLoading={deleteMutation.isPending}
       />
 

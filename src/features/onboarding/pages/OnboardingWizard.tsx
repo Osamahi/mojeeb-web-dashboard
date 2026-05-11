@@ -97,8 +97,8 @@ export const OnboardingWizard = () => {
     // This ensures DashboardLayout gets fresh agents list including newly created agent
     queryClient.invalidateQueries({ queryKey: queryKeys.agents() });
 
-    // Navigate to Studio page where Setup Checklist guides next steps
-    navigate('/studio');
+    // Navigate to Agent Setup page where the Setup Checklist guides next steps
+    navigate('/setup');
 
     // Reset store state after navigation completes
     // This prevents flicker back to Step 1 during navigation
@@ -123,7 +123,7 @@ export const OnboardingWizard = () => {
   const handleSkipConfirm = () => {
     track('onboarding_skipped', { skippedAtStep: currentStep });
     setShowSkipModal(false);
-    navigate('/studio');
+    navigate('/setup');
   };
 
   const handleSkipCancel = () => {

@@ -4,7 +4,6 @@
 export type {
   Action,
   ActionType,
-  ActionStatus,
   ApiActionResponse,
   CreateActionRequest,
   UpdateActionRequest,

@@ -26,6 +26,7 @@ const AdminConnectionsPage = lazy(() => import('./features/connections/pages/Adm
 const OAuthCallbackPage = lazy(() => import('./features/connections/pages/OAuthCallbackPage'));
 const LeadsPage = lazy(() => import('./features/leads/pages/LeadsPage'));
 const ActionsPage = lazy(() => import('./features/actions/pages/ActionsPage').then(m => ({ default: m.ActionsPage })));
+const ToolsPage = lazy(() => import('./features/actions/pages/ToolsPage').then(m => ({ default: m.ToolsPage })));
 const ActionExecutionsPage = lazy(() => import('./features/actions/pages/ActionExecutionsPage').then(m => ({ default: m.ActionExecutionsPage })));
 const FunnelDashboardPage = lazy(() => import('./features/analytics/pages/FunnelDashboardPage'));
 const AgentAnalyticsPage = lazy(() => import('./features/analytics/pages/AgentAnalyticsPage'));
@@ -267,8 +268,18 @@ export const router = createBrowserRouter([
         element: <AgentsPage />,
       },
       {
-        path: 'studio',
+        // Canonical URL for the agent-setup surface. The old `/studio` route
+        // below is kept as a permanent redirect so existing bookmarks, in-app
+        // notifications, and external links continue to resolve.
+        path: 'setup',
         element: <StudioPage />,
+      },
+      {
+        // Legacy route — preserved so existing bookmarks / shared links don't
+        // 404. Permanent redirect to `/setup`. Safe to delete once analytics
+        // show no inbound traffic on this path (give it ~6 months).
+        path: 'studio',
+        element: <Navigate to="/setup" replace />,
       },
       {
         path: 'connections',
@@ -289,6 +300,10 @@ export const router = createBrowserRouter([
       {
         path: 'comments',
         element: <CommentsPage />,
+      },
+      {
+        path: 'tools',
+        element: <ToolsPage />,
       },
       {
         path: 'actions',

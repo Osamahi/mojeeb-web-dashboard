@@ -67,7 +67,7 @@ export default function TestChatDrawer({
         )}
       >
         {/* Header */}
-        <div className="absolute top-0 right-0 p-4 z-10">
+        <div className="absolute top-0 end-0 p-4 z-10">
           <button
             onClick={onClose}
             className={cn(

@@ -121,25 +121,29 @@ export function AvailablePlatformRow({
       ) : showsWidget ? (
         // Widget platform: Show both Customize and Connect buttons
         <div className="flex-shrink-0 flex items-center gap-2">
+          {/* Spacing between icon and label uses flex `gap` (direction-aware)
+              instead of per-icon physical margins. See AvailableIntegrationRow
+              for the same fix — physical `ml-*` / `mr-*` on icons puts the
+              spacing on the wrong side in RTL and leaves icon+label cramped. */}
           <Button
             onClick={(e) => {
               e.stopPropagation();
               onCustomize?.(platform.id);
             }}
             variant="ghost"
-            className="h-7 sm:h-8 px-2.5 sm:px-3 text-xs sm:text-sm text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50"
+            className="inline-flex items-center justify-center gap-1.5 h-7 sm:h-8 px-2.5 sm:px-3 text-xs sm:text-sm text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50"
             size="sm"
           >
-            <Pencil className="w-3.5 h-3.5 sm:mr-1.5" />
+            <Pencil className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{t('connections.edit_button')}</span>
           </Button>
           <Button
             onClick={handleConnect}
-            className="h-7 sm:h-8 px-2.5 sm:px-3 bg-brand-mojeeb hover:bg-brand-mojeeb-hover text-white text-xs sm:text-sm"
+            className="inline-flex items-center justify-center gap-1.5 h-7 sm:h-8 px-2.5 sm:px-3 bg-brand-mojeeb hover:bg-brand-mojeeb-hover text-white text-xs sm:text-sm"
             size="sm"
           >
             <span className="hidden sm:inline">{t('connections.connect_button')}</span>
-            <Plus className="w-3.5 h-3.5 sm:ml-1" />
+            <Plus className="w-3.5 h-3.5" />
           </Button>
         </div>
       ) : requiresUpgrade ? (
@@ -147,11 +151,11 @@ export function AvailablePlatformRow({
         <div className="flex-shrink-0">
           <Button
             onClick={handleConnect}
-            className="h-7 sm:h-8 px-2.5 sm:px-3 bg-neutral-900 hover:bg-neutral-800 text-white text-xs sm:text-sm"
+            className="inline-flex items-center justify-center gap-1.5 h-7 sm:h-8 px-2.5 sm:px-3 bg-neutral-900 hover:bg-neutral-800 text-white text-xs sm:text-sm"
             size="sm"
           >
             <span className="hidden sm:inline">{t('connections.upgrade_plan_cta')}</span>
-            <Rocket className="w-3.5 h-3.5 sm:ml-1" />
+            <Rocket className="w-3.5 h-3.5" />
           </Button>
         </div>
       ) : (
@@ -159,11 +163,11 @@ export function AvailablePlatformRow({
         <div className="flex-shrink-0">
           <Button
             onClick={handleConnect}
-            className="h-7 sm:h-8 px-2.5 sm:px-3 bg-brand-mojeeb hover:bg-brand-mojeeb-hover text-white text-xs sm:text-sm"
+            className="inline-flex items-center justify-center gap-1.5 h-7 sm:h-8 px-2.5 sm:px-3 bg-brand-mojeeb hover:bg-brand-mojeeb-hover text-white text-xs sm:text-sm"
             size="sm"
           >
             <span className="hidden sm:inline">{t('connections.connect_button')}</span>
-            <Plus className="w-3.5 h-3.5 sm:ml-1" />
+            <Plus className="w-3.5 h-3.5" />
           </Button>
         </div>
       )}

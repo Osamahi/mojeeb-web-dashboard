@@ -75,10 +75,17 @@ export interface TestConnectionResult {
 }
 
 /**
- * Sheet tab info with column headers
+ * Sheet tab info with column headers.
+ *
+ * `sheet_id` is the numeric `gid` Google assigns to each tab — stable for the life of the
+ * tab (survives renames; only changes if the tab is deleted and recreated). Captured here
+ * so action setup can store it on `action_config.target_sheet_id`, which the backend
+ * requires for verbs like `add_row` / `update_row` that attach developer metadata to rows
+ * (developer metadata locations require `sheetId`, not the tab name).
  */
 export interface SheetTabInfo {
   name: string;
+  sheet_id: number;
   headers: string[];
 }
 
