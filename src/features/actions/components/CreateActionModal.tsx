@@ -31,6 +31,14 @@ const DEFAULT_UPDATE_TRIGGER_PROMPT =
   'When the customer wants to update or change information from a row they previously created in this conversation, ' +
   'extract the new field values and call this with the row_reference_id from the earlier add result and only the fields that should change.';
 
+// Default trigger prompt for the paired read_row action created when "allow read" is
+// checked. The LLM uses this to recap or confirm what's currently on a row — typically
+// after an update, or when the customer asks "what did I submit?" / "check my order".
+const DEFAULT_READ_TRIGGER_PROMPT =
+  'When the customer asks about details of a row they previously created in this conversation ' +
+  '(e.g., "what did I submit?", "check my entry", "confirm my details"), ' +
+  'call this with the row_reference_id from the earlier add result to fetch the current values.';
+
 export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
   const { agentId } = useAgentContext();
   const createMutation = useCreateAction();
@@ -44,6 +52,12 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
   // them independently afterwards (rename, deactivate, delete) without coupling.
   const [allowEdit, setAllowEdit] = useState(false);
   const [updateTriggerPrompt, setUpdateTriggerPrompt] = useState(DEFAULT_UPDATE_TRIGGER_PROMPT);
+
+  // "Allow read" pairs a sibling read_row action — same shape as update, just for fetching
+  // current values. Independent of allowEdit; some businesses might want only edit, others
+  // only read, or both. Default off — explicit opt-in.
+  const [allowRead, setAllowRead] = useState(false);
+  const [readTriggerPrompt, setReadTriggerPrompt] = useState(DEFAULT_READ_TRIGGER_PROMPT);
 
   const {
     register,
@@ -79,6 +93,8 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
     setConnectionId('');
     setAllowEdit(false);
     setUpdateTriggerPrompt(DEFAULT_UPDATE_TRIGGER_PROMPT);
+    setAllowRead(false);
+    setReadTriggerPrompt(DEFAULT_READ_TRIGGER_PROMPT);
     onClose();
   };
 
@@ -161,6 +177,26 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
         }
       }
 
+      // Paired read_row creation. Same pattern as update — independent action row, only
+      // operation + prompt differ. allowRead is independent of allowEdit (some actions
+      // want only read, some only edit, some both).
+      if (isIntegration && allowRead && actionConfig) {
+        const readRequest: CreateActionRequest = {
+          ...request,
+          name: `${data.name} (read)`,
+          description: `Read the current values of a row previously created via "${data.name}". Used to recap or confirm details with the customer.`,
+          triggerPrompt: readTriggerPrompt,
+          actionConfig: { ...actionConfig, operation: 'read_row' },
+        };
+
+        try {
+          await createMutation.mutateAsync(readRequest);
+        } catch {
+          // Same fail-soft policy as the update path — the add (and possibly update) will
+          // have already been created; user can retry just the read from the actions list.
+        }
+      }
+
       handleClose();
     } catch {
       // Error is handled by TanStack Query's onError / mutation.error state
@@ -239,6 +275,41 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
                       rows={3}
                       className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       placeholder="When the customer wants to change an existing entry..."
+                    />
+                  </div>
+                )}
+
+                {/* Allow Read — paired read_row action so the LLM can recap row values
+                    after an add/update or when the customer asks to confirm details.
+                    Independent of allowEdit; the two checkboxes don't gate each other. */}
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={allowRead}
+                    onChange={(e) => setAllowRead(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 text-blue-600 border-neutral-300 rounded focus:ring-blue-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-neutral-700">
+                      Also allow reading existing rows
+                    </span>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      Creates a paired action so the AI can fetch a row's current values to recap or confirm with the customer.
+                    </p>
+                  </div>
+                </label>
+
+                {allowRead && (
+                  <div className="ml-6">
+                    <label className="block text-sm font-medium text-neutral-700 mb-1">
+                      Read Trigger Prompt *
+                    </label>
+                    <textarea
+                      value={readTriggerPrompt}
+                      onChange={(e) => setReadTriggerPrompt(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      placeholder="When the customer asks to check or confirm what they submitted..."
                     />
                   </div>
                 )}
