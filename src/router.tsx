@@ -277,7 +277,11 @@ export const router = createBrowserRouter([
       },
       {
         path: 'integrations',
-        element: <IntegrationsPage />,
+        element: (
+          <SuperAdminRoute>
+            <IntegrationsPage />
+          </SuperAdminRoute>
+        ),
       },
       {
         path: 'leads',

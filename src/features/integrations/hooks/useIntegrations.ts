@@ -6,7 +6,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { integrationService } from '../services/integrationService';
-import type { CreateConnectionRequest } from '../types';
+import type { CreateConnectionRequest, IntegrationConnection } from '../types';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/queryKeys';
 import { isToastHandled } from '@/lib/errors';
@@ -57,14 +57,39 @@ export function useReconnectConnection() {
   });
 }
 
-export function useDeleteConnection() {
+/**
+ * Delete an integration connection.
+ *
+ * @param options.silent — suppress the success toast. Useful when the deletion
+ *   happens as part of a larger cancel/cleanup flow (e.g. user discards mid-
+ *   Create wizard) where a "successfully deleted" celebration would feel
+ *   off-tone. Errors still toast either way.
+ */
+export function useDeleteConnection(options?: { silent?: boolean }) {
   const queryClient = useQueryClient();
+  const silent = options?.silent ?? false;
 
   return useMutation({
     mutationFn: (connectionId: string) =>
       integrationService.deleteConnection(connectionId),
-    onSuccess: () => {
-      toast.success('Connection deleted successfully');
+    onSuccess: (_data, connectionId) => {
+      if (!silent) toast.success('Connection deleted successfully');
+
+      // Splice the deleted connection out of the cached list immediately so the
+      // UI reflects the deletion without waiting for the refetch. Pure
+      // invalidation alone is enough in theory (TanStack Query refetches
+      // mounted observers on invalidate), but in practice the refetch can race
+      // with React's render cycle and leave the deleted card on screen for a
+      // beat — which the user was hitting and reading as "I have to restart".
+      // Optimistic-on-success removes that beat entirely.
+      queryClient.setQueryData<IntegrationConnection[]>(
+        queryKeys.integrationConnections(),
+        (old) => old?.filter((c) => c.id !== connectionId) ?? []
+      );
+
+      // Still invalidate so the next mount/focus reconciles against the server.
+      // Belt-and-suspenders: if the optimistic splice and the server view ever
+      // diverge (e.g. another tab created a new connection), this catches it.
       queryClient.invalidateQueries({ queryKey: queryKeys.integrationConnections() });
     },
     onError: (error) => {

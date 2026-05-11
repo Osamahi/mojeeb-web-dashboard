@@ -80,10 +80,23 @@ export function ConnectedIntegrationCard({
     }
   }, [connection.id, testMutation]);
 
-  // "Active" is encoded by the corner dot (green) — no extra pill required, matches
-  // /connections's pattern of "presence = healthy". Token-expired or non-active connections
-  // hide the dot; the user will see them via the row's reduced opacity instead.
-  const isHealthy = connection.status === 'active' && !connection.isTokenExpired;
+  // Corner status dot is tri-conceptual but bi-visual:
+  //   - Green:  ready to use right now (auth works + at least one op wired up)
+  //   - Yellow: needs attention (broken auth OR orphan — no actions wired)
+  //
+  // We collapse both failure modes into a single amber visual because users only
+  // care that *something* is off; the subtitle copy disambiguates which one
+  // ("Needs reconnect" for broken auth, empty op chips for orphan).
+  //
+  // We still keep `isAuthHealthy` separate because it drives two side effects
+  // that DON'T apply to orphans:
+  //   - Reduced row opacity (broken-auth only — orphan is full-opacity since
+  //     it's a valid setup-in-progress state, not a failure)
+  //   - "Needs reconnect" amber subtitle copy (broken-auth only — reconnect
+  //     wouldn't fix an orphan anyway)
+  const isAuthHealthy = connection.status === 'active' && !connection.isTokenExpired;
+  const hasWiredOps = enabledOps.size > 0;
+  const isHealthy = isAuthHealthy && hasWiredOps;
 
   // Subtitle = three crumbs: connector name + spreadsheet title (from /metadata) +
   // most-used tab (derived from actions). The spreadsheet title fetch piggybacks on
@@ -106,24 +119,38 @@ export function ConnectedIntegrationCard({
       <div
         className={cn(
           'group relative flex flex-col gap-2 rounded-lg border border-neutral-200 bg-white p-2.5 sm:p-3 transition-all hover:border-neutral-300 hover:shadow-sm',
-          !isHealthy && 'opacity-90',
+          // Only dim for genuinely-broken auth, not for orphans. Orphan is a
+          // valid setup-in-progress state and shouldn't look like an error.
+          !isAuthHealthy && 'opacity-90',
           className
         )}
       >
         {/* Top row — mirrors /connections exactly: icon (with status dot) + name +
             metadata strip + dropdown menu. Tight horizontal layout. */}
         <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Icon with corner status dot. The dot IS the active signal — no need
-              for a separate "Active" pill, per /connections's pattern. */}
+          {/* Icon with corner status dot — always rendered, color encodes status:
+              green = ready to use, amber = needs attention (broken auth or orphan).
+              No separate "Active" pill needed — matches /connections's "presence =
+              signal" pattern, just with two presence-colors instead of one. */}
           <div className="flex-shrink-0 relative">
             <IntegrationIcon
               connectorId={connection.connectorType}
               brandBgColor={meta?.brandBgColor}
               size="md"
             />
-            {isHealthy && (
-              <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white bg-green-500" />
-            )}
+            <span
+              className={cn(
+                'absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-white',
+                isHealthy ? 'bg-green-500' : 'bg-amber-500'
+              )}
+              aria-label={
+                isHealthy
+                  ? t('tools.status_dot_ready')
+                  : !isAuthHealthy
+                  ? t('tools.status_needs_reconnect')
+                  : t('tools.status_dot_orphan')
+              }
+            />
           </div>
 
           {/* Account info — name + meta strip, same shape as /connections. */}
@@ -148,7 +175,10 @@ export function ConnectedIntegrationCard({
                 </span>
               ))}
 
-              {!isHealthy && (
+              {/* Amber "Needs reconnect" only for broken auth, not for orphans.
+                  Orphan = no actions wired up; the empty op-chip row already
+                  communicates that, and Reconnect wouldn't fix it anyway. */}
+              {!isAuthHealthy && (
                 <>
                   <span>•</span>
                   <span className="whitespace-nowrap text-amber-600 font-medium">

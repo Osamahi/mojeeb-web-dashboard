@@ -171,6 +171,10 @@ export const navigation: NavigationItem[] = [
     translationKey: 'navigation.integrations',
     href: '/integrations',
     icon: Cable,
+    // Legacy SuperAdmin surface — the customer-facing way to manage integrations
+    // is now the Tools tab (which uses the same data but a non-technical UX).
+    // Kept around for SuperAdmin debugging/access to the raw connections list.
+    requireSuperAdmin: true,
   },
   {
     name: 'Stripe Products',
