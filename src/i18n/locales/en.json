@@ -52,7 +52,9 @@
     "next": "Next",
     "uploading": "Uploading...",
     "upload": "Upload",
-    "changing": "Changing..."
+    "changing": "Changing...",
+    "retry": "Retry",
+    "retrying": "Retrying..."
   },
   "agents": {
     "title": "AI Agents",
@@ -249,7 +251,7 @@
   },
   "tools": {
     "title": "Agent Tools",
-    "subtitle": "Tools your AI can use to take actions during conversations.",
+    "subtitle": "Connect Mojeeb to your data sources & tools",
     "create_button": "Create Tool",
     "search_placeholder": "Search tools by name, description, or trigger...",
     "no_agent_title": "Select an agent",
@@ -257,7 +259,45 @@
     "empty_title": "No tools yet",
     "empty_description": "Create a tool to give this AI agent abilities like saving leads to a Google Sheet.",
     "delete_title": "Delete Tool",
-    "delete_message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+    "delete_message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "your_integrations_heading": "Your tools ({{count}})",
+    "available_heading": "Available integrations",
+    "connect_cta": "Connect",
+    "notify_me_cta": "Notify me",
+    "notify_me_toast": "You'll be the first to know when {{name}} is ready.",
+    "coming_soon_pill": "Coming Soon",
+    "by_mojeeb_badge": "By Mojeeb · Native",
+    "operations_count": "{{count}} operation",
+    "operations_count_plural": "{{count}} operations",
+    "op_chip_enabled_tooltip": "Used by an action on this connection",
+    "op_chip_available_tooltip": "Available — wire up an action to enable",
+    "status_active": "Active",
+    "status_needs_reconnect": "Needs reconnect",
+    "reconnect": "Reconnect",
+    "delete": "Delete",
+    "spreadsheet_id_label": "Spreadsheet ID",
+    "created_label": "Created",
+    "empty_active_title": "No tools connected yet",
+    "empty_active_subtitle": "Pick an integration below to give your AI agent superpowers.",
+    "load_error_title": "Could not load your tools",
+    "delete_connection_title": "Disconnect integration?",
+    "delete_connection_message": "This will remove the integration connection. Any actions using it will stop working until you reconnect.",
+    "catalog_google_sheets_desc": "Sync conversation data to spreadsheets in real time. Add, update, and read rows.",
+    "catalog_google_calendar_desc": "Book meetings and check availability directly from chat.",
+    "catalog_notion_desc": "Create and update Notion pages from chat interactions.",
+    "op_add_row": "Add row",
+    "op_update_row": "Update row",
+    "op_read_row": "Read row",
+    "op_create_event": "Create event",
+    "op_list_availability": "Check availability",
+    "op_create_page": "Create page",
+    "op_update_page": "Update page",
+    "test": "Test",
+    "testing": "Testing…",
+    "catalog_shopify_desc": "Sync orders and product data with your Shopify store.",
+    "op_create_order": "Create order",
+    "op_find_product": "Find product",
+    "op_update_order": "Update order"
   },
   "leads": {
     "title": "Clients",
@@ -648,8 +688,7 @@
     "messages_on": "Messages On",
     "messages_off": "Messages Off",
     "comments_on": "Comments On",
-    "comments_off": "Comments Off",
-    "reconnect": "Reconnect"
+    "comments_off": "Comments Off"
   },
   "lead_summary": {
     "title": "Summary",
@@ -1296,7 +1335,6 @@
     "ready_to_scale": "Ready to scale?",
     "upgrade_prompt": "You're using {{percentage}}% of your message limit. Upgrade to get more capacity and unlock advanced features.",
     "view_upgrade_options": "View Upgrade Options",
-    "settings": "Settings",
     "table_limits": "Limits",
     "table_usage": "Usage",
     "non_paying": "Non-paying",
@@ -1402,7 +1440,6 @@
     "opening": "Opening...",
     "no_active_subscription": "No active subscription",
     "invoice_history": "Invoice History",
-    "view_invoices": "View Invoices",
     "payment_failed_title": "Payment Failed",
     "payment_failed_message": "Your last payment failed. Please update your payment method to avoid service interruption.",
     "update_payment_method": "Update Payment Method",
@@ -1430,7 +1467,6 @@
     "canceling": "Canceling...",
     "confirm_cancel": "Cancel Subscription",
     "payment_method_title": "Payment Method",
-    "payment_method": "Payment Method",
     "no_payment_method": "No payment method on file",
     "add_payment_method": "Add Payment Method",
     "payment_method_desc": "Manage your payment method",
@@ -1464,7 +1500,6 @@
     "go_to_dashboard": "Go to Dashboard",
     "invoice_history_title": "Invoice History",
     "invoice_history_subtitle": "View and download your past invoices",
-    "payment_method_title": "Payment Method",
     "payment_method_subtitle": "Manage your payment information",
     "download_pdf_title": "Download PDF",
     "view_invoice_title": "View invoice",
@@ -2152,7 +2187,10 @@
     "logout": "Logout"
   },
   "voice_recorder": {
-    "microphone_error": "Failed to access microphone. Please check permissions."
+    "cancel_recording_aria": "Cancel recording",
+    "cancel_recording_title": "Cancel recording",
+    "send_recording_aria": "Send recording",
+    "send_recording_title": "Send recording"
   },
   "date_separator": {
     "today": "Today",
@@ -2493,12 +2531,6 @@
     "drop_files_supported": "Images, audio, or documents",
     "unsupported_file_type": "Unsupported file type: {{filenames}}"
   },
-  "voice_recorder": {
-    "cancel_recording_aria": "Cancel recording",
-    "cancel_recording_title": "Cancel recording",
-    "send_recording_aria": "Send recording",
-    "send_recording_title": "Send recording"
-  },
   "errors": {
     "permission_denied": "You don't have permission to perform this action. Contact your admin.",
     "something_went_wrong": "Something went wrong",
@@ -2592,21 +2624,36 @@
     "field": {
       "name": "Product Name",
       "description": "Description",
-      "active": "Active Status"
+      "active": "Active Status",
+      "product_id": "Product ID",
+      "amount": "Amount",
+      "currency": "Currency",
+      "billing_interval": "Billing Interval",
+      "interval": "Interval",
+      "price_id": "Price ID",
+      "price_active": "Price Active"
     },
     "placeholder": {
       "name": "Enter product name (e.g., Professional Plan)",
-      "description": "Optional description of the product features"
+      "description": "Optional description of the product features",
+      "amount": "0.00"
     },
     "help": {
       "name": "A clear, descriptive name for your product",
       "description": "Additional details about what this product includes",
-      "active": "Inactive products won't be available for purchase"
+      "active": "Inactive products won't be available for purchase",
+      "product_id_readonly": "Product ID cannot be changed after creation",
+      "amount": "Enter the price in your chosen currency (e.g., 29.99 for $29.99 USD)",
+      "currency": "Select the currency for this price",
+      "billing_interval": "How often customers will be charged",
+      "price_active": "Inactive prices won't be available for new subscriptions"
     },
     "validation": {
       "name_required": "Product name is required",
       "name_too_long": "Name cannot exceed 200 characters",
-      "description_too_long": "Description cannot exceed 5000 characters"
+      "description_too_long": "Description cannot exceed 5000 characters",
+      "amount_required": "Amount is required",
+      "amount_positive": "Amount must be greater than 0"
     },
     "note_title": "Note",
     "note_add_prices": "After creating the product, you'll need to add prices through the Stripe Dashboard",
@@ -2645,40 +2692,6 @@
     "delete_product_success": "Product archived successfully",
     "delete_product_error": "Failed to archive product",
     "note_edit_product": "Changes to product name and description will be reflected immediately. Inactive products are hidden from customers.",
-    "field": {
-      "name": "Product Name",
-      "description": "Description",
-      "active": "Active Status",
-      "product_id": "Product ID",
-      "amount": "Amount",
-      "currency": "Currency",
-      "billing_interval": "Billing Interval",
-      "interval": "Interval",
-      "price_id": "Price ID",
-      "price_active": "Price Active"
-    },
-    "placeholder": {
-      "name": "Enter product name (e.g., Professional Plan)",
-      "description": "Optional description of the product features",
-      "amount": "0.00"
-    },
-    "help": {
-      "name": "A clear, descriptive name for your product",
-      "description": "Additional details about what this product includes",
-      "active": "Inactive products won't be available for purchase",
-      "product_id_readonly": "Product ID cannot be changed after creation",
-      "amount": "Enter the price in your chosen currency (e.g., 29.99 for $29.99 USD)",
-      "currency": "Select the currency for this price",
-      "billing_interval": "How often customers will be charged",
-      "price_active": "Inactive prices won't be available for new subscriptions"
-    },
-    "validation": {
-      "name_required": "Product name is required",
-      "name_too_long": "Name cannot exceed 200 characters",
-      "description_too_long": "Description cannot exceed 5000 characters",
-      "amount_required": "Amount is required",
-      "amount_positive": "Amount must be greater than 0"
-    },
     "currency": {
       "usd": "USD - US Dollar",
       "egp": "EGP - Egyptian Pound",
@@ -2888,7 +2901,7 @@
     "message_templates": "Message Templates",
     "templates_count": "{{count}} Templates",
     "add_template": "Add Template",
-    "no_templates_title": "No Templates Found",
+    "no_templates_title": "No templates yet",
     "no_templates_description": "Create your first WhatsApp message template to get started.",
     "verified_name": "WhatsApp Business",
     "status_approved": "APPROVED",
@@ -3010,9 +3023,7 @@
     "info_p3": "Once the 24-hour window expires, you can only reach the customer using a pre-approved template message.",
     "info_remaining": "Time remaining: {{time}}",
     "create_template_link": "Create a template",
-    "no_templates_title": "No templates yet",
     "no_templates_desc": "Create a template in WhatsApp Management to start messaging customers.",
-    "add_template": "Add Template",
     "manage_templates_desc": "Create, edit, or view all templates"
   },
   "comments_page": {

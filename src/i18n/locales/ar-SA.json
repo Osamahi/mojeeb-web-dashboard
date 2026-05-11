@@ -49,7 +49,9 @@
     "showing_x_of_y": "عرض {{start}}-{{end}} من {{total}}",
     "page_x_of_y": "صفحة {{current}} من {{total}}",
     "previous": "السابق",
-    "next": "التالي"
+    "next": "التالي",
+    "retry": "إعادة المحاولة",
+    "retrying": "جارٍ المحاولة..."
   },
   "agents": {
     "title": "الوكلاء الذكيون",
@@ -633,8 +635,7 @@
     "messages_on": "الرسائل مفعّلة",
     "messages_off": "الرسائل متوقفة",
     "comments_on": "التعليقات مفعّلة",
-    "comments_off": "التعليقات متوقفة",
-    "reconnect": "إعادة الاتصال"
+    "comments_off": "التعليقات متوقفة"
   },
   "lead_summary": {
     "title": "الملخص",
@@ -1446,7 +1447,6 @@
     "checkout_try_again": "يمكنك المحاولة مرة أخرى في أي وقت من صفحة الاشتراك.",
     "invoice_history_title": "سجل الفواتير",
     "invoice_history_subtitle": "عرض وتنزيل فواتيرك السابقة",
-    "payment_method_title": "طريقة الدفع",
     "payment_method_subtitle": "إدارة معلومات الدفع الخاصة بك",
     "download_pdf_title": "تنزيل PDF",
     "view_invoice_title": "عرض الفاتورة",
@@ -2111,7 +2111,10 @@
     "logout": "تسجيل الخروج"
   },
   "voice_recorder": {
-    "microphone_error": "فشل الوصول إلى الميكروفون. يرجى التحقق من الأذونات."
+    "cancel_recording_aria": "إلغاء التسجيل",
+    "cancel_recording_title": "إلغاء التسجيل",
+    "send_recording_aria": "إرسال التسجيل",
+    "send_recording_title": "إرسال التسجيل"
   },
   "date_separator": {
     "today": "اليوم",
@@ -2452,12 +2455,6 @@
     "drop_files_supported": "صور أو صوتيات أو مستندات",
     "unsupported_file_type": "نوع ملف غير مدعوم: {{filenames}}"
   },
-  "voice_recorder": {
-    "cancel_recording_aria": "إلغاء التسجيل",
-    "cancel_recording_title": "إلغاء التسجيل",
-    "send_recording_aria": "إرسال التسجيل",
-    "send_recording_title": "إرسال التسجيل"
-  },
   "errors": {
     "permission_denied": "ليس لديك صلاحية لتنفيذ هذا الإجراء. تواصل مع المسؤول.",
     "something_went_wrong": "حدث خطأ ما",
@@ -2724,7 +2721,7 @@
     "message_templates": "قوالب الرسائل",
     "templates_count": "{{count}} قالب",
     "add_template": "إضافة قالب",
-    "no_templates_title": "لم يتم العثور على قوالب",
+    "no_templates_title": "لا توجد قوالب بعد",
     "no_templates_description": "قم بإنشاء أول قالب رسائل واتساب للبدء.",
     "verified_name": "واتساب بزنس",
     "status_approved": "موافق عليه",
@@ -2846,9 +2843,7 @@
     "info_p3": "بمجرد انتهاء النافذة، يمكنك التواصل مع العميل فقط باستخدام رسالة قالب معتمدة مسبقاً.",
     "info_remaining": "الوقت المتبقي: {{time}}",
     "create_template_link": "إنشاء قالب",
-    "no_templates_title": "لا توجد قوالب بعد",
     "no_templates_desc": "أنشئ قالب في إدارة واتساب لبدء مراسلة العملاء.",
-    "add_template": "إضافة قالب",
     "manage_templates_desc": "إنشاء أو تعديل أو عرض جميع القوالب"
   },
   "comments_page": {
@@ -3176,5 +3171,46 @@
     "132012": "تم تعطيل القالب. أنشئ قالباً جديداً أو تواصل مع دعم Meta.",
     "133010": "رقم الهاتف غير مسجل على WhatsApp Cloud API. أعد تسجيله من Meta Business Manager.",
     "unknown": "فشل تسليم الرسالة. لم يقدم واتساب تفاصيل إضافية."
+  },
+  "tools": {
+    "subtitle": "اربط مساعدك الذكي بمصادر بياناتك وأدواتك",
+    "your_integrations_heading": "أدواتك ({{count}})",
+    "available_heading": "تكاملات متاحة",
+    "connect_cta": "اربط",
+    "notify_me_cta": "أبلغني",
+    "notify_me_toast": "سنخبرك أول من يعرف عند جاهزية {{name}}.",
+    "coming_soon_pill": "قريباً",
+    "by_mojeeb_badge": "من مجيب · أساسي",
+    "operations_count": "{{count}} عملية",
+    "operations_count_plural": "{{count}} عمليات",
+    "op_chip_enabled_tooltip": "مستخدم حالياً في إجراء على هذا الاتصال",
+    "op_chip_available_tooltip": "متاح — اربطه بإجراء لتفعيله",
+    "status_active": "نشط",
+    "status_needs_reconnect": "يحتاج إعادة ربط",
+    "reconnect": "إعادة الربط",
+    "delete": "حذف",
+    "spreadsheet_id_label": "معرف الجدول",
+    "created_label": "تم الإنشاء",
+    "empty_active_title": "لم تربط أي أداة بعد",
+    "empty_active_subtitle": "اختر تكاملاً من الأسفل لتعزيز قدرات مساعدك.",
+    "load_error_title": "تعذر تحميل أدواتك",
+    "delete_connection_title": "فصل التكامل؟",
+    "delete_connection_message": "سيتم إزالة الاتصال. أي إجراءات تستخدمه ستتوقف حتى تعيد الربط.",
+    "catalog_google_sheets_desc": "مزامنة بيانات المحادثات مع جداول البيانات في الوقت الفعلي. إضافة وتعديل وقراءة الصفوف.",
+    "catalog_google_calendar_desc": "حجز المواعيد والتحقق من التوفر مباشرة من المحادثة.",
+    "catalog_notion_desc": "إنشاء وتحديث صفحات Notion من تفاعلات المحادثة.",
+    "op_add_row": "إضافة صف",
+    "op_update_row": "تعديل صف",
+    "op_read_row": "قراءة صف",
+    "op_create_event": "إنشاء حدث",
+    "op_list_availability": "التحقق من التوفر",
+    "op_create_page": "إنشاء صفحة",
+    "op_update_page": "تعديل صفحة",
+    "test": "اختبار",
+    "testing": "جاري الاختبار…",
+    "catalog_shopify_desc": "مزامنة الطلبات وبيانات المنتجات مع متجر Shopify.",
+    "op_create_order": "إنشاء طلب",
+    "op_find_product": "البحث عن منتج",
+    "op_update_order": "تعديل طلب"
   }
 }
