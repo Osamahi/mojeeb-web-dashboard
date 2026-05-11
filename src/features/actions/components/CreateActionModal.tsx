@@ -24,12 +24,26 @@ interface CreateActionModalProps {
   onClose: () => void;
 }
 
+// Default trigger prompt for the paired update_row action created when "allow edit" is
+// checked. Editable by the user before submit. The wording leans on the LLM noticing the
+// `row_reference_id` from a prior add_row result in conversation history.
+const DEFAULT_UPDATE_TRIGGER_PROMPT =
+  'When the customer wants to update or change information from a row they previously created in this conversation, ' +
+  'extract the new field values and call this with the row_reference_id from the earlier add result and only the fields that should change.';
+
 export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
   const { agentId } = useAgentContext();
   const createMutation = useCreateAction();
   const [jsonErrors, setJsonErrors] = useState<Record<string, string>>({});
   const [integrationConfig, setIntegrationConfig] = useState<IntegrationConfigValue>(defaultIntegrationConfig);
   const [connectionId, setConnectionId] = useState('');
+
+  // "Allow edit" pairs a sibling update_row action with the add_row this modal creates.
+  // Both share the same connection + column_mapping + target_sheet_id; only the operation
+  // and trigger prompt differ. Stored as separate action rows in DB so the user can manage
+  // them independently afterwards (rename, deactivate, delete) without coupling.
+  const [allowEdit, setAllowEdit] = useState(false);
+  const [updateTriggerPrompt, setUpdateTriggerPrompt] = useState(DEFAULT_UPDATE_TRIGGER_PROMPT);
 
   const {
     register,
@@ -63,6 +77,8 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
     setJsonErrors({});
     setIntegrationConfig(defaultIntegrationConfig);
     setConnectionId('');
+    setAllowEdit(false);
+    setUpdateTriggerPrompt(DEFAULT_UPDATE_TRIGGER_PROMPT);
     onClose();
   };
 
@@ -121,6 +137,30 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
 
     try {
       await createMutation.mutateAsync(request);
+
+      // Paired update_row creation. Sibling action sharing connection + column_mapping +
+      // target_sheet_id; only operation and trigger prompt differ. Spread-and-override
+      // keeps serializeIntegrationConfig as the single source of truth for the canonical
+      // (add) shape — we only swap operation here.
+      if (isIntegration && allowEdit && actionConfig) {
+        const updateRequest: CreateActionRequest = {
+          ...request,
+          name: `${data.name} (update)`,
+          description: `Update an existing row previously created via "${data.name}". Mutates only the fields the customer asks to change.`,
+          triggerPrompt: updateTriggerPrompt,
+          actionConfig: { ...actionConfig, operation: 'update_row' },
+        };
+
+        try {
+          await createMutation.mutateAsync(updateRequest);
+        } catch {
+          // The add_row action was created OK; the update_row paired creation failed.
+          // We don't roll back the add — user can retry update creation manually from
+          // the actions list. The add action is still useful on its own.
+          // Error surfaces via createMutation.error state on the next render.
+        }
+      }
+
       handleClose();
     } catch {
       // Error is handled by TanStack Query's onError / mutation.error state
@@ -157,13 +197,54 @@ export function CreateActionModal({ isOpen, onClose }: CreateActionModalProps) {
 
         {/* Integration Config — shown when actionType is integration */}
         {isIntegration && (
-          <IntegrationActionConfig
-            connectionId={connectionId}
-            onConnectionChange={setConnectionId}
-            value={integrationConfig}
-            onChange={setIntegrationConfig}
-            onAutoFill={handleAutoFill}
-          />
+          <>
+            <IntegrationActionConfig
+              connectionId={connectionId}
+              onConnectionChange={setConnectionId}
+              value={integrationConfig}
+              onChange={setIntegrationConfig}
+              onAutoFill={handleAutoFill}
+            />
+
+            {/* Allow Edit — pairs an update_row action with this add_row action.
+                Both share the connection + column mapping; only the trigger prompt and
+                LLM-visible verb differ. Two separate action rows are created on submit. */}
+            {integrationConfig.targetTab && (
+              <div className="space-y-2">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={allowEdit}
+                    onChange={(e) => setAllowEdit(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 text-blue-600 border-neutral-300 rounded focus:ring-blue-500"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-neutral-700">
+                      Also allow updating existing rows
+                    </span>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      Creates a paired action so the AI can update rows it previously created in the same conversation.
+                    </p>
+                  </div>
+                </label>
+
+                {allowEdit && (
+                  <div className="ml-6">
+                    <label className="block text-sm font-medium text-neutral-700 mb-1">
+                      Update Trigger Prompt *
+                    </label>
+                    <textarea
+                      value={updateTriggerPrompt}
+                      onChange={(e) => setUpdateTriggerPrompt(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                      placeholder="When the customer wants to change an existing entry..."
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {jsonErrors.actionConfig && (

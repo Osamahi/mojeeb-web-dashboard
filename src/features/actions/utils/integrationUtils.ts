@@ -27,6 +27,7 @@ export type ActionFormData = {
 
 export const defaultIntegrationConfig: IntegrationConfigValue = {
   targetTab: '',
+  targetSheetId: 0,
   columnMapping: [],
 };
 
