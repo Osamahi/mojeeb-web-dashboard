@@ -108,7 +108,7 @@ const AgentCard = memo(function AgentCard({ agent }: AgentCardProps) {
   const handleStudioClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigate('/studio');
+    navigate('/setup');
   };
 
   const handleEditClick = (e: React.MouseEvent) => {

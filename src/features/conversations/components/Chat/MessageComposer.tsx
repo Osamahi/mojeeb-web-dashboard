@@ -1461,7 +1461,7 @@ export default memo(function MessageComposer({
                 onClick={() => handleRemoveImage(index)}
                 disabled={uploadedImage.isUploading}
                 className={cn(
-                  'absolute top-1 right-1',
+                  'absolute top-1 end-1',
                   'w-5 h-5',
                   'bg-neutral-800/70',
                   'text-white',

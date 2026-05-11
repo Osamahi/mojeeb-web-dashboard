@@ -268,8 +268,18 @@ export const router = createBrowserRouter([
         element: <AgentsPage />,
       },
       {
-        path: 'studio',
+        // Canonical URL for the agent-setup surface. The old `/studio` route
+        // below is kept as a permanent redirect so existing bookmarks, in-app
+        // notifications, and external links continue to resolve.
+        path: 'setup',
         element: <StudioPage />,
+      },
+      {
+        // Legacy route — preserved so existing bookmarks / shared links don't
+        // 404. Permanent redirect to `/setup`. Safe to delete once analytics
+        // show no inbound traffic on this path (give it ~6 months).
+        path: 'studio',
+        element: <Navigate to="/setup" replace />,
       },
       {
         path: 'connections',

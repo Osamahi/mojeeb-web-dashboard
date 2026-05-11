@@ -101,11 +101,19 @@ export function AvailableIntegrationRow({
         <div className="flex-shrink-0">
           <Button
             onClick={handleConnect}
-            className="h-7 sm:h-8 px-2.5 sm:px-3 bg-brand-mojeeb hover:bg-brand-mojeeb-hover text-white text-xs sm:text-sm"
+            // `inline-flex items-center justify-center gap-1.5` gives proper
+            // vertical centering + a direction-aware gap between the label and
+            // the icon. The previous `sm:ml-1` was a physical margin that put
+            // the spacing on the wrong side in RTL, which left the + glyph
+            // visually colliding with the Arabic label. Source order is
+            // label-then-icon; in RTL the flex container reverses the visual
+            // order automatically, so users see [+ ربط] without us needing to
+            // swap the JSX based on direction.
+            className="inline-flex items-center justify-center gap-1.5 h-7 sm:h-8 px-2.5 sm:px-3 bg-brand-mojeeb hover:bg-brand-mojeeb-hover text-white text-xs sm:text-sm"
             size="sm"
           >
             <span className="hidden sm:inline">{t('tools.connect_cta')}</span>
-            <Plus className="w-3.5 h-3.5 sm:ml-1" />
+            <Plus className="w-3.5 h-3.5" />
           </Button>
         </div>
       )}

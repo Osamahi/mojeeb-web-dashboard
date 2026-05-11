@@ -109,7 +109,9 @@ export const ConfirmDialog = ({
           onClick={onClose}
           disabled={isLoading}
           className={cn(
-            'absolute top-4 right-4 text-neutral-400 hover:text-neutral-600',
+            // Logical end-inline-side so the X auto-flips to the visual end
+            // edge in RTL (matches the modal's reading direction).
+            'absolute top-4 end-4 text-neutral-400 hover:text-neutral-600',
             'transition-colors rounded-md p-1 hover:bg-neutral-100',
             'disabled:opacity-50 disabled:pointer-events-none'
           )}

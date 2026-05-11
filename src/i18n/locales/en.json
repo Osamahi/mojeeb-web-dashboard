@@ -260,8 +260,8 @@
     "empty_description": "Create a tool to give this AI agent abilities like saving leads to a Google Sheet.",
     "delete_title": "Delete Tool",
     "delete_message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
-    "your_integrations_heading": "Your tools ({{count}})",
-    "available_heading": "Available integrations",
+    "your_integrations_heading": "Active tools ({{count}})",
+    "available_heading": "Available tools",
     "connect_cta": "Connect",
     "notify_me_cta": "Notify me",
     "notify_me_toast": "You'll be the first to know when {{name}} is ready.",
@@ -315,7 +315,19 @@
     "edit_modal_no_clone_source": "No existing action to base this on. Create one from the catalog first.",
     "edit_modal_file_label": "file name",
     "edit_modal_sheet_label": "sheet name",
-    "edit_modal_operations_heading": "Operations"
+    "edit_modal_operations_heading": "Operations",
+    "toast_connection_created": "Connection created successfully",
+    "toast_connection_reconnected": "Connection reconnected successfully",
+    "toast_connection_deleted": "Connection deleted successfully",
+    "toast_create_failed": "Failed to create connection",
+    "toast_reconnect_failed": "Failed to reconnect connection",
+    "toast_delete_failed": "Failed to delete connection",
+    "toast_test_success": "Connection test successful",
+    "toast_test_failed": "Connection test failed",
+    "toast_google_not_configured": "Google integration isn't configured properly. Please contact support.",
+    "toast_google_connect_failed": "Couldn't connect to your Google account. Please try again.",
+    "toast_setup_failed": "Couldn't set up the spreadsheet connection. Please try again.",
+    "toast_picker_failed": "Couldn't open Google Drive. Please try again."
   },
   "leads": {
     "title": "Clients",
@@ -741,7 +753,8 @@
     "delete_title": "Delete",
     "delete_aria": "Delete knowledge base",
     "name_placeholder": "Knowledge base name...",
-    "content_edit_placeholder": "Enter the knowledge base content..."
+    "content_edit_placeholder": "Enter the knowledge base content...",
+    "saved_successfully": "Saved successfully"
   },
   "organizations": {
     "title": "Organizations",
@@ -1142,7 +1155,7 @@
   "navigation": {
     "chats": "Chats",
     "analytics": "Analytics",
-    "setup": "Setup",
+    "setup": "Agent Setup",
     "connect": "Connect",
     "clients": "Clients",
     "comments": "Comments",
@@ -1176,7 +1189,8 @@
     "api_keys": "API Keys",
     "integrations": "Integrations",
     "support": "Support",
-    "main_aria_label": "Main navigation"
+    "main_aria_label": "Main navigation",
+    "badge_new": "New"
   },
   "sidebar": {
     "upgrade": "Upgrade"

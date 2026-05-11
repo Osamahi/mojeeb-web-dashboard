@@ -231,7 +231,7 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
   // ─── Step 1: OAuth ───────────────────────────────────────────────────────
   const handleConnectGoogle = useCallback(async () => {
     if (!integrationsClientId) {
-      toast.error('Google integrations client ID is not configured (VITE_GOOGLE_INTEGRATIONS_CLIENT_ID)');
+      toast.error(t('tools.toast_google_not_configured'));
       return;
     }
     setIsConnecting(true);
@@ -245,19 +245,22 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
       // Auto-advance to step 2 on OAuth success.
       setStep(2);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to connect Google account';
-      toast.error(message);
+      // Underlying error.message is typically English (Google SDK error). We
+      // surface a translated generic instead so the user doesn't see English
+      // mid-Arabic UI; the original error is still logged for debugging.
+      console.error('[CreateConnectionModal] OAuth failed', error);
+      toast.error(t('tools.toast_google_connect_failed'));
       // Stay on step 1 — the retry button is visible in the empty state.
     } finally {
       setIsConnecting(false);
     }
-  }, [integrationsClientId]);
+  }, [integrationsClientId, t]);
 
   // ─── Step 2: Drive Picker ────────────────────────────────────────────────
   const handlePickSheet = useCallback(async () => {
     if (!oauthSessionId) return;
     if (!developerKey) {
-      toast.error('Google API key is not configured (VITE_GOOGLE_API_KEY)');
+      toast.error(t('tools.toast_google_not_configured'));
       return;
     }
     setIsPicking(true);
@@ -285,11 +288,11 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
       setStep(3);
     } catch (error) {
       console.error('Picker / connection-create failed', error);
-      toast.error('Failed to set up the spreadsheet connection');
+      toast.error(t('tools.toast_setup_failed'));
     } finally {
       setIsPicking(false);
     }
-  }, [oauthSessionId, developerKey, appId, createConnectionMutation]);
+  }, [oauthSessionId, developerKey, appId, createConnectionMutation, t]);
 
   // ─── Auto-trigger OAuth on step-1 landing ───────────────────────────────
   // Fires once when modal opens with empty state. Same trigger fires again
@@ -603,9 +606,14 @@ export default function CreateConnectionModal({ isOpen, onClose }: CreateConnect
                   {t('integrations.create_connection')}
                 </h2>
 
-                {/* Stepper row — dots + connecting lines + labels below. */}
+                {/* Stepper row — dots + connecting lines + labels below.
+                    Inherits document direction: in RTL the first step
+                    (Connect) renders on the right, last step (Customize) on
+                    the left. The Connector component's fill-animation uses
+                    `origin-left rtl:origin-right` so the green sweep starts
+                    from the just-completed step in either direction. */}
                 <div className="px-6 pt-6 pb-5">
-                  <div className="flex items-start" dir="ltr">
+                  <div className="flex items-start">
                     {stepStatuses.map((status, i) => (
                       <Fragment key={i}>
                         {i > 0 && (
@@ -786,7 +794,10 @@ function Connector({ filled, delay }: { filled: boolean; delay: number }) {
       <div className="absolute inset-0 bg-[#D8D8D0]" />
       {filled && (
         <motion.div
-          className="absolute inset-0 bg-brand-mojeeb origin-left"
+          // `origin-left` for LTR, flipped to `origin-right` in RTL so the
+          // green fill always sweeps from the just-completed step toward the
+          // next one regardless of reading direction.
+          className="absolute inset-0 bg-brand-mojeeb origin-left rtl:origin-right"
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ delay, duration: 0.3, ease: 'easeOut' }}
@@ -1049,8 +1060,13 @@ function Step3Body({
           deep elevation shadow, hairline border, hidden scrollbar, edge fades.
           Pinned to the top so the user sees "this is your sheet" before any
           configuration controls. */}
+      {/* `my-2` adds ~8px extra breathing room above + below the table beyond
+          what the parent's `space-y-4` already provides — the table is the
+          tallest element on the page and was reading cramped between the
+          header strip and the op-toggles card. The empty body row is bumped
+          to `h-10` for the same reason (more visual presence). */}
       {columnHeaders.length > 0 ? (
-        <div className="relative" dir="ltr">
+        <div className="relative my-2" dir="ltr">
           <div
             ref={tableScrollRef}
             onScroll={recalcScrollState}
@@ -1069,7 +1085,7 @@ function Step3Body({
                       key={i}
                       scope="col"
                       className={cn(
-                        'px-3 py-2 min-w-[120px] text-[11px] font-semibold text-neutral-700 text-start whitespace-nowrap',
+                        'px-3 py-2.5 min-w-[120px] text-[11px] font-semibold text-neutral-700 text-start whitespace-nowrap',
                         i < columnHeaders.length - 1 && 'border-e border-neutral-200'
                       )}
                     >
@@ -1084,7 +1100,7 @@ function Step3Body({
                     <td
                       key={i}
                       className={cn(
-                        'px-3 py-2 h-7 border-t border-neutral-200',
+                        'px-3 py-2 h-10 border-t border-neutral-200',
                         i < columnHeaders.length - 1 && 'border-e border-neutral-200'
                       )}
                       aria-hidden="true"
@@ -1115,7 +1131,7 @@ function Step3Body({
           )}
         </div>
       ) : (
-        <div className="flex items-center justify-center py-10 text-sm text-neutral-500 rounded-xl border border-dashed border-neutral-200 text-center px-4">
+        <div className="my-2 flex items-center justify-center py-10 text-sm text-neutral-500 rounded-xl border border-dashed border-neutral-200 text-center px-4">
           {t('integrations.create_modal_step3_no_columns_enabled')}
         </div>
       )}

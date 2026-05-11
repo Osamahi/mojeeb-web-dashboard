@@ -8,7 +8,6 @@ import {
   Users,
   MessageSquare,
   MessageCircleReply,
-  Wrench,
   Plug,
   Contact,
   MessagesSquare,
@@ -22,7 +21,6 @@ import {
   Puzzle,
   Layers,
   Workflow,
-  Sparkles,
   Paperclip,
   Timer,
   ListOrdered,
@@ -67,20 +65,30 @@ export const navigation: NavigationItem[] = [
     requiresAgent: true,
   },
   {
-    name: 'Setup',
+    // Renamed from "Setup" → "Agent Setup" (Apr 2026) to make the surface's
+    // job explicit: this is where the user configures the agent itself.
+    // Icon flipped from `Wrench` → `Bot` for the same reason — Wrench reads
+    // as generic "settings"; Bot ties the entry to its actual subject.
+    name: 'Agent Setup',
     translationKey: 'navigation.setup',
-    href: '/studio',
-    icon: Wrench,
+    href: '/setup',
+    icon: Bot,
     requiresAgent: true,
   },
   {
-    // Customer-facing tools page — agent-scoped CRUD over actions, available to org members.
-    // Distinct from /actions (SuperAdmin-only, cross-agent admin view).
+    // Customer-facing tools page — agent-scoped CRUD over actions, available
+    // to org members. Same underlying concept as /actions (SuperAdmin admin
+    // view), just scoped to one agent and presented for non-technical users —
+    // hence both surfaces share the `Workflow` icon for visual consistency.
     name: 'Tools',
     translationKey: 'navigation.tools',
     href: '/tools',
-    icon: Sparkles,
+    icon: Workflow,
     requiresAgent: true,
+    // Recently shipped — surface a small "NEW" pill in the sidebar so existing
+    // users notice the tab. Remove this line after the tab has been in prod
+    // for ~30 days (or when the next major surface ships and steals the spotlight).
+    badge: 'navigation.badge_new',
   },
   {
     name: 'Connect',
@@ -96,10 +104,15 @@ export const navigation: NavigationItem[] = [
     requiresAgent: true,
   },
   {
+    // SuperAdmin-only — cross-org listing of all agents in the system. The
+    // customer-facing "Agent Setup" entry above covers the same intent for
+    // single-agent users, and the agent switcher in the top bar handles
+    // selection across the user's own agents.
     name: 'Agents',
     translationKey: 'navigation.agents',
     href: '/agents',
     icon: Bot,
+    requireSuperAdmin: true,
   },
   {
     name: 'Users',
@@ -203,6 +216,11 @@ export const navigation: NavigationItem[] = [
     icon: UserPlus,
   },
   {
+    // SuperAdmin cross-agent admin view of the same action primitives that
+    // Tools surfaces to customers. Both share the `Workflow` icon by design —
+    // they're two views into the same underlying concept, just at different
+    // privilege levels (Tools = customer-facing, agent-scoped; Actions =
+    // SuperAdmin-only, cross-agent admin view).
     name: 'Actions',
     translationKey: 'navigation.actions',
     href: '/actions',

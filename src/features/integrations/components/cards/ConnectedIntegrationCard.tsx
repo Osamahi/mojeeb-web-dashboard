@@ -18,7 +18,7 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MoreVertical, Trash2, RefreshCw, FlaskConical, Loader2, CheckCircle2, XCircle, Pencil } from 'lucide-react';
+import { MoreVertical, Trash2, RefreshCw, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -29,7 +29,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { IntegrationIcon } from '../IntegrationIcon';
 import ReconnectConnectionModal from '../ReconnectConnectionModal';
-import { useTestConnection, useConnectionMetadata } from '../../hooks/useIntegrations';
+import { useConnectionMetadata } from '../../hooks/useIntegrations';
 import { getIntegrationById, type IntegrationOperationMeta } from '../../constants/integrations';
 import type { IntegrationConnection } from '../../types';
 
@@ -63,22 +63,6 @@ export function ConnectedIntegrationCard({
   const [isReconnectOpen, setIsReconnectOpen] = useState(false);
   const handleOpenReconnect = useCallback(() => setIsReconnectOpen(true), []);
   const handleCloseReconnect = useCallback(() => setIsReconnectOpen(false), []);
-
-  // Inline test state — when user clicks "Test" inside the dropdown, we briefly
-  // show success/error icons on the menu item itself. Keeps the affordance discoverable
-  // without adding a second inline button to the row.
-  const testMutation = useTestConnection();
-  const [lastTestResult, setLastTestResult] = useState<'success' | 'error' | null>(null);
-  const handleTest = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setLastTestResult(null);
-    try {
-      const result = await testMutation.mutateAsync(connection.id);
-      setLastTestResult(result.success ? 'success' : 'error');
-    } catch {
-      setLastTestResult('error');
-    }
-  }, [connection.id, testMutation]);
 
   // Corner status dot is tri-conceptual but bi-visual:
   //   - Green:  ready to use right now (auth works + at least one op wired up)
@@ -161,13 +145,14 @@ export function ConnectedIntegrationCard({
               </h3>
             </div>
 
-            {/* Metadata strip — bullet-separated, low contrast. dir="ltr" on the
-                whole strip because spreadsheet ids are ASCII and bidi reflow can
-                push the trailing ellipsis to the wrong side in Arabic. */}
-            <div
-              className="flex items-center gap-1.5 sm:gap-2 text-[11px] text-neutral-500 flex-wrap"
-              dir="ltr"
-            >
+            {/* Metadata strip — bullet-separated, low contrast. Inherits document
+                direction so RTL users see chunks ordered right-to-left (connector
+                name on the right, tab name on the left). The chunks themselves
+                are mixed-script (Latin connector name + Arabic tab label etc.)
+                and the bidi algorithm renders them correctly inline. We do NOT
+                force `dir="ltr"` here — that would visually duplicate the LTR
+                ordering for Arabic users and read backwards. */}
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] text-neutral-500 flex-wrap">
               {subtitleChunks.map((chunk, i) => (
                 <span key={i} className="whitespace-nowrap flex items-center gap-1.5 sm:gap-2">
                   {i > 0 && <span>•</span>}
@@ -206,19 +191,6 @@ export function ConnectedIntegrationCard({
                 <DropdownMenuItem onClick={() => onEdit(connection.id)}>
                   <Pencil className="h-4 w-4 me-2" />
                   {t('tools.edit')}
-                </DropdownMenuItem>
-
-                <DropdownMenuItem onClick={handleTest} disabled={testMutation.isPending}>
-                  {testMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                  ) : lastTestResult === 'success' ? (
-                    <CheckCircle2 className="h-4 w-4 me-2 text-green-600" />
-                  ) : lastTestResult === 'error' ? (
-                    <XCircle className="h-4 w-4 me-2 text-red-600" />
-                  ) : (
-                    <FlaskConical className="h-4 w-4 me-2" />
-                  )}
-                  {testMutation.isPending ? t('tools.testing') : t('tools.test')}
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={handleOpenReconnect}>

@@ -119,7 +119,7 @@ export default function ReconnectConnectionModal({
   // ─── Step 1: OAuth ───────────────────────────────────────────────────────
   const handleConnectGoogle = useCallback(async () => {
     if (!integrationsClientId) {
-      toast.error('Google integrations client ID is not configured (VITE_GOOGLE_INTEGRATIONS_CLIENT_ID)');
+      toast.error(t('tools.toast_google_not_configured'));
       return;
     }
     setIsConnecting(true);
@@ -133,13 +133,16 @@ export default function ReconnectConnectionModal({
       setOauthSessionId(newSessionId);
       setStep(2);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to connect Google account';
-      toast.error(message);
+      // Underlying error.message is typically English (Google SDK error). We
+      // surface a translated generic instead so the user doesn't see English
+      // mid-Arabic UI; the original error is still logged for debugging.
+      console.error('[ReconnectConnectionModal] OAuth failed', error);
+      toast.error(t('tools.toast_google_connect_failed'));
       // Stay on step 1 — retry button is in the empty state.
     } finally {
       setIsConnecting(false);
     }
-  }, [integrationsClientId]);
+  }, [integrationsClientId, t]);
 
   // ─── Step 2: Drive Picker + reconnect POST ───────────────────────────────
   // Unlike Create, picking the sheet is the LAST thing — once the user picks
@@ -149,7 +152,7 @@ export default function ReconnectConnectionModal({
   const handlePickSheet = useCallback(async () => {
     if (!oauthSessionId) return;
     if (!developerKey) {
-      toast.error('Google API key is not configured (VITE_GOOGLE_API_KEY)');
+      toast.error(t('tools.toast_google_not_configured'));
       return;
     }
     setIsPicking(true);
@@ -184,7 +187,7 @@ export default function ReconnectConnectionModal({
       }
     } catch (error) {
       console.error('Picker failed', error);
-      toast.error('Failed to open Google file picker');
+      toast.error(t('tools.toast_picker_failed'));
     } finally {
       setIsPicking(false);
     }
@@ -292,7 +295,10 @@ export default function ReconnectConnectionModal({
                 </h2>
 
                 <div className="px-6 pt-6 pb-5">
-                  <div className="flex items-start" dir="ltr">
+                  {/* Stepper inherits document direction — RTL renders the
+                      first step (Re-authenticate) on the right. Connector
+                      fills from `origin-left rtl:origin-right` accordingly. */}
+                  <div className="flex items-start">
                     {stepStatuses.map((status, i) => (
                       <Fragment key={i}>
                         {i > 0 && (
@@ -410,7 +416,9 @@ function Connector({ filled, delay }: { filled: boolean; delay: number }) {
       <div className="absolute inset-0 bg-[#D8D8D0]" />
       {filled && (
         <motion.div
-          className="absolute inset-0 bg-brand-mojeeb origin-left"
+          // Origin flips with direction so the green fill always sweeps from
+          // the just-completed step toward the next one.
+          className="absolute inset-0 bg-brand-mojeeb origin-left rtl:origin-right"
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ delay, duration: 0.3, ease: 'easeOut' }}

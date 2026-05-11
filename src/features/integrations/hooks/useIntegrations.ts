@@ -5,14 +5,24 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { integrationService } from '../services/integrationService';
 import type { CreateConnectionRequest, IntegrationConnection } from '../types';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/queryKeys';
 import { isToastHandled } from '@/lib/errors';
 
+/**
+ * Pull a user-facing error message from a thrown axios error. Falls back to the
+ * caller-supplied i18n string if the backend didn't return a message.
+ *
+ * The server-supplied message comes from `error.response.data.message` and is
+ * intentionally NOT translated here — backend messages today are English-only,
+ * and showing a backend-English error inline beside Arabic UI is the lesser
+ * evil compared to silently swallowing the actual reason a request failed.
+ * When the backend gains i18n support this fallback can drop in cleanly.
+ */
 function serverMessage(error: unknown, fallback: string): string {
-  // Axios attaches the parsed JSON response body at error.response.data
   const data = (error as { response?: { data?: { message?: string } } })?.response?.data;
   return data?.message ?? fallback;
 }
@@ -27,32 +37,38 @@ export function useIntegrationConnections() {
 
 export function useCreateConnection() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (request: CreateConnectionRequest) =>
       integrationService.createConnection(request),
     onSuccess: () => {
-      toast.success('Connection created successfully');
+      toast.success(t('tools.toast_connection_created'));
       queryClient.invalidateQueries({ queryKey: queryKeys.integrationConnections() });
     },
     onError: (error) => {
-      if (!isToastHandled(error)) toast.error(serverMessage(error, 'Failed to create connection'));
+      if (!isToastHandled(error)) {
+        toast.error(serverMessage(error, t('tools.toast_create_failed')));
+      }
     },
   });
 }
 
 export function useReconnectConnection() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: ({ connectionId, oauthSessionId }: { connectionId: string; oauthSessionId: string }) =>
       integrationService.reconnectConnection(connectionId, oauthSessionId),
     onSuccess: () => {
-      toast.success('Connection reconnected successfully');
+      toast.success(t('tools.toast_connection_reconnected'));
       queryClient.invalidateQueries({ queryKey: queryKeys.integrationConnections() });
     },
     onError: (error) => {
-      if (!isToastHandled(error)) toast.error(serverMessage(error, 'Failed to reconnect connection'));
+      if (!isToastHandled(error)) {
+        toast.error(serverMessage(error, t('tools.toast_reconnect_failed')));
+      }
     },
   });
 }
@@ -67,13 +83,14 @@ export function useReconnectConnection() {
  */
 export function useDeleteConnection(options?: { silent?: boolean }) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const silent = options?.silent ?? false;
 
   return useMutation({
     mutationFn: (connectionId: string) =>
       integrationService.deleteConnection(connectionId),
     onSuccess: (_data, connectionId) => {
-      if (!silent) toast.success('Connection deleted successfully');
+      if (!silent) toast.success(t('tools.toast_connection_deleted'));
 
       // Splice the deleted connection out of the cached list immediately so the
       // UI reflects the deletion without waiting for the refetch. Pure
@@ -93,7 +110,9 @@ export function useDeleteConnection(options?: { silent?: boolean }) {
       queryClient.invalidateQueries({ queryKey: queryKeys.integrationConnections() });
     },
     onError: (error) => {
-      if (!isToastHandled(error)) toast.error(serverMessage(error, 'Failed to delete connection'));
+      if (!isToastHandled(error)) {
+        toast.error(serverMessage(error, t('tools.toast_delete_failed')));
+      }
     },
   });
 }
@@ -115,20 +134,26 @@ export function useConnectionMetadata(connectionId: string | null) {
 
 export function useTestConnection() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: (connectionId: string) =>
       integrationService.testConnection(connectionId),
     onSuccess: (result) => {
+      // result.message / result.error come from the backend (English today).
+      // We use them when present so connection-specific failure reasons reach
+      // the user; fall back to a translated generic when the backend was terse.
       if (result.success) {
-        toast.success(result.message || 'Connection test successful');
+        toast.success(result.message || t('tools.toast_test_success'));
       } else {
-        toast.error(result.error || 'Connection test failed');
+        toast.error(result.error || t('tools.toast_test_failed'));
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.integrationConnections() });
     },
     onError: (error) => {
-      if (!isToastHandled(error)) toast.error(serverMessage(error, 'Failed to test connection'));
+      if (!isToastHandled(error)) {
+        toast.error(serverMessage(error, t('tools.toast_test_failed')));
+      }
     },
   });
 }
