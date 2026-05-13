@@ -804,6 +804,14 @@
     "title_action_executions": "سجل تنفيذ الإجراءات",
     "title_comments": "التعليقات"
   },
+  "triggered_actions": {
+    "operations": {
+      "add_row": "إضافة",
+      "update_row": "تحديث",
+      "read_row": "قراءة",
+      "lead_capture": "عميل جديد"
+    }
+  },
   "conversations": {
     "title": "المحادثات",
     "title_with_count": "المحادثات ({{count}})",

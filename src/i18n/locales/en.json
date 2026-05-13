@@ -887,6 +887,14 @@
     "title_action_executions": "Action Executions",
     "title_comments": "Comments"
   },
+  "triggered_actions": {
+    "operations": {
+      "add_row": "Add",
+      "update_row": "Update",
+      "read_row": "Read",
+      "lead_capture": "New Lead"
+    }
+  },
   "conversations": {
     "title": "Conversations",
     "title_with_count": "Conversations ({{count}})",

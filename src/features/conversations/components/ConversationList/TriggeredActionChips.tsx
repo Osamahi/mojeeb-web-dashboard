@@ -17,9 +17,20 @@
  */
 
 import { memo } from 'react';
-import { FileSpreadsheet, Webhook, Globe, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Webhook, Globe, Zap } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import type { TriggeredAction } from '../../types';
+
+// Closed set of operation_id keys we have translations for. Keys outside this
+// set render as icon-only (no label) so we never display the raw machine key
+// (e.g. "add_row") to end users by mistake.
+const TRANSLATABLE_OPERATIONS = new Set([
+  'add_row',
+  'update_row',
+  'read_row',
+  'lead_capture',
+]);
 
 interface TriggeredActionChipsProps {
   actions: TriggeredAction[] | null | undefined;
@@ -27,32 +38,39 @@ interface TriggeredActionChipsProps {
 
 const MAX_INLINE = 2;
 
-// Icon per `provider` when present. Add new providers (third-party connectors
-// or first-party Mojeeb capabilities) here as they ship. Lucide icons render
-// as React components; the Mojeeb brand mark is special-cased as an <img>
-// because we want the actual gradient logomark, not a generic glyph.
-const providerIcons: Record<string, typeof FileSpreadsheet> = {
-  google_sheets: FileSpreadsheet,
-};
+// Brand-mark SVGs served from /public for providers that have one. Used in
+// preference to lucide glyphs so the chip carries actual brand identity
+// (Mojeeb gradient mark, Google "G", etc.). Match is exact on `provider`
+// for first-party, prefix-based for vendor families (google_sheets,
+// google_calendar, google_drive — all map to the same "G").
+function getBrandMarkSrc(provider: string | null): string | null {
+  if (!provider) return null;
+  if (provider === 'mojeeb') return '/mojeeb-mark.svg';
+  if (provider.startsWith('google_')) return '/google-g.svg';
+  return null;
+}
 
-// Fallback icon per action_type when provider is null or unmapped (raw HTTP
-// escape hatches without persisted provider identity — customer-defined
-// api_call/webhook).
-const actionTypeIcons: Record<string, typeof FileSpreadsheet> = {
+// Fallback icon per action_type when no brand mark applies (raw HTTP escape
+// hatches without persisted provider identity — customer-defined api_call /
+// webhook). Returns a lucide icon component, not a JSX element.
+const actionTypeIcons: Record<string, typeof Webhook> = {
   webhook: Webhook,
   api_call: Globe,
 };
 
 /**
- * Renders the chip icon. Mojeeb gets the actual brand mark; everything else
- * routes through the lucide icon map. Centralized here so chip rendering
- * picks the right element without conditionals at every call site.
+ * Renders the chip icon. Brand-mark providers (Mojeeb, Google family, future
+ * HubSpot/Slack/etc.) get their real logo as an <img>; everything else falls
+ * back to a lucide glyph mapped from action_type, or a generic Zap. Centralized
+ * here so the render path stays clean and adding a new brand is a one-liner
+ * in getBrandMarkSrc.
  */
 function ChipIcon({ action }: { action: TriggeredAction }) {
-  if (action.provider === 'mojeeb') {
+  const brandSrc = getBrandMarkSrc(action.provider);
+  if (brandSrc) {
     return (
       <img
-        src="/mojeeb-mark.svg"
+        src={brandSrc}
         alt=""
         aria-hidden="true"
         className="w-3 h-3 flex-shrink-0"
@@ -60,13 +78,13 @@ function ChipIcon({ action }: { action: TriggeredAction }) {
     );
   }
 
-  const Icon = (action.provider && providerIcons[action.provider])
-    || actionTypeIcons[action.action_type]
-    || Zap;
+  const Icon = actionTypeIcons[action.action_type] || Zap;
   return <Icon className="w-3 h-3 flex-shrink-0" />;
 }
 
 const TriggeredActionChips = memo(function TriggeredActionChips({ actions }: TriggeredActionChipsProps) {
+  const { t } = useTranslation();
+
   if (!actions || actions.length === 0) return null;
 
   const visible = actions.slice(0, MAX_INLINE);
@@ -74,30 +92,45 @@ const TriggeredActionChips = memo(function TriggeredActionChips({ actions }: Tri
 
   return (
     <div className="flex flex-wrap items-center gap-1 mt-1">
-      {visible.map((action) => (
-        <Tooltip key={action.execution_id} delayDuration={150}>
-          <TooltipTrigger asChild>
-            <span
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-white border border-neutral-200 text-neutral-700 max-w-[140px]"
-              aria-label={`Action triggered: ${action.action_name}`}
-            >
-              <ChipIcon action={action} />
-              <span className="truncate">{action.action_name}</span>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="text-xs">
-            <div className="font-medium">{action.action_name}</div>
-            {action.provider && action.operation_id && (
-              <div className="text-neutral-300">
-                {action.provider}: {action.operation_id}
+      {visible.map((action) => {
+        // Translate the label by operation_id when we have a mapping for it.
+        // Anything outside the closed set renders as icon-only — we never
+        // display the raw key (e.g. "add_row") to end users.
+        const hasLabel =
+          action.operation_id != null && TRANSLATABLE_OPERATIONS.has(action.operation_id);
+        const label = hasLabel
+          ? t(`triggered_actions.operations.${action.operation_id}`)
+          : null;
+
+        return (
+          <Tooltip key={action.execution_id} delayDuration={150}>
+            <TooltipTrigger asChild>
+              <span
+                className={
+                  hasLabel
+                    ? 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-white border border-neutral-200 text-neutral-700'
+                    : 'inline-flex items-center justify-center w-5 h-5 rounded-md bg-white border border-neutral-200'
+                }
+                aria-label={`Action triggered: ${action.action_name}`}
+              >
+                <ChipIcon action={action} />
+                {hasLabel && <span>{label}</span>}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              <div className="font-medium">{action.action_name}</div>
+              {action.provider && action.operation_id && (
+                <div className="text-neutral-300">
+                  {action.provider}: {action.operation_id}
+                </div>
+              )}
+              <div className="text-neutral-400 font-mono text-[10px] mt-1">
+                exec: {action.execution_id.slice(0, 8)}
               </div>
-            )}
-            <div className="text-neutral-400 font-mono text-[10px] mt-1">
-              exec: {action.execution_id.slice(0, 8)}
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      ))}
+            </TooltipContent>
+          </Tooltip>
+        );
+      })}
 
       {overflow > 0 && (
         <Tooltip delayDuration={150}>
