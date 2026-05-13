@@ -203,7 +203,6 @@ export function ActionExecutionsPage() {
     { value: '', label: t('action_executions.all_types') },
     { value: 'api_call', label: t('action_executions.type_api_call') },
     { value: 'webhook', label: t('action_executions.type_webhook') },
-    { value: 'lead_generation', label: t('action_executions.type_lead_generation') },
     { value: 'integration', label: t('action_executions.type_integration') },
   ], [t]);
 

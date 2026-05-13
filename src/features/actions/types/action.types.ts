@@ -5,7 +5,7 @@
 
 // Action types supported by the system
 // Matches backend ActionTypeValidator.ValidTypes — keep in sync.
-export type ActionType = 'api_call' | 'webhook' | 'lead_generation' | 'integration';
+export type ActionType = 'api_call' | 'webhook' | 'integration';
 
 /**
  * Frontend model (camelCase)

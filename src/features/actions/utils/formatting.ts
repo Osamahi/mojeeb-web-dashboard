@@ -11,10 +11,6 @@ export function formatActionType(type: ActionType): string {
   const labels: Record<ActionType, string> = {
     api_call: 'API Call',
     webhook: 'Webhook',
-    database: 'Database',
-    email: 'Email',
-    sms: 'SMS',
-    lead_generation: 'Lead Generation',
     integration: 'Integration',
   };
   return labels[type] || type;
@@ -27,10 +23,6 @@ export function getActionTypeColor(type: ActionType): string {
   const colors: Record<ActionType, string> = {
     api_call: 'bg-blue-100 text-blue-700 border-blue-200',
     webhook: 'bg-purple-100 text-purple-700 border-purple-200',
-    database: 'bg-green-100 text-green-700 border-green-200',
-    email: 'bg-orange-100 text-orange-700 border-orange-200',
-    sms: 'bg-pink-100 text-pink-700 border-pink-200',
-    lead_generation: 'bg-teal-100 text-teal-700 border-teal-200',
     integration: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   };
   return colors[type] || 'bg-gray-100 text-gray-700 border-gray-200';

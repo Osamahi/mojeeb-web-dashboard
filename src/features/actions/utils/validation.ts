@@ -11,7 +11,6 @@ import type { ActionType } from '../types';
 export const actionTypeOptions: { label: string; value: ActionType }[] = [
   { label: 'API Call', value: 'api_call' },
   { label: 'Webhook', value: 'webhook' },
-  { label: 'Lead Generation', value: 'lead_generation' },
   { label: 'Integration', value: 'integration' },
 ];
 
