@@ -539,13 +539,19 @@ export default function StudioPage() {
           </div>
         </div>
 
-        {/* Right Column - Test Chat (Desktop only - Hidden on mobile) */}
-        <div className="hidden lg:flex flex-col bg-white overflow-hidden">
-          <TestChat
-            agentId={agentId}
-            onFirstMessageSent={() => queryClient.invalidateQueries({ queryKey: ['hasConversations', agentId] })}
-          />
-        </div>
+        {/* Right Column - Test Chat (Desktop only).
+            Conditionally mounted by isDesktop instead of CSS-hidden so the mobile
+            <TestChatPanel> (which also contains a <TestChat>) doesn't double-mount.
+            Both instances would otherwise each fire initStudioConversation on mount
+            and create duplicate conversations server-side. */}
+        {isDesktop && (
+          <div className="flex flex-col bg-white overflow-hidden">
+            <TestChat
+              agentId={agentId}
+              onFirstMessageSent={() => queryClient.invalidateQueries({ queryKey: ['hasConversations', agentId] })}
+            />
+          </div>
+        )}
       </div>
 
       {/* Floating Test Button - Mobile only, shown after checklist is dismissed */}
@@ -567,13 +573,17 @@ export default function StudioPage() {
         </div>
       )}
 
-      {/* Slide-out Test Chat Panel - Mobile only */}
-      <TestChatPanel
-        agentId={agentId}
-        isOpen={isChatPanelOpen}
-        onClose={() => setIsChatPanelOpen(false)}
-        onFirstMessageSent={() => queryClient.invalidateQueries({ queryKey: ['hasConversations', agentId] })}
-      />
+      {/* Slide-out Test Chat Panel - Mobile only.
+          Mounted only on non-desktop viewports so its inner <TestChat> doesn't
+          coexist with the desktop column's <TestChat> and double-fire the init. */}
+      {!isDesktop && (
+        <TestChatPanel
+          agentId={agentId}
+          isOpen={isChatPanelOpen}
+          onClose={() => setIsChatPanelOpen(false)}
+          onFirstMessageSent={() => queryClient.invalidateQueries({ queryKey: ['hasConversations', agentId] })}
+        />
+      )}
 
       {/* Add Knowledge Base Modal */}
       <AddKnowledgeBaseModal

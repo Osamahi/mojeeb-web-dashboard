@@ -135,8 +135,23 @@ export default function TestChat({ agentId, onFirstMessageSent }: TestChatProps)
     return () => clearInterval(interval);
   }, [isInitializing]);
 
+  // Guard against React StrictMode double-mount creating duplicate conversations.
+  // The backend (correctly) mints a fresh customer_id for every call with null —
+  // that's the intended semantic for anonymous widget visitors. StrictMode runs
+  // this effect twice on mount in dev, which without the guard produces two
+  // conversations per studio session. Tracks the agentId we already initialized
+  // for in this component instance so a legitimate agent switch still re-inits.
+  //
+  // Note: the real cross-instance dedupe is done in testChatService via a
+  // module-level in-flight cache. This ref-based guard is just a per-instance
+  // short-circuit so we don't even hit the cache twice from the same mount.
+  const initializedForAgentId = useRef<string | null>(null);
+
   // Initialize conversation on mount
   useEffect(() => {
+    if (initializedForAgentId.current === agentId) return;
+    initializedForAgentId.current = agentId;
+
     const init = async () => {
       try {
         setIsInitializing(true);
@@ -163,6 +178,11 @@ export default function TestChat({ agentId, onFirstMessageSent }: TestChatProps)
 
   // Handle new conversation
   const handleNewConversation = async () => {
+    // Reset the StrictMode init guard so the explicit user-triggered re-init
+    // (button click) goes through. Without this the early-return in the
+    // useEffect would block reinitialization for the same agentId.
+    initializedForAgentId.current = null;
+
     storage.clearMessages();
     setConversation(null);
     setIsInitializing(true);
@@ -171,6 +191,10 @@ export default function TestChat({ agentId, onFirstMessageSent }: TestChatProps)
 
     try {
       const widget = await testChatService.getAgentWidget(agentId);
+      // Clear the session-level dedupe cache for this widget so this explicit
+      // user-triggered "new conversation" actually creates a new one instead
+      // of returning the cached init promise.
+      testChatService.resetStudioConversation(widget.id);
       const conv = await testChatService.initStudioConversation(widget.id, customerName);
       setConversation(conv);
       logger.info('[TestChat]', 'New test conversation started', `conversationId: ${conv.id}`);
