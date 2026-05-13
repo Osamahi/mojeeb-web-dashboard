@@ -64,19 +64,6 @@ async function getAgentWidget(agentId: string): Promise<WidgetConfiguration> {
 }
 
 /**
- * In-flight request deduplication. Survives both React StrictMode double-mount
- * AND parent remount (e.g. when StudioPage's data fetches resolve and trigger
- * a re-render that remounts the TestChat subtree). Keyed by widgetId so
- * switching agents legitimately starts a fresh conversation.
- *
- * The promise is cached for the duration of the page session — same tab, same
- * widget → same conversation across remounts. A page refresh (hard reload)
- * clears the cache and starts a fresh conversation, which matches the
- * "fresh per session" intent.
- */
-const inFlightStudioInits = new Map<string, Promise<StudioConversation>>();
-
-/**
  * Initialize studio test conversation
  * @param widgetId - Widget ID to use for conversation
  * @param customerName - Optional customer name (falls back to STUDIO_CUSTOMER_NAME)
@@ -85,47 +72,23 @@ async function initStudioConversation(
   widgetId: string,
   customerName?: string
 ): Promise<StudioConversation> {
-  // Dedupe: if a request for this widget is already in-flight or completed
-  // in this tab, reuse it. This is what prevents the "3 conversations from
-  // one session" bug — multiple TestChat instances and remounts all share
-  // the same promise.
-  const existing = inFlightStudioInits.get(widgetId);
-  if (existing) {
-    return existing;
-  }
-
-  const promise = api
-    .post<StudioConversation>('/api/conversations/initiate-widget-conversation', {
+  const { data } = await api.post<StudioConversation>(
+    '/api/conversations/initiate-widget-conversation',
+    {
       widget_id: widgetId,
       customer_name: customerName || STUDIO_CUSTOMER_NAME,
       customer_metadata: null,
       initial_message: null,
       customer_id: null,
       source: 'test',
-    })
-    .then(({ data }) => {
-      if (!data.is_ai) {
-        logger.warn('Conversation AI disabled - responses will not be generated');
-      }
-      return data;
-    })
-    .catch((err) => {
-      // On failure, remove from cache so retries can re-fire.
-      inFlightStudioInits.delete(widgetId);
-      throw err;
-    });
+    }
+  );
 
-  inFlightStudioInits.set(widgetId, promise);
-  return promise;
-}
+  if (!data.is_ai) {
+    logger.warn('Conversation AI disabled - responses will not be generated');
+  }
 
-/**
- * Clear the in-flight init cache for a widget. Call this from the
- * "New Conversation" button so an explicit user-triggered re-init genuinely
- * creates a fresh conversation instead of returning the cached promise.
- */
-function resetStudioConversation(widgetId: string): void {
-  inFlightStudioInits.delete(widgetId);
+  return data;
 }
 
 /**
@@ -152,6 +115,5 @@ async function sendTestMessage(request: SendMessageRequest): Promise<MessageResp
 export const testChatService = {
   getAgentWidget,
   initStudioConversation,
-  resetStudioConversation,
   sendTestMessage,
 };
