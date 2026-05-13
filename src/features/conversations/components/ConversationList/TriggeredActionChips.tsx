@@ -17,7 +17,7 @@
  */
 
 import { memo } from 'react';
-import { FileSpreadsheet, Webhook, Globe, UserPlus, Zap } from 'lucide-react';
+import { FileSpreadsheet, Webhook, Globe, Zap } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import type { TriggeredAction } from '../../types';
 
@@ -28,30 +28,42 @@ interface TriggeredActionChipsProps {
 const MAX_INLINE = 2;
 
 // Icon per `provider` when present. Add new providers (third-party connectors
-// or first-party Mojeeb capabilities) here as they ship.
+// or first-party Mojeeb capabilities) here as they ship. Lucide icons render
+// as React components; the Mojeeb brand mark is special-cased as an <img>
+// because we want the actual gradient logomark, not a generic glyph.
 const providerIcons: Record<string, typeof FileSpreadsheet> = {
   google_sheets: FileSpreadsheet,
-  mojeeb: UserPlus,
 };
 
-// Fallback icon per action_type when provider is null (raw HTTP escape hatches
-// without persisted provider identity — customer-defined api_call/webhook).
+// Fallback icon per action_type when provider is null or unmapped (raw HTTP
+// escape hatches without persisted provider identity — customer-defined
+// api_call/webhook).
 const actionTypeIcons: Record<string, typeof FileSpreadsheet> = {
   webhook: Webhook,
   api_call: Globe,
 };
 
 /**
- * Chooses the most specific icon available: provider → action_type → generic Zap.
+ * Renders the chip icon. Mojeeb gets the actual brand mark; everything else
+ * routes through the lucide icon map. Centralized here so chip rendering
+ * picks the right element without conditionals at every call site.
  */
-function pickIcon(action: TriggeredAction) {
-  if (action.provider && providerIcons[action.provider]) {
-    return providerIcons[action.provider];
+function ChipIcon({ action }: { action: TriggeredAction }) {
+  if (action.provider === 'mojeeb') {
+    return (
+      <img
+        src="/mojeeb-mark.svg"
+        alt=""
+        aria-hidden="true"
+        className="w-3 h-3 flex-shrink-0"
+      />
+    );
   }
-  if (actionTypeIcons[action.action_type]) {
-    return actionTypeIcons[action.action_type];
-  }
-  return Zap;
+
+  const Icon = (action.provider && providerIcons[action.provider])
+    || actionTypeIcons[action.action_type]
+    || Zap;
+  return <Icon className="w-3 h-3 flex-shrink-0" />;
 }
 
 const TriggeredActionChips = memo(function TriggeredActionChips({ actions }: TriggeredActionChipsProps) {
@@ -62,38 +74,35 @@ const TriggeredActionChips = memo(function TriggeredActionChips({ actions }: Tri
 
   return (
     <div className="flex flex-wrap items-center gap-1 mt-1">
-      {visible.map((action) => {
-        const Icon = pickIcon(action);
-        return (
-          <Tooltip key={action.execution_id} delayDuration={150}>
-            <TooltipTrigger asChild>
-              <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-brand-mojeeb/10 text-brand-mojeeb max-w-[140px]"
-                aria-label={`Action triggered: ${action.action_name}`}
-              >
-                <Icon className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate">{action.action_name}</span>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
-              <div className="font-medium">{action.action_name}</div>
-              {action.provider && action.operation_id && (
-                <div className="text-neutral-300">
-                  {action.provider}: {action.operation_id}
-                </div>
-              )}
-              <div className="text-neutral-400 font-mono text-[10px] mt-1">
-                exec: {action.execution_id.slice(0, 8)}
+      {visible.map((action) => (
+        <Tooltip key={action.execution_id} delayDuration={150}>
+          <TooltipTrigger asChild>
+            <span
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-white border border-neutral-200 text-neutral-700 max-w-[140px]"
+              aria-label={`Action triggered: ${action.action_name}`}
+            >
+              <ChipIcon action={action} />
+              <span className="truncate">{action.action_name}</span>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs">
+            <div className="font-medium">{action.action_name}</div>
+            {action.provider && action.operation_id && (
+              <div className="text-neutral-300">
+                {action.provider}: {action.operation_id}
               </div>
-            </TooltipContent>
-          </Tooltip>
-        );
-      })}
+            )}
+            <div className="text-neutral-400 font-mono text-[10px] mt-1">
+              exec: {action.execution_id.slice(0, 8)}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      ))}
 
       {overflow > 0 && (
         <Tooltip delayDuration={150}>
           <TooltipTrigger asChild>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-neutral-100 text-neutral-600">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-white border border-neutral-200 text-neutral-600">
               +{overflow}
             </span>
           </TooltipTrigger>
