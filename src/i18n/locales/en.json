@@ -892,7 +892,13 @@
       "add_row": "Add",
       "update_row": "Update",
       "read_row": "Read",
-      "lead_capture": "New Lead"
+      "lead_capture": "Lead captured"
+    },
+    "descriptions": {
+      "lead_capture": "The client's data has been sent to your CRM on Mojeeb.",
+      "add_row": "A new row was added to your connected sheet.",
+      "update_row": "An existing row in your connected sheet was updated.",
+      "read_row": "Data was read from your connected sheet."
     }
   },
   "conversations": {

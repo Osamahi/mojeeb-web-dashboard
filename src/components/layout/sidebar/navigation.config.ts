@@ -85,10 +85,6 @@ export const navigation: NavigationItem[] = [
     href: '/tools',
     icon: Workflow,
     requiresAgent: true,
-    // Recently shipped — surface a small "NEW" pill in the sidebar so existing
-    // users notice the tab. Remove this line after the tab has been in prod
-    // for ~30 days (or when the next major surface ships and steals the spotlight).
-    badge: 'navigation.badge_new',
   },
   {
     name: 'Connect',

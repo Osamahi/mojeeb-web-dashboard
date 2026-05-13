@@ -32,6 +32,17 @@ const TRANSLATABLE_OPERATIONS = new Set([
   'lead_capture',
 ]);
 
+// Subset of operations that ship a tooltip-hover description explaining what
+// the action did (e.g. "Lead captured" → "The client's data has been sent to
+// your CRM on Mojeeb."). Add a key here AND in the locale's
+// triggered_actions.descriptions block to enable a description for a new op.
+const OPERATIONS_WITH_DESCRIPTION = new Set([
+  'lead_capture',
+  'add_row',
+  'update_row',
+  'read_row',
+]);
+
 interface TriggeredActionChipsProps {
   actions: TriggeredAction[] | null | undefined;
 }
@@ -102,31 +113,38 @@ const TriggeredActionChips = memo(function TriggeredActionChips({ actions }: Tri
           ? t(`triggered_actions.operations.${action.operation_id}`)
           : null;
 
+        // Per product call: only operations with a description show a hover
+        // tooltip; chips for operations without one are non-interactive (no
+        // dimmed empty popover, no boilerplate). Today only lead_capture has
+        // a description; add an operation to OPERATIONS_WITH_DESCRIPTION + its
+        // locale entry to surface a tooltip for it.
+        const hasDescription =
+          action.operation_id != null && OPERATIONS_WITH_DESCRIPTION.has(action.operation_id);
+
+        const chipClass = hasLabel
+          ? 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-white border border-neutral-200 text-neutral-700'
+          : 'inline-flex items-center justify-center w-5 h-5 rounded-md bg-white border border-neutral-200';
+
+        const chip = (
+          <span
+            className={chipClass}
+            aria-label={`Action triggered: ${action.action_name}`}
+          >
+            <ChipIcon action={action} />
+            {hasLabel && <span>{label}</span>}
+          </span>
+        );
+
+        if (!hasDescription) {
+          // Plain chip — no tooltip wrapper.
+          return <span key={action.execution_id}>{chip}</span>;
+        }
+
         return (
           <Tooltip key={action.execution_id} delayDuration={150}>
-            <TooltipTrigger asChild>
-              <span
-                className={
-                  hasLabel
-                    ? 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-white border border-neutral-200 text-neutral-700'
-                    : 'inline-flex items-center justify-center w-5 h-5 rounded-md bg-white border border-neutral-200'
-                }
-                aria-label={`Action triggered: ${action.action_name}`}
-              >
-                <ChipIcon action={action} />
-                {hasLabel && <span>{label}</span>}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="text-xs">
-              <div className="font-medium">{action.action_name}</div>
-              {action.provider && action.operation_id && (
-                <div className="text-neutral-300">
-                  {action.provider}: {action.operation_id}
-                </div>
-              )}
-              <div className="text-neutral-400 font-mono text-[10px] mt-1">
-                exec: {action.execution_id.slice(0, 8)}
-              </div>
+            <TooltipTrigger asChild>{chip}</TooltipTrigger>
+            <TooltipContent side="top" align="center" className="text-xs max-w-[260px] leading-snug">
+              {t(`triggered_actions.descriptions.${action.operation_id}`)}
             </TooltipContent>
           </Tooltip>
         );
