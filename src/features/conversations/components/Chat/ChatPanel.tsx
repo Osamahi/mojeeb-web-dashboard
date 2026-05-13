@@ -21,6 +21,7 @@ import { useZustandChatStorage } from '../../hooks/useChatStorage';
 import UnifiedChatView from './UnifiedChatView';
 import { chatApiService } from '../../services/chatApiService';
 import { Avatar } from '@/components/ui/Avatar';
+import TriggeredActionChips from '../ConversationList/TriggeredActionChips';
 import { logger } from '@/lib/logger';
 import { chatToasts } from '../../utils/chatToasts';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -193,7 +194,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   // Using position: sticky to work correctly in both mobile and desktop layouts
   const customHeader = useMemo(
     () => (
-      <div className="sticky top-0 left-0 right-0 z-20 bg-white border-b border-neutral-200 p-4 flex items-center gap-3 h-16">
+      <div className="sticky top-0 left-0 right-0 z-20 bg-white border-b border-neutral-200 p-4 flex items-center gap-3 min-h-16">
         {/* Back button (mobile) */}
         {onBack && (
           <button
@@ -235,6 +236,11 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
               {conversation.topic && <span>{conversation.topic}</span>}
             </p>
           )}
+
+          {/* Triggered-action chips — only render when the conversation has fired
+              successful actions. Renders nothing for the 80% of conversations
+              that haven't, so the header stays a single line in that case. */}
+          <TriggeredActionChips actions={conversation.triggered_actions} />
         </div>
 
         {/* Three-dot menu with delete option (SuperAdmin & Admin only) */}

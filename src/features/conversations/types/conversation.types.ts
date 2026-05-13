@@ -29,6 +29,29 @@ export interface CustomerMetadata {
   [key: string]: unknown;
 }
 
+/**
+ * One entry in `conversation.triggered_actions` — a successful action execution
+ * surfaced onto the conversation card. Source of truth lives in `action_executions`;
+ * this is a denormalized UI cache (max 10, most-recent first, idempotent by
+ * execution_id). Failed executions are NOT included — the user opens the
+ * conversation detail to see the full execution history.
+ *
+ * `provider` is the unified vocabulary for "what kind of thing fired":
+ * - `"google_sheets"`, `"hubspot"`, etc. for integration actions
+ * - `"mojeeb"` for first-party actions (e.g. the built-in Capture Lead)
+ * - `null` for customer-defined raw HTTP escape hatches (api_call/webhook
+ *   without persisted provider/operation metadata)
+ */
+export interface TriggeredAction {
+  execution_id: string;
+  action_id: string;
+  action_name: string;
+  action_type: 'integration' | 'api_call' | 'webhook' | string;
+  provider: string | null;
+  operation_id: string | null;
+  executed_at: string; // ISO 8601 UTC
+}
+
 export interface Conversation {
   id: string;
   customer_id: string;
@@ -68,6 +91,11 @@ export interface Conversation {
   // Pinning (conversation-level)
   is_pinned: boolean;
   pinned_at: string | null;
+
+  // UI cache of successful action executions for this conversation. Max 10, most-recent
+  // first. Populated server-side by ActionQueueProcessor; source of truth lives in
+  // action_executions. May be undefined on older conversations that pre-date the column.
+  triggered_actions?: TriggeredAction[] | null;
 }
 
 // === Message Types ===

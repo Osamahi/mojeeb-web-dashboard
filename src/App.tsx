@@ -6,6 +6,7 @@ import { router } from './router';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { setGlobalQueryClient } from './lib/api';
 import { AppLifecycleProvider } from './contexts/AppLifecycleContext';
+import { TooltipProvider } from './components/ui/tooltip';
 
 // Create a query client
 const queryClient = new QueryClient({
@@ -40,17 +41,22 @@ function App() {
       <Suspense fallback={<TranslationLoader />}>
         <AppLifecycleProvider>
           <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                style: {
-                  background: 'white',
-                  color: '#171717',
-                  border: '1px solid #e5e5e5',
-                },
-              }}
-            />
+            {/* TooltipProvider wraps the router so every <Tooltip> in the tree
+                shares one Radix context (delay + skip-delay timers). Required
+                by Radix; previous hand-rolled primitive didn't need it. */}
+            <TooltipProvider>
+              <RouterProvider router={router} />
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  style: {
+                    background: 'white',
+                    color: '#171717',
+                    border: '1px solid #e5e5e5',
+                  },
+                }}
+              />
+            </TooltipProvider>
           </QueryClientProvider>
         </AppLifecycleProvider>
       </Suspense>

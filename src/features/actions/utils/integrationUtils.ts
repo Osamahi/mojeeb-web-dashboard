@@ -128,7 +128,7 @@ export type ActionLike = {
   name: string;
   description: string | null;
   triggerPrompt: string;
-  actionType: 'api_call' | 'webhook' | 'lead_generation' | 'integration';
+  actionType: 'api_call' | 'webhook' | 'integration';
   actionConfig: Record<string, any>;
   integrationConnectionId: string | null;
   isActive: boolean;

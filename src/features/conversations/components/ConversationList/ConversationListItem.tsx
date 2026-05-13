@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { ConversationContextMenu } from './ConversationContextMenu';
+import TriggeredActionChips from './TriggeredActionChips';
 import { useDeleteConversation } from '../../hooks/useDeleteConversation';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
@@ -332,6 +333,10 @@ const ConversationListItem = memo(function ConversationListItem({
               {conversation.topic}
             </p>
           )}
+
+          {/* Triggered action chips — only renders when the conversation has successful
+              action executions. Most conversations have none and this slot is empty. */}
+          <TriggeredActionChips actions={conversation.triggered_actions} />
         </div>
 
         {/* Timestamp and indicators */}
