@@ -78,6 +78,27 @@ export function useLead(leadId: string | undefined, agentId?: string) {
   });
 }
 
+/**
+ * Fetch the lead captured for a specific conversation (if any).
+ * Returns null when no lead is linked — the hook's data being null is the
+ * signal to hide the "View lead" entry point in the conversation header.
+ *
+ * Callers should pass enabled=false when the conversation has no
+ * lead_capture triggered action so we don't fire a guaranteed-404 request.
+ */
+export function useLeadByConversation(
+  conversationId: string | undefined,
+  agentId: string | undefined,
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: ['lead', 'by-conversation', conversationId, agentId],
+    queryFn: () => leadService.getLeadByConversation(conversationId!, agentId!),
+    enabled: !!conversationId && !!agentId && enabled,
+    staleTime: 60_000,
+  });
+}
+
 // ========================================
 // Mutation Hooks (Data Modifications)
 // ========================================

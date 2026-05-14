@@ -332,6 +332,7 @@
   "leads": {
     "title": "Clients",
     "subtitle": "Manage your clients",
+    "status": "Status",
     "add_client": "Add",
     "export": "Export",
     "more": "More",
@@ -937,6 +938,7 @@
     "message_placeholder": "Type a message...",
     "human_mode_placeholder": "Type a message... (You are responding)",
     "more_options": "More options",
+    "view_lead": "View lead",
     "go_back": "Go back to conversations list",
     "no_messages_yet": "No messages yet",
     "start_conversation_hint": "Start the conversation by sending a message below.",

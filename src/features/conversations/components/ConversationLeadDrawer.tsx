@@ -1,39 +1,37 @@
 /**
- * LeadDetailsDrawer
+ * ConversationLeadDrawer
  *
- * The lead-detail surface on the Clients (Leads) page. Uses the same
- * `SideDrawer` shell as the conversation drawer so the UX is byte-for-byte
- * identical across both surfaces — animation, ESC, scroll lock, inline edit,
- * per-cell skeleton, status dropdown, notes.
+ * Side-drawer that opens from the conversation header to show the lead that
+ * was captured for that conversation. The drawer shell (animation, ESC,
+ * scroll lock, RTL slide direction) lives in the shared `SideDrawer`
+ * component; this file is just data fetching + the shared inline-edit body.
  */
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SideDrawer } from '@/components/ui/SideDrawer';
 import { Spinner } from '@/components/ui/Spinner';
-import { useLead } from '../hooks/useLeads';
-import { useFormCustomFieldSchemas } from '../hooks/useCustomFieldSchemas';
-import { useInlineLeadEdit } from '../hooks/useInlineLeadEdit';
-import { LeadInlineDetails } from './LeadInlineDetails';
+import { useLead } from '@/features/leads/hooks/useLeads';
+import { useFormCustomFieldSchemas } from '@/features/leads/hooks/useCustomFieldSchemas';
+import { useInlineLeadEdit } from '@/features/leads/hooks/useInlineLeadEdit';
+import { LeadInlineDetails } from '@/features/leads/components/LeadInlineDetails';
 
-interface LeadDetailsDrawerProps {
-  /**
-   * The lead to show. May be null while the drawer is animating closed —
-   * the component must stay mounted across the exit so SideDrawer's
-   * AnimatePresence can play the slide-out (parents should NOT conditionally
-   * mount based on leadId; pass isOpen + leadId together).
-   */
-  leadId: string | null;
+interface ConversationLeadDrawerProps {
+  leadId: string;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function LeadDetailsDrawer({ leadId, isOpen, onClose }: LeadDetailsDrawerProps) {
+export default function ConversationLeadDrawer({
+  leadId,
+  isOpen,
+  onClose,
+}: ConversationLeadDrawerProps) {
   const { t } = useTranslation();
 
-  const { data: lead, isLoading } = useLead(leadId ?? undefined);
+  const { data: lead, isLoading } = useLead(leadId);
   const { data: formSchemas = [] } = useFormCustomFieldSchemas();
-  const { savingFieldKey, saveField, saveCustomField } = useInlineLeadEdit(leadId ?? undefined);
+  const { savingFieldKey, saveField, saveCustomField } = useInlineLeadEdit(leadId);
 
   // Single ordered list — system + custom interleaved by display_order so
   // the rendered form respects the per-agent schema configuration without

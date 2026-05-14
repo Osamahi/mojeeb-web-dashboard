@@ -135,6 +135,22 @@ class LeadService {
   }
 
   /**
+   * Get the lead captured for a conversation, or null if none was captured.
+   * Used by the conversation header's "View lead" button.
+   */
+  async getLeadByConversation(conversationId: string, agentId: string): Promise<Lead | null> {
+    try {
+      const { data } = await api.get<ApiResponse<ApiLeadResponse>>(
+        `/api/lead/by-conversation/${conversationId}?agentId=${agentId}`
+      );
+      return this.transformLead(data.data);
+    } catch (error: any) {
+      if (error?.response?.status === 404) return null;
+      throw error;
+    }
+  }
+
+  /**
    * Create a new lead
    */
   async createLead(request: CreateLeadRequest): Promise<Lead> {

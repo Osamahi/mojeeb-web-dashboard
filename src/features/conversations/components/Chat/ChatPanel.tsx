@@ -6,7 +6,7 @@
 
 import { useMemo, useEffect, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowRight, BotOff, MoreVertical, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BotOff, MoreVertical, Trash2, Contact } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '../../types';
 import { SenderRole, MessageType } from '../../types/conversation.types';
@@ -21,11 +21,12 @@ import { useZustandChatStorage } from '../../hooks/useChatStorage';
 import UnifiedChatView from './UnifiedChatView';
 import { chatApiService } from '../../services/chatApiService';
 import { Avatar } from '@/components/ui/Avatar';
-import TriggeredActionChips from '../ConversationList/TriggeredActionChips';
 import { logger } from '@/lib/logger';
 import { chatToasts } from '../../utils/chatToasts';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useDeleteConversation } from '../../hooks/useDeleteConversation';
+import { useLeadByConversation } from '@/features/leads/hooks/useLeads';
+import ConversationLeadDrawer from '../ConversationLeadDrawer';
 import { useAuthStore } from '@/features/auth/stores/authStore';
 import { Role } from '@/features/auth/types/auth.types';
 import {
@@ -40,9 +41,16 @@ import TemplatePicker from './TemplatePicker';
 interface ChatPanelProps {
   conversation: Conversation;
   onBack?: () => void;
+  /**
+   * Hide the header's "View lead" button. Set true when ChatPanel is mounted
+   * inside a context that already represents the lead (e.g. the Clients-page
+   * conversation drawer, opened from the lead detail itself) — showing the
+   * button there would create a redundant lead ↔ conversation loop.
+   */
+  hideLeadButton?: boolean;
 }
 
-export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
+export default function ChatPanel({ conversation, onBack, hideLeadButton = false }: ChatPanelProps) {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.dir() === 'rtl';
   const queryClient = useQueryClient();
@@ -56,6 +64,20 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
   // WhatsApp template state
   const isWhatsApp = conversation.source === 'whatsapp';
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+
+  // Lead-details drawer state. We only fetch when the conversation has a
+  // successful lead_capture triggered action — avoids a guaranteed-404 request
+  // for the ~80% of conversations that never captured a lead.
+  const [showLeadDrawer, setShowLeadDrawer] = useState(false);
+  const hasLeadCapture = useMemo(
+    () => (conversation.triggered_actions ?? []).some((a) => a.operation_id === 'lead_capture'),
+    [conversation.triggered_actions]
+  );
+  const { data: linkedLead } = useLeadByConversation(
+    conversation.id,
+    conversation.agent_id,
+    hasLeadCapture
+  );
 
   const handleTemplateClick = useCallback(() => {
     setShowTemplatePicker((prev) => !prev);
@@ -237,11 +259,25 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
             </p>
           )}
 
-          {/* Triggered-action chips — only render when the conversation has fired
-              successful actions. Renders nothing for the 80% of conversations
-              that haven't, so the header stays a single line in that case. */}
-          <TriggeredActionChips actions={conversation.triggered_actions} />
         </div>
+
+        {/* View lead — outlined button, shown only when this conversation
+            captured a lead AND we're not already inside a lead context
+            (otherwise the button creates a redundant lead ↔ conversation loop).
+            Mirrors BaseHeader's primaryAction styling for cross-page consistency. */}
+        {linkedLead && !hideLeadButton && (
+          <button
+            onClick={() => setShowLeadDrawer(true)}
+            className="px-4 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
+            title={t('conversations.view_lead')}
+            aria-label={t('conversations.view_lead')}
+          >
+            <Contact className="w-4 h-4 text-neutral-700" />
+            <span className="hidden sm:inline text-sm font-medium text-neutral-900">
+              {t('conversations.view_lead')}
+            </span>
+          </button>
+        )}
 
         {/* Three-dot menu with delete option (SuperAdmin & Admin only) */}
         {canDelete && (
@@ -268,7 +304,7 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         )}
       </div>
     ),
-    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, isRTL, canDelete, t]
+    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, isRTL, canDelete, t, linkedLead, hideLeadButton]
   );
 
   // Handle load more with Zustand store
@@ -336,6 +372,15 @@ export default function ChatPanel({ conversation, onBack }: ChatPanelProps) {
         })()}
       </div>
       {ConfirmDialogComponent}
+
+      {/* Lead details side-drawer — opened from header "View lead" button */}
+      {linkedLead && (
+        <ConversationLeadDrawer
+          leadId={linkedLead.id}
+          isOpen={showLeadDrawer}
+          onClose={() => setShowLeadDrawer(false)}
+        />
+      )}
     </>
   );
 }

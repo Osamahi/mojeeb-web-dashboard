@@ -249,6 +249,7 @@
   "leads": {
     "title": "العملاء",
     "subtitle": "إدارة عملائك",
+    "status": "الحالة",
     "add_client": "إضافة",
     "export": "تصدير",
     "more": "المزيد",
@@ -854,6 +855,7 @@
     "message_placeholder": "اكتب رسالة...",
     "human_mode_placeholder": "اكتب رسالة... (أنت ترد)",
     "more_options": "المزيد من الخيارات",
+    "view_lead": "عرض العميل",
     "go_back": "العودة لقائمة المحادثات",
     "no_messages_yet": "لا توجد رسائل بعد",
     "start_conversation_hint": "ابدأ المحادثة بإرسال رسالة أدناه",

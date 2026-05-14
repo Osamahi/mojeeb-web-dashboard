@@ -15,6 +15,7 @@ import { Copy } from 'lucide-react';
 import { InlineEditField } from '@/components/ui/InlineEditField';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { LatestNoteCell } from '../components/LatestNoteCell';
+import { LeadStatusDropdown } from '../components/LeadStatusDropdown';
 import { validateName, validatePhone } from './validation';
 import { formatPhoneNumber } from './formatting';
 import type { Lead, LeadStatus } from '../types/lead.types';
@@ -47,7 +48,7 @@ export interface SystemFieldRenderContext {
   onAddSummaryClick: (leadId: string, name: string, summary: string) => void;
 
   // Status change
-  onStatusChange: (leadId: string, newStatus: LeadStatus, e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onStatusChange: (leadId: string, newStatus: LeadStatus) => void;
 
   // Notes click
   onAddNoteClick: (leadId: string, name: string, agentId: string) => void;
@@ -153,49 +154,25 @@ const renderSummaryColumn = (
 };
 
 /**
- * Render: Status column (dropdown select with inline update)
+ * Render: Status column.
+ *
+ * Delegates to `LeadStatusDropdown` so the status picker UX (popup style,
+ * color dot, check icon, RTL behavior) stays identical across the table
+ * card, table column, and detail drawer. The `schema` arg is intentionally
+ * unused here — `LeadStatusDropdown` resolves options via
+ * `useLeadStatusSchema` internally, which is the same source of truth.
  */
 const renderStatusColumn = (
   _value: unknown,
   lead: Lead,
   ctx: SystemFieldRenderContext,
-  schema?: CustomFieldSchema,
-): ReactNode => {
-  // Get color from schema options for the current status
-  const statusColor = schema?.options?.find(opt => opt.value === lead.status)?.color || '#6B7280';
-
-  return (
-    <select
-      value={lead.status}
-      onChange={(e) => ctx.onStatusChange(lead.id, e.target.value as LeadStatus, e)}
-      onClick={(e) => e.stopPropagation()}
-      className="ps-0 pe-8 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer appearance-none w-full"
-      style={{
-        color: statusColor,
-        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-        backgroundPosition: 'right 0.5rem center',
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: '1.25em 1.25em',
-      }}
-    >
-      {schema?.options?.length ? (
-        // Schema-driven options with i18n labels
-        schema.options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {ctx.locale.startsWith('ar') ? opt.label_ar : opt.label_en}
-          </option>
-        ))
-      ) : (
-        // Fallback to translation keys (for agents without schema)
-        <>
-          <option value="new">{ctx.t('leads.status_new')}</option>
-          <option value="processing">{ctx.t('leads.status_processing')}</option>
-          <option value="completed">{ctx.t('leads.status_completed')}</option>
-        </>
-      )}
-    </select>
-  );
-};
+  _schema?: CustomFieldSchema,
+): ReactNode => (
+  <LeadStatusDropdown
+    status={lead.status}
+    onChange={(next) => ctx.onStatusChange(lead.id, next)}
+  />
+);
 
 /**
  * Render: Notes column (LatestNoteCell with preview)

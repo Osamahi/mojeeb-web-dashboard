@@ -42,7 +42,6 @@ export default function LeadsPage() {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<string | null>(null);
-  const [openInEditMode, setOpenInEditMode] = useState(false);
   const [notesLead, setNotesLead] = useState<{ id: string; name: string; agentId: string } | null>(null);
   const [summaryLead, setSummaryLead] = useState<{ id: string; name: string; summary: string } | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -106,12 +105,12 @@ export default function LeadsPage() {
   ].filter(Boolean).length;
 
   const handleRowClick = useCallback((lead: Lead) => {
-    setOpenInEditMode(false);
     setSelectedLeadId(lead.id);
   }, []);
 
+  // Edit action on a row just opens the drawer — every field is inline-editable,
+  // so there is no separate "edit mode" anymore.
   const handleEditClick = useCallback((leadId: string) => {
-    setOpenInEditMode(true);
     setSelectedLeadId(leadId);
   }, []);
 
@@ -256,16 +255,15 @@ export default function LeadsPage() {
       {/* Modals & Drawers */}
       <AddLeadModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
 
-      {selectedLeadId && (
-        <LeadDetailsDrawer
-          leadId={selectedLeadId}
-          onClose={() => {
-            setSelectedLeadId(null);
-            setOpenInEditMode(false);
-          }}
-          initialEditMode={openInEditMode}
-        />
-      )}
+      {/* Stay mounted across the close transition so SideDrawer's
+          AnimatePresence can play the slide-out animation. Conditionally
+          mounting on `selectedLeadId` would unmount the drawer instantly
+          and skip the exit. */}
+      <LeadDetailsDrawer
+        leadId={selectedLeadId}
+        isOpen={!!selectedLeadId}
+        onClose={() => setSelectedLeadId(null)}
+      />
 
       <ConversationViewDrawer
         conversationId={selectedConversationId}

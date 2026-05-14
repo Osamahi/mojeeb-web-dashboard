@@ -1,7 +1,7 @@
 /**
  * Shared helpers for mapping system field schema keys to values.
  * Two variants:
- *   - getSystemFormFieldValue: Maps field_key → form state (for AddLeadModal/LeadEditMode)
+ *   - getSystemFormFieldValue: Maps field_key → form state (for AddLeadModal)
  *   - getSystemFieldValue: Maps field_key → lead entity property (for table/view rendering)
  */
 

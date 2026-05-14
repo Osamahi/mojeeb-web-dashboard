@@ -81,17 +81,10 @@ export function LeadsTableView({
     containerSelector: '[data-leads-container]',
   });
 
-  // Event handlers with stable references (using refs to avoid recreation)
-  const handleStatusChange = useCallback((leadId: string, newStatus: LeadStatus, e: React.ChangeEvent<HTMLSelectElement>) => {
-    e.stopPropagation();
-    mutateLeadRef.current({
-      leadId,
-      request: { status: newStatus },
-    });
-  }, []);
-
-  // Mobile view uses simplified signature (no event parameter)
-  const handleStatusChangeMobile = useCallback((leadId: string, newStatus: LeadStatus) => {
+  // Event handlers with stable references (using refs to avoid recreation).
+  // Both table and mobile-card paths use the same signature now that
+  // LeadStatusDropdown handles row-click bubbling internally.
+  const handleStatusChange = useCallback((leadId: string, newStatus: LeadStatus) => {
     mutateLeadRef.current({
       leadId,
       request: { status: newStatus },
@@ -342,7 +335,7 @@ export function LeadsTableView({
         onDeleteClick={onDeleteClick}
         onViewConversation={onViewConversation}
         onAddLeadClick={onAddLeadClick}
-        onStatusChange={handleStatusChangeMobile}
+        onStatusChange={handleStatusChange}
         onCopyPhone={handleCopyPhone}
         onAddNoteClick={onAddNoteClick}
         isUpdating={updateMutation.isPending}
