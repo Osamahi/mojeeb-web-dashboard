@@ -6,17 +6,17 @@
  * - LeadsTableView: Only re-renders when data changes
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useInfiniteLeads } from '../hooks/useLeads';
 import { useLeadsSubscription } from '../hooks/useLeadsSubscription';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { UserPlus, Download, MoreVertical, Columns3, Bot, ListChecks } from 'lucide-react';
+import { UserPlus, Plus, Download, MoreVertical, Columns3, Bot, ListChecks } from 'lucide-react';
 import { BaseHeader } from '@/components/ui/BaseHeader';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { LeadsFilterDrawer } from '../components/LeadsFilterDrawer';
+import { LeadsFiltersToolbar } from '../components/LeadsFiltersToolbar';
 import { LeadsTableView } from '../components/LeadsTableView';
 import AddLeadModal from '../components/AddLeadModal';
 import LeadDetailsDrawer from '../components/LeadDetailsDrawer';
@@ -28,7 +28,7 @@ import { StatusEditorModal } from '../components/StatusEditorModal';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import { ExportLeadsModal, ExportProgressModal } from '@/features/exports/components';
 import { useDeleteLead } from '../hooks/useLeads';
-import type { Lead, LeadFilters } from '../types';
+import type { Lead, LeadFilters, LeadStatus, DatePreset } from '../types';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function LeadsPage() {
@@ -50,14 +50,29 @@ export default function LeadsPage() {
   const [isCustomFieldSchemaModalOpen, setIsCustomFieldSchemaModalOpen] = useState(false);
   const [isStatusEditorOpen, setIsStatusEditorOpen] = useState(false);
 
-  // Filter state
+  // Filter state — `filters` is what's actually applied to the query;
+  // `searchInput` is the local debounced buffer for the search box so each
+  // keystroke doesn't refetch.
   const [filters, setFilters] = useState<LeadFilters>({
     search: '',
     status: 'all',
     dateFrom: undefined,
     dateTo: undefined,
   });
-  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState(false);
+  const [activeDatePreset, setActiveDatePreset] = useState<DatePreset | null>(null);
+
+  // Debounce search input (500ms after typing stops) — matches
+  // AdminSubscriptionsPage behavior exactly.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== (filters.search || '')) {
+        setFilters((prev) => ({ ...prev, search: searchInput }));
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchInput, filters.search]);
 
   // Fetch data with filters (server-side pagination + filtering)
   const {
@@ -84,25 +99,33 @@ export default function LeadsPage() {
     setIsAddModalOpen(true);
   }, []);
 
-  const handleFilterDrawerToggle = useCallback(() => {
-    setIsFilterDrawerOpen(prev => !prev);
+  // Filter handlers — applied directly to `filters` (no separate drawer state).
+  const handleStatusChange = useCallback((status: LeadStatus | 'all') => {
+    setFilters((prev) => ({ ...prev, status }));
   }, []);
 
-  const handleFilterDrawerClose = useCallback(() => {
-    setIsFilterDrawerOpen(false);
+  const handleFilterPopoverToggle = useCallback(() => {
+    setIsFilterPopoverOpen((v) => !v);
   }, []);
 
-  const handleApplyFilters = useCallback((newFilters: LeadFilters) => {
-    setFilters(newFilters);
-    setIsFilterDrawerOpen(false);
+  const handleFilterPopoverClose = useCallback(() => {
+    setIsFilterPopoverOpen(false);
   }, []);
 
-  // Calculate active filter count
-  const activeFilterCount = [
-    filters.search && 'search',
-    filters.status !== 'all' && 'status',
-    (filters.dateFrom || filters.dateTo) && 'date',
-  ].filter(Boolean).length;
+  const handleDateFilterApply = useCallback(
+    (preset: DatePreset, dateFrom?: string, dateTo?: string) => {
+      setActiveDatePreset(preset);
+      setFilters((prev) => ({ ...prev, dateFrom, dateTo }));
+      setIsFilterPopoverOpen(false);
+    },
+    []
+  );
+
+  const handleClearFilters = useCallback(() => {
+    setSearchInput('');
+    setActiveDatePreset(null);
+    setFilters({ search: '', status: 'all', dateFrom: undefined, dateTo: undefined });
+  }, []);
 
   const handleRowClick = useCallback((lead: Lead) => {
     setSelectedLeadId(lead.id);
@@ -159,7 +182,8 @@ export default function LeadsPage() {
     setExportJobId(null);
   }, []);
 
-  // Memoize more menu button to prevent BaseHeader re-renders
+  // More-menu button — Add Lead is promoted to the header's primaryAction,
+  // so it's not duplicated here.
   const moreMenuButton = useMemo(() => (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -175,10 +199,6 @@ export default function LeadsPage() {
           <Download className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
           <span>{t('leads.extract')}</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleAddLeadClick}>
-          <UserPlus className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
-          <span>{t('leads.add_lead')}</span>
-        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleAddColumnClick}>
           <Columns3 className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-700" />
           <span>{t('leads.edit_columns')}</span>
@@ -193,7 +213,7 @@ export default function LeadsPage() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  ), [handleExportClick, handleAddLeadClick, t]);
+  ), [handleExportClick, handleAddColumnClick, handleEditStatusClick, t]);
 
   // ========================================
   // Render Logic
@@ -214,22 +234,32 @@ export default function LeadsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Static Header with Filter Button - never re-renders */}
+      {/* Header — Add Lead is the primary action, more-menu hosts secondary
+          actions (Export, Edit columns, Edit statuses, AI instructions). */}
       <BaseHeader
         title={t('leads.title')}
         subtitle={t('leads.subtitle')}
-        showFilterButton
-        activeFilterCount={activeFilterCount}
-        onFilterClick={handleFilterDrawerToggle}
+        primaryAction={{
+          label: t('leads.add_lead'),
+          icon: Plus,
+          onClick: handleAddLeadClick,
+        }}
         additionalActions={moreMenuButton}
       />
 
-      {/* Filter Drawer - slides in from right */}
-      <LeadsFilterDrawer
-        isOpen={isFilterDrawerOpen}
+      {/* Inline filter strip — debounced search + status dropdown + date
+          popover + active-filter pills. Matches AdminSubscriptionsPage UX. */}
+      <LeadsFiltersToolbar
         filters={filters}
-        onClose={handleFilterDrawerClose}
-        onApplyFilters={handleApplyFilters}
+        searchInput={searchInput}
+        activeDatePreset={activeDatePreset}
+        isFilterPopoverOpen={isFilterPopoverOpen}
+        onSearchInputChange={setSearchInput}
+        onStatusChange={handleStatusChange}
+        onFilterPopoverToggle={handleFilterPopoverToggle}
+        onFilterPopoverClose={handleFilterPopoverClose}
+        onDateFilterApply={handleDateFilterApply}
+        onClearFilters={handleClearFilters}
       />
 
       {/* Table View - only re-renders when data changes */}

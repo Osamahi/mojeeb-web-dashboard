@@ -91,7 +91,11 @@ export function FilterPopover({ activePreset, dateFrom, dateTo, onApply, onClose
   return (
     <div
       ref={popoverRef}
-      className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg border border-neutral-200 shadow-lg z-50 overflow-hidden"
+      // Anchor to the end edge (right in LTR, left in RTL) so the popover
+      // grows toward the page center — the previous `left-0` clipped off the
+      // right edge of the viewport when the trigger sat near the page's
+      // right side (Clients page filter strip).
+      className="absolute top-full end-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-lg border border-neutral-200 shadow-lg z-50 overflow-hidden"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">

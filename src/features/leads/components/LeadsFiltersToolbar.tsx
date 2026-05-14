@@ -1,37 +1,35 @@
 /**
- * LeadsFiltersToolbar Component
- * Filter controls - memoized to prevent unnecessary re-renders
- * Only re-renders when filter values actually change
+ * LeadsFiltersToolbar
+ *
+ * Filter strip rendered above the leads table. Mirrors the
+ * AdminSubscriptionsPage filter UX: debounced search left, status dropdown
+ * and date popover right, active-filter pills underneath.
+ *
+ * The parent owns filter state + the search debounce — this component is a
+ * pure controlled view, memoized so unrelated parent re-renders don't shake
+ * the table.
  */
 
 import { memo } from 'react';
 import { Search, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Input } from '@/components/ui/Input';
-import { FilterBadge } from './FilterBadge';
 import { FilterPopover } from './FilterPopover';
-import { useLeadStatusSchema } from '../hooks/useLeadStatusSchema';
+import { LeadStatusDropdown } from './LeadStatusDropdown';
 import type { LeadStatus, LeadFilters, DatePreset } from '../types';
 
 interface LeadsFiltersToolbarProps {
-  // Current filter state
   filters: LeadFilters;
+  /** Debounced search value the parent is currently holding. */
   searchInput: string;
   activeDatePreset: DatePreset | null;
   isFilterPopoverOpen: boolean;
 
-  // Event handlers
   onSearchInputChange: (value: string) => void;
-  onSearchSubmit: () => void;
-  onSearchKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onStatusChange: (status: LeadStatus | 'all') => void;
   onFilterPopoverToggle: () => void;
   onFilterPopoverClose: () => void;
   onDateFilterApply: (preset: DatePreset, dateFrom?: string, dateTo?: string) => void;
   onClearFilters: () => void;
-  onRemoveSearchFilter: () => void;
-  onRemoveStatusFilter: () => void;
-  onRemoveDateFilter: () => void;
 }
 
 export const LeadsFiltersToolbar = memo(({
@@ -40,136 +38,83 @@ export const LeadsFiltersToolbar = memo(({
   activeDatePreset,
   isFilterPopoverOpen,
   onSearchInputChange,
-  onSearchSubmit,
-  onSearchKeyPress,
   onStatusChange,
   onFilterPopoverToggle,
   onFilterPopoverClose,
   onDateFilterApply,
   onClearFilters,
-  onRemoveSearchFilter,
-  onRemoveStatusFilter,
-  onRemoveDateFilter,
 }: LeadsFiltersToolbarProps) => {
   const { t } = useTranslation();
-  const { statusOptions, getStatusLabel } = useLeadStatusSchema();
-  const hasActiveFilters = filters.search || filters.status !== 'all' || filters.dateFrom || filters.dateTo;
+  const hasActiveFilters =
+    !!filters.search || filters.status !== 'all' || !!filters.dateFrom || !!filters.dateTo;
+  const hasDateFilter = !!filters.dateFrom || !!filters.dateTo;
 
   return (
     <div className="space-y-3">
-      {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Search Input with Inline Button */}
-        <div className="flex-1 min-w-[240px] relative">
-          <Input
+      {/* Search left, filter controls right — same shape as AdminSubscriptionsPage. */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Search */}
+        <div className="relative flex-1 max-w-md">
+          <div className="pointer-events-none absolute inset-y-0 ltr:left-0 rtl:right-0 flex items-center ltr:pl-3 rtl:pr-3">
+            <Search className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
             placeholder={t('leads.search_placeholder')}
             value={searchInput}
             onChange={(e) => onSearchInputChange(e.target.value)}
-            onKeyPress={onSearchKeyPress}
-            className={`h-9 ${searchInput ? 'pr-24' : ''}`}
+            className="block w-full rounded-lg border border-gray-300 bg-white py-2 ltr:pl-10 ltr:pr-3 rtl:pr-10 rtl:pl-3 text-sm placeholder-gray-400 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
           />
-          {searchInput && (
+        </div>
+
+        {/* Filter controls */}
+        <div className="flex items-center gap-2">
+          {/* Same styled dropdown as the row-level status picker, with an
+              "All statuses" option enabled via `allowAll`. */}
+          <LeadStatusDropdown
+            status={filters.status}
+            onChange={onStatusChange}
+            allowAll
+            bordered
+          />
+
+          {/* Date filter popover */}
+          <div className="relative">
             <button
-              onClick={onSearchSubmit}
-              className="absolute right-1 top-1/2 -translate-y-1/2 px-3 h-7 bg-black text-white rounded-md hover:bg-neutral-800 transition-colors flex items-center gap-1.5"
+              onClick={onFilterPopoverToggle}
+              className={`
+                inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors
+                ${isFilterPopoverOpen || hasDateFilter
+                  ? 'bg-black text-white border-black'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }
+              `}
             >
-              <Search className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">{t('leads.search_button')}</span>
+              <Calendar className="h-4 w-4" />
+              {hasDateFilter ? t('leads.date_filter') : t('leads.add_filter')}
+            </button>
+
+            {isFilterPopoverOpen && (
+              <FilterPopover
+                activePreset={activeDatePreset}
+                dateFrom={filters.dateFrom}
+                dateTo={filters.dateTo}
+                onApply={onDateFilterApply}
+                onClose={onFilterPopoverClose}
+              />
+            )}
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={onClearFilters}
+              className="px-3 py-2 text-sm text-gray-600 hover:text-black transition-colors"
+            >
+              {t('common.clear_filters')}
             </button>
           )}
         </div>
-
-        {/* Status Dropdown */}
-        <select
-          value={filters.status}
-          onChange={(e) => onStatusChange(e.target.value as LeadStatus | 'all')}
-          className="px-3 h-9 text-sm border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black bg-white hover:bg-neutral-50 transition-colors cursor-pointer"
-        >
-          <option value="all">{t('common.status_all')}</option>
-          {statusOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {getStatusLabel(opt.value)}
-            </option>
-          ))}
-        </select>
-
-        {/* Add Filter Button */}
-        <div className="relative">
-          <button
-            onClick={onFilterPopoverToggle}
-            className={`
-              px-3 h-9 text-sm font-medium rounded-lg border transition-colors flex items-center gap-2
-              ${isFilterPopoverOpen || filters.dateFrom || filters.dateTo
-                ? 'bg-black text-white border-black'
-                : 'bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-50'
-              }
-            `}
-          >
-            <Calendar className="w-4 h-4" />
-            {filters.dateFrom || filters.dateTo ? t('leads.date_filter') : t('leads.add_filter')}
-          </button>
-
-          {/* Filter Popover */}
-          {isFilterPopoverOpen && (
-            <FilterPopover
-              activePreset={activeDatePreset}
-              dateFrom={filters.dateFrom}
-              dateTo={filters.dateTo}
-              onApply={onDateFilterApply}
-              onClose={onFilterPopoverClose}
-            />
-          )}
-        </div>
-
-        {/* Clear All Filters Button */}
-        {hasActiveFilters && (
-          <button
-            onClick={onClearFilters}
-            className="px-3 h-9 text-sm text-neutral-600 hover:text-black transition-colors"
-          >
-            {t('leads.clear_filters')}
-          </button>
-        )}
       </div>
-
-      {/* Active Filter Pills */}
-      {hasActiveFilters && (
-        <div className="flex flex-wrap gap-2">
-          {filters.search && (
-            <FilterBadge
-              label={t('common.search')}
-              value={filters.search}
-              onRemove={onRemoveSearchFilter}
-            />
-          )}
-          {filters.status !== 'all' && (
-            <FilterBadge
-              label={t('common.status')}
-              value={filters.status.charAt(0).toUpperCase() + filters.status.slice(1)}
-              onRemove={onRemoveStatusFilter}
-            />
-          )}
-          {(filters.dateFrom || filters.dateTo) && (
-            <FilterBadge
-              label={t('filter_popover.date_range')}
-              value={
-                activeDatePreset && activeDatePreset !== 'custom'
-                  ? activeDatePreset === 'last7days'
-                    ? t('filter_popover.last_7_days')
-                    : activeDatePreset === 'last30days'
-                    ? t('filter_popover.last_30_days')
-                    : activeDatePreset === 'thisMonth'
-                    ? t('filter_popover.this_month')
-                    : activeDatePreset === 'today'
-                    ? t('filter_popover.today')
-                    : `${filters.dateFrom || '...'} to ${filters.dateTo || '...'}`
-                  : `${filters.dateFrom || '...'} to ${filters.dateTo || '...'}`
-              }
-              onRemove={onRemoveDateFilter}
-            />
-          )}
-        </div>
-      )}
     </div>
   );
 });

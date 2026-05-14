@@ -21,6 +21,7 @@
  */
 
 import { Check, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -31,10 +32,23 @@ import { useLeadStatusSchema } from '../hooks/useLeadStatusSchema';
 import type { LeadStatus } from '../types';
 
 interface LeadStatusDropdownProps {
+  /** Current status. Pass 'all' (when allowAll is true) to mean "no filter". */
   status: string;
-  onChange: (next: LeadStatus) => void;
+  onChange: (next: LeadStatus | 'all') => void;
   disabled?: boolean;
   className?: string;
+  /**
+   * When true, prepends an "All statuses" entry. Used by the filter toolbar
+   * (where 'all' = unfiltered). Defaults to false so per-lead pickers can't
+   * accidentally set a lead's status to 'all'.
+   */
+  allowAll?: boolean;
+  /**
+   * Bordered trigger style — matches sibling filter controls
+   * (date popover button etc.) on the Leads page filter strip. The default
+   * (false) is a borderless trigger used inline in lead rows / cells.
+   */
+  bordered?: boolean;
 }
 
 export function LeadStatusDropdown({
@@ -42,8 +56,20 @@ export function LeadStatusDropdown({
   onChange,
   disabled = false,
   className,
+  allowAll = false,
+  bordered = false,
 }: LeadStatusDropdownProps) {
+  const { t } = useTranslation();
   const { statusOptions, getStatusLabel, getStatusColor } = useLeadStatusSchema();
+
+  const isAll = status === 'all';
+  const triggerLabel = isAll ? t('common.status_all') : getStatusLabel(status);
+  // Neutral color when "all" is selected — no status color is meaningful.
+  const triggerColor = isAll ? '#374151' : getStatusColor(status);
+
+  const triggerClasses = bordered
+    ? 'inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+    : 'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 
   return (
     // Wrap in a div that stops row-click bubbling so this can drop into a
@@ -54,14 +80,31 @@ export function LeadStatusDropdown({
           <button
             type="button"
             disabled={disabled}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ color: getStatusColor(status) }}
+            className={triggerClasses}
+            style={{ color: triggerColor }}
           >
-            {getStatusLabel(status)}
+            {triggerLabel}
             <ChevronDown className="w-4 h-4 text-neutral-500" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="min-w-[10rem]">
+          {allowAll && (
+            <DropdownMenuItem
+              onClick={() => {
+                if (!isAll) onChange('all');
+              }}
+              className="gap-2"
+            >
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0 bg-neutral-300"
+                aria-hidden
+              />
+              <span className="flex-1 text-start">{t('common.status_all')}</span>
+              {isAll && (
+                <Check className="w-3.5 h-3.5 text-neutral-700 flex-shrink-0" />
+              )}
+            </DropdownMenuItem>
+          )}
           {statusOptions.map((opt) => {
             const isSelected = opt.value === status;
             return (
