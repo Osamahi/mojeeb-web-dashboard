@@ -48,7 +48,9 @@ export function LatestNoteCell({ lead, onAddNoteClick }: LatestNoteCellProps) {
           className="ltr:text-left rtl:text-right w-full hover:bg-neutral-50 -mx-2 px-2 py-1 rounded transition-colors"
         >
           <div className="flex flex-col gap-0.5">
-            <span className="text-[13px] text-neutral-900 truncate">{latestNote.text}</span>
+            <span className="text-[13px] text-neutral-900 line-clamp-2 text-start whitespace-normal break-words">
+              {latestNote.text}
+            </span>
             <span className="text-[12px] text-neutral-500">
               {getNoteAuthorName(latestNote.userName, latestNote.userId, user?.id)} · {formatSmartTimestamp(latestNote.createdAt)}
             </span>

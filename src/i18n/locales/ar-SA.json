@@ -347,6 +347,7 @@
     "failed_to_copy": "فشل النسخ",
     "copy_phone_title": "نسخ رقم الهاتف",
     "view_conversation_title": "عرض المحادثة",
+    "conversation_menu_item": "المحادثة",
     "edit_lead_title": "تعديل العميل",
     "delete_lead_title": "حذف العميل",
     "updating": "جاري التحديث...",
@@ -2309,7 +2310,15 @@
   "data_table": {
     "no_items_found": "لم يتم العثور على {{itemName}}",
     "search_placeholder": "بحث في {{itemName}}...",
-    "actions": "الإجراءات"
+    "actions": "الإجراءات",
+    "columns": "الأعمدة",
+    "toggle_columns": "تبديل الأعمدة",
+    "required": "إلزامي",
+    "reset_columns": "إعادة التعيين",
+    "density": "كثافة الصفوف",
+    "density_compact": "مضغوط",
+    "density_regular": "عادي",
+    "density_relaxed": "مريح"
   },
   "divider": {
     "or_continue_with": "أو تابع مع"

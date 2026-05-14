@@ -430,6 +430,7 @@
     "failed_to_copy": "Failed to copy",
     "copy_phone_title": "Copy phone number",
     "view_conversation_title": "View conversation",
+    "conversation_menu_item": "Conversation",
     "edit_lead_title": "Edit lead",
     "delete_lead_title": "Delete lead",
     "updating": "Updating...",
@@ -2415,7 +2416,15 @@
   "data_table": {
     "no_items_found": "No {{itemName}} found",
     "search_placeholder": "Search {{itemName}}...",
-    "actions": "Actions"
+    "actions": "Actions",
+    "columns": "Columns",
+    "toggle_columns": "Toggle columns",
+    "required": "Required",
+    "reset_columns": "Reset to default",
+    "density": "Row density",
+    "density_compact": "Compact",
+    "density_regular": "Regular",
+    "density_relaxed": "Relaxed"
   },
   "divider": {
     "or_continue_with": "Or continue with"

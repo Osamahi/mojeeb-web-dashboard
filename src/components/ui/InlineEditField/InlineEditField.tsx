@@ -11,6 +11,13 @@ interface InlineEditFieldProps {
   validationFn?: (value: string) => { valid: boolean; error?: string };
   isPhone?: boolean;
   isLoading?: boolean;
+  /**
+   * Typography classes for the display-state span (text size + color).
+   * Defaults to `text-sm text-neutral-900`. Override per surface to match
+   * the surrounding cell typography (e.g. the leads table uses 13px to
+   * align with the Notes column).
+   */
+  displayClassName?: string;
 }
 
 export const InlineEditField: React.FC<InlineEditFieldProps> = ({
@@ -21,6 +28,7 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
   validationFn,
   isPhone = false,
   isLoading = false,
+  displayClassName = 'text-sm text-neutral-900',
 }) => {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
@@ -116,9 +124,9 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
         ) : (
           <>
             {isPhone ? (
-              <PhoneNumber value={value} className="text-sm text-neutral-900" />
+              <PhoneNumber value={value} className={displayClassName} />
             ) : (
-              <span className="text-sm text-neutral-900">{value}</span>
+              <span className={displayClassName}>{value}</span>
             )}
           </>
         )}

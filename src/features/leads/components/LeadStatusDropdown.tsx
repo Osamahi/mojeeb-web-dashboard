@@ -3,8 +3,8 @@
  *
  * The single source of truth for the lead-status picker UX, used everywhere
  * a user can change a lead's status:
- *   - Leads-page table card (LeadCard)
  *   - Leads-page table column (systemFieldRenderers)
+ *   - Leads-page filter toolbar (LeadsFiltersToolbar — with allowAll/bordered)
  *   - Lead detail drawer (LeadInlineDetails)
  *
  * Built on the app's `DropdownMenu` primitive (same one as the conversation

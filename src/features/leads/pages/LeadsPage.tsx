@@ -278,8 +278,6 @@ export default function LeadsPage() {
         fetchNextPage={fetchNextPage}
         hasMore={hasMore}
         isFetchingNextPage={isFetchingNextPage}
-        onEditStatusClick={handleEditStatusClick}
-        onAddColumnClick={handleAddColumnClick}
       />
 
       {/* Modals & Drawers */}

@@ -74,6 +74,8 @@ const renderNameColumn = (
         onSave={(newName) => ctx.onNameSave(lead.id, newName)}
         validationFn={validateName}
         isLoading={ctx.isUpdating}
+        // Match the Notes column typography so the row reads as one block.
+        displayClassName="text-[13px] text-neutral-900"
       />
       <div className="flex items-center gap-1.5 group">
         {lead.phone ? (
@@ -124,7 +126,7 @@ const renderSummaryColumn = (
   const displayText = shouldTruncate ? lead.summary!.substring(0, maxLength) : lead.summary;
 
   return (
-    <div className="py-1 max-w-sm min-w-0">
+    <div className="py-1 max-w-xs min-w-0">
       {lead.summary ? (
         <button
           onClick={(e) => {
@@ -133,7 +135,7 @@ const renderSummaryColumn = (
           }}
           className="ltr:text-left rtl:text-right w-full group hover:text-neutral-900 transition-colors min-w-0"
         >
-          <div className="text-sm text-neutral-700 leading-relaxed break-words whitespace-normal">
+          <div className="text-[13px] text-neutral-900 leading-relaxed break-words whitespace-normal">
             {displayText}
             {shouldTruncate && <span className="text-neutral-400 group-hover:text-neutral-900"> ...{ctx.t('leads.view_more')}</span>}
           </div>
@@ -230,22 +232,34 @@ export const getSystemFieldRenderer = (
 };
 
 /**
- * Get column width for system fields
+ * Get column width for system fields.
+ *
+ * Fixed px widths for sized columns + `'auto'` for the Summary column.
+ *
+ * `tableLayout: auto` distributes any extra container width across columns
+ * whose width is `auto` (or empty). By giving Summary `'auto'`, it absorbs
+ * the slack on wide viewports — so the sticky-end actions cell hugs the
+ * page's right edge instead of leaving a gap before it. On narrow viewports
+ * Summary collapses toward its min content width, and the table starts to
+ * scroll horizontally (via `min-w-max` on the <table> element).
+ *
+ * Returning an empty string lets DataTable skip the `style.width` entirely,
+ * which is the cleanest way to say "let the browser decide."
  */
 export const getSystemFieldColumnWidth = (fieldKey: string): string => {
   switch (fieldKey) {
     case 'name':
-      return '25%';
+      return '240px';
     case 'summary':
-      return '30%';
+      return ''; // auto — absorbs slack
     case 'status':
-      return '180px';
+      return '160px';
     case 'notes':
-      return '18%';
+      return '200px';
     case 'created_at':
-      return '14%';
+      return '160px';
     default:
-      return '150px';
+      return '160px';
   }
 };
 

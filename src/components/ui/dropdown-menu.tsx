@@ -1,18 +1,53 @@
 /**
  * Dropdown Menu Component
- * Simple dropdown menu for actions
+ *
+ * Lightweight popover menu used for row actions, three-dot menus, and any
+ * other "trigger → small floating list" UI. Content is **portaled to
+ * `document.body`** with fixed coordinates so it escapes any sticky / table /
+ * transformed ancestor stacking contexts — this matters for tables with
+ * sticky columns where an `absolute` child would otherwise be clipped or
+ * stacked below another sticky cell.
+ *
+ * Auto-flips above the trigger when there isn't enough room below.
+ * RTL-aware via the alignment prop (start/center/end resolve to the visual
+ * leading/center/trailing edge of the trigger).
+ *
+ * Public API (`<DropdownMenu>`, `<DropdownMenuTrigger>`,
+ * `<DropdownMenuContent>`, `<DropdownMenuItem>`) is unchanged from the
+ * previous version.
  */
 
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
-const DropdownMenuContext = React.createContext<{
+// ---------------------------------------------------------------------------
+// Context
+// ---------------------------------------------------------------------------
+
+interface DropdownMenuContextValue {
   isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
-}>({
+  open: () => void;
+  close: () => void;
+  toggle: () => void;
+  triggerRef: React.RefObject<HTMLElement | null>;
+  setTriggerEl: (el: HTMLElement | null) => void;
+  contentRef: React.RefObject<HTMLDivElement | null>;
+}
+
+const DropdownMenuContext = React.createContext<DropdownMenuContextValue>({
   isOpen: false,
-  setIsOpen: () => {},
+  open: () => {},
+  close: () => {},
+  toggle: () => {},
+  triggerRef: { current: null },
+  setTriggerEl: () => {},
+  contentRef: { current: null },
 });
+
+// ---------------------------------------------------------------------------
+// Root
+// ---------------------------------------------------------------------------
 
 export interface DropdownMenuProps {
   children: React.ReactNode;
@@ -20,51 +55,120 @@ export interface DropdownMenuProps {
 
 export function DropdownMenu({ children }: DropdownMenuProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const menuRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLElement | null>(null);
+  const contentRef = React.useRef<HTMLDivElement | null>(null);
 
-  // Close on outside click
+  const open = React.useCallback(() => setIsOpen(true), []);
+  const close = React.useCallback(() => setIsOpen(false), []);
+  const toggle = React.useCallback(() => setIsOpen((v) => !v), []);
+  const setTriggerEl = React.useCallback((el: HTMLElement | null) => {
+    triggerRef.current = el;
+  }, []);
+
+  // Close on click outside — checks both trigger and portaled content so a
+  // click inside the menu (which lives outside the trigger's DOM subtree)
+  // doesn't dismiss it.
   React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+    if (!isOpen) return;
+    const handle = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        triggerRef.current?.contains(target) ||
+        contentRef.current?.contains(target)
+      ) {
+        return;
       }
+      setIsOpen(false);
     };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
   }, [isOpen]);
 
+  // Close on Escape.
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handle = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    document.addEventListener('keydown', handle);
+    return () => document.removeEventListener('keydown', handle);
+  }, [isOpen]);
+
+  // Close when the trigger scrolls off-screen or the window resizes — keeps
+  // the menu honest if the user scrolls the table beneath it.
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const onScrollOrResize = () => setIsOpen(false);
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
+    return () => {
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
+    };
+  }, [isOpen]);
+
+  const value = React.useMemo<DropdownMenuContextValue>(
+    () => ({ isOpen, open, close, toggle, triggerRef, setTriggerEl, contentRef }),
+    [isOpen, open, close, toggle, setTriggerEl],
+  );
+
   return (
-    <DropdownMenuContext.Provider value={{ isOpen, setIsOpen }}>
-      <div ref={menuRef} className={cn('relative inline-block', isOpen && 'z-50')}>
-        {children}
-      </div>
+    <DropdownMenuContext.Provider value={value}>
+      {children}
     </DropdownMenuContext.Provider>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Trigger
+// ---------------------------------------------------------------------------
+
 export interface DropdownMenuTriggerProps {
+  /** When true, clone the child element and attach the trigger behavior to it. */
   asChild?: boolean;
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent) => void;
 }
 
 export const DropdownMenuTrigger = React.forwardRef<
-  HTMLDivElement,
+  HTMLElement,
   DropdownMenuTriggerProps
 >(({ asChild, children, onClick }, ref) => {
-  const { isOpen, setIsOpen } = React.useContext(DropdownMenuContext);
+  const { toggle, setTriggerEl } = React.useContext(DropdownMenuContext);
+
+  // Combined ref: forward to the parent ref AND register the element with the
+  // context so we can position the portaled content against it.
+  const setRef = React.useCallback(
+    (el: HTMLElement | null) => {
+      setTriggerEl(el);
+      if (typeof ref === 'function') ref(el);
+      else if (ref) (ref as React.MutableRefObject<HTMLElement | null>).current = el;
+    },
+    [ref, setTriggerEl],
+  );
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsOpen(!isOpen);
+    toggle();
     onClick?.(e);
   };
 
+  if (asChild && React.isValidElement(children)) {
+    const child = children as React.ReactElement<{
+      ref?: React.Ref<HTMLElement>;
+      onClick?: (e: React.MouseEvent) => void;
+    }>;
+    return React.cloneElement(child, {
+      ref: setRef,
+      onClick: (e: React.MouseEvent) => {
+        child.props.onClick?.(e);
+        handleClick(e);
+      },
+    });
+  }
+
   return (
-    <div ref={ref} onClick={handleClick}>
+    <div ref={setRef as React.Ref<HTMLDivElement>} onClick={handleClick}>
       {children}
     </div>
   );
@@ -72,39 +176,129 @@ export const DropdownMenuTrigger = React.forwardRef<
 
 DropdownMenuTrigger.displayName = 'DropdownMenuTrigger';
 
+// ---------------------------------------------------------------------------
+// Content — portaled, positioned against the trigger
+// ---------------------------------------------------------------------------
+
 export interface DropdownMenuContentProps {
+  /**
+   * Horizontal alignment relative to the trigger. `start`/`end` use the
+   * trigger's leading/trailing edge respectively (RTL-aware), `center`
+   * centers on the trigger.
+   */
   align?: 'start' | 'center' | 'end';
+  /** Vertical gap between trigger and content. Defaults to 8px. */
+  sideOffset?: number;
   children: React.ReactNode;
   className?: string;
 }
 
+interface MenuPosition {
+  top: number;
+  left: number;
+  /** True when we had to flip the menu above the trigger to fit on screen. */
+  flipped: boolean;
+}
+
 export function DropdownMenuContent({
   align = 'start',
+  sideOffset = 8,
   children,
   className,
 }: DropdownMenuContentProps) {
-  const { isOpen } = React.useContext(DropdownMenuContext);
+  const { isOpen, triggerRef, contentRef } = React.useContext(DropdownMenuContext);
+  const [position, setPosition] = React.useState<MenuPosition | null>(null);
+  const [isMounted, setIsMounted] = React.useState(false);
 
-  if (!isOpen) return null;
+  // Mount flag — portals need `document` to exist.
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-  const alignmentClass = {
-    start: 'start-0',
-    center: 'start-1/2 -translate-x-1/2',
-    end: 'end-0',
-  };
+  // Compute position once the content is rendered so we can measure its size
+  // and flip if it overflows the viewport.
+  React.useLayoutEffect(() => {
+    if (!isOpen) {
+      setPosition(null);
+      return;
+    }
+    const triggerEl = triggerRef.current;
+    const contentEl = contentRef.current;
+    if (!triggerEl || !contentEl) return;
 
-  return (
+    const isRTL =
+      document.documentElement.dir === 'rtl' ||
+      (document.body.dir === 'rtl');
+
+    const triggerRect = triggerEl.getBoundingClientRect();
+    const contentRect = contentEl.getBoundingClientRect();
+    const viewportH = window.innerHeight;
+    const viewportW = window.innerWidth;
+
+    // Vertical placement: below the trigger by default, flip above if no room.
+    const spaceBelow = viewportH - triggerRect.bottom;
+    const spaceAbove = triggerRect.top;
+    const flipped =
+      spaceBelow < contentRect.height + sideOffset &&
+      spaceAbove > spaceBelow;
+    const top = flipped
+      ? triggerRect.top - contentRect.height - sideOffset
+      : triggerRect.bottom + sideOffset;
+
+    // Horizontal placement — `start` and `end` flip in RTL.
+    //   start: align content's leading edge with trigger's leading edge
+    //   end:   align content's trailing edge with trigger's trailing edge
+    //   center: center content on trigger
+    let left: number;
+    if (align === 'center') {
+      left = triggerRect.left + triggerRect.width / 2 - contentRect.width / 2;
+    } else {
+      const startsAtLeft =
+        (align === 'start' && !isRTL) || (align === 'end' && isRTL);
+      left = startsAtLeft
+        ? triggerRect.left
+        : triggerRect.right - contentRect.width;
+    }
+
+    // Clamp inside the viewport with an 8px gutter so it never clips off-screen.
+    const GUTTER = 8;
+    left = Math.max(GUTTER, Math.min(left, viewportW - contentRect.width - GUTTER));
+
+    setPosition({ top, left, flipped });
+  }, [isOpen, align, sideOffset, triggerRef, contentRef, children]);
+
+  if (!isMounted || !isOpen) return null;
+
+  return createPortal(
     <div
+      ref={contentRef}
+      role="menu"
+      // High z-index so we beat any in-app overlay (modals are typically z-40 / z-50;
+      // portaling already escapes table stacking contexts, but we still want to land
+      // above other ambient overlays.)
+      style={{
+        position: 'fixed',
+        top: position?.top ?? 0,
+        left: position?.left ?? 0,
+        // Hide content during the first layout pass so we don't see it
+        // flicker at (0,0) before measurement completes.
+        visibility: position ? 'visible' : 'hidden',
+        zIndex: 60,
+      }}
       className={cn(
-        'absolute z-50 mt-2 min-w-[8rem] overflow-hidden rounded-md border border-neutral-200 bg-white p-1 shadow-lg',
-        alignmentClass[align],
-        className
+        'min-w-[8rem] overflow-hidden rounded-md border border-neutral-200 bg-white p-1 shadow-lg',
+        className,
       )}
     >
       {children}
-    </div>
+    </div>,
+    document.body,
   );
 }
+
+// ---------------------------------------------------------------------------
+// Item
+// ---------------------------------------------------------------------------
 
 export interface DropdownMenuItemProps {
   children: React.ReactNode;
@@ -119,13 +313,13 @@ export function DropdownMenuItem({
   className,
   disabled = false,
 }: DropdownMenuItemProps) {
-  const { setIsOpen } = React.useContext(DropdownMenuContext);
+  const { close } = React.useContext(DropdownMenuContext);
 
   const handleClick = (e: React.MouseEvent) => {
     if (disabled) return;
     e.stopPropagation();
     onClick?.(e);
-    setIsOpen(false); // Close menu after clicking item
+    close(); // Close menu after clicking item
   };
 
   return (
@@ -136,7 +330,7 @@ export function DropdownMenuItem({
         'relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors text-start',
         'hover:bg-neutral-100 focus:bg-neutral-100',
         disabled && 'pointer-events-none opacity-50',
-        className
+        className,
       )}
     >
       {children}
