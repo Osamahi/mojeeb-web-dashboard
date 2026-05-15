@@ -28,6 +28,8 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { SchemaFormField } from './SchemaFormField';
 import { LeadNotesSection } from './LeadNotesSection';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
+import { AssigneeDropdown } from './AssigneeDropdown';
+import { useAssignLead } from '../hooks/useLeads';
 import { useDateLocale } from '@/lib/dateConfig';
 import { getSystemFieldValue } from '../utils/systemFieldHelpers';
 import type { Lead, LeadStatus, UpdateLeadRequest } from '../types';
@@ -89,13 +91,16 @@ export function LeadInlineDetails({
         if (schema.field_key === 'notes') return null;
 
         if (schema.is_system && schema.field_key === 'status') {
+          // Render Status then Assignee back-to-back (matches table column order).
           return (
-            <InlineStatusField
-              key={schema.id}
-              currentStatus={lead.status}
-              isSaving={savingFieldKey === 'status'}
-              onChange={(next) => onSaveField({ status: next }, 'status')}
-            />
+            <div key={schema.id} className="space-y-5">
+              <InlineStatusField
+                currentStatus={lead.status}
+                isSaving={savingFieldKey === 'status'}
+                onChange={(next) => onSaveField({ status: next }, 'status')}
+              />
+              <InlineAssigneeField leadId={lead.id} assignedTo={lead.assignedTo} />
+            </div>
           );
         }
 
@@ -184,6 +189,40 @@ function InlineStatusField({
         <Skeleton height="20px" width="60%" />
       ) : (
         <LeadStatusDropdown status={currentStatus} onChange={onChange} />
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// Inline assignee field — uses AssigneeDropdown + useAssignLead. The save
+// path runs through the dedicated assignment endpoint (not patch-update)
+// because it must mirror the change to the linked conversation.
+// ============================================================================
+
+function InlineAssigneeField({
+  leadId,
+  assignedTo,
+}: {
+  leadId: string;
+  assignedTo: string | null;
+}) {
+  const { t } = useTranslation();
+  const assign = useAssignLead();
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-neutral-500 mb-1">
+        {t('leads.assignee')}
+      </label>
+      {assign.isPending ? (
+        <Skeleton height="20px" width="60%" />
+      ) : (
+        <AssigneeDropdown
+          mode="cell"
+          value={assignedTo}
+          onChange={(next) => assign.mutate({ leadId, assignedTo: next })}
+        />
       )}
     </div>
   );

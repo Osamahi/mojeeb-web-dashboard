@@ -1,33 +1,34 @@
 /**
  * LeadsTableView
  *
- * Schema-driven Clients table. Built on `DataTableV2` (TanStack Table v8),
- * which owns the row/column/visibility/pinning state. This component is the
- * data-fetching + handler-wiring shell:
+ * Schema-driven Clients table. Built on `DataTableV2` (TanStack Table v8,
+ * `fillHeight` mode), which owns the row/column/visibility/pinning state.
+ * This component is the data-fetching + handler-wiring shell:
  *
  *   - `useLeadTableColumns` builds the column definitions (system + custom
- *     fields + actions) from the agent's `custom_field_schemas`
- *   - `useInfiniteLeads` (called by the parent) provides the data; we wire
- *     the infinite-scroll sentinel here via `useInfiniteScroll`
+ *     fields + actions) from the agent's `custom_field_schemas`.
+ *   - `useInfiniteLeads` (called by the parent) provides the data; this
+ *     component drives the IntersectionObserver-based infinite scroll
+ *     against the table's own scroll container (the page itself doesn't
+ *     scroll in `fillHeight` mode).
  *   - Inline editing, status changes, and copy-phone are handled by the
- *     existing `SystemFieldRenderContext` plumbing
+ *     `SystemFieldRenderContext` plumbing.
  *
- * Pinning: Name is pinned to the left (row identity), Actions to the right
- * (always reachable during horizontal scroll). Sticky behavior + edge fade
- * shadows + density + column chooser all come from `DataTableV2`.
+ * Pinning: Name is pinned left (row identity) on desktop, Actions pinned
+ * right always — sticky positioning, sticky `<thead>`, and the in-tbody
+ * loading-skeleton rows all come from `DataTableV2`.
  */
 
-import { useMemo, useCallback, useRef } from 'react';
+import { useMemo, useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
-import { useUpdateLead } from '../hooks/useLeads';
+import { useAssignLead, useUpdateLead } from '../hooks/useLeads';
 import { DataTableV2 } from '@/components/ui/DataTableV2';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { LeadsTableSkeleton } from './LeadsTableSkeleton';
 import { formatPhoneNumber } from '../utils/formatting';
-import { useAuthStore } from '@/features/auth/stores/authStore';
 import { useDateLocale } from '@/lib/dateConfig';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useLeadTableColumns } from '../hooks/useLeadTableColumns';
@@ -37,7 +38,6 @@ import type { Lead, LeadStatus, LeadFilters } from '../types';
 interface LeadsTableViewProps {
   leads: Lead[] | undefined;
   isLoading: boolean;
-  isFetching: boolean;
   error: Error | null;
   filters: LeadFilters;
   onEditClick: (leadId: string) => void;
@@ -54,7 +54,6 @@ interface LeadsTableViewProps {
 export function LeadsTableView({
   leads,
   isLoading,
-  isFetching: _isFetching,
   error,
   filters,
   onEditClick,
@@ -68,27 +67,41 @@ export function LeadsTableView({
   isFetchingNextPage,
 }: LeadsTableViewProps) {
   const { t, i18n } = useTranslation();
-  const _user = useAuthStore((state) => state.user);
   const updateMutation = useUpdateLead();
+  const assignMutation = useAssignLead();
   const { formatSmartTimestamp } = useDateLocale();
 
-  // Stable refs prevent callback recreation in render context.
+  // Stable refs so cell-level handlers don't re-create on every mutation
+  // status change (would invalidate `ctx` and re-instantiate the TanStack
+  // table). The refs always read the latest mutation function / translator.
   const mutateLeadRef = useRef(updateMutation.mutate);
   mutateLeadRef.current = updateMutation.mutate;
+  const assignLeadRef = useRef(assignMutation.mutate);
+  assignLeadRef.current = assignMutation.mutate;
   const tRef = useRef(t);
   tRef.current = t;
 
-  // Server-side infinite scroll handler — same selector as before.
+  // `fillHeight` table mode: the page itself doesn't scroll — the table's
+  // own scroll container does. `useInfiniteScroll` must observe against
+  // that element, not the viewport. A callback ref passed to DataTableV2
+  // populates this state when the DOM mounts; the state change re-runs
+  // the hook with a real root.
+  const [scrollContainer, setScrollContainer] = useState<HTMLDivElement | null>(null);
+
   useInfiniteScroll({
     fetchNextPage,
     hasMore,
     isFetching: isFetchingNextPage,
-    containerSelector: '[data-leads-container]',
+    root: scrollContainer,
   });
 
   // Cell-level handlers — same plumbing as the old table.
   const handleStatusChange = useCallback((leadId: string, newStatus: LeadStatus) => {
     mutateLeadRef.current({ leadId, request: { status: newStatus } });
+  }, []);
+
+  const handleAssignChange = useCallback((leadId: string, newAssignee: string | null) => {
+    assignLeadRef.current({ leadId, assignedTo: newAssignee });
   }, []);
 
   const handleNameSave = useCallback(async (leadId: string, newName: string) => {
@@ -147,6 +160,7 @@ export function LeadsTableView({
     onAddSummaryClick,
     onStatusChange: handleStatusChange,
     onAddNoteClick,
+    onAssignChange: handleAssignChange,
     isUpdating: updateMutation.isPending,
   }), [
     t,
@@ -158,6 +172,7 @@ export function LeadsTableView({
     onAddSummaryClick,
     handleStatusChange,
     onAddNoteClick,
+    handleAssignChange,
     updateMutation.isPending,
   ]);
 
@@ -173,12 +188,18 @@ export function LeadsTableView({
   // ============================================================
 
   if (isLoading || isColumnsLoading) {
-    return <LeadsTableSkeleton />;
+    // Skeleton fills the available card height so the layout doesn't jump
+    // when real data arrives.
+    return (
+      <div className="flex-1 min-h-0">
+        <LeadsTableSkeleton />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border border-neutral-200 p-12">
+      <div className="flex-1 min-h-0 bg-white rounded-lg border border-neutral-200 p-12 flex items-center justify-center">
         <EmptyState
           icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
           title={t('leads.error_loading')}
@@ -193,7 +214,7 @@ export function LeadsTableView({
 
   if (!leads || leads.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-neutral-200 p-12">
+      <div className="flex-1 min-h-0 bg-white rounded-lg border border-neutral-200 p-12 flex items-center justify-center">
         <EmptyState
           icon={<UserPlus className="w-12 h-12 text-neutral-400" />}
           title={hasActiveFilters ? t('leads.no_clients_found') : t('leads.no_clients_yet')}
@@ -216,7 +237,10 @@ export function LeadsTableView({
   }
 
   return (
-    <div data-leads-container>
+    // Flex column that lets DataTableV2 (fillHeight=true) absorb the
+    // remaining viewport height. min-h-0 is the load-bearing CSS — without
+    // it the flex child refuses to shrink below its natural content size.
+    <div className="flex flex-col flex-1 min-h-0">
       <DataTableV2<Lead>
         tableId="leads"
         data={leads}
@@ -227,21 +251,19 @@ export function LeadsTableView({
         // columns are shown by default, density stays at Regular.
         showColumnChooser={false}
         showDensityToggle={false}
-        footer={
-          <>
-            {isFetchingNextPage && (
-              <div className="border-t border-neutral-100">
-                <LeadsTableSkeleton rows={3} showHeader={false} />
-              </div>
-            )}
-            {!hasMore && leads.length > 50 && (
-              <div className="flex justify-center items-center py-4 border-t border-neutral-100">
-                <span className="text-sm text-neutral-500">
-                  {t('leads.all_leads_loaded', { count: leads.length })}
-                </span>
-              </div>
-            )}
-          </>
+        // Fixed-height table mode: header + filters stay static above; body
+        // scrolls inside the card.
+        fillHeight
+        // Callback ref — populates `scrollContainer` state when the DOM
+        // mounts, which re-runs `useInfiniteScroll` with the real root.
+        scrollContainerRef={setScrollContainer}
+        // Infinite-scroll status rendered as real <tr>s inside <tbody>, so
+        // the horizontal scrollbar always sits below every row (real + loading).
+        isFetchingNextPage={isFetchingNextPage}
+        endOfListMessage={
+          !hasMore && leads.length > 50
+            ? t('leads.all_leads_loaded', { count: leads.length })
+            : undefined
         }
       />
     </div>

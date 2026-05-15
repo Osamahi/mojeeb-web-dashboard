@@ -20,7 +20,14 @@
  * state lives only for the component's lifetime.
  */
 
-import { useMemo, useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  type CSSProperties,
+} from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -34,7 +41,6 @@ import {
 } from '@tanstack/react-table';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
-import { useScrollEdgeShadow } from '@/hooks/useScrollEdgeShadow';
 import { ColumnChooser, type ColumnChooserItem } from './ColumnChooser';
 import {
   DensityToggle,
@@ -79,8 +85,46 @@ export interface DataTableV2Props<T> {
   /** Optional empty-state node when `data.length === 0`. */
   emptyState?: React.ReactNode;
 
-  /** Rendered below the table (e.g. infinite-scroll sentinel, "load more" spinner). */
-  footer?: React.ReactNode;
+  /**
+   * When true, render N skeleton rows after the last real row to indicate
+   * the next page is loading. The skeleton rows live inside <tbody> so they
+   * scroll with real rows, stay aligned with column widths, and sit ABOVE
+   * the horizontal scrollbar (not below it). Use with infinite-scroll
+   * mutations.
+   */
+  isFetchingNextPage?: boolean;
+  /** Number of skeleton rows to render while fetching. Defaults to 3. */
+  fetchingSkeletonRows?: number;
+
+  /**
+   * Optional terminal row rendered after all real rows when there are no
+   * more pages to load (e.g. "All N leads loaded"). Rendered as a single
+   * full-width <tr> so it stays inside <tbody>'s flow.
+   */
+  endOfListMessage?: React.ReactNode;
+
+  /**
+   * When true, the table card fills its parent's available height: the
+   * toolbar stays fixed at top, the body scrolls vertically AND horizontally
+   * inside the card, and the <thead> sticks to the top of the scrolling
+   * region. Requires the parent to be a flex column with a bounded height
+   * (e.g. `flex flex-col h-full min-h-0`) — same pattern as Linear / Notion
+   * / Airtable.
+   *
+   * Default: false (legacy "table grows to its natural height, page scrolls"
+   * behavior used by every other table in the app).
+   */
+  fillHeight?: boolean;
+
+  /**
+   * Optional ref that receives the scroll container element. Accepts any
+   * React ref shape — a `MutableRefObject` OR a callback ref (e.g. the setter
+   * from `useState<HTMLDivElement | null>`). The callback-ref form is the
+   * recommended pattern for `fillHeight` consumers because it lets a child
+   * hook (e.g. `useInfiniteScroll`) re-run as soon as the DOM node lands,
+   * without ref-mirroring boilerplate in the parent.
+   */
+  scrollContainerRef?: React.Ref<HTMLDivElement>;
 }
 
 // ----------------------------------------------------------------------------
@@ -128,25 +172,16 @@ interface StickyStyle {
  * Generate the sticky-positioning styles for a pinned column. Uses logical
  * `inset-inline-*` values so RTL flips naturally without per-direction code.
  *
- * The shadow is conditional — only the "edge" pinned columns (leftmost in
- * left-pinned group, rightmost in right-pinned group) get the shadow that
- * separates pinned content from the scrolling middle. The shadow itself is
- * inset-only here; the scroll-position-driven fade is handled by the wrapper.
+ * Body cells get an opaque background so the scrolling content underneath
+ * doesn't bleed through. No edge shadows — the pin itself is the separator.
  */
 function getStickyCellStyle<T>(
   column: Column<T, unknown>,
   isHeader: boolean,
-  showStartShadow: boolean,
-  showEndShadow: boolean,
 ): StickyStyle {
   const pin = column.getIsPinned();
   if (!pin) return { className: '' };
 
-  const isLastLeft = pin === 'left' && column.getIsLastColumn('left');
-  const isFirstRight = pin === 'right' && column.getIsFirstColumn('right');
-
-  // Body cells need an opaque bg so scrolling content doesn't show through.
-  // We use bg-white as the base and let the row's group-hover paint over.
   const baseBg = isHeader
     ? 'bg-neutral-50'
     : 'bg-white group-hover/row:bg-neutral-50';
@@ -159,19 +194,8 @@ function getStickyCellStyle<T>(
     offsetStyle.insetInlineEnd = `${column.getAfter('right')}px`;
   }
 
-  const showShadow =
-    (isLastLeft && showStartShadow) || (isFirstRight && showEndShadow);
-
   return {
-    className: cn(
-      'sticky',
-      baseBg,
-      isHeader ? 'z-20' : 'z-10',
-      // Inset shadow on the inner edge of the pinned column when there is
-      // content scrolled under it. Direction-aware via the boolean above.
-      showShadow && isLastLeft && 'shadow-[inset_-1px_0_0_rgba(0,0,0,0.06)]',
-      showShadow && isFirstRight && 'shadow-[inset_1px_0_0_rgba(0,0,0,0.06)]',
-    ),
+    className: cn('sticky', baseBg, isHeader ? 'z-20' : 'z-10'),
     style: offsetStyle,
   };
 }
@@ -193,7 +217,11 @@ export function DataTableV2<T>({
   showColumnChooser = true,
   showDensityToggle = true,
   emptyState,
-  footer,
+  isFetchingNextPage = false,
+  fetchingSkeletonRows = 3,
+  endOfListMessage,
+  fillHeight = false,
+  scrollContainerRef,
 }: DataTableV2Props<T>) {
   const { t } = useTranslation();
 
@@ -262,8 +290,22 @@ export function DataTableV2<T>({
     setColumnVisibility(initialColumnVisibility ?? {});
   }, [initialColumnVisibility]);
 
-  // ---- Edge shadow tracking ----
-  const { ref: scrollRef, showStart, showEnd } = useScrollEdgeShadow<HTMLDivElement>();
+  // Forward the scroll container DOM node to the consumer's ref. Accepts
+  // both shapes React allows: a callback ref (function) or a mutable ref
+  // object. Callback refs are the recommended pattern for fillHeight
+  // consumers — passing `setState` directly drives a re-render when the
+  // DOM lands, so a child `useInfiniteScroll` can observe it correctly.
+  const setScrollContainerRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!scrollContainerRef) return;
+      if (typeof scrollContainerRef === 'function') {
+        scrollContainerRef(node);
+      } else {
+        (scrollContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+    },
+    [scrollContainerRef],
+  );
 
   // ---- Density-driven row classes ----
   const cellPadding = DENSITY_CELL_PADDING_CLASS[density];
@@ -273,9 +315,17 @@ export function DataTableV2<T>({
   const isEmpty = rows.length === 0;
 
   return (
-    <div className="space-y-3">
+    <div
+      className={cn(
+        'space-y-3',
+        // When the table must fill its parent's height, the OUTER wrapper
+        // is the flex column that grows. Toolbar stays its natural height;
+        // table card absorbs the rest.
+        fillHeight && 'flex flex-col h-full min-h-0',
+      )}
+    >
       {(toolbarStart || toolbarEnd || showColumnChooser || showDensityToggle) && (
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 flex-shrink-0">
           <div className="flex items-center gap-2 min-w-0">{toolbarStart}</div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {toolbarEnd}
@@ -293,9 +343,37 @@ export function DataTableV2<T>({
         </div>
       )}
 
-      <div className="bg-white border border-neutral-200 rounded-lg overflow-hidden">
-        {/* Scrollable wrapper — drives horizontal scroll + tracks edge state */}
-        <div ref={scrollRef} className="overflow-x-auto">
+      <div
+        className={cn(
+          // `isolate` creates a new stacking context for the card so the
+          // sticky <thead>'s z-index stays local — it sits above pinned
+          // column cells inside the table but never above app chrome
+          // (sidebar, header) which live in the root stacking context.
+          'isolate bg-white border border-neutral-200 rounded-lg overflow-hidden',
+          // In fillHeight mode, the card itself is the bounded flex column
+          // that contains thead + body + footer. min-h-0 is required so the
+          // child scroll region can actually shrink.
+          fillHeight && 'flex flex-col flex-1 min-h-0',
+        )}
+      >
+        {/* Scrollable wrapper — drives horizontal scroll.
+            tabIndex=0 + role=region so keyboard users can focus the table
+            area and arrow-key / shift+wheel to scroll horizontally.
+            Consumers that need infinite scroll observe this element via the
+            `scrollContainerRef` callback prop (not a DOM-attribute selector). */}
+        <div
+          ref={setScrollContainerRef}
+          className={cn(
+            'overflow-x-auto',
+            // In fillHeight mode the same element also scrolls vertically and
+            // grows to fill the card. min-h-0 lets it shrink below its
+            // natural content height when the viewport demands.
+            fillHeight && 'overflow-y-auto flex-1 min-h-0',
+          )}
+          tabIndex={0}
+          role="region"
+          aria-label={t('data_table.scroll_region_label', 'Data table')}
+        >
           <table
             // `min-w-max` so the table sizes to its natural column widths and
             // overflows the parent → wrapper scrolls horizontally.
@@ -304,16 +382,20 @@ export function DataTableV2<T>({
             className="w-full min-w-max"
             style={{ borderCollapse: 'separate', borderSpacing: 0 }}
           >
-            <thead className="bg-neutral-50">
+            {/* Sticky thead in fillHeight mode so column labels stay visible
+                while the user scrolls the body. z-30 keeps it above sticky
+                pinned column cells (z-10/20) without conflicting with the
+                desktop sidebar (z-30 — different stacking context). */}
+            <thead
+              className={cn(
+                'bg-neutral-50',
+                fillHeight && 'sticky top-0 z-30',
+              )}
+            >
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
-                    const sticky = getStickyCellStyle(
-                      header.column,
-                      true,
-                      showStart,
-                      showEnd,
-                    );
+                    const sticky = getStickyCellStyle(header.column, true);
                     return (
                       <th
                         key={header.id}
@@ -354,24 +436,76 @@ export function DataTableV2<T>({
                   </td>
                 </tr>
               ) : (
-                rows.map((row) => (
-                  <DataTableRow
-                    key={row.id}
-                    row={row}
-                    cellPadding={cellPadding}
-                    showStart={showStart}
-                    showEnd={showEnd}
-                    onRowClick={onRowClick}
-                  />
-                ))
+                <>
+                  {rows.map((row) => (
+                    <DataTableRow
+                      key={row.id}
+                      row={row}
+                      cellPadding={cellPadding}
+                      onRowClick={onRowClick}
+                    />
+                  ))}
+
+                  {/* Infinite-scroll loading rows. Live inside <tbody> so they
+                      scroll with real rows, stay column-aligned, and sit
+                      ABOVE the native horizontal scrollbar at the bottom of
+                      the scroll container — not below it. */}
+                  {isFetchingNextPage && (
+                    <SkeletonRows
+                      count={fetchingSkeletonRows}
+                      colSpan={table.getVisibleLeafColumns().length}
+                      cellPadding={cellPadding}
+                    />
+                  )}
+
+                  {/* Terminal "no more pages" row. Same flow rules as the
+                      skeleton rows so it sits alongside content, not below
+                      the scrollbar. */}
+                  {endOfListMessage && (
+                    <tr>
+                      <td
+                        colSpan={table.getVisibleLeafColumns().length}
+                        className="px-6 py-4 text-center text-sm text-neutral-500 border-t border-neutral-100"
+                      >
+                        {endOfListMessage}
+                      </td>
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>
         </div>
-
-        {footer}
       </div>
+
     </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// SkeletonRows — N <tr>s with a shimmer block, used for infinite-scroll
+// loading state. Renders inside <tbody> so the rows participate in column
+// alignment and the table's scroll flow. Pulled out so the parent doesn't
+// re-build the same JSX on every render of a long list.
+// ----------------------------------------------------------------------------
+
+interface SkeletonRowsProps {
+  count: number;
+  colSpan: number;
+  cellPadding: string;
+}
+
+function SkeletonRows({ count, colSpan, cellPadding }: SkeletonRowsProps) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <tr key={`skeleton-${i}`} aria-hidden className="border-b border-neutral-100 last:border-b-0">
+          <td colSpan={colSpan} className={cn('align-middle', cellPadding)}>
+            <div className="h-4 w-full rounded bg-neutral-200/70 animate-pulse" />
+          </td>
+        </tr>
+      ))}
+    </>
   );
 }
 
@@ -382,16 +516,12 @@ export function DataTableV2<T>({
 interface DataTableRowProps<T> {
   row: Row<T>;
   cellPadding: string;
-  showStart: boolean;
-  showEnd: boolean;
   onRowClick?: (row: T) => void;
 }
 
 function DataTableRow<T>({
   row,
   cellPadding,
-  showStart,
-  showEnd,
   onRowClick,
 }: DataTableRowProps<T>) {
   return (
@@ -404,7 +534,7 @@ function DataTableRow<T>({
       )}
     >
       {row.getVisibleCells().map((cell) => {
-        const sticky = getStickyCellStyle(cell.column, false, showStart, showEnd);
+        const sticky = getStickyCellStyle(cell.column, false);
         return (
           <td
             key={cell.id}

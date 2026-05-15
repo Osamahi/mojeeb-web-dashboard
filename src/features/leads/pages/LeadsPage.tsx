@@ -28,7 +28,7 @@ import { StatusEditorModal } from '../components/StatusEditorModal';
 import ConversationViewDrawer from '@/features/conversations/components/ConversationViewDrawer';
 import { ExportLeadsModal, ExportProgressModal } from '@/features/exports/components';
 import { useDeleteLead } from '../hooks/useLeads';
-import type { Lead, LeadFilters, LeadStatus, DatePreset } from '../types';
+import type { LeadFilters, LeadStatus, DatePreset } from '../types';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 export default function LeadsPage() {
@@ -79,9 +79,7 @@ export default function LeadsPage() {
     data,
     isLoading,
     error,
-    isFetching,
     fetchNextPage,
-    hasNextPage,
     isFetchingNextPage,
   } = useInfiniteLeads(filters);
 
@@ -104,6 +102,14 @@ export default function LeadsPage() {
     setFilters((prev) => ({ ...prev, status }));
   }, []);
 
+  const handleAssigneeChange = useCallback((next: import('../types').AssigneeFilter | 'all') => {
+    setFilters((prev) => ({
+      ...prev,
+      // 'all' / null means "no filter" — store undefined to skip the query param.
+      assignedTo: next === 'all' || next == null ? undefined : next,
+    }));
+  }, []);
+
   const handleFilterPopoverToggle = useCallback(() => {
     setIsFilterPopoverOpen((v) => !v);
   }, []);
@@ -124,11 +130,13 @@ export default function LeadsPage() {
   const handleClearFilters = useCallback(() => {
     setSearchInput('');
     setActiveDatePreset(null);
-    setFilters({ search: '', status: 'all', dateFrom: undefined, dateTo: undefined });
-  }, []);
-
-  const handleRowClick = useCallback((lead: Lead) => {
-    setSelectedLeadId(lead.id);
+    setFilters({
+      search: '',
+      status: 'all',
+      dateFrom: undefined,
+      dateTo: undefined,
+      assignedTo: undefined,
+    });
   }, []);
 
   // Edit action on a row just opens the drawer — every field is inline-editable,
@@ -233,40 +241,53 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    // Fixed-height table mode (Linear / Notion / Airtable pattern):
+    //   - Page becomes a flex column that fills <main>'s height
+    //   - Header + filters stay at their natural height at the top
+    //     (flex-shrink-0 so they never compress)
+    //   - <LeadsTableView /> uses flex-1 + min-h-0 to absorb the rest, and
+    //     the table scrolls internally (both axes) inside that bounded box.
+    // h-full needs <main> to be h-full too — DashboardLayout already is.
+    <div className="p-6 h-full flex flex-col gap-6 min-h-0">
       {/* Header — Add Lead is the primary action, more-menu hosts secondary
-          actions (Export, Edit columns, Edit statuses, AI instructions). */}
-      <BaseHeader
-        title={t('leads.title')}
-        subtitle={t('leads.subtitle')}
-        primaryAction={{
-          label: t('leads.add_lead'),
-          icon: Plus,
-          onClick: handleAddLeadClick,
-        }}
-        additionalActions={moreMenuButton}
-      />
+          actions (Export, Edit columns, Edit statuses, AI instructions).
+          shrink-0 so this row never gets compressed by the flex layout when
+          the viewport is short. */}
+      <div className="flex-shrink-0">
+        <BaseHeader
+          title={t('leads.title')}
+          subtitle={t('leads.subtitle')}
+          primaryAction={{
+            label: t('leads.add_lead'),
+            icon: Plus,
+            onClick: handleAddLeadClick,
+          }}
+          additionalActions={moreMenuButton}
+        />
+      </div>
 
       {/* Inline filter strip — debounced search + status dropdown + date
           popover + active-filter pills. Matches AdminSubscriptionsPage UX. */}
-      <LeadsFiltersToolbar
-        filters={filters}
-        searchInput={searchInput}
-        activeDatePreset={activeDatePreset}
-        isFilterPopoverOpen={isFilterPopoverOpen}
-        onSearchInputChange={setSearchInput}
-        onStatusChange={handleStatusChange}
-        onFilterPopoverToggle={handleFilterPopoverToggle}
-        onFilterPopoverClose={handleFilterPopoverClose}
-        onDateFilterApply={handleDateFilterApply}
-        onClearFilters={handleClearFilters}
-      />
+      <div className="flex-shrink-0">
+        <LeadsFiltersToolbar
+          filters={filters}
+          searchInput={searchInput}
+          activeDatePreset={activeDatePreset}
+          isFilterPopoverOpen={isFilterPopoverOpen}
+          onSearchInputChange={setSearchInput}
+          onStatusChange={handleStatusChange}
+          onAssigneeChange={handleAssigneeChange}
+          onFilterPopoverToggle={handleFilterPopoverToggle}
+          onFilterPopoverClose={handleFilterPopoverClose}
+          onDateFilterApply={handleDateFilterApply}
+          onClearFilters={handleClearFilters}
+        />
+      </div>
 
       {/* Table View - only re-renders when data changes */}
       <LeadsTableView
         leads={leads}
         isLoading={isLoading}
-        isFetching={isFetching}
         error={error}
         filters={filters}
         onEditClick={handleEditClick}

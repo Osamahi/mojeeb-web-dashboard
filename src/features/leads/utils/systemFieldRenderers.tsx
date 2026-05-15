@@ -16,6 +16,7 @@ import { InlineEditField } from '@/components/ui/InlineEditField';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { LatestNoteCell } from '../components/LatestNoteCell';
 import { LeadStatusDropdown } from '../components/LeadStatusDropdown';
+import { AssigneeDropdown } from '../components/AssigneeDropdown';
 import { validateName, validatePhone } from './validation';
 import { formatPhoneNumber } from './formatting';
 import type { Lead, LeadStatus } from '../types/lead.types';
@@ -52,6 +53,10 @@ export interface SystemFieldRenderContext {
 
   // Notes click
   onAddNoteClick: (leadId: string, name: string, agentId: string) => void;
+
+  // Assign / unassign a lead (null = unassign). Mirrored to the linked
+  // conversation server-side via the assign_entity RPC.
+  onAssignChange: (leadId: string, newAssignee: string | null) => void;
 
   // Update mutation loading state
   isUpdating: boolean;
@@ -188,6 +193,24 @@ const renderNotesColumn = (
 };
 
 /**
+ * Render: Assignee column.
+ *
+ * Delegates to `AssigneeDropdown` (cell mode) so the picker UX is identical
+ * to the one used in the filter toolbar and detail drawer.
+ */
+const renderAssigneeColumn = (
+  _value: unknown,
+  lead: Lead,
+  ctx: SystemFieldRenderContext,
+): ReactNode => (
+  <AssigneeDropdown
+    mode="cell"
+    value={lead.assignedTo}
+    onChange={(next) => ctx.onAssignChange(lead.id, next)}
+  />
+);
+
+/**
  * Render: Created At column (formatSmartTimestamp)
  */
 const renderCreatedAtColumn = (
@@ -224,6 +247,8 @@ export const getSystemFieldRenderer = (
       return (value, lead) => renderStatusColumn(value, lead, ctx, schema);
     case 'notes':
       return (value, lead) => renderNotesColumn(value, lead, ctx);
+    case 'assigned_to':
+      return (value, lead) => renderAssigneeColumn(value, lead, ctx);
     case 'created_at':
       return (value, lead) => renderCreatedAtColumn(value, lead, ctx);
     default:
@@ -255,6 +280,8 @@ export const getSystemFieldColumnWidth = (fieldKey: string): string => {
     case 'status':
       return '160px';
     case 'notes':
+      return '200px';
+    case 'assigned_to':
       return '200px';
     case 'created_at':
       return '160px';

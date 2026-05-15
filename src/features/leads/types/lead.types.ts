@@ -50,6 +50,7 @@ export interface Lead {
   summary: string | null;
   notes: LeadNote[];  // Notes array
   conversationId: string | null;
+  assignedTo: string | null;  // User id of the assignee. Mirrored with the linked conversation.
   createdAt: string;
   updatedAt: string;
 }
@@ -86,8 +87,35 @@ export interface ApiLeadResponse {
   summary: string | null;
   notes: ApiLeadNoteResponse[];  // Notes array
   conversation_id: string | null;
+  assigned_to: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// ========================================
+// Assignment types
+// ========================================
+
+/**
+ * Filter value for the assignee filter. Special tokens:
+ *   - "me"         — assigned to the authenticated user
+ *   - "unassigned" — assigned_to IS NULL
+ *   - any other    — user UUID
+ *   - null/undef   — no filter
+ */
+export type AssigneeFilter = string | 'me' | 'unassigned' | null;
+
+export interface AssignLeadRequest {
+  assignedTo: string | null;  // null = unassign
+  reason?: string;
+}
+
+export interface ApiAssignmentResponse {
+  lead_id: string | null;
+  conversation_id: string | null;
+  agent_id: string;
+  assigned_to: string | null;
+  changed_at: string;
 }
 
 // ========================================
@@ -137,6 +165,8 @@ export interface LeadFilters {
   status: LeadStatus | 'all';
   dateFrom?: string;
   dateTo?: string;
+  /** "me" | "unassigned" | user UUID. undefined = no filter. */
+  assignedTo?: AssigneeFilter;
 }
 
 /**

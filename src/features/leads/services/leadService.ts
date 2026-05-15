@@ -17,7 +17,28 @@ import type {
   CreateNoteRequest,
   UpdateNoteRequest,
 } from '../types';
-import type { CursorPaginatedLeadsResponse } from '../types/lead.types';
+import type {
+  CursorPaginatedLeadsResponse,
+  ApiAssignmentResponse,
+} from '../types/lead.types';
+
+/**
+ * One row from /api/lead/{id}/assignment-history. Shape matches the
+ * AssignmentHistoryEntryResponse DTO on the backend.
+ */
+export interface ApiAssignmentHistoryEntry {
+  id: string;
+  entity_type: 'lead' | 'conversation';
+  entity_id: string;
+  agent_id: string;
+  from_user_id: string | null;
+  to_user_id: string | null;
+  changed_by: string | null;
+  source: 'manual' | 'self_claim' | 'inherited_from_conversation' | 'ai' | 'system';
+  reason: string | null;
+  correlation_id: string | null;
+  changed_at: string;
+}
 
 // Backend API Response Wrapper
 interface ApiResponse<T> {
@@ -66,6 +87,7 @@ class LeadService {
       summary: apiLead.summary,
       notes: apiLead.notes?.map(c => this.transformNote(c)) || [],
       conversationId: apiLead.conversation_id,
+      assignedTo: apiLead.assigned_to ?? null,
       createdAt: apiLead.created_at,
       updatedAt: apiLead.updated_at,
     };
@@ -109,6 +131,11 @@ class LeadService {
         }
         if (filters.search && filters.search.trim()) {
           params.append('search', filters.search.trim());
+        }
+        if (filters.assignedTo) {
+          // Special tokens 'me' / 'unassigned' are resolved server-side; plain
+          // UUIDs are passed through as-is.
+          params.append('assignedTo', filters.assignedTo);
         }
       }
 
@@ -194,6 +221,42 @@ class LeadService {
    */
   async deleteLead(leadId: string, agentId: string): Promise<void> {
     await api.delete(`/api/lead/${leadId}?agentId=${agentId}`);
+  }
+
+  // ========================================
+  // Assignment Operations
+  // ========================================
+
+  /**
+   * Assign (or unassign with assignedTo=null) a lead. The backend RPC mirrors
+   * the change to the linked conversation atomically and writes one audit row
+   * per affected entity.
+   */
+  async assignLead(
+    leadId: string,
+    agentId: string,
+    assignedTo: string | null,
+    reason?: string,
+  ): Promise<ApiAssignmentResponse> {
+    const { data } = await api.put<ApiResponse<ApiAssignmentResponse>>(
+      `/api/lead/${leadId}/assign?agentId=${agentId}`,
+      { assigned_to: assignedTo, reason: reason ?? null },
+    );
+    return data.data;
+  }
+
+  /**
+   * Fetches the assignment audit history for a lead, most-recent first.
+   */
+  async getLeadAssignmentHistory(
+    leadId: string,
+    agentId: string,
+    limit = 50,
+  ): Promise<ApiAssignmentHistoryEntry[]> {
+    const { data } = await api.get<ApiResponse<ApiAssignmentHistoryEntry[]>>(
+      `/api/lead/${leadId}/assignment-history?agentId=${agentId}&limit=${limit}`,
+    );
+    return data.data;
   }
 
   // ========================================

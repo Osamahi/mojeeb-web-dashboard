@@ -15,7 +15,16 @@ import { Search, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FilterPopover } from './FilterPopover';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
-import type { LeadStatus, LeadFilters, DatePreset } from '../types';
+import { AssigneeDropdown } from './AssigneeDropdown';
+import type { LeadStatus, LeadFilters, DatePreset, AssigneeFilter } from '../types/lead.types';
+
+/**
+ * Temporary feature flag — hides the Assignee filter without removing any
+ * of the supporting code (dropdown component, handler, types). Flip back
+ * to `true` to re-enable the filter. Keep in sync with
+ * SHOW_ASSIGNEE_COLUMN in useLeadTableColumns.tsx.
+ */
+const SHOW_ASSIGNEE_FILTER = false;
 
 interface LeadsFiltersToolbarProps {
   filters: LeadFilters;
@@ -26,6 +35,7 @@ interface LeadsFiltersToolbarProps {
 
   onSearchInputChange: (value: string) => void;
   onStatusChange: (status: LeadStatus | 'all') => void;
+  onAssigneeChange: (next: AssigneeFilter | 'all') => void;
   onFilterPopoverToggle: () => void;
   onFilterPopoverClose: () => void;
   onDateFilterApply: (preset: DatePreset, dateFrom?: string, dateTo?: string) => void;
@@ -39,6 +49,7 @@ export const LeadsFiltersToolbar = memo(({
   isFilterPopoverOpen,
   onSearchInputChange,
   onStatusChange,
+  onAssigneeChange,
   onFilterPopoverToggle,
   onFilterPopoverClose,
   onDateFilterApply,
@@ -46,7 +57,11 @@ export const LeadsFiltersToolbar = memo(({
 }: LeadsFiltersToolbarProps) => {
   const { t } = useTranslation();
   const hasActiveFilters =
-    !!filters.search || filters.status !== 'all' || !!filters.dateFrom || !!filters.dateTo;
+    !!filters.search ||
+    filters.status !== 'all' ||
+    !!filters.dateFrom ||
+    !!filters.dateTo ||
+    !!filters.assignedTo;
   const hasDateFilter = !!filters.dateFrom || !!filters.dateTo;
 
   return (
@@ -77,6 +92,19 @@ export const LeadsFiltersToolbar = memo(({
             allowAll
             bordered
           />
+
+          {/* Assignee filter — mirrors the row-level picker; uses filter mode
+              so it can hold the "me" / "unassigned" / "all" tokens too.
+              Gated by SHOW_ASSIGNEE_FILTER while the assignee feature is
+              hidden from the UI; the underlying state + types stay wired. */}
+          {SHOW_ASSIGNEE_FILTER && (
+            <AssigneeDropdown
+              mode="filter"
+              value={filters.assignedTo ?? 'all'}
+              onChange={onAssigneeChange}
+              bordered
+            />
+          )}
 
           {/* Date filter popover */}
           <div className="relative">

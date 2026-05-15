@@ -65,6 +65,13 @@ function parseWidth(width: string | undefined): number | undefined {
   return Number.isFinite(px) ? px : undefined;
 }
 
+/**
+ * Temporary feature flag — hides the Assignee column without removing any of
+ * the supporting code (renderer, types, RPC plumbing, mutation hook). Flip
+ * back to `true` to re-enable the column.
+ */
+const SHOW_ASSIGNEE_COLUMN = false;
+
 export function useLeadTableColumns({
   ctx,
   onViewConversation,
@@ -133,14 +140,14 @@ export function useLeadTableColumns({
       };
     });
 
-    // 3) Actions column — pinned right, never hideable
+    // 3) Actions column — pinned right, never hideable. Kebab-only across
+    //    all viewports: saves horizontal space. The dropdown is uncontrolled
+    //    (manages its own open/close); clicking the kebab toggles it.
     const actionsCol: ColumnDef<Lead, any> = {
       id: 'actions',
       header: '',
       enableSorting: false,
       enableHiding: false,
-      // No explicit size: column sizes to its content (three icons on desktop,
-      // one three-dot button on mobile via Tailwind responsive classes).
       meta: {
         label: t('data_table.actions'),
         cellClassName: 'text-end whitespace-nowrap',
@@ -152,69 +159,38 @@ export function useLeadTableColumns({
             onClick={(e) => e.stopPropagation()}
             className="flex items-center justify-end"
           >
-            {/* Desktop: three inline icons (md and up) */}
-            <div className="hidden md:flex items-center gap-1">
-              {lead.conversationId ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <button
-                  onClick={() => onViewConversation(lead.conversationId!)}
                   className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-                  title={t('leads.view_conversation_title')}
+                  title={t('leads.more')}
+                  aria-label={t('leads.more')}
                 >
-                  <MessageSquare className="w-4 h-4" />
+                  <MoreVertical className="w-4 h-4" />
                 </button>
-              ) : (
-                <div className="w-8 h-8" />
-              )}
-              <button
-                onClick={() => onEditClick(lead.id)}
-                className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-                title={t('leads.edit_lead_title')}
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onDeleteClick(lead.id)}
-                className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-                title={t('leads.delete_lead_title')}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Mobile: collapse to three-dot menu */}
-            <div className="md:hidden">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="p-2 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg transition-all"
-                    title={t('leads.more')}
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                  {lead.conversationId && (
-                    <DropdownMenuItem
-                      onClick={() => onViewConversation(lead.conversationId!)}
-                    >
-                      <MessageSquare className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-500" />
-                      <span>{t('leads.conversation_menu_item')}</span>
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={() => onEditClick(lead.id)}>
-                    <Pencil className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-500" />
-                    <span>{t('leads.edit_lead_title')}</span>
-                  </DropdownMenuItem>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {lead.conversationId && (
                   <DropdownMenuItem
-                    onClick={() => onDeleteClick(lead.id)}
-                    className="text-red-600 focus:text-red-600"
+                    onClick={() => onViewConversation(lead.conversationId!)}
                   >
-                    <Trash2 className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-                    <span>{t('leads.delete_lead_title')}</span>
+                    <MessageSquare className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-500" />
+                    <span>{t('leads.conversation_menu_item')}</span>
                   </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                )}
+                <DropdownMenuItem onClick={() => onEditClick(lead.id)}>
+                  <Pencil className="w-4 h-4 ltr:mr-2 rtl:ml-2 text-neutral-500" />
+                  <span>{t('leads.edit_lead_title')}</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDeleteClick(lead.id)}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                  <span>{t('leads.delete_lead_title')}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         );
       },
@@ -233,7 +209,35 @@ export function useLeadTableColumns({
       return (aSchema?.display_order ?? 0) - (bSchema?.display_order ?? 0);
     });
 
-    return [...ordered, actionsCol];
+    // Hardcoded "Assigned to" column. Not driven by custom_field_schemas
+    // because assignment is a system-wide concern (mirrored with conversations
+    // via assign_entity RPC) rather than a per-agent custom field. Inserted
+    // right after Status — matches industry placement (HubSpot, Intercom,
+    // Front, Pipedrive).
+    const assigneeRenderer = getSystemFieldRenderer('assigned_to', ctx);
+    const assigneeCol: ColumnDef<Lead, any> = {
+      id: 'assigned_to',
+      accessorKey: 'assignedTo' as keyof Lead as string,
+      header: t('leads.assignee'),
+      enableSorting: false,
+      enableHiding: true,
+      size: parseWidth(getSystemFieldColumnWidth('assigned_to')),
+      meta: { label: t('leads.assignee') },
+      cell: ({ row }) => (assigneeRenderer ? assigneeRenderer(undefined, row.original) : null),
+    };
+
+    // Find Status to anchor the assignee column right after it; fall back to
+    // pushing onto the end if Status isn't shown.
+    // Gated by SHOW_ASSIGNEE_COLUMN — when false, the assignee column is
+    // omitted from the rendered table but all supporting code stays put.
+    const statusIdx = ordered.findIndex((c) => c.id === 'status');
+    const withAssignee = SHOW_ASSIGNEE_COLUMN
+      ? statusIdx >= 0
+        ? [...ordered.slice(0, statusIdx + 1), assigneeCol, ...ordered.slice(statusIdx + 1)]
+        : [...ordered, assigneeCol]
+      : ordered;
+
+    return [...withAssignee, actionsCol];
   }, [
     allSchemas,
     ctx,

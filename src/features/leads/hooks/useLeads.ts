@@ -132,6 +132,104 @@ export function useCreateLead() {
 }
 
 /**
+ * Assign (or unassign with assignedTo=null) a lead.
+ *
+ * Mirrors automatically to the linked conversation via the assign_entity
+ * RPC on the backend. Optimistically patches the lead's `assignedTo` field
+ * in the leads list cache so the avatar updates instantly; on error it
+ * rolls back; on success Supabase realtime delivers the canonical value
+ * (and we still invalidate the lead detail + history caches).
+ */
+export function useAssignLead() {
+  const { agentId } = useAgentContext();
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: ({
+      leadId,
+      assignedTo,
+      reason,
+    }: {
+      leadId: string;
+      assignedTo: string | null;
+      reason?: string;
+    }) => leadService.assignLead(leadId, agentId!, assignedTo, reason),
+
+    onMutate: async ({ leadId, assignedTo }) => {
+      // Cancel in-flight list refetches so they don't overwrite the optimistic patch.
+      await queryClient.cancelQueries({ queryKey: queryKeys.leads(agentId) });
+
+      // Patch every page of every infinite-cursor query that has this lead.
+      // We can't enumerate the exact filter combos, so we walk the whole
+      // matcher and only touch caches whose data shape matches.
+      const prevByKey: Array<[unknown[], unknown]> = [];
+      const matched = queryClient.getQueriesData<any>({
+        queryKey: queryKeys.leads(agentId),
+      });
+      for (const [key, value] of matched) {
+        if (!value || typeof value !== 'object') continue;
+        // useInfiniteLeads stores `{ pages: [{ leads: Lead[] }] }`
+        if (Array.isArray((value as any).pages)) {
+          prevByKey.push([key, value]);
+          const next = {
+            ...(value as any),
+            pages: (value as any).pages.map((page: any) => ({
+              ...page,
+              leads: Array.isArray(page.leads)
+                ? page.leads.map((l: Lead) =>
+                    l.id === leadId ? { ...l, assignedTo } : l,
+                  )
+                : page.leads,
+            })),
+          };
+          queryClient.setQueryData(key, next);
+        }
+      }
+
+      // Single-lead detail cache
+      const prevLead = queryClient.getQueryData<Lead>(queryKeys.lead(leadId));
+      if (prevLead) {
+        queryClient.setQueryData<Lead>(queryKeys.lead(leadId), {
+          ...prevLead,
+          assignedTo,
+        });
+      }
+
+      return { prevByKey, prevLead };
+    },
+
+    onError: (error: any, { leadId }, context) => {
+      // Roll back optimistic patches.
+      if (context?.prevByKey) {
+        for (const [key, value] of context.prevByKey) {
+          queryClient.setQueryData(key as any, value);
+        }
+      }
+      if (context?.prevLead) {
+        queryClient.setQueryData(queryKeys.lead(leadId), context.prevLead);
+      }
+
+      if (isToastHandled(error)) return;
+      const message = error?.response?.data?.message || t('leads.assignment_failed');
+      toast.error(message);
+    },
+
+    onSuccess: () => {
+      toast.success(t('leads.assignment_updated'));
+    },
+
+    onSettled: (_, __, { leadId }) => {
+      // Refresh the lead's history view if it's open; realtime handles the
+      // list/detail caches but the assignment_log isn't on a realtime channel.
+      queryClient.invalidateQueries({
+        queryKey: ['lead', 'assignment-history', leadId],
+      });
+    },
+  });
+}
+
+/**
  * Update an existing lead
  * Relies on Supabase realtime subscription to update cache automatically
  * No invalidation needed - subscription handler updates React Query cache immediately
