@@ -30,7 +30,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useTableCustomFieldSchemas } from './useCustomFieldSchemas';
 import { useIsMobile } from '@/hooks/useMediaQuery';
-import { useDateLocale } from '@/lib/dateConfig';
 import {
   getSystemFieldRenderer,
   getSystemFieldColumnWidth,
@@ -38,14 +37,16 @@ import {
   type SystemFieldRenderContext,
 } from '../utils/systemFieldRenderers';
 import {
-  renderCustomFieldValue,
-  getCustomFieldValue,
+  renderCustomFieldCell,
   getColumnWidth,
+  type CustomFieldRenderContext,
 } from '../utils/customFieldTableRenderer';
 import type { Lead } from '../types/lead.types';
 
 export interface UseLeadTableColumnsOptions {
   ctx: SystemFieldRenderContext;
+  /** Per-custom-field save + modal handlers. */
+  customCtx: CustomFieldRenderContext;
   onViewConversation: (conversationId: string) => void;
   onEditClick: (leadId: string) => void;
   onDeleteClick: (leadId: string) => void;
@@ -67,12 +68,12 @@ function parseWidth(width: string | undefined): number | undefined {
 
 export function useLeadTableColumns({
   ctx,
+  customCtx,
   onViewConversation,
   onEditClick,
   onDeleteClick,
 }: UseLeadTableColumnsOptions): UseLeadTableColumnsResult {
   const { t, i18n } = useTranslation();
-  const { formatSmartTimestamp } = useDateLocale();
   const { data: allSchemas = [], isLoading } = useTableCustomFieldSchemas();
   const isMobile = useIsMobile();
 
@@ -123,13 +124,7 @@ export function useLeadTableColumns({
         enableHiding: true,
         size: widthPx,
         meta: { label },
-        cell: ({ row }) =>
-          renderCustomFieldValue({
-            value: getCustomFieldValue(row.original, schema.field_key),
-            schema,
-            formatSmartTimestamp,
-            locale: i18n.language,
-          }),
+        cell: ({ row }) => renderCustomFieldCell(row.original, schema, customCtx),
       };
     });
 
@@ -190,30 +185,23 @@ export function useLeadTableColumns({
     };
 
     // Merge by display_order across system+custom, then append actions.
-    const ordered = [...systemCols, ...customCols].sort((a, b) => {
-      // Stable ordering by display_order from the schemas. The original
-      // schemas array drives this; system/custom split is just for shape.
-      const aSchema = allSchemas.find(
-        (s) => (s.is_system ? s.field_key : `custom_${s.field_key}`) === a.id,
-      );
-      const bSchema = allSchemas.find(
-        (s) => (s.is_system ? s.field_key : `custom_${s.field_key}`) === b.id,
-      );
-      return (aSchema?.display_order ?? 0) - (bSchema?.display_order ?? 0);
-    });
-
-    // `assigned_to` is rendered by the schema-driven loop above (its system
-    // row was seeded by migration 095). Its column position, labels, and
-    // visibility are managed through the "Manage Custom Fields" modal like
-    // any other system field.
+    // Build a column-id → display_order map once so the comparator is O(1).
+    const orderById = new Map<string, number>();
+    for (const s of allSchemas) {
+      const id = s.is_system ? s.field_key : `custom_${s.field_key}`;
+      orderById.set(id, s.display_order);
+    }
+    const ordered = [...systemCols, ...customCols].sort(
+      (a, b) => (orderById.get(a.id!) ?? 0) - (orderById.get(b.id!) ?? 0),
+    );
 
     return [...ordered, actionsCol];
   }, [
     allSchemas,
     ctx,
+    customCtx,
     i18n.language,
     t,
-    formatSmartTimestamp,
     onViewConversation,
     onEditClick,
     onDeleteClick,

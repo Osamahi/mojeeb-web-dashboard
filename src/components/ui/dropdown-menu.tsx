@@ -283,9 +283,9 @@ export function DropdownMenuContent({
     <div
       ref={contentRef}
       role="menu"
-      // High z-index so we beat any in-app overlay (modals are typically z-40 / z-50;
-      // portaling already escapes table stacking contexts, but we still want to land
-      // above other ambient overlays.)
+      // High z-index so dropdowns opened from inside a modal land above the
+      // modal layer (BaseModal uses z-[9999]). Portaling already escapes
+      // table stacking contexts; the z-index protects against z-9999 overlays.
       style={{
         position: 'fixed',
         top: position?.top ?? 0,
@@ -293,7 +293,7 @@ export function DropdownMenuContent({
         // Hide content during the first layout pass so we don't see it
         // flicker at (0,0) before measurement completes.
         visibility: position ? 'visible' : 'hidden',
-        zIndex: 60,
+        zIndex: 10000,
       }}
       className={cn(
         'min-w-[8rem] overflow-hidden rounded-md border border-neutral-200 bg-white p-1 shadow-lg',

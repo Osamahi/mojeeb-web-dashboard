@@ -30,6 +30,7 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState<LeadStatus>('new');
   const [notes, setNotes] = useState('');
+  const [assignedTo, setAssignedTo] = useState<string | null>(null);
   const [customFields, setCustomFields] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<LeadFormErrors>({});
 
@@ -64,6 +65,10 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
         break;
       case 'summary':
         setNotes(value);
+        break;
+      case 'assigned_to':
+        // AssigneeDropdown normalizes "no owner" to '' on the way through onChange.
+        setAssignedTo(value.length > 0 ? value : null);
         break;
     }
   };
@@ -124,6 +129,7 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
         status,
         summary: notes.trim() || undefined,
         customFields: Object.keys(customFields).length > 0 ? customFields : undefined,
+        assignedTo: assignedTo ?? undefined,
       },
       {
         onSuccess: () => {
@@ -139,6 +145,7 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
     setPhone('');
     setStatus('new');
     setNotes('');
+    setAssignedTo(null);
     setCustomFields({});
     setErrors({});
   };
@@ -172,7 +179,7 @@ export default function AddLeadModal({ isOpen, onClose }: AddLeadModalProps) {
                 schema={schema}
                 value={
                   schema.is_system
-                    ? getSystemFormFieldValue(schema.field_key, { name, phone, status, notes })
+                    ? getSystemFormFieldValue(schema.field_key, { name, phone, status, notes, assignedTo })
                     : (customFields[schema.field_key] || '')
                 }
                 onChange={(value) =>

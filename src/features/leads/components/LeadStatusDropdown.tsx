@@ -67,8 +67,10 @@ export function LeadStatusDropdown({
   // Neutral color when "all" is selected — no status color is meaningful.
   const triggerColor = isAll ? '#374151' : getStatusColor(status);
 
+  // `bordered` is the form-style variant (matches input height + width).
+  // Inline/cell variant stays content-sized so it sits naturally next to text.
   const triggerClasses = bordered
-    ? 'inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+    ? 'flex w-full items-center justify-between gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
     : 'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 
   return (

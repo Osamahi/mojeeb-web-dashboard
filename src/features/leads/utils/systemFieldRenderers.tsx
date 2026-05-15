@@ -74,7 +74,6 @@ const renderNameColumn = (
     <div className="flex flex-col gap-1.5 py-1">
       <InlineEditField
         value={lead.name}
-        fieldName="Name"
         placeholder={ctx.t('leads.enter_lead_name_placeholder')}
         onSave={(newName) => ctx.onNameSave(lead.id, newName)}
         validationFn={validateName}
@@ -104,7 +103,6 @@ const renderNameColumn = (
           <div className="order-0">
             <InlineEditField
               value={lead.phone}
-              fieldName="Phone"
               placeholder={ctx.t('leads.enter_phone_placeholder')}
               onSave={(newPhone) => ctx.onPhoneSave(lead.id, newPhone)}
               validationFn={validatePhone}

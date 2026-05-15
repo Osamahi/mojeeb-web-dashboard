@@ -129,6 +129,8 @@ export interface CreateLeadRequest {
   status?: LeadStatus;
   customFields?: Record<string, any>;
   summary?: string;
+  /** Optional initial owner (organization member user id). */
+  assignedTo?: string | null;
 }
 
 export interface UpdateLeadRequest {

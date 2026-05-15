@@ -13,13 +13,20 @@ import type { Lead } from '../types/lead.types';
  */
 export function getSystemFormFieldValue(
   fieldKey: string,
-  state: { name: string; phone: string; status: string; notes: string },
+  state: {
+    name: string;
+    phone: string;
+    status: string;
+    notes: string;
+    assignedTo?: string | null;
+  },
 ): string {
   switch (fieldKey) {
     case 'name': return state.name;
     case 'phone': return state.phone;
     case 'status': return state.status;
     case 'summary': return state.notes;
+    case 'assigned_to': return state.assignedTo ?? '';
     default: return '';
   }
 }

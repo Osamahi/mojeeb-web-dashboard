@@ -1,253 +1,273 @@
 /**
  * Custom Field Table Renderer
- * Pure utility functions for rendering custom field values in table cells
  *
- * Architecture: Isolated, reusable, stateless rendering logic
- * Dependencies: Zero React hooks - only pure functions
+ * Routes each custom-field cell to the right editor:
+ *
+ *   Modal-edited (free-text):
+ *     string / text / number / currency / email / url / phone
+ *       → opens CustomFieldEditModal (single input or textarea, save button)
+ *
+ *   Inline pickers:
+ *     enum  → EnumDropdown (color badge + popover)
+ *     boolean → click toggles true/false
+ *     date / datetime → native date picker via InlineEditField
+ *
+ *   Read-only:
+ *     timestamp → display only
+ *
+ * Empty cells show "Add" (or "Select" for enum) so users discover the
+ * affordance — same pattern as the summary system column.
  */
 
 import type { ReactNode } from 'react';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
+import { InlineEditField } from '@/components/ui/InlineEditField';
+import { EnumDropdown } from '../components/EnumDropdown';
 import type { CustomFieldSchema, FieldType } from '../types/customFieldSchema.types';
 import type { Lead } from '../types/lead.types';
 
 /**
- * Configuration for rendering a custom field value
+ * Render context — supplies the per-row save handlers and i18n state.
  */
-interface RenderConfig {
-  value: unknown;
-  schema: CustomFieldSchema;
-  formatSmartTimestamp: (date: string, options?: { showTimezone?: boolean; useRelative?: boolean }) => string;
+export interface CustomFieldRenderContext {
+  /** Translate function. */
+  t: (key: string, options?: Record<string, unknown>) => string;
+  /** Active locale ('en' | 'ar'). */
   locale: string;
+  /** Smart timestamp formatter (reused from useDateLocale). */
+  formatSmartTimestamp: (date: string, options?: { showTimezone?: boolean; useRelative?: boolean }) => string;
+  /** Save a single custom field by merging into customFields. */
+  onCustomFieldSave: (leadId: string, fieldKey: string, value: string | null) => Promise<void>;
+  /** Open the edit modal for a free-text custom field. */
+  onOpenEditModal: (leadId: string, schema: CustomFieldSchema) => void;
+  /** Mutation pending state — disables the editors while a save is in flight. */
+  isUpdating: boolean;
 }
 
 /**
- * Empty value placeholder
+ * Render a custom-field cell for a given lead + schema.
  */
-const EmptyPlaceholder = (): ReactNode => (
-  <span className="text-neutral-400 text-sm">—</span>
-);
+export const renderCustomFieldCell = (
+  lead: Lead,
+  schema: CustomFieldSchema,
+  ctx: CustomFieldRenderContext,
+): ReactNode => {
+  const raw = lead.customFields?.[schema.field_key];
 
-/**
- * Check if value is empty
- */
-const isEmpty = (value: unknown): boolean => {
-  return value === null || value === undefined || value === '';
-};
-
-/**
- * Render string field type
- */
-const renderString = (value: unknown): ReactNode => {
-  return <span className="text-sm text-neutral-900">{String(value)}</span>;
-};
-
-/**
- * Render text field type (with truncation)
- */
-const renderText = (value: unknown): ReactNode => {
-  const textValue = String(value);
-  const maxLength = 100;
-  const isTruncated = textValue.length > maxLength;
-
-  return (
-    <span
-      className="text-sm text-neutral-700 line-clamp-2"
-      title={isTruncated ? textValue : undefined}
-    >
-      {isTruncated ? `${textValue.substring(0, maxLength)}...` : textValue}
-    </span>
-  );
-};
-
-/**
- * Render number field type
- */
-const renderNumber = (value: unknown): ReactNode => {
-  return <span className="text-sm text-neutral-900">{String(value)}</span>;
-};
-
-/**
- * Render currency field type with locale formatting
- */
-const renderCurrency = (value: unknown): ReactNode => {
-  const numValue = typeof value === 'number' ? value : parseFloat(String(value));
-
-  if (isNaN(numValue)) {
-    return <span className="text-sm text-neutral-900">{String(value)}</span>;
-  }
-
-  return (
-    <span className="text-sm text-neutral-900 font-medium">
-      {numValue.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}
-    </span>
-  );
-};
-
-/**
- * Render email field type (clickable mailto link)
- */
-const renderEmail = (value: unknown): ReactNode => {
-  return (
-    <a
-      href={`mailto:${value}`}
-      onClick={(e) => e.stopPropagation()}
-      className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-    >
-      {String(value)}
-    </a>
-  );
-};
-
-/**
- * Render phone field type (clickable tel link with PhoneNumber component)
- */
-const renderPhone = (value: unknown): ReactNode => {
-  return (
-    <a
-      href={`tel:${value}`}
-      onClick={(e) => e.stopPropagation()}
-      className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-    >
-      <PhoneNumber value={String(value)} />
-    </a>
-  );
-};
-
-/**
- * Render URL field type (clickable external link)
- */
-const renderUrl = (value: unknown): ReactNode => {
-  return (
-    <a
-      href={String(value)}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      className="text-sm text-blue-600 hover:text-blue-800 hover:underline truncate block"
-    >
-      {String(value)}
-    </a>
-  );
-};
-
-/**
- * Render date/datetime/timestamp field types
- */
-const renderDate = (value: unknown, formatSmartTimestamp: (date: string) => string): ReactNode => {
-  try {
-    return (
-      <span className="text-sm text-neutral-900">
-        {formatSmartTimestamp(String(value))}
-      </span>
-    );
-  } catch {
-    return <span className="text-sm text-neutral-700">{String(value)}</span>;
-  }
-};
-
-/**
- * Render boolean field type
- */
-const renderBoolean = (value: unknown): ReactNode => {
-  const boolValue = Boolean(value);
-  return (
-    <span className={`text-sm font-medium ${boolValue ? 'text-green-600' : 'text-neutral-400'}`}>
-      {boolValue ? '✓' : '—'}
-    </span>
-  );
-};
-
-/**
- * Render enum field type (color-coded badge)
- */
-const renderEnum = (value: unknown, schema: CustomFieldSchema, locale: string): ReactNode => {
-  const stringValue = String(value);
-
-  // Find matching option from schema
-  const option = schema.options?.find(opt => opt.value === stringValue);
-
-  // Select label based on locale
-  const label = option
-    ? (locale.startsWith('ar') ? option.label_ar : option.label_en)
-    : stringValue;
-
-  return (
-    <span
-      className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium"
-      style={{
-        backgroundColor: option?.color ? `${option.color}20` : '#f3f4f6',
-        color: option?.color || '#374151',
-      }}
-    >
-      {label}
-    </span>
-  );
-};
-
-/**
- * Main renderer - routes to appropriate type-specific renderer
- */
-export const renderCustomFieldValue = (config: RenderConfig): ReactNode => {
-  const { value, schema, formatSmartTimestamp, locale } = config;
-
-  // Handle empty values
-  if (isEmpty(value)) {
-    return <EmptyPlaceholder />;
-  }
-
-  // Route to type-specific renderer
   switch (schema.field_type) {
-    case 'string':
-      return renderString(value);
-
-    case 'text':
-      return renderText(value);
-
-    case 'number':
-      return renderNumber(value);
-
-    case 'currency':
-      return renderCurrency(value);
-
-    case 'email':
-      return renderEmail(value);
-
-    case 'phone':
-      return renderPhone(value);
-
-    case 'url':
-      return renderUrl(value);
-
-    case 'date':
-    case 'datetime':
-    case 'timestamp':
-      return renderDate(value, formatSmartTimestamp);
+    case 'enum': {
+      const stringValue = raw === null || raw === undefined ? '' : String(raw);
+      return (
+        <EnumDropdown
+          schema={schema}
+          value={stringValue}
+          onChange={(next) =>
+            void ctx.onCustomFieldSave(lead.id, schema.field_key, next.length > 0 ? next : null)
+          }
+          disabled={ctx.isUpdating}
+        />
+      );
+    }
 
     case 'boolean':
-      return renderBoolean(value);
+      return (
+        <BooleanCell
+          value={raw}
+          onSave={(next) => ctx.onCustomFieldSave(lead.id, schema.field_key, next)}
+          t={ctx.t}
+          isUpdating={ctx.isUpdating}
+        />
+      );
 
-    case 'enum':
-      return renderEnum(value, schema, locale);
+    case 'date':
+    case 'datetime': {
+      const stringValue = raw === null || raw === undefined ? '' : String(raw);
+      return (
+        <InlineEditField
+          value={stringValue}
+          onSave={(next) =>
+            ctx.onCustomFieldSave(lead.id, schema.field_key, next.length > 0 ? next : null)
+          }
+          inputType={schema.field_type === 'date' ? 'date' : 'datetime-local'}
+          isLoading={ctx.isUpdating}
+          renderValue={(v) => (
+            <span className="text-sm text-neutral-900">
+              {safeFormat(v, ctx.formatSmartTimestamp)}
+            </span>
+          )}
+        />
+      );
+    }
 
-    default:
-      // Fallback to string rendering for unknown types
-      return renderString(value);
+    case 'timestamp': {
+      // Read-only — no inline edit, no "Add" affordance.
+      const stringValue = raw === null || raw === undefined ? '' : String(raw);
+      if (!stringValue) return null;
+      return (
+        <span className="text-sm text-neutral-900">
+          {safeFormat(stringValue, ctx.formatSmartTimestamp)}
+        </span>
+      );
+    }
+
+    // Free-text types (string / text / number / currency / email / url / phone)
+    // all open the same modal so the editing UX matches notes/summary.
+    default: {
+      const stringValue = raw === null || raw === undefined ? '' : String(raw);
+      return <FreeTextCell lead={lead} schema={schema} value={stringValue} ctx={ctx} />;
+    }
   }
 };
 
 /**
- * Extract custom field value from lead object
+ * Cell for any free-text field — opens CustomFieldEditModal on click.
+ * Display formatting per type (link / phone / currency / truncated text).
  */
-export const getCustomFieldValue = (lead: Lead, fieldKey: string): unknown => {
-  return lead.customFields?.[fieldKey];
-};
+function FreeTextCell({
+  lead,
+  schema,
+  value,
+  ctx,
+}: {
+  lead: Lead;
+  schema: CustomFieldSchema;
+  value: string;
+  ctx: CustomFieldRenderContext;
+}) {
+  const isEmpty = !value || value.trim() === '';
+
+  const open = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    ctx.onOpenEditModal(lead.id, schema);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={open}
+      className="ltr:text-left rtl:text-right w-full hover:bg-neutral-50 rounded transition-colors px-2 py-1 -mx-2 -my-1 min-w-0"
+    >
+      {isEmpty ? (
+        <span className="text-sm text-neutral-400">{ctx.t('common.add')}</span>
+      ) : (
+        <FreeTextDisplay value={value} fieldType={schema.field_type} />
+      )}
+    </button>
+  );
+}
+
+function FreeTextDisplay({ value, fieldType }: { value: string; fieldType: FieldType }) {
+  switch (fieldType) {
+    case 'phone':
+      return (
+        <span className="text-sm text-neutral-900">
+          <PhoneNumber value={value} />
+        </span>
+      );
+
+    case 'email':
+    case 'url':
+      // Plain text — not a link. Clicking the cell opens the edit modal.
+      // A dedicated mailto/open-link affordance can be layered on later.
+      return (
+        <span
+          className="text-sm text-neutral-900 truncate block"
+          title={value}
+        >
+          {value}
+        </span>
+      );
+
+    case 'currency': {
+      const n = parseFloat(value);
+      return (
+        <span className="text-sm text-neutral-900 font-medium">
+          {Number.isFinite(n)
+            ? n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : value}
+        </span>
+      );
+    }
+
+    case 'text': {
+      const maxLength = 100;
+      const truncated = value.length > maxLength;
+      const display = truncated ? `${value.substring(0, maxLength)}...` : value;
+      return (
+        <span
+          className="text-sm text-neutral-700 line-clamp-2 break-words"
+          title={truncated ? value : undefined}
+        >
+          {display}
+        </span>
+      );
+    }
+
+    default:
+      return <span className="text-sm text-neutral-900">{value}</span>;
+  }
+}
 
 /**
- * Get optimal column width based on field type
+ * Boolean cell — click toggles. Empty state shows "Add" and a first click
+ * sets it to true; filled state shows the boolean as words ("Yes" / "No")
+ * so it stays visually distinct from the unset/empty state.
+ */
+function BooleanCell({
+  value,
+  onSave,
+  t,
+  isUpdating,
+}: {
+  value: unknown;
+  onSave: (next: string) => Promise<void>;
+  t: (key: string, options?: Record<string, unknown>) => string;
+  isUpdating: boolean;
+}) {
+  const isEmpty = value === null || value === undefined || value === '';
+  const boolValue = value === true || value === 'true';
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isUpdating) return;
+    if (isEmpty) {
+      void onSave('true');
+    } else {
+      void onSave(boolValue ? 'false' : 'true');
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isUpdating}
+      className="inline-flex items-center px-2 py-1 -mx-2 -my-1 rounded hover:bg-neutral-50 transition-colors disabled:opacity-50"
+    >
+      {isEmpty ? (
+        <span className="text-sm text-neutral-400">{t('common.add')}</span>
+      ) : (
+        <span className={`text-sm font-medium ${boolValue ? 'text-green-600' : 'text-neutral-500'}`}>
+          {boolValue ? t('common.yes') : t('common.no')}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function safeFormat(
+  raw: string,
+  formatSmartTimestamp: (date: string) => string,
+): string {
+  try {
+    return formatSmartTimestamp(raw);
+  } catch {
+    return raw;
+  }
+}
+
+/**
+ * Get optimal column width based on field type.
  */
 export const getColumnWidth = (fieldType: FieldType): string => {
   switch (fieldType) {
@@ -256,7 +276,7 @@ export const getColumnWidth = (fieldType: FieldType): string => {
 
     case 'date':
     case 'datetime':
-      return '140px';
+      return '160px';
 
     case 'currency':
     case 'number':
@@ -274,6 +294,6 @@ export const getColumnWidth = (fieldType: FieldType): string => {
     case 'timestamp':
     case 'enum':
     default:
-      return '150px';
+      return '160px';
   }
 };

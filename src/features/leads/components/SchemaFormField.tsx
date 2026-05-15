@@ -14,6 +14,9 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { PhoneNumber } from '@/components/ui/PhoneNumber';
 import { useDateLocale } from '@/lib/dateConfig';
+import { AssigneeDropdown } from './AssigneeDropdown';
+import { LeadStatusDropdown } from './LeadStatusDropdown';
+import { EnumDropdown } from './EnumDropdown';
 import type { CustomFieldSchema } from '../types/customFieldSchema.types';
 
 interface SchemaFormFieldProps {
@@ -138,27 +141,57 @@ function SchemaFieldEditMode({
         />
       );
 
-    case 'enum':
+    case 'enum': {
+      // Status is rendered with the dedicated LeadStatusDropdown so the
+      // status picker UX is identical across the table, drawer, and form.
+      // Other enum fields use the generic schema-driven dropdown.
+      const Dropdown = schema.field_key === 'status' ? (
+        <LeadStatusDropdown
+          status={value || 'new'}
+          onChange={(next) => onChange(String(next))}
+          bordered
+          className="w-full"
+        />
+      ) : (
+        <EnumDropdown
+          schema={schema}
+          value={value}
+          onChange={(next) => onChange(next)}
+          bordered
+        />
+      );
       return (
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">
             {label}
           </label>
-          <select
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-          >
-            <option value="">{t('leads.select_placeholder')}</option>
-            {schema.options?.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {i18n.language.startsWith('ar') ? opt.label_ar : opt.label_en}
-              </option>
-            ))}
-          </select>
+          {Dropdown}
           {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
         </div>
       );
+    }
+
+    case 'owner': {
+      // Lead-owner picker — uses the same dropdown as the table cell + drawer
+      // so the assignee UX is identical across all three surfaces.
+      // Empty string is normalized to null for the underlying value.
+      const ownerValue = typeof value === 'string' && value.length > 0 ? value : null;
+      return (
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
+            {label}
+          </label>
+          <AssigneeDropdown
+            mode="cell"
+            value={ownerValue}
+            onChange={(next) => onChange(next ?? '')}
+            bordered
+            className="w-full"
+          />
+          {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
+        </div>
+      );
+    }
 
     case 'boolean':
       return (
@@ -211,12 +244,21 @@ function SchemaFieldEditMode({
       );
 
     case 'phone':
+      // Phone-shaped input: numeric keypad on mobile, strip non-digit chars
+      // (except a leading '+') so paste/typing letters can't slip through.
       return (
         <Input
           label={label}
           type="tel"
+          inputMode="tel"
+          autoComplete="tel"
           value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            const raw = e.target.value;
+            const leadingPlus = raw.startsWith('+') ? '+' : '';
+            const digits = raw.replace(/\D/g, '');
+            onChange(leadingPlus + digits);
+          }}
           error={error}
         />
       );

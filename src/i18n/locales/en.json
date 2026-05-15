@@ -28,6 +28,8 @@
     "invalid_date": "Invalid date",
     "deleting": "Deleting...",
     "add": "Add",
+    "yes": "Yes",
+    "no": "No",
     "back": "Back",
     "logo_alt": "Mojeeb",
     "navigate_home": "Navigate to home page",
@@ -436,6 +438,7 @@
     "lead_updated": "Lead updated successfully",
     "update_failed_name": "Failed to update name",
     "update_failed_phone": "Failed to update phone",
+    "update_failed": "Failed to update client",
     "copied_to_clipboard": "Copied to clipboard",
     "failed_to_copy": "Failed to copy",
     "copy_phone_title": "Copy phone number",
@@ -463,6 +466,7 @@
     "creating_lead": "Please wait while lead is being created...",
     "field_required": "{{field}} is required",
     "select_placeholder": "Select...",
+    "select_empty": "Select",
     "enter_lead_name_placeholder": "Enter lead name",
     "enter_phone_placeholder": "Enter phone number",
     "filter_search_label": "Search",
@@ -734,13 +738,6 @@
     "messages_off": "Messages Off",
     "comments_on": "Comments On",
     "comments_off": "Comments Off"
-  },
-  "lead_summary": {
-    "title": "Summary",
-    "title_with_name": "Summary - {{name}}",
-    "placeholder": "Enter summary...",
-    "saving": "Saving...",
-    "save_button": "Save Summary"
   },
   "knowledge_base": {
     "add_title": "Add Knowledge",
@@ -2263,7 +2260,8 @@
     "pause": "Pause"
   },
   "inline_edit": {
-    "add_field": "Add {{field}}",
+    "add_field": "Add",
+    "enter_value": "Enter value",
     "enter_field": "Enter {{field}}",
     "save": "Save",
     "cancel": "Cancel",

@@ -118,8 +118,10 @@ export function AssigneeDropdown(props: AssigneeDropdownProps) {
     );
   }, [members]);
 
+  // `bordered` is the form-style variant (matches input height + width).
+  // Inline/cell variant stays content-sized so it sits naturally next to text.
   const triggerClasses = bordered
-    ? 'inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-900 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+    ? 'flex w-full items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-neutral-900 hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
     : 'inline-flex items-center gap-1.5 px-2 py-1 text-[13px] font-medium text-neutral-900 bg-transparent rounded-md hover:bg-neutral-50 focus:outline-none transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 
   return (
@@ -128,7 +130,9 @@ export function AssigneeDropdown(props: AssigneeDropdownProps) {
         <DropdownMenuTrigger asChild>
           <button type="button" disabled={disabled || isLoading} className={triggerClasses}>
             {triggerContent.avatar}
-            <span className="truncate max-w-[140px]">{triggerContent.label}</span>
+            <span className={`truncate text-start ${bordered ? 'flex-1' : 'max-w-[140px]'}`}>
+              {triggerContent.label}
+            </span>
             <ChevronDown className="w-3.5 h-3.5 text-neutral-500 flex-shrink-0" />
           </button>
         </DropdownMenuTrigger>

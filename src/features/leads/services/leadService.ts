@@ -181,8 +181,9 @@ class LeadService {
    * Create a new lead
    */
   async createLead(request: CreateLeadRequest): Promise<Lead> {
-    // Transform to snake_case for backend
-    const payload = {
+    // Transform to snake_case for backend. Omit `assigned_to` when not set
+    // so it doesn't clobber any inheritance logic on the server.
+    const payload: Record<string, unknown> = {
       agent_id: request.agentId,
       name: request.name,
       phone: request.phone,
@@ -190,6 +191,7 @@ class LeadService {
       custom_fields: request.customFields || {},
       summary: request.summary,
     };
+    if (request.assignedTo !== undefined) payload.assigned_to = request.assignedTo;
 
     // Backend returns lead object directly (not wrapped)
     const { data } = await api.post<ApiLeadResponse>('/api/lead', payload);

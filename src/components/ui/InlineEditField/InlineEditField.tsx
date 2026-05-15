@@ -5,12 +5,20 @@ import { PhoneNumber } from '@/components/ui/PhoneNumber';
 
 interface InlineEditFieldProps {
   value: string | null;
-  fieldName: string;
   placeholder?: string;
   onSave: (newValue: string) => Promise<void>;
   validationFn?: (value: string) => { valid: boolean; error?: string };
   isPhone?: boolean;
   isLoading?: boolean;
+  /**
+   * Native HTML input type. Defaults to 'text'. Used to render type-aware
+   * editors (numeric keypad on mobile for 'number', native date picker for
+   * 'date', etc.). The save value is still a string — schema-driven parsing
+   * happens at the API layer.
+   */
+  inputType?: 'text' | 'number' | 'email' | 'url' | 'tel' | 'date' | 'datetime-local';
+  /** Optional `step` attribute, mainly for 'number' (e.g. 0.01 for currency). */
+  inputStep?: string;
   /**
    * Typography classes for the display-state span (text size + color).
    * Defaults to `text-sm text-neutral-900`. Override per surface to match
@@ -18,17 +26,26 @@ interface InlineEditFieldProps {
    * align with the Notes column).
    */
   displayClassName?: string;
+  /**
+   * Optional renderer for the filled-state display. When omitted the value
+   * is rendered as plain text (or via PhoneNumber when `isPhone`). Used to
+   * style a value as a link (mailto/url), a colored badge, etc., while
+   * keeping the click-to-edit affordance intact.
+   */
+  renderValue?: (value: string) => React.ReactNode;
 }
 
 export const InlineEditField: React.FC<InlineEditFieldProps> = ({
   value,
-  fieldName,
   placeholder,
   onSave,
   validationFn,
   isPhone = false,
   isLoading = false,
+  inputType = 'text',
+  inputStep,
   displayClassName = 'text-sm text-neutral-900',
+  renderValue,
 }) => {
   const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
@@ -110,24 +127,23 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
 
     return (
       <div
-        onClick={isEmpty ? handleStartEdit : undefined}
-        className={`inline-flex items-center gap-2 px-2 py-1 -mx-2 -my-1 rounded transition-colors ${
-          isEmpty ? 'group cursor-pointer hover:bg-neutral-50' : ''
-        }`}
+        onClick={handleStartEdit}
+        className="inline-flex items-center gap-2 px-2 py-1 -mx-2 -my-1 rounded transition-colors group cursor-pointer hover:bg-neutral-50"
       >
         {isEmpty ? (
-          <>
-            <span className="text-sm text-neutral-400">
-              {t('inline_edit.add_field', { field: fieldName })}
-            </span>
-          </>
+          <span className="text-sm text-neutral-400">
+            {t('inline_edit.add_field')}
+          </span>
         ) : (
           <>
-            {isPhone ? (
-              <PhoneNumber value={value} className={displayClassName} />
+            {renderValue ? (
+              renderValue(value!)
+            ) : isPhone ? (
+              <PhoneNumber value={value!} className={displayClassName} />
             ) : (
               <span className={displayClassName}>{value}</span>
             )}
+            <Pencil className="w-3 h-3 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
           </>
         )}
       </div>
@@ -140,12 +156,13 @@ export const InlineEditField: React.FC<InlineEditFieldProps> = ({
       <div className="flex items-center gap-2">
         <input
           ref={inputRef}
-          type="text"
+          type={inputType}
+          step={inputStep}
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onClick={handleInputClick}
-          placeholder={placeholder || t('inline_edit.enter_field', { field: fieldName.toLowerCase() })}
+          placeholder={placeholder || t('inline_edit.enter_value')}
           disabled={isSaving || isLoading}
           className="flex-1 px-2 py-1 text-sm text-neutral-900 bg-white border border-neutral-300 rounded focus:outline-none focus:ring-2 focus:ring-black focus:border-black disabled:bg-neutral-50 disabled:cursor-not-allowed min-w-[150px]"
         />

@@ -33,6 +33,9 @@ import { useDateLocale } from '@/lib/dateConfig';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useLeadTableColumns } from '../hooks/useLeadTableColumns';
 import type { SystemFieldRenderContext } from '../utils/systemFieldRenderers';
+import type { CustomFieldRenderContext } from '../utils/customFieldTableRenderer';
+import { SchemaFieldEditModal } from './SchemaFieldEditModal';
+import type { CustomFieldSchema } from '../types/customFieldSchema.types';
 import type { Lead, LeadStatus, LeadFilters } from '../types';
 
 interface LeadsTableViewProps {
@@ -103,6 +106,39 @@ export function LeadsTableView({
   const handleAssignChange = useCallback((leadId: string, newAssignee: string | null) => {
     assignLeadRef.current({ leadId, assignedTo: newAssignee });
   }, []);
+
+  // ─── Custom-field inline edit plumbing ─────────────────────────────────
+  // Save a single custom field: read the current `customFields` bag from the
+  // current leads list, patch one key, send the merged bag through the shared
+  // updateLead mutation (which handles cache invalidation + realtime fan-out).
+  const leadsRef = useRef(leads);
+  leadsRef.current = leads;
+
+  const handleCustomFieldSave = useCallback(
+    async (leadId: string, fieldKey: string, value: string | null): Promise<void> => {
+      const lead = leadsRef.current?.find((l) => l.id === leadId);
+      const merged = { ...(lead?.customFields || {}), [fieldKey]: value };
+      mutateLeadRef.current(
+        { leadId, request: { customFields: merged } },
+        {
+          onError: () => toast.error(tRef.current('leads.update_failed')),
+        },
+      );
+    },
+    [],
+  );
+
+  const [editTarget, setEditTarget] = useState<{
+    leadId: string;
+    schema: CustomFieldSchema;
+  } | null>(null);
+
+  const handleOpenEditModal = useCallback(
+    (leadId: string, schema: CustomFieldSchema) => {
+      setEditTarget({ leadId, schema });
+    },
+    [],
+  );
 
   const handleNameSave = useCallback(async (leadId: string, newName: string) => {
     return new Promise<void>((resolve, reject) => {
@@ -176,8 +212,28 @@ export function LeadsTableView({
     updateMutation.isPending,
   ]);
 
+  const customCtx = useMemo<CustomFieldRenderContext>(
+    () => ({
+      t,
+      locale: i18n.language,
+      formatSmartTimestamp,
+      onCustomFieldSave: handleCustomFieldSave,
+      onOpenEditModal: handleOpenEditModal,
+      isUpdating: updateMutation.isPending,
+    }),
+    [
+      t,
+      i18n.language,
+      formatSmartTimestamp,
+      handleCustomFieldSave,
+      handleOpenEditModal,
+      updateMutation.isPending,
+    ],
+  );
+
   const { columns, pinning, isLoading: isColumnsLoading } = useLeadTableColumns({
     ctx,
+    customCtx,
     onViewConversation,
     onEditClick,
     onDeleteClick,
@@ -266,6 +322,31 @@ export function LeadsTableView({
             : undefined
         }
       />
+
+      {/* Custom-field edit modal — opened from the cell renderer for any
+          free-text type (string / text / number / currency / email / url / phone).
+          `key` forces a fresh component instance per (lead, field) so the
+          modal's internal draft state can't bleed across openings. */}
+      {editTarget && (() => {
+        const lead = leads.find((l) => l.id === editTarget.leadId);
+        const fieldKey = editTarget.schema.field_key;
+        const currentValue = String(lead?.customFields?.[fieldKey] ?? '');
+        return (
+          <SchemaFieldEditModal
+            key={`${editTarget.leadId}:${fieldKey}`}
+            isOpen
+            onClose={() => setEditTarget(null)}
+            leadName={lead?.name ?? undefined}
+            schema={editTarget.schema}
+            currentValue={currentValue}
+            isSaving={updateMutation.isPending}
+            onSave={async (next) => {
+              await handleCustomFieldSave(editTarget.leadId, fieldKey, next.length > 0 ? next : null);
+              setEditTarget(null);
+            }}
+          />
+        );
+      })()}
     </div>
   );
 }

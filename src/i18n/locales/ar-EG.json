@@ -28,6 +28,8 @@
     "invalid_date": "تاريخ غير صالح",
     "deleting": "جاري الحذف...",
     "add": "إضافة",
+    "yes": "نعم",
+    "no": "لا",
     "back": "رجوع",
     "logo_alt": "مجيب",
     "navigate_home": "روح للصفحة الرئيسية",
@@ -353,6 +355,7 @@
     "lead_updated": "تم تحديث العميل بنجاح",
     "update_failed_name": "فشل تحديث الاسم",
     "update_failed_phone": "فشل تحديث رقم الهاتف",
+    "update_failed": "فشل تحديث العميل",
     "copied_to_clipboard": "تم النسخ إلى الحافظة",
     "failed_to_copy": "فشل النسخ",
     "copy_phone_title": "نسخ رقم الهاتف",
@@ -380,6 +383,7 @@
     "creating_lead": "يرجى الانتظار بينما يتم إنشاء العميل...",
     "field_required": "{{field}} مطلوب",
     "select_placeholder": "اختر...",
+    "select_empty": "اختر",
     "enter_lead_name_placeholder": "اكتب اسم العميل",
     "enter_phone_placeholder": "اكتب رقم الموبايل",
     "filter_search_label": "دوّر",
@@ -651,13 +655,6 @@
     "messages_off": "الرسائل متوقفة",
     "comments_on": "التعليقات مفعّلة",
     "comments_off": "التعليقات متوقفة"
-  },
-  "lead_summary": {
-    "title": "الملخص",
-    "title_with_name": "الملخص - {{name}}",
-    "placeholder": "اكتب الملخص...",
-    "saving": "بيحفظ...",
-    "save_button": "احفظ الملخص"
   },
   "knowledge_base": {
     "add_title": "إضافة معرفة",
@@ -2031,7 +2028,8 @@
     "pause": "وقّف"
   },
   "inline_edit": {
-    "add_field": "ضيف {{field}}",
+    "add_field": "إضافة",
+    "enter_value": "اكتب قيمة",
     "enter_field": "اكتب {{field}}",
     "save": "حفظ",
     "cancel": "إلغاء",

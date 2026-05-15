@@ -9,7 +9,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAgentContext } from '@/hooks/useAgentContext';
-import { useInfiniteLeads } from '../hooks/useLeads';
+import { useInfiniteLeads, useUpdateLead } from '../hooks/useLeads';
+import { useTableCustomFieldSchemas } from '../hooks/useCustomFieldSchemas';
 import { useLeadsSubscription } from '../hooks/useLeadsSubscription';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -21,7 +22,7 @@ import { LeadsTableView } from '../components/LeadsTableView';
 import AddLeadModal from '../components/AddLeadModal';
 import LeadDetailsDrawer from '../components/LeadDetailsDrawer';
 import { LeadNotesModal } from '../components/LeadNotesModal';
-import { AddSummaryModal } from '../components/AddSummaryModal';
+import { SchemaFieldEditModal } from '../components/SchemaFieldEditModal';
 import { LeadSettingsModal } from '../components/LeadSettingsModal';
 import { CustomFieldSchemaModal } from '../components/CustomFieldSchemaModal';
 import { StatusEditorModal } from '../components/StatusEditorModal';
@@ -36,6 +37,14 @@ export default function LeadsPage() {
   useDocumentTitle('pages.title_leads');
   const { isAgentSelected, agentId } = useAgentContext();
   const deleteMutation = useDeleteLead();
+  const updateMutation = useUpdateLead();
+  // Used to resolve the system schema for fields edited through SchemaFieldEditModal
+  // (currently just `summary`; future system free-text edits route through here too).
+  const { data: tableSchemas = [] } = useTableCustomFieldSchemas();
+  const summarySchema = useMemo(
+    () => tableSchemas.find((s) => s.is_system && s.field_key === 'summary'),
+    [tableSchemas],
+  );
 
   // Modal/Drawer state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -330,13 +339,29 @@ export default function LeadsPage() {
         />
       )}
 
-      {summaryLead && (
-        <AddSummaryModal
-          isOpen={true}
+      {summaryLead && summarySchema && (
+        <SchemaFieldEditModal
+          key={`summary:${summaryLead.id}`}
+          isOpen
           onClose={() => setSummaryLead(null)}
-          leadId={summaryLead.id}
           leadName={summaryLead.name}
-          currentSummary={summaryLead.summary}
+          schema={summarySchema}
+          currentValue={summaryLead.summary}
+          isSaving={updateMutation.isPending}
+          onSave={(next) =>
+            new Promise<void>((resolve, reject) => {
+              updateMutation.mutate(
+                { leadId: summaryLead.id, request: { summary: next.length > 0 ? next : undefined } },
+                {
+                  onSuccess: () => {
+                    setSummaryLead(null);
+                    resolve();
+                  },
+                  onError: (err) => reject(err),
+                },
+              );
+            })
+          }
         />
       )}
 
