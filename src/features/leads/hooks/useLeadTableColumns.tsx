@@ -65,13 +65,6 @@ function parseWidth(width: string | undefined): number | undefined {
   return Number.isFinite(px) ? px : undefined;
 }
 
-/**
- * Temporary feature flag — hides the Assignee column without removing any of
- * the supporting code (renderer, types, RPC plumbing, mutation hook). Flip
- * back to `true` to re-enable the column.
- */
-const SHOW_ASSIGNEE_COLUMN = false;
-
 export function useLeadTableColumns({
   ctx,
   onViewConversation,
@@ -209,35 +202,12 @@ export function useLeadTableColumns({
       return (aSchema?.display_order ?? 0) - (bSchema?.display_order ?? 0);
     });
 
-    // Hardcoded "Assigned to" column. Not driven by custom_field_schemas
-    // because assignment is a system-wide concern (mirrored with conversations
-    // via assign_entity RPC) rather than a per-agent custom field. Inserted
-    // right after Status — matches industry placement (HubSpot, Intercom,
-    // Front, Pipedrive).
-    const assigneeRenderer = getSystemFieldRenderer('assigned_to', ctx);
-    const assigneeCol: ColumnDef<Lead, any> = {
-      id: 'assigned_to',
-      accessorKey: 'assignedTo' as keyof Lead as string,
-      header: t('leads.assignee'),
-      enableSorting: false,
-      enableHiding: true,
-      size: parseWidth(getSystemFieldColumnWidth('assigned_to')),
-      meta: { label: t('leads.assignee') },
-      cell: ({ row }) => (assigneeRenderer ? assigneeRenderer(undefined, row.original) : null),
-    };
+    // `assigned_to` is rendered by the schema-driven loop above (its system
+    // row was seeded by migration 095). Its column position, labels, and
+    // visibility are managed through the "Manage Custom Fields" modal like
+    // any other system field.
 
-    // Find Status to anchor the assignee column right after it; fall back to
-    // pushing onto the end if Status isn't shown.
-    // Gated by SHOW_ASSIGNEE_COLUMN — when false, the assignee column is
-    // omitted from the rendered table but all supporting code stays put.
-    const statusIdx = ordered.findIndex((c) => c.id === 'status');
-    const withAssignee = SHOW_ASSIGNEE_COLUMN
-      ? statusIdx >= 0
-        ? [...ordered.slice(0, statusIdx + 1), assigneeCol, ...ordered.slice(statusIdx + 1)]
-        : [...ordered, assigneeCol]
-      : ordered;
-
-    return [...withAssignee, actionsCol];
+    return [...ordered, actionsCol];
   }, [
     allSchemas,
     ctx,

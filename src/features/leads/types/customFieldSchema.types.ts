@@ -15,7 +15,11 @@ export type FieldType =
   | 'datetime'
   | 'timestamp'
   | 'boolean'
-  | 'enum';
+  | 'enum'
+  // System-only field types — present in the schema for system rows
+  // (assigned_to). Not exposed in FIELD_TYPE_OPTIONS, so users can't pick
+  // them when creating custom fields.
+  | 'owner';
 
 export interface EnumOption {
   value: string;
@@ -194,6 +198,7 @@ export const SYSTEM_FIELD_KEYS = [
   'summary',
   'status',
   'notes',
+  'assigned_to',
   'created_at',
 ] as const;
 
@@ -211,5 +216,6 @@ export const RESERVED_FIELD_KEYS = [
   'updated_at',
   'conversation_id',
   'notes',
+  'assigned_to',
   'custom_fields',
 ];

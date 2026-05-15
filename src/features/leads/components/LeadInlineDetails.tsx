@@ -86,21 +86,29 @@ export function LeadInlineDetails({
   return (
     <div className="space-y-5">
       {/* One continuous list — system + custom interleaved by display_order.
-          Status renders inline so its schema position controls placement. */}
+          Status + Assignee render with their own controls; the schema row
+          decides their position in the list. */}
       {schemas.map((schema) => {
         if (schema.field_key === 'notes') return null;
 
         if (schema.is_system && schema.field_key === 'status') {
-          // Render Status then Assignee back-to-back (matches table column order).
           return (
-            <div key={schema.id} className="space-y-5">
-              <InlineStatusField
-                currentStatus={lead.status}
-                isSaving={savingFieldKey === 'status'}
-                onChange={(next) => onSaveField({ status: next }, 'status')}
-              />
-              <InlineAssigneeField leadId={lead.id} assignedTo={lead.assignedTo} />
-            </div>
+            <InlineStatusField
+              key={schema.id}
+              currentStatus={lead.status}
+              isSaving={savingFieldKey === 'status'}
+              onChange={(next) => onSaveField({ status: next }, 'status')}
+            />
+          );
+        }
+
+        if (schema.is_system && schema.field_key === 'assigned_to') {
+          return (
+            <InlineAssigneeField
+              key={schema.id}
+              leadId={lead.id}
+              assignedTo={lead.assignedTo}
+            />
           );
         }
 

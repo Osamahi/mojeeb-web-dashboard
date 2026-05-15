@@ -19,12 +19,10 @@ import { AssigneeDropdown } from './AssigneeDropdown';
 import type { LeadStatus, LeadFilters, DatePreset, AssigneeFilter } from '../types/lead.types';
 
 /**
- * Temporary feature flag — hides the Assignee filter without removing any
- * of the supporting code (dropdown component, handler, types). Flip back
- * to `true` to re-enable the filter. Keep in sync with
- * SHOW_ASSIGNEE_COLUMN in useLeadTableColumns.tsx.
+ * Feature flag — keeps the Owner filter toggle in one place. Keep in sync
+ * with SHOW_ASSIGNEE_COLUMN in useLeadTableColumns.tsx.
  */
-const SHOW_ASSIGNEE_FILTER = false;
+const SHOW_ASSIGNEE_FILTER = true;
 
 interface LeadsFiltersToolbarProps {
   filters: LeadFilters;

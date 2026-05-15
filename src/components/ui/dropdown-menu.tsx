@@ -94,16 +94,26 @@ export function DropdownMenu({ children }: DropdownMenuProps) {
     return () => document.removeEventListener('keydown', handle);
   }, [isOpen]);
 
-  // Close when the trigger scrolls off-screen or the window resizes — keeps
-  // the menu honest if the user scrolls the table beneath it.
+  // Close when the surrounding viewport scrolls or resizes — keeps the
+  // menu honest if the user scrolls the table beneath it.
+  //
+  // Scoping: capture-phase `scroll` catches scrolls on ANY element. We
+  // explicitly ignore events whose target is the menu's own content (a
+  // long member list scrolls inside it) — otherwise picking a teammate
+  // from a scrollable list would close the menu mid-scroll.
   React.useEffect(() => {
     if (!isOpen) return;
-    const onScrollOrResize = () => setIsOpen(false);
-    window.addEventListener('scroll', onScrollOrResize, true);
-    window.addEventListener('resize', onScrollOrResize);
+    const onScroll = (e: Event) => {
+      const target = e.target as Node | null;
+      if (target && contentRef.current?.contains(target)) return;
+      setIsOpen(false);
+    };
+    const onResize = () => setIsOpen(false);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onResize);
     return () => {
-      window.removeEventListener('scroll', onScrollOrResize, true);
-      window.removeEventListener('resize', onScrollOrResize);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onResize);
     };
   }, [isOpen]);
 
