@@ -48,7 +48,7 @@ export function useAcceptInvitationMutation() {
 
         // 1. Clear selected conversation (from old org)
         logger.info('[useAcceptInvitationMutation] Step 1/4: Clearing conversation selection');
-        useConversationStore.getState().selectConversation(null);
+        useConversationStore.getState().clearSelection();
 
         // 2. Seed the new org's first agent so the dashboard renders an agent
         // immediately after navigation. Full list is loaded on demand by

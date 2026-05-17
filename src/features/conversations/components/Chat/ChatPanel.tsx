@@ -6,12 +6,11 @@
 
 import { useMemo, useEffect, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowRight, BotOff, MoreVertical, Trash2, Contact } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BotOff, MoreVertical, Trash2, Contact, Plus } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Conversation } from '../../types';
 import { SenderRole, MessageType } from '../../types/conversation.types';
 import { useChatStore } from '../../stores/chatStore';
-import { useConversationStore } from '../../stores/conversationStore';
 import { useAgentStore } from '@/features/agents/stores/agentStore';
 import { toggleAIMode } from '../../services/conversationApi';
 import { queryKeys } from '@/lib/queryKeys';
@@ -25,6 +24,7 @@ import { logger } from '@/lib/logger';
 import { chatToasts } from '../../utils/chatToasts';
 import { useConfirm } from '@/hooks/useConfirm';
 import { useDeleteConversation } from '../../hooks/useDeleteConversation';
+import { useCaptureLeadFromConversation } from '../../hooks/useCaptureLeadFromConversation';
 import { useLeadByConversation } from '@/features/leads/hooks/useLeads';
 import ConversationLeadDrawer from '../ConversationLeadDrawer';
 import { useAuthStore } from '@/features/auth/stores/authStore';
@@ -55,9 +55,9 @@ export default function ChatPanel({ conversation, onBack, hideLeadButton = false
   const isRTL = i18n.dir() === 'rtl';
   const queryClient = useQueryClient();
   const globalSelectedAgent = useAgentStore((state) => state.globalSelectedAgent);
-  const selectConversation = useConversationStore((state) => state.selectConversation);
   const { confirm, ConfirmDialogComponent } = useConfirm();
   const deleteMutation = useDeleteConversation();
+  const captureLeadMutation = useCaptureLeadFromConversation();
   const user = useAuthStore((state) => state.user);
   const canDelete = user?.role === Role.SuperAdmin || user?.role === Role.Admin;
 
@@ -130,17 +130,19 @@ export default function ChatPanel({ conversation, onBack, hideLeadButton = false
     },
   });
 
-  // Toggle AI/Human mode mutation
+  // Toggle AI/Human mode mutation — optimistically updates the single-conversation
+  // React Query cache (the single source ChatPanel reads from). On error, rollback
+  // by restoring the previous cache entry.
   const toggleModeMutation = useMutation({
     mutationFn: (isAI: boolean) => toggleAIMode(conversation.id, isAI),
     onMutate: async (newIsAI) => {
-      // Optimistically update the selected conversation in Zustand
-      const updatedConversation = {
-        ...conversation,
-        is_ai: newIsAI,
-      };
-      selectConversation(updatedConversation);
-      return { previousConversation: conversation };
+      const key = queryKeys.conversation(conversation.id);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData(key);
+      queryClient.setQueryData(key, (old: typeof conversation | undefined) =>
+        old ? { ...old, is_ai: newIsAI } : old
+      );
+      return { previous };
     },
     onSuccess: (_data, newIsAI) => {
       // Invalidate conversations to refresh the list
@@ -150,9 +152,8 @@ export default function ChatPanel({ conversation, onBack, hideLeadButton = false
       chatToasts.modeSwitch(newIsAI ? t('message_composer.mode_switched_to_ai') : t('message_composer.mode_switched_to_human'));
     },
     onError: (error, _variables, context) => {
-      // Rollback on error
-      if (context?.previousConversation) {
-        selectConversation(context.previousConversation);
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(queryKeys.conversation(conversation.id), context.previous);
       }
       chatToasts.modeSwitchError(t('message_composer.mode_switch_error'));
       logger.error('Failed to toggle AI/Human mode', error, {
@@ -185,6 +186,13 @@ export default function ChatPanel({ conversation, onBack, hideLeadButton = false
       });
     }
   }, [confirm, conversation.id, conversation.customer_name, deleteMutation, onBack, t]);
+
+  // Admin-triggered lead capture — re-runs Gemini narrowed to capture_lead.
+  // Smart-merge on the backend dedupes re-clicks, so no need to disable when
+  // a lead already exists (admin may want to refresh extracted fields).
+  const handleCaptureLead = useCallback(() => {
+    captureLeadMutation.mutate(conversation.id);
+  }, [captureLeadMutation, conversation.id]);
 
   // Fetch messages on conversation change
   useEffect(() => {
@@ -261,22 +269,41 @@ export default function ChatPanel({ conversation, onBack, hideLeadButton = false
 
         </div>
 
-        {/* View lead — outlined button, shown only when this conversation
-            captured a lead AND we're not already inside a lead context
-            (otherwise the button creates a redundant lead ↔ conversation loop).
-            Mirrors BaseHeader's primaryAction styling for cross-page consistency. */}
-        {linkedLead && !hideLeadButton && (
-          <button
-            onClick={() => setShowLeadDrawer(true)}
-            className="px-4 h-10 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
-            title={t('conversations.view_lead')}
-            aria-label={t('conversations.view_lead')}
-          >
-            <Contact className="w-4 h-4 text-neutral-700" />
-            <span className="hidden sm:inline text-sm font-medium text-neutral-900">
-              {t('conversations.view_lead')}
-            </span>
-          </button>
+        {/* Lead action — mutually exclusive states of the same affordance.
+            Visual differentiation by intent (Option 2 — tonal contrast):
+              - No lead yet → brand-tinted "Add lead" (create-action accent).
+              - Lead exists → neutral outlined "View lead" (passive navigation).
+            Hidden when ChatPanel is inside an existing lead context to avoid
+            a redundant lead ↔ conversation loop. */}
+        {!hideLeadButton && (
+          linkedLead ? (
+            <button
+              onClick={() => setShowLeadDrawer(true)}
+              className="px-3 h-8 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 transition-colors flex items-center gap-1.5"
+              title={t('conversations.view_lead')}
+              aria-label={t('conversations.view_lead')}
+            >
+              <Contact className="w-3.5 h-3.5 text-neutral-700" />
+              <span className="hidden sm:inline text-xs font-medium text-neutral-900">
+                {t('conversations.view_lead')}
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={handleCaptureLead}
+              disabled={captureLeadMutation.isPending}
+              className="px-3 h-8 rounded-lg bg-neutral-900 hover:bg-neutral-800 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={t('conversations.add_lead')}
+              aria-label={t('conversations.add_lead')}
+            >
+              <Plus className="w-3.5 h-3.5 text-white" />
+              <span className="hidden sm:inline text-xs font-semibold text-white">
+                {captureLeadMutation.isPending
+                  ? t('conversations.adding_lead')
+                  : t('conversations.add_lead')}
+              </span>
+            </button>
+          )
         )}
 
         {/* Three-dot menu with delete option (SuperAdmin & Admin only) */}
@@ -304,7 +331,7 @@ export default function ChatPanel({ conversation, onBack, hideLeadButton = false
         )}
       </div>
     ),
-    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, isRTL, canDelete, t, linkedLead, hideLeadButton]
+    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, isRTL, canDelete, t, linkedLead, hideLeadButton, handleCaptureLead, captureLeadMutation.isPending]
   );
 
   // Handle load more with Zustand store

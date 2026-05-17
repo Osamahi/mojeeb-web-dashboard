@@ -56,7 +56,7 @@ export function useDeleteConversation() {
   const queryClient = useQueryClient();
   const { agentId } = useAgentContext();
   const clearSelection = useConversationStore((state) => state.clearSelection);
-  const selectedConversation = useConversationStore((state) => state.selectedConversation);
+  const selectedConversationId = useConversationStore((state) => state.selectedConversationId);
 
   return useMutation({
     mutationFn: (conversationId: string) => chatApiService.deleteConversation(conversationId),
@@ -66,7 +66,7 @@ export function useDeleteConversation() {
       toast.success('Conversation deleted successfully');
 
       // Clear selection if deleted conversation was currently selected
-      if (selectedConversation?.id === conversationId) {
+      if (selectedConversationId === conversationId) {
         clearSelection();
       }
 

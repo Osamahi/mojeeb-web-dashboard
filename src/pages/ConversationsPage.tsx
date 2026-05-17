@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { useAgentContext } from '@/hooks/useAgentContext';
 import { useConversationStore } from '@/features/conversations/stores/conversationStore';
+import { useSelectedConversation } from '@/features/conversations/hooks/useConversation';
 import { useChatStore } from '@/features/conversations/stores/chatStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import NoAgentEmptyState from '@/features/agents/components/NoAgentEmptyState';
@@ -23,17 +24,17 @@ export const ConversationsPage = () => {
   useDocumentTitle('pages.title_conversations');
   const isMobile = useIsMobile();
   const { agent: globalSelectedAgent, agentId } = useAgentContext();
-  const selectedConversation = useConversationStore((state) => state.selectedConversation);
-  const selectConversation = useConversationStore((state) => state.selectConversation);
+  const clearSelection = useConversationStore((state) => state.clearSelection);
+  const selectedConversation = useSelectedConversation();
   const { mutate: markAsRead } = useMarkConversationAsRead();
 
   const [showChat, setShowChat] = useState(false);
 
   // Reset conversation selection when agent changes
   useEffect(() => {
-    selectConversation(null);
+    clearSelection();
     setShowChat(false);
-  }, [agentId, selectConversation]);
+  }, [agentId, clearSelection]);
 
   // Smart read logic: Mark as read when conversation is selected OR when becomes unread while selected
   // This ensures conversations stay read while user is viewing them, even if new messages arrive
@@ -64,7 +65,7 @@ export const ConversationsPage = () => {
 
   const handleBackToList = () => {
     setShowChat(false);
-    selectConversation(null);
+    clearSelection();
   };
 
   // Mobile: Show either list or chat (stacked)

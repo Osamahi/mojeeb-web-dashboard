@@ -18,7 +18,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 export const PendingInvitationModal = () => {
   const { pendingInvitations, showModal, setShowModal, clearInvitations } = useInvitationStore();
-  const selectedConversation = useConversationStore((state) => state.selectedConversation);
+  const selectedConversationId = useConversationStore((state) => state.selectedConversationId);
   const acceptMutation = useAcceptInvitationMutation();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -34,11 +34,11 @@ export const PendingInvitationModal = () => {
   const handleAccept = () => {
     logger.info('[PendingInvitationModal] User accepting invitation', {
       organizationName: currentInvitation.organizationName,
-      hasOpenConversation: !!selectedConversation,
+      hasOpenConversation: !!selectedConversationId,
     });
 
     // If user has open conversation, show confirmation first
-    if (selectedConversation) {
+    if (selectedConversationId) {
       setShowConfirmation(true);
       return;
     }

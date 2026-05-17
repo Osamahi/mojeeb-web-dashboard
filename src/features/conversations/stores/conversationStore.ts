@@ -1,47 +1,25 @@
 /**
- * Conversation Store - Zustand (UI State Only)
- * Manages conversation UI state (selected conversation)
- * Data fetching and real-time updates handled by React Query hooks
+ * Conversation Store - Zustand (Selection Only)
+ *
+ * Holds only the ID of the currently-selected conversation. Conversation data
+ * (any field on the row) is fetched and kept fresh by React Query — see
+ * `useConversation(id)` and `useSelectedConversation()` in features/conversations/hooks.
+ *
+ * Rationale: keeping a snapshot here caused stale state when realtime updates
+ * landed on jsonb columns (e.g. `triggered_actions`). The single source of truth
+ * is the React Query cache; this store carries only the UI intent ("which row is
+ * the user looking at?").
  */
-
 import { create } from 'zustand';
-import type { Conversation } from '../types';
 
 interface ConversationStore {
-  // UI State
-  selectedConversation: Conversation | null;
-
-  // Actions
-  selectConversation: (conversation: Conversation | null) => void;
-  /**
-   * Merge a partial server payload onto the currently selected conversation.
-   * No-op when the selected conversation differs from the incoming id.
-   * Used by the realtime subscription to keep ChatPanel in sync with DB updates
-   * (e.g. ai_handoff_until set/cleared, is_ai toggled remotely).
-   */
-  patchSelectedConversation: (id: string, patch: Partial<Conversation>) => void;
+  selectedConversationId: string | null;
+  selectConversationId: (id: string | null) => void;
   clearSelection: () => void;
 }
 
 export const useConversationStore = create<ConversationStore>((set) => ({
-  // Initial State
-  selectedConversation: null,
-
-  // Select Conversation
-  selectConversation: (conversation: Conversation | null) => {
-    set({ selectedConversation: conversation });
-  },
-
-  patchSelectedConversation: (id, patch) => {
-    set((state) =>
-      state.selectedConversation && state.selectedConversation.id === id
-        ? { selectedConversation: { ...state.selectedConversation, ...patch } }
-        : state
-    );
-  },
-
-  // Clear Selection
-  clearSelection: () => {
-    set({ selectedConversation: null });
-  },
+  selectedConversationId: null,
+  selectConversationId: (id) => set({ selectedConversationId: id }),
+  clearSelection: () => set({ selectedConversationId: null }),
 }));

@@ -50,6 +50,14 @@ export const queryKeys = {
   conversations: (agentId: string | undefined) => ['conversations', agentId] as const,
 
   /**
+   * Query key for a single conversation row by ID. Independent of list filters so the
+   * "selected conversation" stays consistent even when the user changes filters that
+   * would have excluded the row from the list. Realtime invalidates this alongside the
+   * list key so any UPDATE on the row refreshes both at the same time.
+   */
+  conversation: (id: string | undefined) => ['conversation', id] as const,
+
+  /**
    * Query key for fetching conversations with filters
    * Extends the base conversations key so partial matching still works for cache updates.
    * @param {string | undefined} agentId - The agent ID

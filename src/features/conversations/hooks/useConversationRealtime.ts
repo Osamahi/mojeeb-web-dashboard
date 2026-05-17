@@ -1,16 +1,17 @@
 /**
  * Realtime Sync Hook for Conversations
- * Subscribes to Supabase realtime changes and invalidates React Query cache
- * so the list refetches fresh data from the server.
- * Created: February 2026
+ *
+ * Subscribes to Supabase realtime conversation changes and invalidates the React
+ * Query caches that hold conversation data — the list cache (used by
+ * ConversationList) and the single-conversation cache (used by ChatPanel via
+ * useSelectedConversation). Both views render off the same source, so one
+ * invalidation pair keeps every consumer fresh.
  */
 
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { queryKeys } from '@/lib/queryKeys';
-import { useConversationStore } from '../stores/conversationStore';
-import type { Conversation } from '../types';
 
 interface UseConversationRealtimeOptions {
   agentId: string;
@@ -19,17 +20,9 @@ interface UseConversationRealtimeOptions {
   enabled?: boolean;
 }
 
-/**
- * Subscribe to realtime conversation updates and invalidate queries.
- * No manual cache manipulation — just triggers a refetch from the server
- * so all filtered views stay consistent.
- */
 export function useConversationRealtime(options: UseConversationRealtimeOptions) {
   const { agentId, enabled = true } = options;
   const queryClient = useQueryClient();
-  const patchSelectedConversation = useConversationStore(
-    (state) => state.patchSelectedConversation
-  );
 
   useEffect(() => {
     if (!enabled || !agentId) {
@@ -55,22 +48,23 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
             console.log('[Realtime] Received event:', payload.eventType);
           }
 
-          // Mirror UPDATEs onto the open conversation in Zustand so ChatPanel
-          // (which reads from selectedConversation, not the list query) reflects
-          // server-side changes like ai_handoff_until set/cleared, is_ai toggled,
-          // last_message_at updated, etc. — without requiring a page refresh.
-          if (payload.eventType === 'UPDATE' && payload.new) {
-            const next = payload.new as Partial<Conversation> & { id?: string };
-            if (next.id) {
-              patchSelectedConversation(next.id, next);
-            }
-          }
-
-          // Invalidate all conversation queries for this agent
-          // This triggers a refetch, keeping all filtered views in sync with the DB
+          // Invalidate the list (any filter variant) so ConversationList refetches.
           queryClient.invalidateQueries({
             queryKey: queryKeys.conversations(agentId),
           });
+
+          // Invalidate the single-conversation cache for the updated row so
+          // ChatPanel (via useSelectedConversation) refetches without needing a
+          // Zustand mirror. payload.new carries the row id for UPDATE/INSERT;
+          // payload.old carries it for DELETE.
+          const rowId =
+            (payload.new as { id?: string } | null)?.id ??
+            (payload.old as { id?: string } | null)?.id;
+          if (rowId) {
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.conversation(rowId),
+            });
+          }
         }
       )
       .subscribe((status) => {
@@ -85,5 +79,5 @@ export function useConversationRealtime(options: UseConversationRealtimeOptions)
       }
       supabase.removeChannel(channel);
     };
-  }, [agentId, enabled, queryClient, patchSelectedConversation]);
+  }, [agentId, enabled, queryClient]);
 }

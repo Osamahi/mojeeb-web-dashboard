@@ -61,9 +61,10 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
   // Check if any filters are active
   const hasActiveFilters = filters.showUnreadOnly || filters.selectedSources.length > 0 || filters.showUrgentOnly || !!filters.searchTerm;
 
-  // UI state from Zustand store
-  const selectedConversation = useConversationStore((state) => state.selectedConversation);
-  const selectConversation = useConversationStore((state) => state.selectConversation);
+  // UI state from Zustand store — just the selected ID. The conversation row itself
+  // is sourced from React Query via useSelectedConversation in consumers.
+  const selectedConversationId = useConversationStore((state) => state.selectedConversationId);
+  const selectConversationId = useConversationStore((state) => state.selectConversationId);
 
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -78,14 +79,12 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
     }
   };
 
-  // Handle conversation selection
+  // Handle conversation selection — store just the id; the panel hydrates the row
+  // from React Query (seeded by the list cache for an instant initial render).
   const handleSelect = useCallback((conversationId: string) => {
-    const conversation = conversations.find((c) => c.id === conversationId);
-    if (conversation) {
-      selectConversation(conversation);
-      onConversationSelect(conversationId);
-    }
-  }, [conversations, selectConversation, onConversationSelect]);
+    selectConversationId(conversationId);
+    onConversationSelect(conversationId);
+  }, [selectConversationId, onConversationSelect]);
 
   // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: ConversationFiltersState) => {
@@ -126,7 +125,7 @@ export default function ConversationList({ agentId, onConversationSelect }: Conv
               <ConversationListItem
                 key={conversation.id}
                 conversation={conversation}
-                isSelected={selectedConversation?.id === conversation.id}
+                isSelected={selectedConversationId === conversation.id}
                 onSelect={() => handleSelect(conversation.id)}
               />
             ))}

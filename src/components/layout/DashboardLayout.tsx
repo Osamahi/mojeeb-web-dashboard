@@ -15,7 +15,7 @@ import { useAnalytics } from '@/lib/analytics';
 export const DashboardLayout = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const selectedConversation = useConversationStore((state) => state.selectedConversation);
+  const selectedConversationId = useConversationStore((state) => state.selectedConversationId);
   const { user } = useAuthStore();
   const hasProcessedPhoneCheck = useRef<string | null>(null); // Track which user we've processed
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -40,7 +40,7 @@ export const DashboardLayout = () => {
 
   // Determine if header should be hidden
   // Hide on mobile when on conversations page AND a conversation is selected
-  const shouldHideHeader = isMobile && location.pathname === '/conversations' && selectedConversation !== null;
+  const shouldHideHeader = isMobile && location.pathname === '/conversations' && selectedConversationId !== null;
 
   // Auto-show phone modal if user has no phone and hasn't seen it this session
   useEffect(() => {

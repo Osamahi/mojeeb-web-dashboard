@@ -254,3 +254,15 @@ export async function markConversationAsResolved(
 ): Promise<void> {
   await api.post(`/api/v2/conversations/${conversationId}/mark-resolved`);
 }
+
+/**
+ * Admin-triggered lead capture. Re-runs Gemini with the capture_lead tool
+ * forced and routes the result through the same action queue Gemini uses
+ * during normal chat. Backend returns 202 (queued); the lead row appears
+ * once the queue processes it. Existing smart-merge dedupes re-clicks.
+ */
+export async function captureLeadFromConversation(
+  conversationId: string
+): Promise<void> {
+  await api.post(`/api/v2/conversations/${conversationId}/capture-lead`);
+}

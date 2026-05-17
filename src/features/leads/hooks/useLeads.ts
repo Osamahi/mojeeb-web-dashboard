@@ -280,12 +280,21 @@ export function useDeleteLead() {
   return useMutation({
     mutationFn: (leadId: string) => leadService.deleteLead(leadId, agentId!),
     onSuccess: () => {
-      // Invalidate all leads queries (including all filter variations)
+      // Invalidate all leads queries (including all filter variations).
       queryClient.invalidateQueries({
         queryKey: queryKeys.leads(agentId),
         refetchType: 'active'
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.leadStats(agentId) });
+      // useLeadByConversation lives under a separate root key (['lead', 'by-conversation', ...])
+      // — invalidate it explicitly so ChatPanel's linkedLead becomes undefined after a delete.
+      queryClient.invalidateQueries({ queryKey: ['lead', 'by-conversation'] });
+      // Backend also strips the lead_capture chip from conversations.triggered_actions
+      // on delete (LeadCommandService → remove_triggered_action_by_operation). Refresh
+      // any cached conversation rows so ChatPanel's "View lead / Add lead" button
+      // flips back without waiting on the realtime broadcast.
+      queryClient.invalidateQueries({ queryKey: ['conversation'] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
       toast.success(t('leads.lead_deleted'));
     },
     onError: (error: any) => {
