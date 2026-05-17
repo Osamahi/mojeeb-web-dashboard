@@ -188,11 +188,35 @@ export default function ChatPanel({ conversation, onBack, hideLeadButton = false
   }, [confirm, conversation.id, conversation.customer_name, deleteMutation, onBack, t]);
 
   // Admin-triggered lead capture — re-runs Gemini narrowed to capture_lead.
-  // Smart-merge on the backend dedupes re-clicks, so no need to disable when
-  // a lead already exists (admin may want to refresh extracted fields).
+  // Backend returns 202 in ~3s but the lead row lands asynchronously via the
+  // action queue another ~3s later. Track that gap with awaitingQueue so the
+  // button stays disabled across the whole 202→queue→lead-exists window —
+  // otherwise the user can re-click and burn another Gemini call before the
+  // first lead lands. Cleared either when `linkedLead` arrives (the queue
+  // finished) or by a 15s safety timer (queue failed silently).
+  const [awaitingQueue, setAwaitingQueue] = useState(false);
   const handleCaptureLead = useCallback(() => {
-    captureLeadMutation.mutate(conversation.id);
+    captureLeadMutation.mutate(conversation.id, {
+      onSuccess: () => setAwaitingQueue(true),
+    });
   }, [captureLeadMutation, conversation.id]);
+
+  // Clear awaitingQueue the moment the lead actually appears — the button is
+  // about to switch branches to "View lead" anyway, but this keeps state honest
+  // for the brief render before that swap.
+  useEffect(() => {
+    if (awaitingQueue && linkedLead) setAwaitingQueue(false);
+  }, [awaitingQueue, linkedLead]);
+
+  // Safety timer: if the queue stalls and no lead appears within 15s, re-enable
+  // the button so the admin can retry rather than be stuck forever.
+  useEffect(() => {
+    if (!awaitingQueue) return;
+    const timer = setTimeout(() => setAwaitingQueue(false), 15_000);
+    return () => clearTimeout(timer);
+  }, [awaitingQueue]);
+
+  const captureLeadDisabled = captureLeadMutation.isPending || awaitingQueue;
 
   // Fetch messages on conversation change
   useEffect(() => {
@@ -291,14 +315,14 @@ export default function ChatPanel({ conversation, onBack, hideLeadButton = false
           ) : (
             <button
               onClick={handleCaptureLead}
-              disabled={captureLeadMutation.isPending}
+              disabled={captureLeadDisabled}
               className="px-3 h-8 rounded-lg bg-neutral-900 hover:bg-neutral-800 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               title={t('conversations.add_lead')}
               aria-label={t('conversations.add_lead')}
             >
               <Plus className="w-3.5 h-3.5 text-white" />
               <span className="hidden sm:inline text-xs font-semibold text-white">
-                {captureLeadMutation.isPending
+                {captureLeadDisabled
                   ? t('conversations.adding_lead')
                   : t('conversations.add_lead')}
               </span>
@@ -331,7 +355,7 @@ export default function ChatPanel({ conversation, onBack, hideLeadButton = false
         )}
       </div>
     ),
-    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, isRTL, canDelete, t, linkedLead, hideLeadButton, handleCaptureLead, captureLeadMutation.isPending]
+    [conversation, onBack, profilePictureUrl, handleDelete, deleteMutation.isPending, isRTL, canDelete, t, linkedLead, hideLeadButton, handleCaptureLead, captureLeadDisabled]
   );
 
   // Handle load more with Zustand store
