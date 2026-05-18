@@ -39,6 +39,27 @@ function toUtcIsoString(dateInputValue: string): string {
   return `${dateInputValue}T00:00:00Z`;
 }
 
+/**
+ * Add months to a YYYY-MM-DD date input value, returning YYYY-MM-DD.
+ * Mirrors backend BillingInterval.CalculatePeriodEnd (monthly = +1, annual = +12).
+ * Uses UTC math to avoid timezone drift, matching how toUtcIsoString stores dates.
+ */
+function addMonthsToDateInput(dateInputValue: string, monthsToAdd: number): string {
+  if (!dateInputValue) return '';
+  const [yearStr, monthStr, dayStr] = dateInputValue.split('-');
+  const date = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, Number(dayStr)));
+  date.setUTCMonth(date.getUTCMonth() + monthsToAdd);
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function calculateEndDate(startDateInputValue: string, billingInterval: string): string {
+  const months = billingInterval === 'annual' ? 12 : 1;
+  return addMonthsToDateInput(startDateInputValue, months);
+}
+
 export function EditLimitsModal({
   isOpen,
   onClose,
@@ -197,7 +218,7 @@ export function EditLimitsModal({
               disabled={updateLimitsMutation.isPending}
             />
             <p className="mt-1 text-xs text-neutral-500">
-              {t('edit_limits.message_limit_help', 'Current limit: {limit}', {
+              {t('edit_limits.message_limit_help', 'Current limit: {{limit}}', {
                 limit: subscription.messageLimit === 0 ? 'Unlimited' : subscription.messageLimit,
               })}
             </p>
@@ -220,7 +241,7 @@ export function EditLimitsModal({
               disabled={updateLimitsMutation.isPending}
             />
             <p className="mt-1 text-xs text-neutral-500">
-              {t('edit_limits.agent_limit_help', 'Current limit: {limit}', {
+              {t('edit_limits.agent_limit_help', 'Current limit: {{limit}}', {
                 limit: subscription.agentLimit === 0 ? 'Unlimited' : subscription.agentLimit,
               })}
             </p>
@@ -242,7 +263,13 @@ export function EditLimitsModal({
                 type="date"
                 id="periodStart"
                 value={periodStart}
-                onChange={(e) => setPeriodStart(e.target.value)}
+                onChange={(e) => {
+                  const newStart = e.target.value;
+                  setPeriodStart(newStart);
+                  if (newStart) {
+                    setPeriodEnd(calculateEndDate(newStart, subscription.billingInterval));
+                  }
+                }}
                 className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 disabled={updateLimitsMutation.isPending}
               />
@@ -261,6 +288,11 @@ export function EditLimitsModal({
                 className="mt-1 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 disabled={updateLimitsMutation.isPending}
               />
+              <p className="mt-1 text-xs text-neutral-500">
+                {t('edit_limits.period_end_help', 'Auto-updates from start date ({{interval}}). Override if needed.', {
+                  interval: subscription.billingInterval,
+                })}
+              </p>
             </div>
           </div>
         </div>
@@ -274,7 +306,7 @@ export function EditLimitsModal({
             <div className="space-y-1 text-sm text-green-800">
               {messageLimit !== subscription.messageLimit.toString() && (
                 <p>
-                  {t('edit_limits.message_change', 'Message Limit: {old} → {new}', {
+                  {t('edit_limits.message_change', 'Message Limit: {{old}} → {{new}}', {
                     old: subscription.messageLimit === 0 ? 'Unlimited' : subscription.messageLimit,
                     new: messageLimit === '' || parseInt(messageLimit) === 0 ? 'Unlimited' : messageLimit,
                   })}
@@ -282,7 +314,7 @@ export function EditLimitsModal({
               )}
               {agentLimit !== subscription.agentLimit.toString() && (
                 <p>
-                  {t('edit_limits.agent_change', 'Agent Limit: {old} → {new}', {
+                  {t('edit_limits.agent_change', 'Agent Limit: {{old}} → {{new}}', {
                     old: subscription.agentLimit === 0 ? 'Unlimited' : subscription.agentLimit,
                     new: agentLimit === '' || parseInt(agentLimit) === 0 ? 'Unlimited' : agentLimit,
                   })}
@@ -290,7 +322,7 @@ export function EditLimitsModal({
               )}
               {periodStart !== originalPeriodStart && (
                 <p>
-                  {t('edit_limits.period_start_change', 'Period Start: {old} → {new}', {
+                  {t('edit_limits.period_start_change', 'Period Start: {{old}} → {{new}}', {
                     old: originalPeriodStart,
                     new: periodStart,
                   })}
@@ -298,7 +330,7 @@ export function EditLimitsModal({
               )}
               {periodEnd !== originalPeriodEnd && (
                 <p>
-                  {t('edit_limits.period_end_change', 'Period End: {old} → {new}', {
+                  {t('edit_limits.period_end_change', 'Period End: {{old}} → {{new}}', {
                     old: originalPeriodEnd,
                     new: periodEnd,
                   })}

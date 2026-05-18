@@ -335,6 +335,30 @@ class SubscriptionService {
   }
 
   /**
+   * Manually set usage counters (SuperAdmin only)
+   * PATCH /api/admin/subscriptions/{id}/usage
+   */
+  async adminUpdateUsage(
+    subscriptionId: string,
+    messagesUsed?: number | null,
+    agentsUsed?: number | null
+  ): Promise<SubscriptionDetails> {
+    const snakeCaseRequest: Record<string, unknown> = {};
+    if (messagesUsed !== undefined && messagesUsed !== null) {
+      snakeCaseRequest.messages_used = messagesUsed;
+    }
+    if (agentsUsed !== undefined && agentsUsed !== null) {
+      snakeCaseRequest.agents_used = agentsUsed;
+    }
+
+    const response = await api.patch<ApiResponse<ApiSubscriptionResponse>>(
+      `/api/admin/subscriptions/${subscriptionId}/usage`,
+      snakeCaseRequest
+    );
+    return this.transformSubscriptionResponse(response.data.data);
+  }
+
+  /**
    * Get usage statistics for a specific subscription
    * GET /api/admin/subscriptions/{id}/usage
    */

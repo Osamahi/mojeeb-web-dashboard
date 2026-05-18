@@ -8,6 +8,7 @@ import type { SubscriptionDetails, SubscriptionFilters } from '../types/subscrip
 import { CreateSubscriptionModal } from '../components/CreateSubscriptionModal';
 import { AdminChangePlanModal } from '../components/AdminChangePlanModal';
 import { EditLimitsModal } from '../components/EditLimitsModal';
+import { EditUsageModal } from '../components/EditUsageModal';
 import { ViewUsageModal } from '../components/ViewUsageModal';
 import { SubscriptionTable } from '../components/SubscriptionTable';
 import { OrganizationAgentsModal } from '@/features/organizations/components/OrganizationAgentsModal';
@@ -26,6 +27,7 @@ export default function AdminSubscriptionsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showChangePlanModal, setShowChangePlanModal] = useState(false);
   const [showEditLimitsModal, setShowEditLimitsModal] = useState(false);
+  const [showEditUsageModal, setShowEditUsageModal] = useState(false);
   const [showViewUsageModal, setShowViewUsageModal] = useState(false);
   const [showAgentsModal, setShowAgentsModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
@@ -197,6 +199,11 @@ export default function AdminSubscriptionsPage() {
   const handleEditLimits = (subscription: SubscriptionDetails) => {
     setSelectedSubscription(subscription);
     setShowEditLimitsModal(true);
+  };
+
+  const handleEditUsage = (subscription: SubscriptionDetails) => {
+    setSelectedSubscription(subscription);
+    setShowEditUsageModal(true);
   };
 
   const handleViewUsage = (subscription: SubscriptionDetails) => {
@@ -391,6 +398,7 @@ export default function AdminSubscriptionsPage() {
               onRenew={handleRenew}
               onChangePlan={handleChangePlan}
               onEditLimits={handleEditLimits}
+              onEditUsage={handleEditUsage}
               onViewUsage={handleViewUsage}
               onViewAgents={handleViewAgents}
               onViewTeam={handleViewTeam}
@@ -449,6 +457,19 @@ export default function AdminSubscriptionsPage() {
           isOpen={showEditLimitsModal}
           onClose={() => {
             setShowEditLimitsModal(false);
+            setSelectedSubscription(null);
+          }}
+          onSuccess={handleRefresh}
+          subscription={selectedSubscription}
+        />
+      )}
+
+      {/* Edit Usage Modal */}
+      {selectedSubscription && (
+        <EditUsageModal
+          isOpen={showEditUsageModal}
+          onClose={() => {
+            setShowEditUsageModal(false);
             setSelectedSubscription(null);
           }}
           onSuccess={handleRefresh}

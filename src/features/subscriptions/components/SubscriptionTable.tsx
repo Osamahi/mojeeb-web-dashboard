@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit, BarChart3, Sliders, CreditCard, Loader2, Bot, Users } from 'lucide-react';
+import { MoreVertical, Flag, Pause, Play, RefreshCw, Edit, BarChart3, Sliders, CreditCard, Loader2, Bot, Users, Gauge } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PlanCode } from '../types/subscription.types';
 import type { SubscriptionDetails } from '../types/subscription.types';
@@ -12,6 +12,7 @@ interface SubscriptionTableProps {
   onRenew: (id: string) => void;
   onChangePlan: (subscription: SubscriptionDetails) => void;
   onEditLimits: (subscription: SubscriptionDetails) => void;
+  onEditUsage: (subscription: SubscriptionDetails) => void;
   onViewUsage: (subscription: SubscriptionDetails) => void;
   onViewAgents: (subscription: SubscriptionDetails) => void;
   onViewTeam: (subscription: SubscriptionDetails) => void;
@@ -26,6 +27,7 @@ export function SubscriptionTable({
   onRenew,
   onChangePlan,
   onEditLimits,
+  onEditUsage,
   onViewUsage,
   onViewAgents,
   onViewTeam,
@@ -338,6 +340,18 @@ export function SubscriptionTable({
                           >
                             <Sliders className="h-4 w-4" />
                             {t('subscriptions.edit_limits', 'Edit Limits')}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              onEditUsage(subscription);
+                              setOpenMenuId(null);
+                              setMenuPosition(null);
+                            }}
+                            className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <Gauge className="h-4 w-4" />
+                            {t('subscriptions.edit_usage', 'Edit Usage')}
                           </button>
 
                           <button
